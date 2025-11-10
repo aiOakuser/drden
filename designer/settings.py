@@ -287,11 +287,12 @@ if production_like and engine_is_sqlite and enforce_persistent_db:
     )
 
 # Warn in any other non-debug scenario as an extra safeguard
-if not DEBUG and engine_is_sqlite:
-    warnings.warn(
-        "SQLite is configured while DEBUG=False. Configure a persistent database via DATABASE_URL to avoid data loss.",
-        RuntimeWarning,
-    )
+# Temporarily disabled for production deployment with SQLite
+# if not DEBUG and engine_is_sqlite:
+#     warnings.warn(
+#         "SQLite is configured while DEBUG=False. Configure a persistent database via DATABASE_URL to avoid data loss.",
+#         RuntimeWarning,
+#     )
 
 # --- Password validation ---
 AUTH_PASSWORD_VALIDATORS = [
