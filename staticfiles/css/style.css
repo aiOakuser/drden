@@ -27,6 +27,20 @@ img {
   display: block;
 }
 
+/* ===== Utilities ===== */
+/* Visually hidden content, still accessible to screen readers */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
 /* ===== Header ===== */
 .header {
   position: sticky;
@@ -446,4 +460,101 @@ img {
 }
 .popup-controls {
   margin-top: 15px;
+}
+
+/* ===== Promo Bars (Free trial until satisfied) ===== */
+.promo-bar {
+  width: 100%;
+  background: linear-gradient(90deg, #280768, #3d0a85);
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  font-family: var(--font-body);
+}
+
+.promo-marquee {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.promo-track {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  padding: 8px 12px;
+  animation: promo-scroll 28s linear infinite;
+}
+
+.promo-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.promo-item:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.promo-emoji {
+  font-size: 14px;
+}
+
+.promo-text {
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 13px;
+}
+
+.promo-cta {
+  color: darkorange;
+  font-weight: 900;
+}
+
+.promo-arrow {
+  opacity: 0.7;
+}
+
+.promo-sep {
+  opacity: 0.5;
+}
+
+/* Pause marquee when user hovers or focuses items for better UX */
+.promo-marquee:hover .promo-track,
+.promo-marquee:focus-within .promo-track {
+  animation-play-state: paused;
+}
+
+@keyframes promo-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 768px) {
+  .promo-track {
+    gap: 12px;
+    padding: 6px 8px;
+    animation-duration: 22s;
+  }
+  .promo-text {
+    font-size: 12px;
+  }
+}
+
+/* Respect user motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .promo-track {
+    animation: none;
+  }
 }

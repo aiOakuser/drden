@@ -12,11 +12,18 @@ from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment from .env.production if present (no override of existing env)
-_env_file = BASE_DIR / ".env.production"
-if _env_file.exists():
-    load_dotenv(dotenv_path=_env_file)
+# Load environment variables - prioritize local .env, fallback to .env.production
+_local_env = BASE_DIR / ".env"
+_production_env = BASE_DIR / ".env.production"
+
+if _local_env.exists():
+    # Load local .env first for development
+    load_dotenv(dotenv_path=_local_env)
+elif _production_env.exists():
+    # Fallback to production env if no local .env exists
+    load_dotenv(dotenv_path=_production_env)
 else:
+    # Load from default .env if it exists
     load_dotenv()
 
 
@@ -42,8 +49,8 @@ DEBUG = env_bool("DEBUG", default=False)
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
-    "designer.aioak.co",
-    "www.designer.aioak.co",
+    "designrden.com",
+    "www.designrden.com",
 ]
 if os.getenv("ALLOWED_HOSTS"):
     # Allow overriding via env (comma-separated)
@@ -55,8 +62,8 @@ if DEBUG:
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  
 CSRF_TRUSTED_ORIGINS = [
-    "https://designer.aioak.co",
-    "https://www.designer.aioak.co",
+    "https://designrden.com",
+    "https://www.designrden.com",
 ]
 
 # In development (DEBUG=True), do not require HTTPS for cookies to allow local testing,

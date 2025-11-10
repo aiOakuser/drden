@@ -19,8 +19,8 @@ class MediaStorage(S3Boto3Storage):
 #     "AllowedHeaders": ["*"],
 #     "AllowedMethods": ["GET","HEAD"],
 #     "AllowedOrigins": [
-#       "https://designer.aioak.co",
-#       "https://www.designer.aioak.co",
+#       "https://designrden.com",
+#       "https://www.designrden.com",
 #     ],
 #     "ExposeHeaders": ["ETag"],
 #     "MaxAgeSeconds": 3000
@@ -34,4 +34,4 @@ class MediaStorage(S3Boto3Storage):
 
 # ⚡ For production security, swap * in "AllowedOrigins" for:
 
-# ["https://designer.aioak.co","https://www.designer.aioak.co"]
+# ["https://designrden.com","https://www.designrden.com"]
