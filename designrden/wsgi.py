@@ -1,8 +1,16 @@
+"""
+WSGI config for designrden project.
+
+It exposes the WSGI callable as a module-level variable named ``application``.
+
+For more information on this file, see
+https://docs.djangoproject.com/en/5.2/howto/deployment/wsgi/
+"""
+
 import os
+
 from django.core.wsgi import get_wsgi_application
 
-# Tell Django which settings file to use
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "designrden.settings")
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'designrden.settings')
 
-# The WSGI application Django’s servers (and Gunicorn) use
 application = get_wsgi_application()

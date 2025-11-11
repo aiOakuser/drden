@@ -1,7 +1,3 @@
-"""
-Django settings for designer project.
-"""
-
 from pathlib import Path
 import os
 from dotenv import load_dotenv
@@ -12,11 +8,18 @@ from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment from .env.production if present (no override of existing env)
-_env_file = BASE_DIR / ".env.production"
-if _env_file.exists():
-    load_dotenv(dotenv_path=_env_file)
+# Load environment variables - prioritize local .env, fallback to .env.production
+_local_env = BASE_DIR / ".env"
+_production_env = BASE_DIR / ".env.production"
+
+if _local_env.exists():
+    # Load local .env first for development
+    load_dotenv(dotenv_path=_local_env)
+elif _production_env.exists():
+    # Fallback to production env if no local .env exists
+    load_dotenv(dotenv_path=_production_env)
 else:
+    # Load from default .env if it exists
     load_dotenv()
 
 
@@ -36,6 +39,7 @@ BASE_URL_SERVER = os.getenv("BASE_URL_SERVER", "")
 SERVER_URL_IS_HTTPS = BASE_URL_SERVER.lower().startswith("https://")
 
 # --- Core ---
+SECRET_KEY = 'django-insecure-ck*q$d@!w83)@m36n=)%3m$jxp6#k53sh86j^i2q*lz1&klq&+'
 SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-change-this-in-production")
 DEBUG = env_bool("DEBUG", default=False)
 
