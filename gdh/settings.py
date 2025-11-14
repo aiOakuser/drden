@@ -46,8 +46,8 @@ DEBUG = env_bool("DEBUG", default=False)
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
-    "designrden.com",
-    "www.designrden.com",
+    "gdh.com",
+    "www.gdh.com",
 ]
 if os.getenv("ALLOWED_HOSTS"):
     # Allow overriding via env (comma-separated)
@@ -63,8 +63,8 @@ else:
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  
 CSRF_TRUSTED_ORIGINS = [
-    "https://designrden.com",
-    "https://www.designrden.com",
+    "https://gdh.com",
+    "https://www.gdh.com",
 ]
 
 # In development (DEBUG=True), do not require HTTPS for cookies to allow local testing,
@@ -143,7 +143,7 @@ MIDDLEWARE = [
     "social_django.middleware.SocialAuthExceptionMiddleware",
 ]
 
-ROOT_URLCONF = "designrden.urls"
+ROOT_URLCONF = "gdh.urls"
 
 # --- Static & Media ---
 STATIC_URL = "/static/"
@@ -166,7 +166,7 @@ if USE_S3_MEDIA:
 
     # Django 5 STORAGES API
     STORAGES = {
-        "default": {"BACKEND": "designrden.storages.MediaStorage"},
+        "default": {"BACKEND": "gdh.storages.MediaStorage"},
         # staticfiles backend adjusted below based on DEBUG
         "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
     }
@@ -211,7 +211,7 @@ TEMPLATES = [
     }
 ]
 
-WSGI_APPLICATION = "designrden.wsgi.application"
+WSGI_APPLICATION = "gdh.wsgi.application"
 
 # --- CSRF ---
 # Use a custom failure view that returns friendlier HTML and JSON responses.
