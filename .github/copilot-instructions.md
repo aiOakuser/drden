@@ -30,7 +30,7 @@ User (Django auth) + RejectedDesigner (tracks rejected signups)
 - **Static files**: `designer_portfolio/static/` with subdirs `css/`, `images/`, `js/`, `swatches/`
 - **Media uploads**: Models use specific upload paths like `collections/covers/`, `designs/gallery/`
 - **Helper function**: Use `utils.list_static_media(path)` for directory listings with automatic sorting
-- **Brand assets**: Logo switching logic in navbar uses `logo-maroon.png` and `logo-dark.png`
+- **Brand assets**: Logo switching logic in navbar uses `logo-green.png` and `logo-dark.png`
 
 ### 2. URL & View Architecture
 

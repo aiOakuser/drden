@@ -6,7 +6,7 @@
     <a class="brand" href="{% url 'home' %}">
       <img
         class="brand__mark"
-        src="{% static 'images/brand/logo-maroon.png' %}"
+        src="{% static 'images/brand/logo-blue.png' %}"
         alt="designer"
       />
     </a>
@@ -65,16 +65,18 @@
   document.addEventListener("DOMContentLoaded", function () {
     // Logo hover swap
     const logo = document.querySelector(".brand__mark");
-    const blackLogo = "{% static 'images/brand/logo-dark.png' %}";
-    const redLogo = "{% static 'images/brand/logo-maroon.png' %}";
+    const blueLogo = "{% static 'images/brand/logo-blue.png' %}";
+    const orangeLogo = "{% static 'images/brand/logo-orange.png' %}";
 
-    logo.addEventListener("mouseenter", () => {
-      logo.src = redLogo;
-    });
+    if (logo) {
+      logo.addEventListener("mouseenter", () => {
+        logo.src = orangeLogo;
+      });
 
-    logo.addEventListener("mouseleave", () => {
-      logo.src = blackLogo;
-    });
+      logo.addEventListener("mouseleave", () => {
+        logo.src = blueLogo;
+      });
+    }
 
     // Mobile menu toggle
     const mobileToggle = document.querySelector(".mobile-menu-toggle");
@@ -129,7 +131,7 @@
 
   /* ===== Logo Styles ===== */
   .brand__mark {
-    height: 50px;
+    height: 75px;
     transition: all 0.3s ease;
   }
 
@@ -301,7 +303,7 @@
     }
 
     .brand__mark {
-      height: 45px;
+      height: 70px;
     }
 
     .header__social {
@@ -384,7 +386,7 @@
     }
 
     .brand__mark {
-      height: 40px;
+      height: 60px;
     }
   }
 
@@ -405,7 +407,7 @@
     }
 
     .brand__mark {
-      height: 35px;
+      height: 50px;
     }
   }
 
