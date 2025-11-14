@@ -19,8 +19,8 @@ class MediaStorage(S3Boto3Storage):
 #     "AllowedHeaders": ["*"],
 #     "AllowedMethods": ["GET","HEAD"],
 #     "AllowedOrigins": [
-#       "https://GlobalDesignerHub.com",
-#       "https://www.GlobalDesignerHub.com",
+#       "https://globaldesignerhub.com",
+#       "https://www.globaldesignerhub.com",
 #     ],
 #     "ExposeHeaders": ["ETag"],
 #     "MaxAgeSeconds": 3000
@@ -34,4 +34,4 @@ class MediaStorage(S3Boto3Storage):
 
 # ⚡ For production security, swap * in "AllowedOrigins" for:
 
-# ["https://GlobalDesignerHub.com","https://www.GlobalDesignerHub.com"]
+# ["https://globaldesignerhub.com","https://www.globaldesignerhub.com"]

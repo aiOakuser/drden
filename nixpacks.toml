@@ -1,2 +1,2 @@
 [start]
-  cmd = "python -m pip install --no-cache-dir psycopg2-binary==2.9.9 && python manage.py migrate && (python manage.py restore_designer_users || true) && python manage.py collectstatic --noinput && gunicorn GlobalDesignerHub.wsgi:application --bind 0.0.0.0:8032 --workers ${WORKERS:-3}"
+  cmd = "python -m pip install --no-cache-dir psycopg2-binary==2.9.9 && python manage.py migrate && (python manage.py restore_designer_users || true) && python manage.py collectstatic --noinput && gunicorn gdh.wsgi:application --bind 0.0.0.0:8032 --workers ${WORKERS:-3}"

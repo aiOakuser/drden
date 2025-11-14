@@ -46,8 +46,8 @@ DEBUG = env_bool("DEBUG", default=False)
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
-    "gdh.com",
-    "www.gdh.com",
+    "globaldesignerhub.com",
+    "www.globaldesignerhub.com",
 ]
 if os.getenv("ALLOWED_HOSTS"):
     # Allow overriding via env (comma-separated)
@@ -63,8 +63,8 @@ else:
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  
 CSRF_TRUSTED_ORIGINS = [
-    "https://gdh.com",
-    "https://www.gdh.com",
+    "https://globaldesignerhub.com",
+    "https://www.globaldesignerhub.com",
 ]
 
 # In development (DEBUG=True), do not require HTTPS for cookies to allow local testing,
