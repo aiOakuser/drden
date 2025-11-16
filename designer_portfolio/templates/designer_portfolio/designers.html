@@ -57,13 +57,14 @@
       </div>
     </div>
 
-    <!-- Designers Grid -->
-    <div class="designers-grid" id="designersGrid">
-      {% for designer in designers %}
-      <article class="designer-card{% if designer.portfolio_website %} clickable-card{% endif %}"
-               data-category="{{ designer.specialization|lower|slugify }}"
-               {% if designer.portfolio_website %}data-website="{{ designer.portfolio_website }}"{% endif %}>
-        <div class="card-image">
+      <!-- Designers Grid -->
+      <div class="designers-grid" id="designersGrid">
+        {% for designer in designers %}
+          {% with contact_email=designer.public_contact_email %}
+          <article class="designer-card{% if designer.portfolio_website %} clickable-card{% endif %}"
+                   data-category="{{ designer.specialization|lower|slugify }}"
+                   {% if designer.portfolio_website %}data-website="{{ designer.portfolio_website }}"{% endif %}>
+          <div class="card-image">
           {% if designer.profile_image %}
           <img src="{{ designer.profile_image.url }}" alt="{{ designer.user.get_full_name }}" class="designer-photo" loading="lazy" />
           {% else %}
@@ -74,8 +75,8 @@
 
           <div class="card-overlay">
             <div class="quick-actions">
-              {% if designer.contact_email %}
-              <a href="mailto:{{ designer.contact_email }}" class="action-btn" title="Send Email">
+                {% if contact_email %}
+                <a href="mailto:{{ contact_email }}" class="action-btn" title="Send Email">
                 <i class="fas fa-envelope"></i>
               </a>
               {% endif %}
@@ -88,7 +89,7 @@
           </div>
         </div>
 
-        <div class="card-content">
+          <div class="card-content">
           <div class="designer-header">
             <h3 class="designer-name">
               {{ designer.user.get_full_name|default:designer.user.username }}
@@ -150,8 +151,8 @@
           </div>
 
           <div class="card-actions">
-            {% if designer.contact_email %}
-            <a href="mailto:{{ designer.contact_email }}" class="btn btn-primary">
+              {% if contact_email %}
+              <a href="mailto:{{ contact_email }}" class="btn btn-primary">
               <i class="fas fa-paper-plane"></i> Get In Touch
             </a>
             {% endif %}
@@ -160,7 +161,8 @@
             </button>
           </div>
         </div>
-      </article>
+        </article>
+          {% endwith %}
       {% empty %}
       <div class="empty-state">
         <div class="empty-icon">
