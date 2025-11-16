@@ -125,3 +125,37 @@ class DesignerProfileAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
+
+
+# ---------------- Designer AI ----------------
+@admin.register(m.DesignerAISession)
+class DesignerAISessionAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "language", "created_at", "message_count")
+    list_filter = ("language", "created_at")
+    search_fields = ("id", "user__username", "session_id")
+    readonly_fields = ("created_at", "updated_at")
+    
+    def message_count(self, obj):
+        return obj.messages.count()
+    message_count.short_description = "Messages"
+
+
+@admin.register(m.DesignerAIMessage)
+class DesignerAIMessageAdmin(admin.ModelAdmin):
+    list_display = ("session", "role", "short_content", "created_at")
+    list_filter = ("role", "created_at")
+    search_fields = ("content", "session__user__username")
+    readonly_fields = ("created_at", "updated_at")
+    
+    def short_content(self, obj):
+        return obj.content[:100] + "..." if len(obj.content) > 100 else obj.content
+    short_content.short_description = "Content"
+
+
+@admin.register(m.DocPage)
+class DocPageAdmin(admin.ModelAdmin):
+    list_display = ("title", "slug", "category", "language", "published", "order")
+    list_filter = ("language", "category", "published")
+    search_fields = ("title", "content", "slug", "tags")
+    prepopulated_fields = {"slug": ("title",)}
+    readonly_fields = ("created_at", "updated_at")

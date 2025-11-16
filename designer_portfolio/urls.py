@@ -19,6 +19,8 @@ from .views import (
     designer_about_me_view, designer_contact_view,
     DesignerRegistrationView,
     DesignersListView,
+    designer_ai_chat,
+    my_conversations,
 )
 
 router = DefaultRouter()
@@ -66,6 +68,8 @@ urlpatterns = [
     # API
     path("api/", include(router.urls)),
     path("api/designers/register/", DesignerRegistrationView.as_view(), name="designer_register_api"),
+    path("api/ai/designer-chat/", designer_ai_chat, name="designer_ai_chat"),
+    path("designer-ai/history/", my_conversations, name="designer_ai_history"),
 
     # Admin actions
     path("admin/pending-designers/", PendingDesignersView.as_view(), name="pending_designers"),

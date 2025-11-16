@@ -1,6 +1,6 @@
 import base64
-import base64
 import json
+import uuid
 from decimal import Decimal, InvalidOperation
 from datetime import timedelta
 from pathlib import Path
@@ -37,6 +37,9 @@ from .models import (
     Collection,
     Event,
     WebAuthnCredential,
+    DesignerAISession,
+    DesignerAIMessage,
+    DocPage,
 )
 
 from webauthn import (
@@ -345,6 +348,15 @@ class HomePageView(TemplateView):
         except Exception:
             # Fallback to an empty list if the database or model is unavailable
             context["designers"] = []
+        
+        # Provide collections for the homepage slideshow
+        try:
+            collections_qs = Collection.objects.order_by("-year", "name")
+            context["collections"] = list(collections_qs)
+        except Exception:
+            # Fallback to an empty list if the database or model is unavailable
+            context["collections"] = []
+        
         return context
 
 class AboutView(TemplateView):
@@ -1261,3 +1273,333 @@ def csrf_failure(request, reason=""):
         "debug": settings.DEBUG,
     }
     return render(request, "errors/403_csrf.html", context=context, status=403)
+
+
+# ==================== Designer AI Chat ====================
+
+def _get_designer_ai_system_prompt() -> str:
+    """Returns the system prompt for Designer AI."""
+    return """You are "GlobalDesignerHub Designer AI", an assistant for designers using GlobalDesignerHub (GDH).
+
+Your scope:
+- Answer questions about design portfolios (fashion, graphic, UX/UI, interior, illustration, etc.).
+- Help with portfolio structure, case studies, project descriptions, and image/video presentation.
+- Help users understand and use GlobalDesignerHub features: creating profiles, uploading designs, collections, collaboration, privacy, and sharing.
+- Help with light website issues related to GDH (image sizes, formats, performance tips), but do NOT give server admin or low-level dev instructions unless clearly asked by a developer.
+- Always prefer solutions that use GDH features (collections, tags, categories, collaboration tools).
+
+When a question is NOT about design, portfolios, or GDH, politely say you are focused only on designer + GlobalDesignerHub topics and redirect them.
+
+Whenever relevant:
+- Link to the correct GDH documentation page using format: (/docs/designers/getting-started) or (/docs/api/overview)
+- If the question is about integrations, show the relevant API or integration docs links.
+
+Tone: friendly, professional, and supportive of creative people. Avoid strong opinions; give options and best practices."""
+
+
+def _get_designer_ai_responses() -> dict:
+    """Returns a dictionary of common responses for fallback when AI is not available."""
+    return {
+        "portfolio": {
+            "keywords": ["portfolio", "structure", "layout", "case study", "project"],
+            "response": """Great question about portfolios! Here are some best practices:
+
+**Portfolio Structure:**
+- Start with your strongest work
+- Group projects by category or collection
+- Include 3-5 high-quality images per project
+- Add brief descriptions explaining your process
+
+**On GlobalDesignerHub:**
+- Use Collections to group related projects
+- Add descriptive captions to each image
+- Tag your work by category for easy discovery
+
+For more details, check out: (/docs/designers/portfolio-layouts)"""
+        },
+        "upload": {
+            "keywords": ["upload", "image", "size", "format", "video"],
+            "response": """Here's how to handle media on GlobalDesignerHub:
+
+**Image Guidelines:**
+- Recommended size: 1920x1080px or larger
+- Formats: JPG, PNG, WebP
+- Max file size: 10MB per image
+- For best quality, use high-resolution images
+
+**Video Guidelines:**
+- Formats: MP4, WebM
+- Max file size: 100MB
+- Recommended resolution: 1080p
+
+**Upload Process:**
+1. Go to Dashboard → Designs
+2. Click "New Design"
+3. Upload your images/videos
+4. Add titles, descriptions, and tags
+
+Need more help? See: (/docs/designers/media-guidelines)"""
+        },
+        "profile": {
+            "keywords": ["profile", "create", "setup", "account"],
+            "response": """Setting up your GlobalDesignerHub profile is easy:
+
+**Getting Started:**
+1. Sign up for an account
+2. Complete your designer profile
+3. Add a profile image and bio
+4. Start uploading your work
+
+**Profile Tips:**
+- Use a professional photo
+- Write a compelling bio highlighting your expertise
+- Add your location and specialization
+- Link your social media accounts
+
+Learn more: (/docs/designers/getting-started)"""
+        },
+        "api": {
+            "keywords": ["api", "integration", "embed", "sync", "webhook"],
+            "response": """GlobalDesignerHub offers a REST API for integrations:
+
+**API Features:**
+- Portfolio management (list, create, update projects)
+- Media uploads
+- Collection management
+- Authentication via API keys
+
+**Getting Started:**
+- API Overview: (/docs/api/overview)
+- Authentication: (/docs/api/auth)
+- Portfolio API: (/docs/api/portfolios)
+
+**Embedding:**
+You can embed your GDH portfolio on your own website using our embed widgets.
+
+For developers: (/docs/api/overview)"""
+        },
+        "default": {
+            "response": """I'm here to help with design portfolios and GlobalDesignerHub!
+
+I can assist with:
+- Portfolio structure and layouts
+- Uploading and organizing your work
+- Using GDH features
+- API and integration questions
+
+Try asking:
+- "How do I create my portfolio?"
+- "What image size should I upload?"
+- "How do I use the API?"
+
+Or check out our docs: (/docs/designers/getting-started)"""
+        }
+    }
+
+
+def _get_ai_response_fallback(message: str, context_page: str = "") -> str:
+    """Fallback response when AI service is not available."""
+    message_lower = message.lower()
+    responses = _get_designer_ai_responses()
+    
+    # Check for matching keywords
+    for key, data in responses.items():
+        if key == "default":
+            continue
+        for keyword in data["keywords"]:
+            if keyword in message_lower:
+                return data["response"]
+    
+    return responses["default"]["response"]
+
+
+@require_POST
+@requires_csrf_token
+def designer_ai_chat(request):
+    """
+    API endpoint for Designer AI chat with RAG, session management, and error handling.
+    Accepts POST requests with JSON body:
+    {
+        "message": "user message",
+        "context_page": "/dashboard/designs/",
+        "current_url": "https://...",
+        "language": "en"
+    }
+    """
+    try:
+        data = json.loads(request.body)
+        user_message = data.get("message", "").strip()
+        context_page = data.get("context_page", "")
+        current_url = data.get("current_url", "")
+        language = data.get("language", "en")
+        
+        if not user_message:
+            return JsonResponse({
+                "success": False,
+                "error": "Message is required"
+            }, status=400)
+        
+        # Get or create session
+        session_id = request.COOKIES.get("designer_ai_session")
+        if session_id:
+            try:
+                session = DesignerAISession.objects.get(session_id=session_id)
+            except DesignerAISession.DoesNotExist:
+                session = None
+        else:
+            session = None
+        
+        if not session:
+            session = DesignerAISession.objects.create(
+                user=request.user if request.user.is_authenticated else None,
+                session_id=str(uuid.uuid4()),
+                language=language
+            )
+        
+        # Save user message
+        DesignerAIMessage.objects.create(
+            session=session,
+            role="user",
+            content=user_message,
+        )
+        
+        # Build system prompt
+        system_prompt = _get_designer_ai_system_prompt()
+        
+        # Add context about current page
+        if context_page:
+            context_info = f"\n\nUser is currently on page: {context_page}"
+            if "dashboard" in context_page:
+                context_info += "\nThey are in the dashboard area."
+            if "design" in context_page:
+                context_info += "\nThey are working with designs."
+            if "collection" in context_page:
+                context_info += "\nThey are working with collections."
+            system_prompt += context_info
+        
+        # RAG: Retrieve relevant documentation
+        rag_docs = []
+        try:
+            rag_docs = list(DocPage.objects.filter(
+                published=True,
+                language=language
+            ).filter(
+                Q(content__icontains=user_message) |
+                Q(title__icontains=user_message) |
+                Q(tags__icontains=user_message)
+            )[:3])
+        except Exception as e:
+            if settings.DEBUG:
+                print(f"RAG error: {e}")
+        
+        # Build messages with history
+        messages = [{"role": "system", "content": system_prompt}]
+        
+        # Add RAG context if found
+        if rag_docs:
+            rag_context = "\n\n--- Documentation Context ---\n\n"
+            rag_context += "\n\n---\n\n".join(
+                f"Title: {doc.title}\nContent: {doc.content[:500]}...\nLink: /docs/{doc.category}/{doc.slug}/"
+                for doc in rag_docs
+            )
+            messages.append({"role": "system", "content": rag_context})
+        
+        # Add conversation history (last 10 messages)
+        history = DesignerAIMessage.objects.filter(session=session).exclude(role="system").order_by("created_at")[:10]
+        for msg in history:
+            if msg.role in ["user", "assistant"]:
+                messages.append({"role": msg.role, "content": msg.content})
+        
+        # Add current user message
+        messages.append({"role": "user", "content": user_message})
+        
+        # Check if OpenAI is configured
+        openai_api_key = os.getenv("OPENAI_API_KEY")
+        use_openai = openai_api_key and openai_api_key.strip()
+        
+        ai_response = None
+        
+        if use_openai:
+            try:
+                import openai
+                # Support both old and new OpenAI SDK
+                try:
+                    # New SDK (v1.0+)
+                    client = openai.OpenAI(api_key=openai_api_key)
+                    response = client.chat.completions.create(
+                        model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+                        messages=messages,
+                        temperature=0.7,
+                        max_tokens=1000
+                    )
+                    ai_response = response.choices[0].message.content
+                except AttributeError:
+                    # Old SDK fallback
+                    openai.api_key = openai_api_key
+                    response = openai.ChatCompletion.create(
+                        model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+                        messages=messages,
+                        temperature=0.7,
+                        max_tokens=1000
+                    )
+                    ai_response = response.choices[0].message["content"]
+                
+            except ImportError:
+                if settings.DEBUG:
+                    print("OpenAI library not installed")
+            except Exception as e:
+                if settings.DEBUG:
+                    print(f"OpenAI error: {e}")
+        
+        # Fallback to rule-based responses if OpenAI failed
+        if not ai_response:
+            ai_response = _get_ai_response_fallback(user_message, context_page)
+        
+        # Save assistant response
+        DesignerAIMessage.objects.create(
+            session=session,
+            role="assistant",
+            content=ai_response,
+            metadata={"rag_sources": [doc.slug for doc in rag_docs] if rag_docs else []}
+        )
+        
+        # Return response
+        response = JsonResponse({
+            "success": True,
+            "response": ai_response,
+            "session_id": str(session.session_id)
+        })
+        response.set_cookie("designer_ai_session", str(session.session_id), max_age=60*60*24*30)  # 30 days
+        return response
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            "success": False,
+            "error": "Invalid JSON"
+        }, status=400)
+    except Exception as e:
+        if settings.DEBUG:
+            import traceback
+            print(f"🔥 AI ERROR: {e}")
+            print(traceback.format_exc())
+            return JsonResponse({
+                "success": False,
+                "error": str(e)
+            }, status=500)
+        return JsonResponse({
+            "success": False,
+            "error": "An error occurred. Please try again."
+        }, status=500)
+
+
+def my_conversations(request):
+    """View for displaying user's AI chat history."""
+    if not request.user.is_authenticated:
+        from django.shortcuts import redirect
+        return redirect("login")
+    
+    sessions = DesignerAISession.objects.filter(user=request.user).order_by("-created_at")[:50]
+    
+    return render(request, "designer_portfolio/my_conversations.html", {
+        "sessions": sessions
+    })

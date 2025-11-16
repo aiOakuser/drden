@@ -406,3 +406,57 @@ class UserSubscription(models.Model):
         if self.is_trial_active:
             return (self.trial_end_date - timezone.now()).days
         return 0
+
+
+# ==================== Designer AI Chat ====================
+
+class DesignerAISession(TimeStampedModel):
+    """Stores chat sessions for Designer AI conversations."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="ai_sessions", null=True, blank=True)
+    session_id = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    language = models.CharField(max_length=10, default="en")
+    metadata = models.JSONField(default=dict, blank=True)  # Store onboarding progress, preferences, etc.
+    
+    class Meta:
+        ordering = ["-created_at"]
+    
+    def __str__(self):
+        if self.user:
+            return f"Session {self.id} - {self.user.username}"
+        return f"Session {self.id}"
+
+
+class DesignerAIMessage(TimeStampedModel):
+    """Individual messages in a chat session."""
+    session = models.ForeignKey(DesignerAISession, on_delete=models.CASCADE, related_name="messages")
+    role = models.CharField(max_length=20, choices=[
+        ("system", "System"),
+        ("user", "User"),
+        ("assistant", "Assistant"),
+    ])
+    content = models.TextField()
+    metadata = models.JSONField(default=dict, blank=True)  # Store RAG sources, etc.
+    
+    class Meta:
+        ordering = ["created_at"]
+    
+    def __str__(self):
+        return f"{self.role}: {self.content[:50]}..."
+
+
+class DocPage(TimeStampedModel):
+    """Documentation pages for RAG retrieval."""
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(unique=True)
+    content = models.TextField()
+    language = models.CharField(max_length=10, default="en")
+    category = models.CharField(max_length=100, blank=True)  # e.g., "designers", "api", "getting-started"
+    tags = models.CharField(max_length=500, blank=True)  # Comma-separated tags
+    order = models.IntegerField(default=0)
+    published = models.BooleanField(default=True)
+    
+    class Meta:
+        ordering = ["order", "title"]
+    
+    def __str__(self):
+        return self.title

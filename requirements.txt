@@ -45,3 +45,6 @@ psycopg2-binary==2.9.10
 # Social authentication
 social-auth-app-django==5.4.0
 social-auth-core[openidconnect]==4.4.2
+
+# AI Chat (optional - install with: pip install openai)
+# openai>=1.0.0

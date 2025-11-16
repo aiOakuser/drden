@@ -1,5 +1,6 @@
 {% extends "designer_portfolio/dashboard_base.html" %}
 {% block dashboard_content %}
+{% include "designer_portfolio/includes/contextual_help_bar.html" with help_text="Need help with image sizes, formats, or organizing your design? Ask Designer AI." %}
 <div class="design-upload-page">
   <!-- Success/Error Messages -->
   {% if messages %} {% for message in messages %}
