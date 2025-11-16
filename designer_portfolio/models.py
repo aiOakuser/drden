@@ -290,6 +290,16 @@ class DesignerProfile(models.Model):
         verbose_name = "Designer Profile"
         verbose_name_plural = "Designer Profiles"
 
+    @property
+    def public_contact_email(self) -> str:
+        """Return the best contact email to expose publicly."""
+        email = (self.contact_email or "").strip()
+        if email:
+            return email
+
+        user_email = (getattr(self.user, "email", "") or "").strip()
+        return user_email
+
 
 # ---------------- Subscription Models ----------------
 class WebAuthnCredential(TimeStampedModel):
