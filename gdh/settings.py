@@ -9,17 +9,48 @@ from django.core.exceptions import ImproperlyConfigured
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment variables - prioritize local .env, fallback to .env.production
-_local_env = BASE_DIR / ".env"
 _production_env = BASE_DIR / ".env.production"
+_loaded_env = False
 
-if _local_env.exists():
-    # Load local .env first for development
-    load_dotenv(dotenv_path=_local_env)
-elif _production_env.exists():
-    # Fallback to production env if no local .env exists
-    load_dotenv(dotenv_path=_production_env)
-else:
-    # Load from default .env if it exists
+
+def _is_truthy(value: str | None) -> bool:
+    if value is None:
+        return False
+    return value.strip().lower() in {"1", "true", "t", "yes", "y", "on"}
+
+
+def _load_env_file(path: Path) -> bool:
+    if path.is_file():
+        load_dotenv(dotenv_path=path)
+        return True
+    return False
+
+
+_explicit_env_file = os.getenv("DJANGO_ENV_FILE") or os.getenv("ENV_FILE")
+if _explicit_env_file:
+    explicit_path = Path(_explicit_env_file)
+    if not explicit_path.is_absolute():
+        explicit_path = BASE_DIR / explicit_path
+    if _load_env_file(explicit_path):
+        _loaded_env = True
+    else:
+        warnings.warn(f"Specified env file '{explicit_path}' not found; skipping.", RuntimeWarning)
+
+if not _loaded_env:
+    for candidate in (
+        BASE_DIR / ".env.local",
+        BASE_DIR / ".env",
+    ):
+        if _load_env_file(candidate):
+            _loaded_env = True
+            break
+
+if not _loaded_env and _is_truthy(os.getenv("DJANGO_LOAD_PRODUCTION_DOTENV")):
+    if _load_env_file(_production_env):
+        _loaded_env = True
+
+if not _loaded_env:
+    # Load from default .env if it exists in parent directories
     load_dotenv()
 
 
