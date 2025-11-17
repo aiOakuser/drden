@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 import socket
 import warnings
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote
 from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -243,8 +243,8 @@ def _db_settings_from_url(database_url: str):
     return {
         "ENGINE": engine,
         "NAME": str(name),
-        "USER": parsed.username or "",
-        "PASSWORD": parsed.password or "",
+        "USER": unquote(parsed.username or ""),
+        "PASSWORD": unquote(parsed.password or ""),
         "HOST": parsed.hostname or "",
         "PORT": parsed.port or "",
         "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
