@@ -17,9 +17,9 @@ class Brand(TimeStampedModel):
     name = models.CharField(max_length=100, default="designer")
     tagline = models.CharField(max_length=160, blank=True)
     logo = models.ImageField(upload_to="brand/", blank=True, null=True)
-    primary_color = models.CharField(max_length=7, default="#000000")  # black
-    secondary_color = models.CharField(max_length=7, default="#FFFFFF")  # white
-    accent_color = models.CharField(max_length=7, default="#9CA3AF")  # neutral gray
+    primary_color = models.CharField(max_length=7, default="#1A2634")  # deep navy charcoal
+    secondary_color = models.CharField(max_length=7, default="#F4F7F8")  # soft cool grey
+    accent_color = models.CharField(max_length=7, default="#FF6F61")  # coral pink
     primary_font = models.CharField(max_length=100, default="Playfair Display")
     secondary_font = models.CharField(max_length=100, default="Inter")
 
