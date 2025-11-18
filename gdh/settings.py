@@ -8,18 +8,19 @@ from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment variables - prioritize local .env, fallback to .env.production
-_local_env = BASE_DIR / ".env"
-_production_env = BASE_DIR / ".env.production"
+# Load environment variables - prefer developer overrides, fallback to production
+_env_candidates = [
+    BASE_DIR / ".env.local",
+    BASE_DIR / ".env",
+    BASE_DIR / ".env.production",
+]
 
-if _local_env.exists():
-    # Load local .env first for development
-    load_dotenv(dotenv_path=_local_env)
-elif _production_env.exists():
-    # Fallback to production env if no local .env exists
-    load_dotenv(dotenv_path=_production_env)
+for _env_path in _env_candidates:
+    if _env_path.exists():
+        load_dotenv(dotenv_path=_env_path)
+        break
 else:
-    # Load from default .env if it exists
+    # Load from the default search path if none of the expected files exist
     load_dotenv()
 
 
