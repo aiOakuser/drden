@@ -37,6 +37,7 @@ class Command(BaseCommand):
                 # Prefer environment variable; if empty, leaves contact hidden until set
                 "contact_email": os.getenv("SERI_CONTACT_EMAIL", "").strip(),
             },
+            {"username": "myrym", "portfolio_website": "https://myrym.aioak.co"},
         ]
 
         created_count = 0
