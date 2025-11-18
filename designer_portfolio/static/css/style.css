@@ -3,23 +3,27 @@
   --font-head: Garamond, "Times New Roman", designerf;
   --font-body: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial,
     sans-designerf;
-  --color-primary: #1A2634;
-  --color-primary-rgb: 26, 38, 52;
-  --color-secondary: #F4F7F8;
-  --color-secondary-rgb: 244, 247, 248;
-  --color-accent: #FF6F61;
-  --color-accent-rgb: 255, 111, 97;
+  --color-primary: #0E0E0F;
+  --color-primary-rgb: 14, 14, 15;
+  --color-secondary: #F6F5F3;
+  --color-secondary-rgb: 246, 245, 243;
+  --color-accent: #D8B57A;
+  --color-accent-rgb: 216, 181, 122;
+  --color-graphite: #2A2A2C;
+  --color-graphite-rgb: 42, 42, 44;
+  --color-highlight: #CFC7BB;
+  --color-highlight-rgb: 207, 199, 187;
   --color-text: var(--color-primary);
   --color-text-strong: rgba(var(--color-primary-rgb), 0.95);
-  --color-text-muted: rgba(var(--color-primary-rgb), 0.7);
-  --color-text-soft: rgba(var(--color-primary-rgb), 0.55);
-  --color-border: rgba(var(--color-primary-rgb), 0.18);
-  --color-border-strong: rgba(var(--color-primary-rgb), 0.35);
+  --color-text-muted: rgba(var(--color-graphite-rgb), 0.65);
+  --color-text-soft: rgba(var(--color-graphite-rgb), 0.45);
+  --color-border: rgba(var(--color-graphite-rgb), 0.35);
+  --color-border-strong: rgba(var(--color-graphite-rgb), 0.65);
   --color-surface: var(--color-secondary);
-  --color-surface-muted: rgba(var(--color-secondary-rgb), 0.85);
-  --color-surface-contrast: rgba(var(--color-primary-rgb), 0.05);
-  --color-accent-soft: rgba(var(--color-accent-rgb), 0.2);
-  --color-shadow: 0 12px 24px rgba(var(--color-primary-rgb), 0.12);
+  --color-surface-muted: rgba(var(--color-highlight-rgb), 0.9);
+  --color-surface-contrast: rgba(var(--color-graphite-rgb), 0.08);
+  --color-accent-soft: rgba(var(--color-accent-rgb), 0.24);
+  --color-shadow: 0 12px 24px rgba(var(--color-graphite-rgb), 0.18);
   --maxW: 1200px;
 }
 
