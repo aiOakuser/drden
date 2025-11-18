@@ -42,16 +42,16 @@
   }
 
   .collection-item {
-    background: #fff;
+    background: var(--color-secondary);
     border-radius: 6px;
     overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.1);
     transition: transform 0.3s ease;
   }
 
   .collection-item:hover {
     transform: translateY(-5px);
-    background: darkorange;
+    background: var(--color-accent);
   }
 
   .collection-item img {
@@ -62,8 +62,8 @@
   }
 
   .collection-caption {
-    background: #800000;
-    color: #fff;
+    background: var(--color-primary);
+    color: var(--color-secondary);
     font-size: 14px;
     font-weight: bold;
     text-transform: uppercase;

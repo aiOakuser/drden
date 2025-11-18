@@ -114,9 +114,9 @@
 <style>
   /* ===== Header Base Styles ===== */
   .header {
-    background: #280768;
+    background: var(--color-primary);
     padding: 15px 30px;
-    color: #fff;
+    color: var(--color-secondary);
     position: relative;
   }
 
@@ -149,7 +149,7 @@
   .mobile-menu-toggle span {
     width: 25px;
     height: 3px;
-    background: #fff;
+    background: var(--color-secondary);
     margin: 3px 0;
     transition: 0.3s;
     border-radius: 2px;
@@ -175,7 +175,7 @@
   }
 
   .nav a {
-    color: #fff;
+    color: var(--color-secondary);
     text-decoration: none;
     text-transform: uppercase;
     font-weight: bold;
@@ -187,16 +187,16 @@
   }
 
   .nav a:hover {
-    color: darkorange;
+    color: var(--color-accent);
   }
 
   /* Free Trial CTA in nav */
   .nav-trial-cta {
-    background: darkorange;
-    color: #1a0b4b !important;
+    background: var(--color-accent);
+    color: var(--color-primary) !important;
     padding: 8px 12px;
     border-radius: 16px;
-    border: 1px solid rgba(0,0,0,0.08);
+    border: 1px solid rgba(var(--color-primary-rgb), 0.08);
     font-weight: 900;
   }
   .nav-trial-cta:hover { filter: brightness(0.95); }
@@ -210,7 +210,7 @@
   .nav-logout-btn {
     background: none;
     border: none;
-    color: #fff;
+    color: var(--color-secondary);
     text-decoration: none;
     text-transform: uppercase;
     font-weight: bold;
@@ -224,7 +224,7 @@
   }
 
   .nav-logout-btn:hover {
-    color: darkorange;
+    color: var(--color-accent);
   }
 
   /* ===== Social Icons Styling ===== */
@@ -240,17 +240,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid #fff;
+    border: 1px solid var(--color-secondary);
     border-radius: 50%;
-    color: #fff;
+    color: var(--color-secondary);
     font-size: 18px;
     transition: all 0.3s ease;
   }
 
   .header__social a:hover {
-    background: darkorange;
-    border-color: darkorange;
-    color: #fff;
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-secondary);
   }
 
   /* ===== Responsive Design ===== */
@@ -348,11 +348,11 @@
       top: 100%;
       left: 0;
       right: 0;
-      background: #280768;
+      background: var(--color-primary);
       flex-direction: column;
       padding: 20px;
       gap: 15px;
-      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      border-top: 1px solid rgba(var(--color-secondary-rgb), 0.2);
       transform: translateY(-100%);
       opacity: 0;
       visibility: hidden;
@@ -370,14 +370,14 @@
       font-size: 16px;
       padding: 10px 0;
       text-align: center;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid rgba(var(--color-secondary-rgb), 0.1);
     }
 
     .nav-logout-btn {
       font-size: 16px;
       padding: 10px 0;
       text-align: center;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid rgba(var(--color-secondary-rgb), 0.1);
       width: 100%;
     }
 
