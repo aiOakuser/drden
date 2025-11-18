@@ -1,12 +1,12 @@
 {% load static %}
 <!-- HEADER -->
 <header class="header">
-  <div class="header__inner">
+    <div class="header__inner">
     <!-- Logo -->
     <a class="brand" href="{% url 'home' %}">
       <img
         class="brand__mark"
-        src="{% static 'images/brand/logo-blue.png' %}"
+        src="{% static 'images/brand/logo-orange.png' %}"
         alt="designer"
       />
     </a>
@@ -60,24 +60,9 @@
   </div>
 </header>
 
-<!-- Logo hover swap & Mobile menu functionality -->
+<!-- Header interactions -->
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    // Logo hover swap
-    const logo = document.querySelector(".brand__mark");
-    const blueLogo = "{% static 'images/brand/logo-blue.png' %}";
-    const orangeLogo = "{% static 'images/brand/logo-orange.png' %}";
-
-    if (logo) {
-      logo.addEventListener("mouseenter", () => {
-        logo.src = orangeLogo;
-      });
-
-      logo.addEventListener("mouseleave", () => {
-        logo.src = blueLogo;
-      });
-    }
-
     // Mobile menu toggle
     const mobileToggle = document.querySelector(".mobile-menu-toggle");
     const nav = document.querySelector(".nav");
@@ -111,29 +96,29 @@
   });
 </script>
 
-<style>
-  /* ===== Header Base Styles ===== */
-  .header {
-    background: var(--color-primary);
-    padding: 15px 30px;
-    color: var(--color-secondary);
-    position: relative;
-  }
+  <style>
+    /* ===== Header Base Styles ===== */
+    .header {
+      background: var(--color-primary);
+      padding: 15px 30px;
+      color: var(--color-secondary);
+      position: relative;
+    }
 
-  .header__inner {
-    max-width: 1800px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: relative;
-  }
+    .header__inner {
+      max-width: 1800px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+    }
 
-  /* ===== Logo Styles ===== */
-  .brand__mark {
-    height: 75px;
-    transition: all 0.3s ease;
-  }
+    /* ===== Logo Styles ===== */
+    .brand__mark {
+      height: 90px;
+      transition: all 0.3s ease;
+    }
 
   /* ===== Mobile Menu Toggle ===== */
   .mobile-menu-toggle {
@@ -303,7 +288,7 @@
     }
 
     .brand__mark {
-      height: 70px;
+      height: 80px;
     }
 
     .header__social {
@@ -386,7 +371,7 @@
     }
 
     .brand__mark {
-      height: 60px;
+      height: 70px;
     }
   }
 
@@ -407,7 +392,7 @@
     }
 
     .brand__mark {
-      height: 50px;
+      height: 60px;
     }
   }
 
