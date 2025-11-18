@@ -2,8 +2,10 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.core import mail
+from social_core.exceptions import AuthForbidden
 
 from .models import DesignerProfile, UserSubscription
+from .social_pipeline import generate_username, ensure_verified_email, sync_user_details
 
 
 TEST_STORAGE_BACKENDS = {
@@ -163,3 +165,67 @@ class PasswordResetFlowTests(TestCase):
             any(fallback_email in (message.to or []) for message in mail.outbox),
             "Expected the reset email to use the profile contact address when user.email is empty",
         )
+
+
+class _DummyBackend:
+    name = "google-oauth2"
+
+
+class GoogleSocialPipelineTests(TestCase):
+    def setUp(self) -> None:
+        self.backend = _DummyBackend()
+
+    def test_generate_username_from_email_is_slugified(self):
+        data = generate_username(
+            strategy=None,
+            backend=self.backend,
+            details={"email": "Jane.Doe@example.com"},
+            user=None,
+        )
+        self.assertEqual(data["username"], "janedoeexamplecom")
+
+    def test_generate_username_appends_suffix_when_taken(self):
+        User.objects.create_user(username="janedoeexamplecom", password="unused")
+        data = generate_username(
+            strategy=None,
+            backend=self.backend,
+            details={"email": "Jane.Doe@example.com"},
+            user=None,
+        )
+        self.assertNotEqual(data["username"], "janedoeexamplecom")
+        self.assertTrue(data["username"].startswith("janedoeexamplecom"))
+
+    def test_ensure_verified_email_blocks_unverified_accounts(self):
+        with self.assertRaises(AuthForbidden):
+            ensure_verified_email(
+                strategy=None,
+                backend=self.backend,
+                details={"email": "designer@example.com"},
+                response={"email": "designer@example.com", "email_verified": False},
+            )
+
+    def test_sync_user_details_updates_profile_and_subscription(self):
+        user = User.objects.create_user(username="freshdesigner", email="", password="unused")
+        DesignerProfile.objects.filter(user=user).delete()
+        UserSubscription.objects.filter(user=user).delete()
+
+        sync_user_details(
+            strategy=None,
+            backend=self.backend,
+            user=user,
+            details={
+                "email": "fresh@example.com",
+                "first_name": "Fresh",
+                "last_name": "Designer",
+            },
+            response={"email": "fresh@example.com", "email_verified": True},
+        )
+
+        user.refresh_from_db()
+        self.assertEqual(user.email, "fresh@example.com")
+        self.assertEqual(user.first_name, "Fresh")
+        self.assertEqual(user.last_name, "Designer")
+        self.assertTrue(DesignerProfile.objects.filter(user=user).exists())
+        self.assertTrue(UserSubscription.objects.filter(user=user).exists())
+        profile = user.designer_profile
+        self.assertEqual(profile.contact_email, "fresh@example.com")
