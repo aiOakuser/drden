@@ -65,6 +65,14 @@ def env_bool(name: str, default: bool = False) -> bool:
         return False
     return default
 
+
+def env_list(name: str, default: list[str] | None = None) -> list[str]:
+    raw = os.getenv(name)
+    if raw is None or raw.strip() == "":
+        return [] if default is None else list(default)
+    normalized = raw.replace("\n", ",")
+    return [item.strip() for item in normalized.split(",") if item.strip()]
+
 # Helpful flags derived from environment for consistent HTTPS behavior
 BASE_URL_SERVER = os.getenv("BASE_URL_SERVER", "")
 SERVER_URL_IS_HTTPS = BASE_URL_SERVER.lower().startswith("https://")
@@ -154,6 +162,13 @@ SECURE_SSL_REDIRECT = env_bool(
     default=(not DEBUG or SERVER_URL_IS_HTTPS),
 )
 
+# --- Suspicious request filtering / throttling ---
+SUSPICIOUS_REQUEST_FILTER_ENABLED = env_bool("SUSPICIOUS_REQUEST_FILTER_ENABLED", default=not DEBUG)
+_configured_suspicious_patterns = env_list("SUSPICIOUS_PATH_PATTERNS")
+SUSPICIOUS_PATH_PATTERNS = _configured_suspicious_patterns or None
+SUSPICIOUS_REQUEST_RATE_LIMIT = int(os.getenv("SUSPICIOUS_REQUEST_RATE_LIMIT", "120"))
+SUSPICIOUS_REQUEST_RATE_WINDOW = int(os.getenv("SUSPICIOUS_REQUEST_RATE_WINDOW", "60"))
+
 # Make local dev origins trusted for CSRF in DEBUG mode
 if DEBUG:
     CSRF_TRUSTED_ORIGINS += [
@@ -203,6 +218,7 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "designer_portfolio.middleware.CanonicalDomainRedirectMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "designer_portfolio.middleware.SuspiciousRequestThrottleMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",  # ✅ compressed static files
     "django.contrib.sessions.middleware.SessionMiddleware",
     "designer_portfolio.middleware.UTMTrackingMiddleware",  # ✅ capture UTM/session attribution
