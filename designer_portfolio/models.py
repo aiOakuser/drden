@@ -244,6 +244,14 @@ class RejectedDesigner(models.Model):
         return f"{self.username} (Rejected on {self.rejected_at:%Y-%m-%d})"
 
 
+class DesignerQuestion(models.Model):
+    category = models.CharField(max_length=200)
+    question = models.TextField()
+
+    def __str__(self):
+        return self.question[:60]
+
+
 # ---------------- Designer Profile ----------------
 class DesignerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='designer_profile')
