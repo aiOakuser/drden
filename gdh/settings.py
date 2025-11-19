@@ -3,23 +3,24 @@ import os
 from dotenv import load_dotenv
 import socket
 import warnings
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote
 from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment variables - prioritize local .env, fallback to .env.production
-_local_env = BASE_DIR / ".env"
-_production_env = BASE_DIR / ".env.production"
+# Load environment variables - prefer developer overrides, fallback to production
+_env_candidates = [
+    BASE_DIR / ".env.local",
+    BASE_DIR / ".env",
+    BASE_DIR / ".env.production",
+]
 
-if _local_env.exists():
-    # Load local .env first for development
-    load_dotenv(dotenv_path=_local_env)
-elif _production_env.exists():
-    # Fallback to production env if no local .env exists
-    load_dotenv(dotenv_path=_production_env)
+for _env_path in _env_candidates:
+    if _env_path.exists():
+        load_dotenv(dotenv_path=_env_path)
+        break
 else:
-    # Load from default .env if it exists
+    # Load from the default search path if none of the expected files exist
     load_dotenv()
 
 
@@ -243,8 +244,8 @@ def _db_settings_from_url(database_url: str):
     return {
         "ENGINE": engine,
         "NAME": str(name),
-        "USER": parsed.username or "",
-        "PASSWORD": parsed.password or "",
+        "USER": unquote(parsed.username or ""),
+        "PASSWORD": unquote(parsed.password or ""),
         "HOST": parsed.hostname or "",
         "PORT": parsed.port or "",
         "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
@@ -387,7 +388,21 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET")
 # Redirects for social auth
 SOCIAL_AUTH_LOGIN_REDIRECT_URL = "/dashboard/"
 SOCIAL_AUTH_LOGIN_ERROR_URL = "/accounts/login/"
-SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ["email", "profile"]
+SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ["openid", "email", "profile"]
+SOCIAL_AUTH_GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS = {"prompt": "select_account"}
+SOCIAL_AUTH_PIPELINE = (
+    "social_core.pipeline.social_auth.social_details",
+    "social_core.pipeline.social_auth.social_uid",
+    "social_core.pipeline.social_auth.auth_allowed",
+    "designer_portfolio.social_pipeline.ensure_verified_email",
+    "social_core.pipeline.social_auth.social_user",
+    "social_core.pipeline.social_auth.associate_by_email",
+    "designer_portfolio.social_pipeline.generate_username",
+    "social_core.pipeline.user.create_user",
+    "social_core.pipeline.social_auth.associate_user",
+    "social_core.pipeline.social_auth.load_extra_data",
+    "designer_portfolio.social_pipeline.sync_user_details",
+)
 
 
 # --- WebAuthn / Passkeys ---

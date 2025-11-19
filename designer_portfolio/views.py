@@ -1,5 +1,6 @@
 import base64
 import json
+import os
 import uuid
 from decimal import Decimal, InvalidOperation
 from datetime import timedelta
@@ -12,7 +13,7 @@ from django.views.generic import TemplateView, DetailView, ListView
 from django.contrib.auth.views import LoginView, PasswordResetView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import login, authenticate, get_user_model
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 from django.views.decorators.csrf import requires_csrf_token
 from django.views.decorators.http import require_POST
 from django.core.mail import send_mail
@@ -24,8 +25,9 @@ from django.core.validators import URLValidator
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.urls import reverse_lazy, reverse
+from django.utils.text import slugify
 from .forms import DesignerSignUpForm, DesignerLoginForm, DesignerPasswordResetForm
 from .auth_utils import ensure_designer_access
 from .models import (
@@ -71,6 +73,66 @@ def _bytes_from_base64url(data: str) -> bytes:
         raise TypeError("data must be str")
     padding = "=" * (-len(data) % 4)
     return base64.urlsafe_b64decode(data + padding)
+
+
+def _doc_category_parts(value: str):
+    """
+    Normalize documentation categories so we can build URLs safely.
+    Returns (raw_value, label, slug).
+    """
+
+    raw_value = (value or "").strip()
+    label = raw_value or "General"
+    slug_value = slugify(label) or "general"
+    return raw_value, label, slug_value
+
+
+def _doc_categories_with_counts():
+    """
+    Return a list of dicts describing available documentation categories.
+    """
+
+    categories = []
+    qs = (
+        DocPage.objects.filter(published=True)
+        .values("category")
+        .annotate(total=Count("id"))
+        .order_by("category")
+    )
+
+    for row in qs:
+        raw_value, label, slug_value = _doc_category_parts(row["category"])
+        categories.append(
+            {
+                "value": raw_value,
+                "label": label,
+                "slug": slug_value,
+                "total": row["total"],
+            }
+        )
+
+    if not categories:
+        categories.append(
+            {
+                "value": "",
+                "label": "General",
+                "slug": "general",
+                "total": 0,
+            }
+        )
+
+    return categories
+
+
+def _filter_docs_by_category(queryset, category_value: str):
+    """
+    Apply category filter to a DocPage queryset, supporting empty/default categories.
+    """
+
+    normalized_value = (category_value or "").strip()
+    if not normalized_value:
+        return queryset.filter(Q(category__isnull=True) | Q(category=""))
+    return queryset.filter(category=normalized_value)
 
 
 def _request_wants_json(request) -> bool:
@@ -364,6 +426,62 @@ class AboutView(TemplateView):
 
 class AboutSiteView(TemplateView):
     template_name = "designer_portfolio/about_site.html"
+
+
+def docs_index(request, category_slug=None):
+    """
+    Render documentation index or category-specific listing.
+    """
+
+    categories = _doc_categories_with_counts()
+    slug_to_value = {category["slug"]: category["value"] for category in categories}
+
+    docs_queryset = DocPage.objects.filter(published=True).order_by("order", "title")
+    active_category = None
+    active_category_label = None
+
+    if category_slug:
+        category_value = slug_to_value.get(category_slug)
+        if category_value is None:
+            raise Http404("Documentation category not found.")
+        docs_queryset = _filter_docs_by_category(docs_queryset, category_value)
+        active_category = category_slug
+        _, active_category_label, _ = _doc_category_parts(category_value)
+
+    context = {
+        "categories": categories,
+        "active_category": active_category,
+        "active_category_label": active_category_label,
+        "docs": list(docs_queryset),
+    }
+    return render(request, "designer_portfolio/docs_index.html", context)
+
+
+def docs_detail(request, category_slug, doc_slug):
+    """
+    Render a single documentation page with related links.
+    """
+
+    doc = get_object_or_404(DocPage, slug=doc_slug, published=True)
+    _, category_label, doc_category_slug = _doc_category_parts(doc.category)
+
+    if doc_category_slug != category_slug:
+        raise Http404("Documentation page not found.")
+
+    categories = _doc_categories_with_counts()
+    related_docs = (
+        _filter_docs_by_category(DocPage.objects.filter(published=True).exclude(pk=doc.pk), doc.category)
+        .order_by("order", "title")[:5]
+    )
+
+    context = {
+        "doc": doc,
+        "category_label": category_label,
+        "categories": categories,
+        "related_docs": related_docs,
+        "active_category": doc_category_slug,
+    }
+    return render(request, "designer_portfolio/docs_detail.html", context)
 
 class CollectionsPageView(TemplateView):
     template_name = "designer_portfolio/collections.html"

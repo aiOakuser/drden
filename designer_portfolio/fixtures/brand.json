@@ -5,9 +5,9 @@
       "fields": {
         "name": "designer",
         "tagline": "Whome Vision Meets Style",
-        "primary_color": "#000000",
-        "secondary_color": "#FFFFFF",
-        "accent_color": "#9CA3AF",
+        "primary_color": "#0E0E0F",
+        "secondary_color": "#2A2A2C",
+        "accent_color": "#D8B57A",
         "primary_font": "Playfair Display",
         "secondary_font": "Inter",
         "created_at": "2024-01-01T00:00:00Z",

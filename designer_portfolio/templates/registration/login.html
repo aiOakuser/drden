@@ -2,24 +2,17 @@
 designer{% endblock %} {% block content %}
 <div
   class="login-container"
-  style="
-    max-width: 400px;
-    margin: 60px auto;
-    padding: 30px;
-    background: #fff;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  "
+  style="max-width: 400px; margin: 60px auto; padding: 30px; background: var(--color-secondary); border-radius: 10px; box-shadow: 0 2px 10px rgba(var(--color-primary-rgb), 0.1)"
 >
-  <h2 style="text-align: center; margin-bottom: 20px; color: #280768">
+  <h2 style="text-align: center; margin-bottom: 20px; color: var(--color-primary)">
     Designer Login
   </h2>
-  <p style="text-align: center; color: #666; font-size: 14px; margin-top: -10px; margin-bottom: 10px;">
+  <p style="text-align: center; color: var(--color-text-muted); font-size: 14px; margin-top: -10px; margin-bottom: 10px">
     Please enter a correct username and password. Note that both fields may be case-sensitive.
   </p>
 
   {% if form.errors or form.non_field_errors %}
-  <div style="color: red; text-align: center; margin-bottom: 20px">
+  <div style="color: var(--color-accent); text-align: center; margin-bottom: 20px">
     {% for error in form.non_field_errors %}
       <div>{{ error }}</div>
     {% endfor %}
@@ -51,15 +44,7 @@ designer{% endblock %} {% block content %}
       required
       maxlength="150"
       autocomplete="username"
-      style="
-        width: 100%;
-        padding: 14px;
-        border: 2px solid #e1e5e9;
-        border-radius: 8px;
-        font-size: 16px;
-        transition: all 0.3s ease;
-        box-sizing: border-box;
-      "
+      style="width: 100%; padding: 14px; border: 2px solid var(--color-border); border-radius: 8px; font-size: 16px; transition: all 0.3s ease; box-sizing: border-box"
       placeholder="Username or Email"
       value="{{ form.username.value|default:'' }}"
     />
@@ -72,32 +57,14 @@ designer{% endblock %} {% block content %}
         id="id_password"
         required
         autocomplete="current-password"
-        style="
-          width: 100%;
-          padding: 14px 44px 14px 14px;
-          border: 2px solid #e1e5e9;
-          border-radius: 8px;
-          font-size: 16px;
-          transition: all 0.3s ease;
-          box-sizing: border-box;
-        "
+        style="width: 100%; padding: 14px 44px 14px 14px; border: 2px solid var(--color-border); border-radius: 8px; font-size: 16px; transition: all 0.3s ease; box-sizing: border-box"
         placeholder="Password"
       />
       <button
         type="button"
         id="togglePassword"
         aria-label="Show password"
-        style="
-          position: absolute;
-          right: 10px;
-          top: 50%;
-          transform: translateY(-50%);
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          color: #666;
-          font-weight: 600;
-        "
+        style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: transparent; border: none; cursor: pointer; color: var(--color-text-muted); font-weight: 600"
       >Show</button>
     </div>
 
@@ -105,27 +72,17 @@ designer{% endblock %} {% block content %}
     <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
       <label style="display: flex; align-items: center; gap: 8px; cursor: pointer">
         <input type="checkbox" name="remember_me" id="id_remember_me" {% if form.remember_me.value %}checked{% else %}{% if form.remember_me.field.initial %}checked{% endif %}{% endif %} />
-        <span style="font-size: 14px; color: #333">Keep me signed in</span>
+        <span style="font-size: 14px; color: var(--color-text)">Keep me signed in</span>
       </label>
-      <button type="button" id="faceLoginBtn" style="background: #f5f5ff; color: #280768; border: 1px solid #dcd7f5; padding: 8px 12px; border-radius: 8px; font-size: 14px; cursor: pointer;">
+      <button type="button" id="faceLoginBtn" style="background: var(--color-surface); color: var(--color-primary); border: 1px solid var(--color-surface); padding: 8px 12px; border-radius: 8px; font-size: 14px; cursor: pointer">
         Use Face/Passkey
       </button>
     </div>
-    <div id="passkeyStatus" style="min-height: 18px; font-size: 13px; color: #555; margin-top: -6px; margin-bottom: 4px;" aria-live="polite"></div>
+    <div id="passkeyStatus" style="min-height: 18px; font-size: 13px; color: var(--color-text); margin-top: -6px; margin-bottom: 4px" aria-live="polite"></div>
 
     <button
       type="submit"
-      style="
-        background: linear-gradient(135deg, #280768, #3d0a85);
-        color: #fff;
-        padding: 16px;
-        border: none;
-        border-radius: 8px;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-      "
+      style="background: linear-gradient(135deg, var(--color-primary), var(--color-primary)); color: var(--color-secondary); padding: 16px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease"
     >
       Login
     </button>
@@ -134,32 +91,19 @@ designer{% endblock %} {% block content %}
   <!-- Login Actions -->
   <div
     class="login-actions"
-    style="
-      margin-top: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-    "
+    style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px"
   >
     <a
       href="{% url 'password_reset' %}"
-      style="color: #800000; text-decoration: none; font-size: 14px"
+      style="color: var(--color-primary); text-decoration: none; font-size: 14px"
     >
       Forgot your password?
     </a>
     <div class="new-user-link" style="text-align: right">
-      <span style="color: #666; font-size: 14px">New to AIOAK?</span>
+      <span style="color: var(--color-text-muted); font-size: 14px">New to AIOAK?</span>
       <a
         href="{% url 'signup' %}"
-        style="
-          color: #280768;
-          text-decoration: none;
-          font-weight: bold;
-          margin-left: 8px;
-          font-size: 14px;
-        "
+        style="color: var(--color-primary); text-decoration: none; font-weight: bold; margin-left: 8px; font-size: 14px"
       >
         Sign up
       </a>
@@ -168,7 +112,7 @@ designer{% endblock %} {% block content %}
 
   <!-- Social Login -->
   <div class="social-login-section" style="margin-top: 20px; text-align: center">
-    <p style="margin-bottom: 15px; color: #666; font-size: 14px">Or continue with</p>
+    <p style="margin-bottom: 15px; color: var(--color-text-muted); font-size: 14px">Or continue with</p>
     <div class="social-login-buttons" style="display: flex; justify-content: center; gap: 15px">
       <a href="{% url 'social:begin' 'google-oauth2' %}{% if next %}?next={{ next|urlencode }}{% endif %}"
          class="social-login-btn google" title="Sign in with Google" aria-label="Sign in with Google">
@@ -194,9 +138,9 @@ designer{% endblock %} {% block content %}
   }
 
   .social-login-btn.google {
-    background: #280768;
-    color: white;
-    border-color: #280768;
+    background: var(--color-primary);
+    color: var(--color-secondary);
+    border-color: var(--color-primary);
   }
 
   .social-login-btn.google span {
@@ -206,42 +150,42 @@ designer{% endblock %} {% block content %}
   }
 
   .social-login-btn.linkedin {
-    background: #280768;
-    color: white;
-    border-color: #280768;
+    background: var(--color-primary);
+    color: var(--color-secondary);
+    border-color: var(--color-primary);
   }
 
   .social-login-btn.instagram {
-    background: #280768;
-    color: white;
-    border-color: #280768;
+    background: var(--color-primary);
+    color: var(--color-secondary);
+    border-color: var(--color-primary);
   }
 
   .social-login-btn:hover {
     transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.2);
   }
 
   .social-login-btn.google:hover {
-    background: #db4437;
-    border-color: #db4437;
+    background: var(--color-accent);
+    border-color: var(--color-accent);
   }
 
   .social-login-btn.linkedin:hover {
-    background: #0077b5;
-    border-color: #0077b5;
+    background: var(--color-accent);
+    border-color: var(--color-accent);
   }
 
   .social-login-btn.instagram:hover {
     background: linear-gradient(
       45deg,
-      #f09433 0%,
-      #e6683c 25%,
-      #dc2743 50%,
-      #cc2366 75%,
-      #bc1888 100%
+      var(--color-accent) 0%,
+      var(--color-accent) 25%,
+      var(--color-accent) 50%,
+      var(--color-accent) 75%,
+      var(--color-accent) 100%
     );
-    border-color: #bc1888;
+    border-color: var(--color-accent);
   }
 
   /* fine-tune */
@@ -252,7 +196,7 @@ designer{% endblock %} {% block content %}
   }
 
   .new-user-link a:hover {
-    color: #1a0540 !important;
+    color: var(--color-primary) !important;
   }
 
   /* Responsive adjustments */
@@ -309,9 +253,9 @@ designer{% endblock %} {% block content %}
       }
       statusEl.textContent = message || '';
       const colors = {
-        error: '#b00020',
-        success: '#056608',
-        info: '#555555',
+        error: 'var(--color-accent)',
+        success: 'var(--color-accent)',
+        info: 'var(--color-text)',
       };
       statusEl.style.color = colors[tone] || colors.info;
     }

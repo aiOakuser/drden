@@ -115,13 +115,13 @@ text_filters %} {% block content %}
   .thumb-icon {
     position: relative;
     cursor: pointer;
-    border: 2px solid #000;
+    border: 2px solid var(--color-primary);
     padding: 2px;
     transition: transform 0.3s ease, border-color 0.3s ease;
   }
   .thumb-icon:hover {
     transform: scale(1.05);
-    border-color: #800000;
+    border-color: var(--color-primary);
   }
 
   .event-images img,
@@ -152,8 +152,8 @@ text_filters %} {% block content %}
     left: 50%;
     transform: translate(-50%, -50%);
     font-size: 40px;
-    color: #fff;
-    background: rgba(0, 0, 0, 0.6);
+    color: var(--color-secondary);
+    background: rgba(var(--color-primary-rgb), 0.6);
     border-radius: 50%;
     padding: 10px 18px;
     pointer-events: none;

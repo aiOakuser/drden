@@ -326,33 +326,33 @@
     max-width: 800px;
     margin: 40px auto;
     padding: 30px;
-    background: #fff;
+    background: var(--color-secondary);
     border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 20px rgba(var(--color-primary-rgb), 0.1);
   }
 
   .welcome-section {
     text-align: center;
     margin-bottom: 30px;
     padding-bottom: 25px;
-    border-bottom: 2px solid #f0f0f0;
+    border-bottom: 2px solid var(--color-surface-muted);
   }
 
   .welcome-section h1 {
-    color: #280768;
+    color: var(--color-primary);
     margin-bottom: 10px;
     font-size: 32px;
     font-weight: 700;
   }
 
   .welcome-section p {
-    color: #666;
+    color: var(--color-text-muted);
     font-size: 18px;
     margin-bottom: 20px;
   }
 
   .benefits {
-    color: #555;
+    color: var(--color-text);
     font-size: 14px;
     line-height: 1.8;
   }
@@ -364,20 +364,20 @@
   .signup-form h2 {
     text-align: center;
     margin-bottom: 25px;
-    color: #280768;
+    color: var(--color-primary);
     font-size: 24px;
   }
 
   .form-section {
     margin-bottom: 30px;
     padding: 25px;
-    background: #f8f9fa;
+    background: var(--color-surface);
     border-radius: 10px;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--color-border);
   }
 
   .form-section h3 {
-    color: #280768;
+    color: var(--color-primary);
     margin-bottom: 20px;
     font-size: 20px;
     display: flex;
@@ -387,7 +387,7 @@
 
   .optional {
     font-size: 14px;
-    color: #666;
+    color: var(--color-text-muted);
     font-weight: normal;
   }
 
@@ -398,14 +398,14 @@
   .form-group label {
     display: block;
     margin-bottom: 8px;
-    color: #333;
+    color: var(--color-text);
     font-weight: 600;
   }
 
   .form-group input {
     width: 100%;
     padding: 14px;
-    border: 2px solid #e1e5e9;
+    border: 2px solid var(--color-border);
     border-radius: 8px;
     font-size: 16px;
     transition: all 0.3s ease;
@@ -413,14 +413,14 @@
   }
 
   .form-group input:focus {
-    border-color: #280768;
+    border-color: var(--color-primary);
     outline: none;
-    box-shadow: 0 0 0 3px rgba(40, 7, 104, 0.1);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
   }
 
   .trial-offer {
-    background: linear-gradient(135deg, #e8f4ff, #f0f8ff);
-    border: 2px solid #007bff;
+    background: linear-gradient(135deg, var(--color-surface), var(--color-surface));
+    border: 2px solid var(--color-accent);
   }
 
   .trial-banner {
@@ -428,20 +428,20 @@
   }
 
   .trial-banner h4 {
-    color: #007bff;
+    color: var(--color-accent);
     font-size: 24px;
     margin-bottom: 10px;
   }
 
   .trial-banner p {
-    color: #555;
+    color: var(--color-text);
     margin-bottom: 15px;
   }
 
   .trial-banner ul {
     list-style: none;
     padding: 0;
-    color: #555;
+    color: var(--color-text);
   }
 
   .trial-banner li {
@@ -454,7 +454,7 @@
     content: "✓";
     position: absolute;
     left: 0;
-    color: #007bff;
+    color: var(--color-accent);
     font-weight: bold;
   }
 
@@ -476,45 +476,45 @@
   .plan-card {
     display: block;
     padding: 20px;
-    border: 2px solid #e9ecef;
+    border: 2px solid var(--color-border);
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.3s ease;
-    background: white;
+    background: var(--color-secondary);
     text-align: center;
   }
 
   .plan-card:hover {
-    border-color: #280768;
+    border-color: var(--color-primary);
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(40, 7, 104, 0.1);
+    box-shadow: 0 4px 15px rgba(var(--color-primary-rgb), 0.1);
   }
 
   .plan-option input:checked + .plan-card {
-    border-color: #280768;
-    background: rgba(40, 7, 104, 0.05);
+    border-color: var(--color-primary);
+    background: rgba(var(--color-primary-rgb), 0.05);
   }
 
   .trial-card {
-    border-color: #007bff !important;
-    background: rgba(0, 123, 255, 0.05) !important;
+    border-color: var(--color-accent) !important;
+    background: rgba(var(--color-accent-rgb), 0.05) !important;
   }
 
   .plan-header h4 {
     margin: 0 0 10px 0;
-    color: #280768;
+    color: var(--color-primary);
     font-size: 18px;
   }
 
   .price {
     font-size: 24px;
     font-weight: bold;
-    color: #280768;
+    color: var(--color-primary);
     margin-bottom: 5px;
   }
 
   .duration {
-    color: #666;
+    color: var(--color-text-muted);
     font-size: 14px;
     margin-bottom: 10px;
   }
@@ -529,13 +529,13 @@
   }
 
   .best-value {
-    background: #ff6b6b;
-    color: white;
+    background: var(--color-accent);
+    color: var(--color-secondary);
   }
 
   .save {
-    background: #4ecdc4;
-    color: white;
+    background: var(--color-accent);
+    color: var(--color-secondary);
   }
 
   .payment-methods {
@@ -553,20 +553,20 @@
     align-items: center;
     gap: 15px;
     padding: 15px;
-    border: 2px solid #e9ecef;
+    border: 2px solid var(--color-border);
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.3s ease;
-    background: white;
+    background: var(--color-secondary);
   }
 
   .payment-card:hover {
-    border-color: #280768;
+    border-color: var(--color-primary);
   }
 
   .payment-option input:checked + .payment-card {
-    border-color: #280768;
-    background: rgba(40, 7, 104, 0.05);
+    border-color: var(--color-primary);
+    background: rgba(var(--color-primary-rgb), 0.05);
   }
 
   .payment-icon {
@@ -575,12 +575,12 @@
 
   .payment-info h4 {
     margin: 0;
-    color: #280768;
+    color: var(--color-primary);
   }
 
   .payment-info p {
     margin: 4px 0 0 0;
-    color: #666;
+    color: var(--color-text-muted);
     font-size: 14px;
   }
 
@@ -600,12 +600,12 @@
   }
 
   .checkbox-item label {
-    color: #555;
+    color: var(--color-text);
     line-height: 1.5;
   }
 
   .checkbox-item a {
-    color: #280768;
+    color: var(--color-primary);
     text-decoration: none;
   }
 
@@ -615,8 +615,8 @@
 
   .submit-btn {
     width: 100%;
-    background: linear-gradient(135deg, #280768, #3d0a85);
-    color: #fff;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary));
+    color: var(--color-secondary);
     padding: 18px;
     border: none;
     border-radius: 10px;
@@ -628,19 +628,19 @@
   }
 
   .submit-btn:hover {
-    background: linear-gradient(135deg, #1a0540, #280768);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary));
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(40, 7, 104, 0.3);
+    box-shadow: 0 6px 20px rgba(var(--color-primary-rgb), 0.3);
   }
 
   .login-link {
     margin-top: 20px;
     text-align: center;
-    color: #666;
+    color: var(--color-text-muted);
   }
 
   .login-link a {
-    color: #280768;
+    color: var(--color-primary);
     text-decoration: none;
     font-weight: 600;
   }
@@ -652,13 +652,13 @@
   .review-notice {
     margin-top: 15px;
     text-align: center;
-    color: #888;
+    color: var(--color-text-muted);
     font-size: 14px;
     font-style: italic;
   }
 
   .error {
-    color: #dc3545;
+    color: var(--color-accent);
     font-size: 14px;
     margin-top: 5px;
   }
@@ -672,7 +672,7 @@
     .field-note {
       margin-top: 6px;
       font-size: 13px;
-      color: #666;
+      color: var(--color-text-muted);
       line-height: 1.5;
     }
 
