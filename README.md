@@ -1,11 +1,30 @@
 Resume.aioak.co is a secure, tech-forward application designed for fashion designers to effortlessly upload and manage their design portfolios with detailed, clean, and organized tech pack information.
 The platform offers a user-friendly interface and a robust authentication system, allowing users to sign in securely via Gmail, LinkedIn, or Instagram. Built with both usability and security in mind, Resume.aioak.co streamlines the process of presenting, storing, and sharing professional design documents in the fashion industry.
 
-## Google Login Setup (Designers)
+## Local Development Quickstart
 
-1. Create OAuth 2.0 credentials in the [Google Cloud Console](https://console.cloud.google.com/) and add the callback `https://<your-domain>/auth/complete/google-oauth2/` (and `http://localhost:8000/auth/complete/google-oauth2/` for local development).
-2. Set the following environment variables (either directly or via `.env.local`/`.env.production`):
-   - `GOOGLE_CLIENT_ID`
-   - `GOOGLE_CLIENT_SECRET`
-   - Optional: `SOCIAL_AUTH_REDIRECT_IS_HTTPS=True` when running behind HTTPS.
-3. Restart the Django app so that `social-auth-app-django` can pick up the credentials. Designers will now see the “Continue with Google” option on the login page and can sign in with their verified Google accounts.
+1. **Install dependencies**
+   ```bash
+   pip3 install --user -r requirements.txt
+   ```
+   (Feel free to use a virtual environment if your system provides `python3-venv`.)
+
+2. **Environment variables**
+   - The server now loads environment files in this order:
+     1. File specified via `DJANGO_ENV_FILE` or `ENV_FILE`
+     2. `.env.local`
+     3. `.env`
+   - To opt into production values stored in `.env.production`, explicitly set `DJANGO_LOAD_PRODUCTION_DOTENV=true`.
+   - When no file is found, Django falls back to your shell environment variables.
+
+3. **Database**
+   - By default, the project uses SQLite (e.g., `db.sqlite3` in the repo root) so you can run the site without a PostgreSQL instance.
+   - Set `DATABASE_URL` or the `DB_*` variables if you want to target PostgreSQL or another database engine.
+
+4. **Run migrations and start the server**
+   ```bash
+   python3 manage.py migrate
+   python3 manage.py runserver
+   ```
+
+This workflow avoids accidental connections to production databases and works out-of-the-box on a fresh clone.
