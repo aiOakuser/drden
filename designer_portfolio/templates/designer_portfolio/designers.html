@@ -193,47 +193,57 @@
 <style>
 /* ===== Hero Section ===== */
 .designers-hero {
-  background: linear-gradient(135deg, #280768 0%, #3d0a85 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary) 100%);
+  color: var(--color-secondary);
   padding: 120px 0 80px;
   position: relative;
   overflow: hidden;
 }
 .designers-hero::before {
   content: "";
-  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-  opacity: 0.1;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, rgba(var(--color-secondary-rgb), 0.12) 1px, transparent 1px),
+    radial-gradient(circle, rgba(var(--color-accent-rgb), 0.08) 1px, transparent 1px),
+    linear-gradient(130deg, rgba(var(--color-primary-rgb), 0.15), rgba(var(--color-primary-rgb), 0.03));
+  background-size: 4px 4px, 6px 6px, 100% 100%;
+  background-position: 0 0, 18px 18px, 0 0;
+  opacity: 0.2;
 }
 .hero-content { max-width: 1200px; margin: 0 auto; padding: 0 20px; text-align: center; position: relative; z-index: 2; }
 .hero-title { font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 900; margin-bottom: 24px; line-height: 1.1; }
-.hero-accent { display: block; font-size: 0.6em; color: #ffa500; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
-.hero-main { display: block; background: linear-gradient(45deg, #fff, #ffa500); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.hero-subtitle { font-size: 1.2rem; color: rgba(255,255,255,0.9); max-width: 600px; margin: 0 auto 40px; line-height: 1.6; }
-  .hero-note { font-size: 1rem; color: rgba(255,255,255,0.85); max-width: 620px; margin: -20px auto 40px; line-height: 1.5; background: rgba(0,0,0,0.15); padding: 12px 18px; border-radius: 12px; backdrop-filter: blur(4px); }
+.hero-accent { display: block; font-size: 0.6em; color: var(--color-accent); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+.hero-main { display: block; background: linear-gradient(45deg, var(--color-secondary), var(--color-accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.hero-subtitle { font-size: 1.2rem; color: rgba(var(--color-secondary-rgb), 0.9); max-width: 600px; margin: 0 auto 40px; line-height: 1.6; }
+  .hero-note { font-size: 1rem; color: rgba(var(--color-secondary-rgb), 0.85); max-width: 620px; margin: -20px auto 40px; line-height: 1.5; background: rgba(var(--color-primary-rgb), 0.15); padding: 12px 18px; border-radius: 12px; backdrop-filter: blur(4px); }
 .hero-stats { display: flex; justify-content: center; gap: 60px; margin-top: 60px; }
-.stat-number { display: block; font-size: 2.5rem; font-weight: 900; color: #ffa500; }
+.stat-number { display: block; font-size: 2.5rem; font-weight: 900; color: var(--color-accent); }
 
 /* ===== Main Section ===== */
-.designers-section { padding: 80px 0; background: #f8f9fa; }
+.designers-section { padding: 80px 0; background: var(--color-surface); }
 .container { max-width: 1400px; margin: 0 auto; padding: 0 20px; }
 
 /* ===== Filters ===== */
-.filters-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 50px; padding: 20px; background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-.filter-btn { padding: 10px 20px; border: 2px solid transparent; background: #f1f3f4; color: #5f6368; border-radius: 25px; font-weight: 600; transition: all 0.3s ease; }
-.filter-btn:hover, .filter-btn.active { background: #280768; color: white; border-color: #280768; transform: translateY(-2px); }
+.filters-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 50px; padding: 20px; background: var(--color-secondary); border-radius: 16px; box-shadow: 0 4px 20px rgba(var(--color-primary-rgb), 0.08); }
+.filter-btn { padding: 10px 20px; border: 2px solid transparent; background: var(--color-surface); color: var(--color-text-muted); border-radius: 25px; font-weight: 600; transition: all 0.3s ease; }
+.filter-btn:hover, .filter-btn.active { background: var(--color-primary); color: var(--color-secondary); border-color: var(--color-primary); transform: translateY(-2px); }
 
 /* ===== Designers Grid ===== */
 .designers-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; }
-.designer-card { position: relative; background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.1); transition: all 0.4s cubic-bezier(0.4,0,0.2,1); }
-.designer-card:hover { transform: translateY(-12px); box-shadow: 0 20px 60px rgba(40,7,104,0.2); }
+.designer-card { position: relative; background: var(--color-secondary); border-radius: 20px; overflow: hidden; box-shadow: 0 8px 32px rgba(var(--color-primary-rgb), 0.1); transition: all 0.4s cubic-bezier(0.4,0,0.2,1); }
+.designer-card:hover { transform: translateY(-12px); box-shadow: 0 20px 60px rgba(var(--color-primary-rgb), 0.2); }
 
 /* Increase typography for better readability on designers page */
 .designer-name { font-size: clamp(1.25rem, 2.2vw, 1.6rem); font-weight: 800; line-height: 1.25; }
-.designer-specialty { font-size: clamp(1rem, 1.8vw, 1.2rem); color: #444; font-weight: 600; margin-top: 2px; }
-.designer-bio { font-size: clamp(0.98rem, 1.6vw, 1.12rem); line-height: 1.6; color: #333; }
-.designer-meta .meta-item { font-size: clamp(0.95rem, 1.5vw, 1.05rem); color: #555; }
-  .portfolio-notice { margin-top: 16px; padding: 12px 14px; background: #fff7e6; border: 1px solid #ffe0b2; border-radius: 10px; font-size: 0.95rem; color: #9a6b1f; line-height: 1.5; }
+.designer-specialty { font-size: clamp(1rem, 1.8vw, 1.2rem); color: var(--color-text); font-weight: 600; margin-top: 2px; }
+.designer-bio { font-size: clamp(0.98rem, 1.6vw, 1.12rem); line-height: 1.6; color: var(--color-text); }
+.designer-meta .meta-item { font-size: clamp(0.95rem, 1.5vw, 1.05rem); color: var(--color-text); }
+  .portfolio-notice { margin-top: 16px; padding: 12px 14px; background: var(--color-accent-soft); border: 1px solid var(--color-accent-soft); border-radius: 10px; font-size: 0.95rem; color: var(--color-primary); line-height: 1.5; }
 
 /* Make entire card feel clickable when website exists */
 .clickable-card { cursor: pointer; }

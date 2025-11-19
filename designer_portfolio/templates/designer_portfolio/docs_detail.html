@@ -56,20 +56,20 @@
 
 <style>
   .docs-detail-hero {
-    background: #f4f3ff;
+    background: var(--color-surface);
     padding: 50px 0;
   }
 
   .docs-back-link {
     font-size: 14px;
-    color: #4a0c9c;
+    color: var(--color-primary);
     text-decoration: none;
     display: inline-block;
     margin-bottom: 12px;
   }
 
   .docs-detail-meta {
-    color: #6c7280;
+    color: var(--color-text-muted);
   }
 
   .docs-detail-layout {
@@ -79,10 +79,10 @@
   }
 
   .docs-sidebar {
-    background: #fff;
+    background: var(--color-secondary);
     border-radius: 16px;
     padding: 24px;
-    box-shadow: 0 10px 40px rgba(13, 15, 28, 0.08);
+    box-shadow: 0 10px 40px rgba(var(--color-primary-rgb), 0.08);
     align-self: flex-start;
     position: sticky;
     top: 120px;
@@ -103,13 +103,13 @@
     padding: 10px 14px;
     border-radius: 10px;
     text-decoration: none;
-    color: #1e1f24;
-    background: #f7f7fb;
+    color: var(--color-primary);
+    background: var(--color-surface);
   }
 
   .docs-category-list a.active {
-    background: #ece6ff;
-    color: #4a0c9c;
+    background: var(--color-surface);
+    color: var(--color-primary);
     font-weight: 600;
   }
 
@@ -124,15 +124,15 @@
 
   .docs-related a {
     text-decoration: none;
-    color: #4a0c9c;
+    color: var(--color-primary);
     font-weight: 500;
   }
 
   .docs-article {
-    background: #fff;
+    background: var(--color-secondary);
     border-radius: 24px;
     padding: 40px;
-    box-shadow: 0 20px 60px rgba(17, 32, 68, 0.12);
+    box-shadow: 0 20px 60px rgba(var(--color-primary-rgb), 0.12);
     line-height: 1.8;
     font-size: 18px;
   }

@@ -8,19 +8,49 @@ from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment variables - prefer developer overrides, fallback to production
-_env_candidates = [
-    BASE_DIR / ".env.local",
-    BASE_DIR / ".env",
-    BASE_DIR / ".env.production",
-]
+# Load environment variables - prioritize local .env, fallback to .env.production
+_production_env = BASE_DIR / ".env.production"
+_loaded_env = False
 
-for _env_path in _env_candidates:
-    if _env_path.exists():
-        load_dotenv(dotenv_path=_env_path)
-        break
-else:
-    # Load from the default search path if none of the expected files exist
+
+def _is_truthy(value: str | None) -> bool:
+    if value is None:
+        return False
+    return value.strip().lower() in {"1", "true", "t", "yes", "y", "on"}
+
+
+def _load_env_file(path: Path) -> bool:
+    if path.is_file():
+        load_dotenv(dotenv_path=path)
+        return True
+    return False
+
+
+_explicit_env_file = os.getenv("DJANGO_ENV_FILE") or os.getenv("ENV_FILE")
+if _explicit_env_file:
+    explicit_path = Path(_explicit_env_file)
+    if not explicit_path.is_absolute():
+        explicit_path = BASE_DIR / explicit_path
+    if _load_env_file(explicit_path):
+        _loaded_env = True
+    else:
+        warnings.warn(f"Specified env file '{explicit_path}' not found; skipping.", RuntimeWarning)
+
+if not _loaded_env:
+    for candidate in (
+        BASE_DIR / ".env.local",
+        BASE_DIR / ".env",
+    ):
+        if _load_env_file(candidate):
+            _loaded_env = True
+            break
+
+if not _loaded_env and _is_truthy(os.getenv("DJANGO_LOAD_PRODUCTION_DOTENV")):
+    if _load_env_file(_production_env):
+        _loaded_env = True
+
+if not _loaded_env:
+    # Load from default .env if it exists in parent directories
     load_dotenv()
 
 
@@ -75,6 +105,45 @@ CSRF_TRUSTED_ORIGINS = [
     "https://globaldesignerhub.com",
     "https://www.globaldesignerhub.com",
 ]
+
+# --- Canonical host enforcement ---
+CANONICAL_HOST = (os.getenv("CANONICAL_HOST") or "globaldesignerhub.com").strip().lower()
+if CANONICAL_HOST == "":
+    CANONICAL_HOST = ""
+
+_canonical_aliases_env = os.getenv("CANONICAL_REDIRECT_HOSTS")
+if _canonical_aliases_env:
+    CANONICAL_REDIRECT_HOSTS = [
+        host.strip().lower()
+        for host in _canonical_aliases_env.split(",")
+        if host.strip()
+    ]
+else:
+    CANONICAL_REDIRECT_HOSTS = []
+    if CANONICAL_HOST:
+        if CANONICAL_HOST.startswith("www."):
+            CANONICAL_REDIRECT_HOSTS.append(CANONICAL_HOST[4:])
+        else:
+            CANONICAL_REDIRECT_HOSTS.append(f"www.{CANONICAL_HOST}")
+
+CANONICAL_REDIRECT_HOSTS = [
+    host for host in CANONICAL_REDIRECT_HOSTS if host and host != CANONICAL_HOST
+]
+
+CANONICAL_DOMAIN_REDIRECT_ENABLED = env_bool(
+    "CANONICAL_DOMAIN_REDIRECT_ENABLED",
+    default=bool(CANONICAL_HOST) and not DEBUG,
+)
+
+_canonical_scheme_env = (os.getenv("CANONICAL_REDIRECT_SCHEME") or "").strip().lower()
+if _canonical_scheme_env in {"http", "https"}:
+    CANONICAL_REDIRECT_SCHEME = _canonical_scheme_env
+else:
+    CANONICAL_REDIRECT_SCHEME = "https" if (not DEBUG or SERVER_URL_IS_HTTPS) else ""
+
+for _host in [CANONICAL_HOST, *CANONICAL_REDIRECT_HOSTS]:
+    if _host and _host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_host)
 
 # In development (DEBUG=True), do not require HTTPS for cookies to allow local testing,
 # unless the configured server URL is HTTPS (e.g., production .env but DEBUG left True).
@@ -147,6 +216,7 @@ SPECTACULAR_SETTINGS = {
 # --- Middleware ---
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
+    "designer_portfolio.middleware.CanonicalDomainRedirectMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "designer_portfolio.middleware.SuspiciousRequestThrottleMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",  # ✅ compressed static files
@@ -404,7 +474,21 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET")
 # Redirects for social auth
 SOCIAL_AUTH_LOGIN_REDIRECT_URL = "/dashboard/"
 SOCIAL_AUTH_LOGIN_ERROR_URL = "/accounts/login/"
-SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ["email", "profile"]
+SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ["openid", "email", "profile"]
+SOCIAL_AUTH_GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS = {"prompt": "select_account"}
+SOCIAL_AUTH_PIPELINE = (
+    "social_core.pipeline.social_auth.social_details",
+    "social_core.pipeline.social_auth.social_uid",
+    "social_core.pipeline.social_auth.auth_allowed",
+    "designer_portfolio.social_pipeline.ensure_verified_email",
+    "social_core.pipeline.social_auth.social_user",
+    "social_core.pipeline.social_auth.associate_by_email",
+    "designer_portfolio.social_pipeline.generate_username",
+    "social_core.pipeline.user.create_user",
+    "social_core.pipeline.social_auth.associate_user",
+    "social_core.pipeline.social_auth.load_extra_data",
+    "designer_portfolio.social_pipeline.sync_user_details",
+)
 
 
 # --- WebAuthn / Passkeys ---

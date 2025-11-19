@@ -2,8 +2,10 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.core import mail
+from social_core.exceptions import AuthForbidden
 
 from .models import DesignerProfile, UserSubscription
+from .social_pipeline import generate_username, ensure_verified_email, sync_user_details
 
 
 TEST_STORAGE_BACKENDS = {
@@ -163,3 +165,25 @@ class PasswordResetFlowTests(TestCase):
             any(fallback_email in (message.to or []) for message in mail.outbox),
             "Expected the reset email to use the profile contact address when user.email is empty",
         )
+
+
+@override_settings(
+    SECURE_SSL_REDIRECT=False,
+    SESSION_COOKIE_SECURE=False,
+    CSRF_COOKIE_SECURE=False,
+    STORAGES=TEST_STORAGE_BACKENDS,
+    CANONICAL_HOST="globaldesignerhub.com",
+    CANONICAL_REDIRECT_HOSTS=["www.globaldesignerhub.com"],
+    CANONICAL_DOMAIN_REDIRECT_ENABLED=True,
+    CANONICAL_REDIRECT_SCHEME="https",
+    ALLOWED_HOSTS=["testserver", "globaldesignerhub.com", "www.globaldesignerhub.com"],
+)
+class CanonicalDomainRedirectTests(TestCase):
+    def test_www_redirects_to_canonical(self):
+        response = self.client.get("/", HTTP_HOST="www.globaldesignerhub.com")
+        self.assertEqual(response.status_code, 301)
+        self.assertEqual(response.headers.get("Location"), "https://globaldesignerhub.com/")
+
+    def test_canonical_host_serves_homepage(self):
+        response = self.client.get("/", HTTP_HOST="globaldesignerhub.com")
+        self.assertEqual(response.status_code, 200)

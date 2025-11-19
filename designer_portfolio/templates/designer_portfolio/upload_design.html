@@ -1,26 +1,26 @@
 {% extends "designer_portfolio/base.html" %}
 
 {% block content %}
-<div class="upload-design-container" style="max-width:700px; margin:40px auto; padding:20px; background:#fff; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,0.1);">
-  <h2 style="margin-bottom:20px; text-align:center;">Upload New Design & Techpack</h2>
+<div class="upload-design-container" style="max-width: 700px; margin: 40px auto; padding: 20px; background: var(--color-secondary); border-radius: 10px; box-shadow: 0 2px 10px rgba(var(--color-primary-rgb), 0.1)">
+  <h2 style="margin-bottom: 20px; text-align: center">Upload New Design & Techpack</h2>
 
   {# Intentionally removed transient flash messages to keep page clean #}
 
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
 
-    <fieldset disabled style="margin-bottom:25px; opacity:0.6;">
+    <fieldset disabled style="margin-bottom: 25px; opacity: 0.6">
       <legend><strong>Design Details</strong></legend>
       {{ design_form.as_p }}
     </fieldset>
 
-    <fieldset disabled style="margin-bottom:25px; opacity:0.6;">
+    <fieldset disabled style="margin-bottom: 25px; opacity: 0.6">
       <legend><strong>Techpack Details</strong></legend>
       {{ techpack_form.as_p }}
     </fieldset>
 
-    <div style="text-align:center;">
-      <button type="submit" disabled style="background:#800000; color:#fff; padding:10px 20px; border:none; border-radius:5px; cursor:not-allowed; opacity:0.6;">
+    <div style="text-align: center">
+      <button type="submit" disabled style="background: var(--color-primary); color: var(--color-secondary); padding: 10px 20px; border: none; border-radius: 5px; cursor: not-allowed; opacity: 0.6">
         Upload
       </button>
     </div>

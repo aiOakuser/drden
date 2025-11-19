@@ -46,7 +46,7 @@ designer{% endblock %} {% block content %}
   :root {
     --font-head: "EB Garamond", designerf;
     --font-body: "Inter", sans-designerf;
-    --maroon: #800000;
+    --maroon: var(--color-primary);
   }
 
   /* ===== Container ===== */
@@ -55,7 +55,7 @@ designer{% endblock %} {% block content %}
     margin: 0 auto;
     padding: 40px 20px;
     font-family: var(--font-body);
-    color: #111;
+    color: var(--color-primary);
   }
 
   .contact-container h1 {
@@ -96,7 +96,7 @@ designer{% endblock %} {% block content %}
   .contact-form textarea {
     font-family: var(--font-body);
     padding: 12px 14px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--color-border);
     border-radius: 6px;
     font-size: 15px;
     transition: border-color 0.3s ease;
@@ -111,7 +111,7 @@ designer{% endblock %} {% block content %}
   .contact-form button {
     font-family: var(--font-body);
     background: var(--maroon);
-    color: #fff;
+    color: var(--color-secondary);
     border: none;
     border-radius: 6px;
     padding: 12px 16px;
@@ -122,7 +122,7 @@ designer{% endblock %} {% block content %}
   }
 
   .contact-form button:hover {
-    background: #a31a1a;
+    background: var(--color-accent);
   }
 
   /* ===== Messages ===== */
@@ -133,11 +133,11 @@ designer{% endblock %} {% block content %}
   }
 
   .messages .success {
-    color: green;
+    color: var(--color-primary);
   }
 
   .messages .error {
-    color: red;
+    color: var(--color-accent);
   }
 </style>
 {% endblock %}
