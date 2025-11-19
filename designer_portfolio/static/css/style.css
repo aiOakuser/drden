@@ -82,8 +82,8 @@ img {
 }
 
 .brand__mark {
-  width: 58px;
-  height: 58px;
+  width: 116px;
+  height: 116px;
   object-fit: contain;
   transition: 0.3s ease;
 }
@@ -139,7 +139,7 @@ img {
   margin: 20px 0;
 }
 .logo-center img {
-  max-width: 180px;
+  max-width: 360px;
   height: auto;
 }
 

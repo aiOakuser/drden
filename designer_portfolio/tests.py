@@ -2,8 +2,10 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.core import mail
+from social_core.exceptions import AuthForbidden
 
 from .models import DesignerProfile, UserSubscription
+from .social_pipeline import generate_username, ensure_verified_email, sync_user_details
 
 
 TEST_STORAGE_BACKENDS = {
