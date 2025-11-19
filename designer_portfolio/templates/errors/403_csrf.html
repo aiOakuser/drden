@@ -1,24 +1,24 @@
 {% extends "designer_portfolio/base.html" %}
 {% block title %}Security Check — Please Refresh{% endblock %}
 {% block content %}
-<div style="max-width:780px;margin:60px auto;background:#fff;padding:28px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.06);">
-  <h1 style="margin:0 0 10px;color:#280768;">Security verification failed</h1>
-  <p style="color:#444;line-height:1.6;margin:0 0 16px;">
+<div style="max-width: 780px; margin: 60px auto; background: var(--color-secondary); padding: 28px; border-radius: 12px; box-shadow: 0 8px 30px rgba(var(--color-primary-rgb), 0.06)">
+  <h1 style="margin: 0 0 10px; color: var(--color-primary)">Security verification failed</h1>
+  <p style="color: var(--color-text); line-height: 1.6; margin: 0 0 16px">
     Your session may have expired or this page was open for a while. Please refresh and try again.
   </p>
 
   {% if debug and reason %}
-    <details style="margin:10px 0 18px;">
-      <summary style="cursor:pointer;color:#800000;font-weight:600;">Technical details</summary>
-      <pre style="white-space:pre-wrap;background:#fafafa;border:1px solid #eee;padding:12px;border-radius:8px;">{{ reason }}</pre>
+    <details style="margin: 10px 0 18px">
+      <summary style="cursor: pointer; color: var(--color-primary); font-weight: 600">Technical details</summary>
+      <pre style="white-space: pre-wrap; background: var(--color-surface); border: 1px solid var(--color-surface-muted); padding: 12px; border-radius: 8px">{{ reason }}</pre>
     </details>
   {% endif %}
 
-  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;">
-    <a href="" onclick="location.reload();return false;" style="background:#280768;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:600;">Refresh page</a>
-    <a href="/" style="background:#f5f5ff;color:#280768;border:1px solid #dcd7f5;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:600;">Go to home</a>
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px">
+    <a href="" onclick="location.reload();return false;" style="background: var(--color-primary); color: var(--color-secondary); padding: 10px 16px; border-radius: 8px; text-decoration: none; font-weight: 600">Refresh page</a>
+    <a href="/" style="background: var(--color-surface); color: var(--color-primary); border: 1px solid var(--color-surface); padding: 10px 16px; border-radius: 8px; text-decoration: none; font-weight: 600">Go to home</a>
     {% if not user.is_authenticated %}
-      <a href="{% url 'login' %}" style="background:#f5f5ff;color:#280768;border:1px solid #dcd7f5;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:600;">Sign in</a>
+      <a href="{% url 'login' %}" style="background: var(--color-surface); color: var(--color-primary); border: 1px solid var(--color-surface); padding: 10px 16px; border-radius: 8px; text-decoration: none; font-weight: 600">Sign in</a>
     {% endif %}
   </div>
 </div>

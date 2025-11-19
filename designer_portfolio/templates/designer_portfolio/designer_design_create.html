@@ -10,7 +10,7 @@
   {% if form_errors %}
   <div class="alert alert-error">
     <strong>We couldn't save your design yet.</strong>
-    <ul style="margin-top:10px; padding-left:18px;">
+    <ul style="margin-top: 10px; padding-left: 18px">
       {% for field, error in form_errors.items %}
       <li>{{ field|title }}: {{ error }}</li>
       {% endfor %}
@@ -458,23 +458,23 @@
   }
 
   .alert-success {
-    color: #155724;
-    background-color: #d4edda;
-    border-color: #c3e6cb;
+    color: var(--color-accent);
+    background-color: var(--color-accent-soft);
+    border-color: var(--color-accent-soft);
   }
 
   .alert-error {
-    color: #721c24;
-    background-color: #f8d7da;
-    border-color: #f5c6cb;
+    color: var(--color-primary);
+    background-color: var(--color-accent-soft);
+    border-color: var(--color-accent-soft);
   }
 
   /* Upload Progress */
   .upload-progress {
-    background: white;
+    background: var(--color-secondary);
     padding: 25px;
     border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 10px rgba(var(--color-primary-rgb), 0.1);
     margin-bottom: 30px;
   }
 
@@ -487,20 +487,20 @@
 
   .progress-header h3 {
     margin: 0;
-    color: #280768;
+    color: var(--color-primary);
     font-size: 18px;
   }
 
   .progress-percentage {
     font-weight: bold;
-    color: #280768;
+    color: var(--color-primary);
     font-size: 16px;
   }
 
   .progress-bar {
     width: 100%;
     height: 8px;
-    background: #e9ecef;
+    background: var(--color-border);
     border-radius: 4px;
     overflow: hidden;
     margin-bottom: 10px;
@@ -508,7 +508,7 @@
 
   .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #280768, #3d0a85);
+    background: linear-gradient(90deg, var(--color-primary), var(--color-primary));
     border-radius: 4px;
     transition: width 0.3s ease;
     width: 0%;
@@ -516,21 +516,21 @@
 
   .progress-status {
     font-size: 14px;
-    color: #666;
+    color: var(--color-text-muted);
   }
 
   /* Form Styles */
   .design-form {
-    background: white;
+    background: var(--color-secondary);
     padding: 30px;
     border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 10px rgba(var(--color-primary-rgb), 0.1);
   }
 
   .form-section {
     margin-bottom: 40px;
     padding-bottom: 30px;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid var(--color-border);
   }
 
   .form-section:last-of-type {
@@ -543,7 +543,7 @@
     align-items: center;
     gap: 12px;
     margin: 0 0 25px 0;
-    color: #280768;
+    color: var(--color-primary);
     font-size: 20px;
     font-weight: 600;
   }
@@ -566,7 +566,7 @@
   .form-group label {
     display: block;
     margin-bottom: 6px;
-    color: #333;
+    color: var(--color-text);
     font-weight: 600;
     font-size: 14px;
   }
@@ -574,43 +574,43 @@
   .form-control {
     width: 100%;
     padding: 12px 15px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--color-border);
     border-radius: 8px;
     font-size: 16px;
     transition: border-color 0.3s ease;
-    background: white;
+    background: var(--color-secondary);
   }
 
   .form-control:focus {
     outline: none;
-    border-color: #280768;
-    box-shadow: 0 0 0 3px rgba(40, 7, 104, 0.1);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
   }
 
   .form-text {
     display: block;
     margin-top: 6px;
     font-size: 12px;
-    color: #666;
+    color: var(--color-text-muted);
   }
 
   /* Image Upload Styles */
   .image-upload-label {
     display: block;
     margin-bottom: 10px;
-    color: #333;
+    color: var(--color-text);
     font-weight: 600;
     font-size: 14px;
   }
 
   .image-upload-area {
-    border: 2px dashed #ddd;
+    border: 2px dashed var(--color-border);
     border-radius: 12px;
     padding: 40px 20px;
     text-align: center;
     cursor: pointer;
     transition: all 0.3s ease;
-    background: #fafafa;
+    background: var(--color-surface);
     position: relative;
     min-height: 200px;
     display: flex;
@@ -619,13 +619,13 @@
   }
 
   .image-upload-area:hover {
-    border-color: #280768;
-    background: rgba(40, 7, 104, 0.02);
+    border-color: var(--color-primary);
+    background: rgba(var(--color-primary-rgb), 0.02);
   }
 
   .image-upload-area.has-image {
     padding: 0;
-    background: white;
+    background: var(--color-secondary);
   }
 
   .upload-placeholder {
@@ -640,17 +640,17 @@
 
   .upload-placeholder h4 {
     margin: 0 0 8px 0;
-    color: #333;
+    color: var(--color-text);
     font-size: 18px;
   }
 
   .upload-placeholder p {
     margin: 0 0 8px 0;
-    color: #666;
+    color: var(--color-text-muted);
   }
 
   .upload-placeholder small {
-    color: #999;
+    color: var(--color-text-soft);
     font-size: 12px;
   }
 
@@ -689,7 +689,7 @@
 
   /* File Upload Styles */
   .tech-pack-upload {
-    background: #f8f9fa;
+    background: var(--color-surface);
     padding: 25px;
     border-radius: 10px;
     margin-bottom: 20px;
@@ -701,29 +701,29 @@
 
   .upload-info h4 {
     margin: 0 0 8px 0;
-    color: #280768;
+    color: var(--color-primary);
     font-size: 16px;
   }
 
   .upload-info p {
     margin: 0;
-    color: #666;
+    color: var(--color-text-muted);
     font-size: 14px;
   }
 
   .file-upload-area {
-    border: 2px dashed #ddd;
+    border: 2px dashed var(--color-border);
     border-radius: 10px;
     padding: 30px 20px;
     text-align: center;
     cursor: pointer;
     transition: all 0.3s ease;
-    background: white;
+    background: var(--color-secondary);
   }
 
   .file-upload-area:hover {
-    border-color: #280768;
-    background: rgba(40, 7, 104, 0.02);
+    border-color: var(--color-primary);
+    background: rgba(var(--color-primary-rgb), 0.02);
   }
 
   .file-placeholder .file-icon {
@@ -734,13 +734,13 @@
 
   .file-placeholder h4 {
     margin: 0 0 5px 0;
-    color: #333;
+    color: var(--color-text);
     font-size: 16px;
   }
 
   .file-placeholder p {
     margin: 0 0 5px 0;
-    color: #666;
+    color: var(--color-text-muted);
     font-size: 14px;
   }
 
@@ -748,7 +748,7 @@
     display: flex;
     align-items: center;
     padding: 15px;
-    background: rgba(40, 7, 104, 0.05);
+    background: rgba(var(--color-primary-rgb), 0.05);
     border-radius: 8px;
   }
 
@@ -761,24 +761,24 @@
 
   .file-icon-large {
     font-size: 32px;
-    color: #280768;
+    color: var(--color-primary);
   }
 
   .file-details h5 {
     margin: 0 0 4px 0;
-    color: #333;
+    color: var(--color-text);
     font-size: 14px;
   }
 
   .file-details p {
     margin: 0;
-    color: #666;
+    color: var(--color-text-muted);
     font-size: 12px;
   }
 
   .remove-file {
-    background: #dc3545;
-    color: white;
+    background: var(--color-accent);
+    color: var(--color-secondary);
     border: none;
     border-radius: 50%;
     width: 24px;
@@ -811,7 +811,7 @@
 
   .checkbox-text {
     font-size: 14px;
-    color: #333;
+    color: var(--color-text);
   }
 
   .toggle-label {
@@ -831,7 +831,7 @@
     position: relative;
     width: 50px;
     height: 26px;
-    background: #ccc;
+    background: var(--color-border);
     border-radius: 26px;
     transition: background 0.3s ease;
   }
@@ -842,14 +842,14 @@
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background: white;
+    background: var(--color-secondary);
     top: 2px;
     left: 2px;
     transition: transform 0.3s ease;
   }
 
   .toggle-input:checked + .toggle-slider {
-    background: #280768;
+    background: var(--color-primary);
   }
 
   .toggle-input:checked + .toggle-slider::before {
@@ -859,11 +859,11 @@
   .toggle-text {
     font-size: 16px;
     font-weight: 600;
-    color: #333;
+    color: var(--color-text);
   }
 
   .publishing-options {
-    background: #f8f9fa;
+    background: var(--color-surface);
     padding: 20px;
     border-radius: 10px;
   }
@@ -873,7 +873,7 @@
     gap: 15px;
     justify-content: center;
     padding-top: 20px;
-    border-top: 1px solid #e9ecef;
+    border-top: 1px solid var(--color-border);
   }
 
   .btn {
@@ -891,25 +891,25 @@
   }
 
   .btn-primary {
-    background: linear-gradient(135deg, #280768, #3d0a85);
-    color: white;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary));
+    color: var(--color-secondary);
   }
 
   .btn-primary:hover {
-    background: linear-gradient(135deg, #1a0540, #280768);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary));
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(40, 7, 104, 0.3);
+    box-shadow: 0 4px 15px rgba(var(--color-primary-rgb), 0.3);
   }
 
   .btn-secondary {
-    background: #f8f9fa;
-    color: #666;
-    border: 1px solid #ddd;
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
   }
 
   .btn-secondary:hover {
-    background: #e9ecef;
-    color: #333;
+    background: var(--color-border);
+    color: var(--color-text);
   }
 
   /* Responsive Design */
@@ -1121,20 +1121,20 @@
     if (area) {
       area.addEventListener("dragover", function (e) {
         e.preventDefault();
-        this.style.borderColor = "#280768";
-        this.style.background = "rgba(40, 7, 104, 0.05)";
+        this.style.borderColor = "var(--color-primary)";
+        this.style.background = "rgba(var(--color-primary-rgb), 0.05)";
       });
 
       area.addEventListener("dragleave", function (e) {
         e.preventDefault();
-        this.style.borderColor = "#ddd";
-        this.style.background = "#fafafa";
+        this.style.borderColor = "var(--color-border)";
+        this.style.background = "var(--color-surface)";
       });
 
       area.addEventListener("drop", function (e) {
         e.preventDefault();
-        this.style.borderColor = "#ddd";
-        this.style.background = "#fafafa";
+        this.style.borderColor = "var(--color-border)";
+        this.style.background = "var(--color-surface)";
 
         const files = e.dataTransfer.files;
         if (files.length > 0) {

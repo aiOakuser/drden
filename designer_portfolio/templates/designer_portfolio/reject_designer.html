@@ -1,25 +1,18 @@
 {% extends "designer_portfolio/base.html" %} {% block title %}Rejected Designers
 | designer{% endblock %} {% block content %}
 <div
-  style="
-    max-width: 800px;
-    margin: 40px auto;
-    padding: 20px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  "
+  style="max-width: 800px; margin: 40px auto; padding: 20px; background: var(--color-secondary); border-radius: 8px; box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.1)"
 >
-  <h2 style="color: #b22222; margin-bottom: 20px">Rejected Designers</h2>
+  <h2 style="color: var(--color-accent); margin-bottom: 20px">Rejected Designers</h2>
 
   {% if rejected_designers %}
   <table style="width: 100%; border-collapse: collapse">
     <thead>
-      <tr style="background: #f8f8f8">
-        <th style="padding: 10px; border-bottom: 1px solid #ddd">Username</th>
-        <th style="padding: 10px; border-bottom: 1px solid #ddd">Email</th>
-        <th style="padding: 10px; border-bottom: 1px solid #ddd">Reason</th>
-        <th style="padding: 10px; border-bottom: 1px solid #ddd">
+      <tr style="background: var(--color-surface)">
+        <th style="padding: 10px; border-bottom: 1px solid var(--color-border)">Username</th>
+        <th style="padding: 10px; border-bottom: 1px solid var(--color-border)">Email</th>
+        <th style="padding: 10px; border-bottom: 1px solid var(--color-border)">Reason</th>
+        <th style="padding: 10px; border-bottom: 1px solid var(--color-border)">
           Rejected At
         </th>
       </tr>
@@ -27,28 +20,22 @@
     <tbody>
       {% for designer in rejected_designers %}
       <tr>
-        <td style="padding: 10px; border-bottom: 1px solid #eee">
+        <td style="padding: 10px; border-bottom: 1px solid var(--color-surface-muted)">
           {{ designer.username }}
         </td>
-        <td style="padding: 10px; border-bottom: 1px solid #eee">
+        <td style="padding: 10px; border-bottom: 1px solid var(--color-surface-muted)">
           {{ designer.email }}
         </td>
-        <td style="padding: 10px; border-bottom: 1px solid #eee">
+        <td style="padding: 10px; border-bottom: 1px solid var(--color-surface-muted)">
           {{ designer.reason|default:"(No reason provided)" }}
         </td>
-        <td style="padding: 10px; border-bottom: 1px solid #eee">
+        <td style="padding: 10px; border-bottom: 1px solid var(--color-surface-muted)">
           {{ designer.rejected_at|date:"Y-m-d H:i" }}
         </td>
-        <td style="padding: 10px; border-bottom: 1px solid #eee">
+        <td style="padding: 10px; border-bottom: 1px solid var(--color-surface-muted)">
           <a
             href="{% url 'reinstate_designer' designer.id %}"
-            style="
-              background: #4682b4;
-              color: #fff;
-              padding: 6px 12px;
-              border-radius: 4px;
-              text-decoration: none;
-            "
+            style="background: var(--color-accent); color: var(--color-secondary); padding: 6px 12px; border-radius: 4px; text-decoration: none"
             onclick="return confirm('Reinstate this designer account? They will return as pending approval.');"
           >
             🔄 Reinstate

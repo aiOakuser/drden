@@ -56,16 +56,16 @@
   }
 
   .collection-item {
-    background: #fff;
+    background: var(--color-secondary);
     border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 6px 16px rgba(var(--color-primary-rgb), 0.15);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
   .collection-item:hover {
     transform: translateY(-6px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-    background: darkorange;
+    box-shadow: 0 10px 20px rgba(var(--color-primary-rgb), 0.2);
+    background: var(--color-accent);
   }
 
   .collection-item img {
@@ -76,8 +76,8 @@
   }
 
   .collection-caption {
-    background: #280768;
-    color: #fff;
+    background: var(--color-primary);
+    color: var(--color-secondary);
     font-size: 15px;
     font-weight: bold;
     text-transform: uppercase;
@@ -99,7 +99,7 @@
     text-transform: uppercase;
     margin-bottom: 40px;
     text-align: center;
-    color: #280768;
+    color: var(--color-primary);
   }
 
   .designers-grid {
@@ -116,16 +116,16 @@
   }
 
   .designer-item {
-    background: #fff;
+    background: var(--color-secondary);
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px 20px rgba(var(--color-primary-rgb), 0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
 
   .designer-item:hover {
     transform: translateY(-8px);
-    box-shadow: 0 12px 30px rgba(40, 7, 104, 0.15);
+    box-shadow: 0 12px 30px rgba(var(--color-primary-rgb), 0.15);
   }
 
   .designer-card {
@@ -142,15 +142,15 @@
     height: 80px;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid #280768;
+    border: 3px solid var(--color-primary);
   }
 
   .designer-avatar {
     width: 80px;
     height: 80px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #280768, #3d0a85);
-    color: white;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary));
+    color: var(--color-secondary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -166,7 +166,7 @@
   .designer-name {
     font-size: 20px;
     font-weight: 700;
-    color: #280768;
+    color: var(--color-primary);
     margin: 0 0 8px 0;
   }
 
@@ -175,8 +175,8 @@
   }
 
   .brand-name {
-    background: linear-gradient(135deg, #280768, #3d0a85);
-    color: white;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary));
+    color: var(--color-secondary);
     padding: 4px 12px;
     border-radius: 20px;
     font-size: 12px;
@@ -188,7 +188,7 @@
   .designer-location,
   .designer-experience {
     font-size: 14px;
-    color: #666;
+    color: var(--color-text-muted);
     margin-bottom: 8px;
     display: flex;
     align-items: center;
@@ -198,13 +198,13 @@
 
   .designer-location i,
   .designer-experience i {
-    color: #280768;
+    color: var(--color-primary);
     font-size: 12px;
   }
 
   .designer-bio {
     font-size: 14px;
-    color: #555;
+    color: var(--color-text);
     line-height: 1.5;
     margin: 15px 0;
     padding: 0 10px;
@@ -228,48 +228,48 @@
     font-weight: 600;
     text-decoration: none;
     transition: all 0.3s ease;
-    color: white;
+    color: var(--color-secondary);
   }
 
   .email-btn {
-    background: #dc3545;
+    background: var(--color-accent);
   }
 
   .email-btn:hover {
-    background: #c82333;
-    color: white;
+    background: var(--color-accent);
+    color: var(--color-secondary);
   }
 
   .portfolio-btn {
-    background: #28a745;
+    background: var(--color-accent);
   }
 
   .portfolio-btn:hover {
-    background: #218838;
-    color: white;
+    background: var(--color-accent);
+    color: var(--color-secondary);
   }
 
   .instagram-btn {
-    background: #e4405f;
+    background: var(--color-accent);
   }
 
   .instagram-btn:hover {
-    background: #d73647;
-    color: white;
+    background: var(--color-accent);
+    color: var(--color-secondary);
   }
 
   .linkedin-btn {
-    background: #0077b5;
+    background: var(--color-accent);
   }
 
   .linkedin-btn:hover {
-    background: #005885;
-    color: white;
+    background: var(--color-accent);
+    color: var(--color-secondary);
   }
 
   .collaboration-badge {
-    background: #d4edda;
-    color: #155724;
+    background: var(--color-accent-soft);
+    color: var(--color-accent);
     padding: 8px 12px;
     border-radius: 20px;
     font-size: 12px;
@@ -281,14 +281,14 @@
   }
 
   .collaboration-badge i {
-    color: #28a745;
+    color: var(--color-accent);
   }
 
   .no-designers {
     grid-column: 1 / -1;
     text-align: center;
     padding: 60px 20px;
-    color: #666;
+    color: var(--color-text-muted);
     font-size: 18px;
   }
 

@@ -40,8 +40,8 @@
   <button type="button" class="arrow right" onclick="changePopup(1)" aria-label="Next media">&#10095;</button>
 
   <div class="popup-inner">
-    <img id="popup-img" class="popup-content" src="" alt="" style="display:none;">
-    <video id="popup-video" class="popup-content" controls style="display:none;"></video>
+    <img id="popup-img" class="popup-content" src="" alt="" style="display: none">
+    <video id="popup-video" class="popup-content" controls style="display: none"></video>
   </div>
 </div>
 
@@ -105,13 +105,13 @@
   .thumb-icon {
     position: relative;
     cursor: pointer;
-    border: 2px solid #000;
+    border: 2px solid var(--color-primary);
     padding: 2px;
     transition: transform 0.3s ease, border-color 0.3s ease;
   }
   .thumb-icon:hover {
     transform: scale(1.05);
-    border-color: #800000;
+    border-color: var(--color-primary);
   }
 
   .collection-images img,
@@ -136,8 +136,8 @@
     left: 50%;
     transform: translate(-50%, -50%);
     font-size: 40px;
-    color: #fff;
-    background: rgba(0,0,0,0.6);
+    color: var(--color-secondary);
+    background: rgba(var(--color-primary-rgb), 0.6);
     border-radius: 50%;
     padding: 10px 18px;
     pointer-events: none;

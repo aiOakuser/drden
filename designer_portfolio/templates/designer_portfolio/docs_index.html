@@ -64,8 +64,8 @@
 
 <style>
   .docs-hero {
-    background: linear-gradient(120deg, #260466, #4a0c9c);
-    color: #fff;
+    background: linear-gradient(120deg, var(--color-primary), var(--color-primary));
+    color: var(--color-secondary);
     padding: 60px 0;
     text-align: center;
   }
@@ -81,10 +81,10 @@
   }
 
   .docs-sidebar {
-    background: #fff;
+    background: var(--color-secondary);
     border-radius: 16px;
     padding: 24px;
-    box-shadow: 0 10px 40px rgba(13, 15, 28, 0.08);
+    box-shadow: 0 10px 40px rgba(var(--color-primary-rgb), 0.08);
     position: sticky;
     top: 120px;
     align-self: flex-start;
@@ -110,13 +110,13 @@
     padding: 10px 14px;
     border-radius: 10px;
     text-decoration: none;
-    color: #1e1f24;
-    background: #f7f7fb;
+    color: var(--color-primary);
+    background: var(--color-surface);
   }
 
   .docs-category-list a.active {
-    background: #ece6ff;
-    color: #4a0c9c;
+    background: var(--color-surface);
+    color: var(--color-primary);
     font-weight: 600;
   }
 
@@ -126,10 +126,10 @@
   }
 
   .docs-card {
-    background: #fff;
+    background: var(--color-secondary);
     border-radius: 18px;
     padding: 24px;
-    box-shadow: 0 20px 60px rgba(17, 32, 68, 0.12);
+    box-shadow: 0 20px 60px rgba(var(--color-primary-rgb), 0.12);
   }
 
   .docs-card h3 {
@@ -138,14 +138,14 @@
 
   .docs-meta {
     font-size: 14px;
-    color: #6c7280;
+    color: var(--color-text-muted);
   }
 
   .docs-link {
     display: inline-flex;
     align-items: center;
     margin-top: 10px;
-    color: #4a0c9c;
+    color: var(--color-primary);
     font-weight: 600;
     text-decoration: none;
   }
@@ -153,9 +153,9 @@
   .docs-empty {
     text-align: center;
     padding: 60px;
-    border: 2px dashed #d9dbf1;
+    border: 2px dashed var(--color-surface);
     border-radius: 24px;
-    color: #6c7280;
+    color: var(--color-text-muted);
   }
 
   @media (max-width: 960px) {
