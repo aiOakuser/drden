@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import Callable, Dict
+from typing import Callable, Dict, Iterable, Set
 
-from django.http import HttpRequest, HttpResponse
+from django.conf import settings
+from django.http import HttpRequest, HttpResponse, HttpResponsePermanentRedirect
 
 
 UTM_PARAM_NAMES = {
@@ -74,3 +75,65 @@ class UTMTrackingMiddleware:
 
         response = self.get_response(request)
         return response
+
+
+class CanonicalDomainRedirectMiddleware:
+    """
+    Ensure every request lands on the configured canonical hostname (e.g., globaldesignerhub.com).
+
+    This keeps legacy hostnames such as www.globaldesignerhub.com or HTTP variants from serving
+    stale content or bypassing the primary homepage experience.
+    """
+
+    def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]):
+        self.get_response = get_response
+        self.enabled: bool = bool(getattr(settings, "CANONICAL_DOMAIN_REDIRECT_ENABLED", False))
+        self.canonical_host: str = (getattr(settings, "CANONICAL_HOST", "") or "").strip().lower()
+        self.preferred_scheme: str = (getattr(settings, "CANONICAL_REDIRECT_SCHEME", "") or "").strip().lower()
+        if self.preferred_scheme not in {"http", "https"}:
+            self.preferred_scheme = ""
+        self.alias_hosts: Set[str] = self._normalized_aliases(
+            getattr(settings, "CANONICAL_REDIRECT_HOSTS", [])
+        )
+
+    @staticmethod
+    def _normalized_aliases(hosts: Iterable[str]) -> Set[str]:
+        normalized: Set[str] = set()
+        for host in hosts or []:
+            cleaned = CanonicalDomainRedirectMiddleware._normalize_host(host)
+            if cleaned:
+                normalized.add(cleaned)
+        return normalized
+
+    @staticmethod
+    def _normalize_host(host: str) -> str:
+        value = (host or "").strip().lower()
+        if not value:
+            return ""
+        if value.startswith("["):
+            closing = value.find("]")
+            if closing != -1:
+                return value[1:closing]
+            return value.strip("[]")
+        if ":" in value:
+            value = value.split(":", 1)[0]
+        return value
+
+    def _target_scheme(self, request: HttpRequest) -> str:
+        if self.preferred_scheme:
+            return self.preferred_scheme
+        return "https" if request.is_secure() else "http"
+
+    def __call__(self, request: HttpRequest) -> HttpResponse:
+        if not self.enabled or not self.canonical_host:
+            return self.get_response(request)
+
+        host = self._normalize_host(request.get_host())
+        if not host or host == self.canonical_host:
+            return self.get_response(request)
+
+        if host not in self.alias_hosts:
+            return self.get_response(request)
+
+        target_url = f"{self._target_scheme(request)}://{self.canonical_host}{request.get_full_path()}"
+        return HttpResponsePermanentRedirect(target_url)
