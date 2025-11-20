@@ -446,6 +446,25 @@ class PrivacyPolicyView(TemplateView):
         )
         return context
 
+class TermsOfServiceView(TemplateView):
+    template_name = "designer_portfolio/terms_of_service.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        support_email = (
+            getattr(settings, "SERI_CONTACT_EMAIL", "")
+            or getattr(settings, "ADMIN_EMAIL", "")
+            or "support@globaldesignerhub.com"
+        )
+        context.update(
+            {
+                "company_name": "GlobalDesignerHub",
+                "effective_date": "November 19, 2025",
+                "contact_email": support_email,
+            }
+        )
+        return context
+
 
 def docs_index(request, category_slug=None):
     """

@@ -1,0 +1,158 @@
+{% extends "designer_portfolio/base.html" %}
+
+{% block content %}
+<section class="legal-page">
+  <div class="legal-container">
+    <p class="legal-eyebrow">Effective {{ effective_date }}</p>
+    <h1>Terms of Service</h1>
+    <p>
+      Welcome to {{ company_name }} (“we”, “us”, “our”). These Terms of Service govern your access
+      to and use of globaldesignerhub.com, the designer dashboard, portfolio pages, and all related
+      services (collectively, the “Services”). By creating an account, using Google login, or accessing
+      the Services, you agree to these Terms.
+    </p>
+
+    <h2>1. Eligibility & Accounts</h2>
+    <ul>
+      <li>You must be at least 16 years old and able to form a binding contract.</li>
+      <li>You are responsible for maintaining the security of your login credentials.</li>
+      <li>Using Google OAuth or other single sign-on methods binds you to these Terms.</li>
+    </ul>
+
+    <h2>2. Acceptable Use</h2>
+    <p>You agree not to:</p>
+    <ul>
+      <li>Upload unlawful, infringing, or hateful content.</li>
+      <li>Attempt to access another user’s account or data.</li>
+      <li>Reverse engineer, interfere with, or disrupt the Services.</li>
+      <li>Use the platform to send spam or unauthorized marketing messages.</li>
+    </ul>
+
+    <h2>3. Content & Intellectual Property</h2>
+    <ul>
+      <li>You retain ownership of the designs, files, and portfolio content you upload.</li>
+      <li>You grant {{ company_name }} a limited license to host, display, and process that content as needed to operate the Services.</li>
+      <li>You must have the necessary rights to share any content you upload.</li>
+    </ul>
+
+    <h2>4. Subscriptions & Payments</h2>
+    <ul>
+      <li>Paid plans may be billed monthly or annually according to the plan you choose.</li>
+      <li>You authorize us and our payment processors (Stripe, PayPal) to charge the provided payment method.</li>
+      <li>All fees are non-refundable unless required by law. You can cancel future renewals at any time from the dashboard.</li>
+    </ul>
+
+    <h2>5. Privacy</h2>
+    <p>
+      Your use of the Services is also governed by our
+      <a href="{% url 'privacy_policy' %}">Privacy Policy</a>, which explains how we collect and
+      use personal information, including data received from Google when you log in.
+    </p>
+
+    <h2>6. Service Changes & Availability</h2>
+    <ul>
+      <li>We may update features, impose limits, or discontinue parts of the Services at any time.</li>
+      <li>We aim for high availability but do not guarantee uninterrupted access.</li>
+      <li>We may suspend your account if you violate these Terms or applicable laws.</li>
+    </ul>
+
+    <h2>7. Disclaimers & Liability</h2>
+    <p>
+      The Services are provided “as is” without warranties of any kind. To the fullest extent permitted
+      by law, {{ company_name }} is not liable for indirect, incidental, or consequential damages,
+      loss of profits, or loss of data.
+    </p>
+
+    <h2>8. Termination</h2>
+    <p>
+      You may stop using the Services at any time. We may suspend or terminate access if you breach
+      these Terms or create risk for other users. Upon termination, certain provisions (e.g., intellectual
+      property, disclaimers, indemnity) will continue to apply.
+    </p>
+
+    <h2>9. Governing Law</h2>
+    <p>
+      These Terms are governed by the laws of the State of Delaware, USA, without regard to conflict of
+      law principles. Disputes will be handled in the state or federal courts located in Delaware unless
+      required otherwise by consumer protection laws.
+    </p>
+
+    <h2>10. Changes to These Terms</h2>
+    <p>
+      We may update these Terms from time to time. When we do, we will revise the “Effective” date
+      and notify you via email or in-app notice for material updates. Continued use of the Services
+      after changes means you accept the revised Terms.
+    </p>
+
+    <h2>Contact Us</h2>
+    <p>
+      For questions about these Terms or to report a violation, email
+      <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.
+    </p>
+
+    <p class="legal-updated">Last updated on {{ effective_date }}.</p>
+  </div>
+</section>
+
+<style>
+  .legal-page {
+    background: var(--color-surface, #f9f9fb);
+    padding: 60px 20px;
+  }
+
+  .legal-container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: var(--color-secondary, #fff);
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+    padding: 48px;
+    line-height: 1.7;
+    color: var(--color-primary, #0f172a);
+  }
+
+  .legal-eyebrow {
+    font-size: 0.9rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted, #6b7280);
+    margin-bottom: 0.5rem;
+  }
+
+  .legal-container h1 {
+    font-size: clamp(2rem, 3vw, 2.6rem);
+    margin-bottom: 1.5rem;
+  }
+
+  .legal-container h2 {
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 1.4rem;
+  }
+
+  .legal-container p {
+    margin-bottom: 1rem;
+  }
+
+  .legal-container ul {
+    padding-left: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .legal-container ul li {
+    margin-bottom: 0.5rem;
+  }
+
+  .legal-updated {
+    margin-top: 3rem;
+    font-style: italic;
+    color: var(--color-muted, #6b7280);
+  }
+
+  @media (max-width: 640px) {
+    .legal-container {
+      padding: 32px 24px;
+    }
+  }
+</style>
+{% endblock %}

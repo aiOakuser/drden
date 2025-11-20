@@ -4,14 +4,28 @@
 {% endif %}
 
 <footer class="site-footer-light">
-  <p>© designer · 2025 AIOAK Incorporation. All rights reserved.</p>
+  <p>
+    © designer · 2025 AIOAK Incorporation. All rights reserved.
+      <span class="legal-links">
+        <a href="{% url 'terms_of_service' %}">Terms of Service</a>
+        <span aria-hidden="true"> · </span>
+        <a href="{% url 'privacy_policy' %}">Privacy Policy</a>
+      </span>
+  </p>
 </footer>
 <footer class="site-footer-dark">
-  <p>© designer · 2025 AIOAK Incorporation. All rights reserved.</p>
+  <p>
+    © designer · 2025 AIOAK Incorporation. All rights reserved.
+    <span class="legal-links">
+      <a href="{% url 'terms_of_service' %}">Terms of Service</a>
+      <span aria-hidden="true"> · </span>
+      <a href="{% url 'privacy_policy' %}">Privacy Policy</a>
+    </span>
+  </p>
 </footer>
 
 <style>
-  .site-footer-light {
+    .site-footer-light {
     background: var(--color-secondary); /* white background */
     color: var(--color-secondary); /* black text */
     text-align: center; /* center content */
@@ -28,14 +42,20 @@
     font-family: Inter, sans-serif;
   }
 
-  /* Larger screens - improve footer legibility */
-  @media (min-width: 1200px) {
-    .site-footer-light,
-    .site-footer-dark {
-      font-size: 15px;
-      padding: 6px 0;
+    .site-footer-light .legal-links a,
+    .site-footer-dark .legal-links a {
+      color: inherit;
+      text-decoration: underline;
     }
-  }
+
+    /* Larger screens - improve footer legibility */
+    @media (min-width: 1200px) {
+      .site-footer-light,
+      .site-footer-dark {
+        font-size: 15px;
+        padding: 6px 0;
+      }
+    }
 
   @media (min-width: 1440px) {
     .site-footer-light,
