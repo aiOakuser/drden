@@ -1453,6 +1453,26 @@ Whenever relevant:
 Tone: friendly, professional, and supportive of creative people. Avoid strong opinions; give options and best practices."""
 
 
+def _build_infrastructure_response() -> str:
+    """Generate a reusable explanation of GDH infrastructure details."""
+    canonical_host = getattr(settings, "CANONICAL_HOST", "globaldesignerhub.com")
+    reference_doc_path = getattr(settings, "INFRASTRUCTURE_DOC_PATH", "/docs/platform/reference-architecture")
+    return f"""Here's how {canonical_host} keeps performance high and resilient worldwide:
+
+**Platform footprint**
+- Traffic is served through a federated network of edge locations and core data centers across multiple regions.
+- Requests automatically route to the closest healthy location, and capacity can shift between partners for failover.
+
+**Providers & transparency**
+- We manage the network stack internally and integrate with several cloud + carrier-neutral facilities.
+- Specific VPS or bare-metal providers are not disclosed publicly so we can rotate infrastructure without notice.
+- The goal is consistent performance, not reliance on a single vendor.
+
+**Deep dives**
+- Architecture diagrams, data-flow notes, and compliance mappings live in our reference architecture docs: ({reference_doc_path})
+- Let me know what scenario you're planning (e.g., latency, compliance, migration) and I can highlight the right section."""
+
+
 def _get_designer_ai_responses() -> dict:
     """Returns a dictionary of common responses for fallback when AI is not available."""
     return {
@@ -1533,6 +1553,27 @@ Learn more: (/docs/designers/getting-started)"""
 You can embed your GDH portfolio on your own website using our embed widgets.
 
 For developers: (/docs/api/overview)"""
+        },
+        "infrastructure": {
+            "keywords": [
+                "infrastructure",
+                "server",
+                "servers",
+                "hosting",
+                "uptime",
+                "redundancy",
+                "datacenter",
+                "data center",
+                "vps",
+                "provider",
+                "providers",
+                "cloud",
+                "architecture",
+                "reference architecture",
+                "network",
+                "scalability",
+            ],
+            "response": _build_infrastructure_response(),
         },
         "default": {
             "response": """I'm here to help with design portfolios and GlobalDesignerHub!
