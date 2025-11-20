@@ -34,6 +34,10 @@ def _designer_seed_entries() -> list[Dict[str, Any]]:
             "contact_email": os.getenv("SERI_CONTACT_EMAIL", "").strip(),
         },
         {"username": "myrym", "portfolio_website": "https://myrym.aioak.co"},
+        {"username": "ateliernova", "portfolio_website": "https://ateliernova.aioak.co"},
+        {"username": "solstice", "portfolio_website": "https://solstice.aioak.co"},
+        {"username": "modohaus", "portfolio_website": "https://modohaus.aioak.co"},
+        {"username": "lumenknit", "portfolio_website": "https://lumenknit.aioak.co"},
     ]
 
 
