@@ -466,6 +466,178 @@ class TermsOfServiceView(TemplateView):
         return context
 
 
+class CommunityForumView(TemplateView):
+    template_name = "designer_portfolio/community_forum.html"
+
+    FAQ_FILTERS = [
+        {
+            "key": "onboarding",
+            "label": "Getting Started",
+            "description": "Access, verification, and posting basics.",
+            "icon": "fa-solid fa-rocket",
+        },
+        {
+            "key": "design_workflows",
+            "label": "Design Workflows",
+            "description": "Uploads, tech packs, and milestones.",
+            "icon": "fa-solid fa-pen-ruler",
+        },
+        {
+            "key": "collaboration",
+            "label": "Collaboration",
+            "description": "Share links, reviews, and feedback loops.",
+            "icon": "fa-solid fa-people-group",
+        },
+        {
+            "key": "subscriptions",
+            "label": "Subscriptions",
+            "description": "Billing, seats, and plan changes.",
+            "icon": "fa-solid fa-credit-card",
+        },
+        {
+            "key": "events",
+            "label": "Events",
+            "description": "AMAs, program calendar, and replays.",
+            "icon": "fa-solid fa-calendar-days",
+        },
+        {
+            "key": "ai_tools",
+            "label": "AI Co-Designer",
+            "description": "Designer AI prompts and workflows.",
+            "icon": "fa-solid fa-robot",
+        },
+        {
+            "key": "support",
+            "label": "Support & Trust",
+            "description": "Reporting abuse and urgent escalation.",
+            "icon": "fa-solid fa-shield",
+        },
+    ]
+
+    FAQ_ENTRIES = [
+        {
+            "question": "Who can join the GlobalDesignerHub Community Forum?",
+            "answer": (
+                "Every active designer account automatically gains forum access with the same "
+                "GlobalDesignerHub credentials. If your portfolio is still pending approval, you can browse "
+                "read-only threads while the trust & safety team finalizes verification. Brand partners can be "
+                "invited by an approved designer via the Community > Invite Partner flow from the dashboard."
+            ),
+            "category": "onboarding",
+            "tags": ["access", "eligibility", "partners"],
+            "updated": "Nov 2025",
+        },
+        {
+            "question": "How should I prep my profile before posting in a community topic?",
+            "answer": (
+                "Complete the Designer Dashboard > About Me section so your bio, region, and specialties show "
+                "up next to every post. Threads that link to at least one published design or collection receive "
+                "priority in the ‘Top Work-In-Progress’ feed, so publish at least one design first."
+            ),
+            "category": "onboarding",
+            "tags": ["profile", "dashboard", "visibility"],
+            "updated": "Nov 2025",
+        },
+        {
+            "question": "What qualifies as a complete design upload when I request critique?",
+            "answer": (
+                "A critique-ready post should include: the design slug (copied from the design detail page), "
+                "at least one cover image, a short goal statement, and any tech pack files you are comfortable "
+                "sharing. Community moderators flag posts missing visuals so please upload via Designs > Upload Design beforehand."
+            ),
+            "category": "design_workflows",
+            "tags": ["design upload", "tech pack", "feedback"],
+            "updated": "Nov 2025",
+        },
+        {
+            "question": "Can I invite a brand partner or mentor into a private feedback thread?",
+            "answer": (
+                "Yes. Create a private feedback channel from the thread action menu, then add any verified "
+                "GlobalDesignerHub email or send a one-time guest link that expires in 7 days. Guests can comment, "
+                "annotate images, and leave timestamped notes but cannot see unpublished designs outside the thread."
+            ),
+            "category": "collaboration",
+            "tags": ["feedback", "guests", "sharing"],
+            "updated": "Oct 2025",
+        },
+        {
+            "question": "Is forum access included in my subscription and what about archived teams?",
+            "answer": (
+                "All paid and trial GlobalDesignerHub subscriptions include full forum participation. If your "
+                "subscription lapses, you retain read-only access for 30 days so you can export any bookmarked "
+                "threads before the workspace is archived. Re-subscribe at any time to reopen posting privileges."
+            ),
+            "category": "subscriptions",
+            "tags": ["billing", "plans", "access"],
+            "updated": "Sep 2025",
+        },
+        {
+            "question": "Where do I find community AMAs, challenges, and event replays?",
+            "answer": (
+                "Open Events in the main navigation for upcoming sessions, then visit the pinned ‘Event Recaps’ "
+                "collection inside the forum to watch recordings, download decks, and follow challenge rules. "
+                "Each event thread includes filters for format (AMA, workshop, call for entries) and deadlines."
+            ),
+            "category": "events",
+            "tags": ["calendar", "replay", "challenges"],
+            "updated": "Oct 2025",
+        },
+        {
+            "question": "How does the Designer AI assistant support threads inside the forum?",
+            "answer": (
+                "You can highlight any message and choose “Summarize with Designer AI” to receive a brief, "
+                "attributed recap. The assistant also suggests follow-up prompts based on your portfolio data "
+                "and can draft replies from the Designer AI Chat widget embedded on the right rail."
+            ),
+            "category": "ai_tools",
+            "tags": ["ai", "summaries", "automation"],
+            "updated": "Nov 2025",
+        },
+        {
+            "question": "How do I escalate urgent issues or report abuse in the community?",
+            "answer": (
+                "Use the Flag option on any post to alert moderators within minutes. For urgent safety or IP "
+                "concerns, email support@globaldesignerhub.com with links to the affected threads. We maintain a "
+                "24/7 incident channel and will update you within one business day."
+            ),
+            "category": "support",
+            "tags": ["safety", "moderation", "abuse reports"],
+            "updated": "Always on",
+        },
+    ]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        forum_url = getattr(
+            settings,
+            "COMMUNITY_FORUM_URL",
+            "https://community.globaldesignerhub.com",
+        )
+
+        category_lookup = {item["key"]: item for item in self.FAQ_FILTERS}
+        faq_entries = []
+        for entry in self.FAQ_ENTRIES:
+            enriched_entry = entry.copy()
+            category_meta = category_lookup.get(entry["category"], {})
+            enriched_entry["category_label"] = category_meta.get(
+                "label", entry["category"].replace("_", " ").title()
+            )
+            enriched_entry["category_icon"] = category_meta.get(
+                "icon", "fa-solid fa-circle"
+            )
+            enriched_entry["tags"] = entry.get("tags", [])
+            faq_entries.append(enriched_entry)
+
+        context.update(
+            {
+                "community_forum_url": forum_url,
+                "faq_filters": self.FAQ_FILTERS,
+                "faq_entries": faq_entries,
+            }
+        )
+        return context
+
+
 def docs_index(request, category_slug=None):
     """
     Render documentation index or category-specific listing.

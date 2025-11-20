@@ -38,6 +38,7 @@ from .views import (
     my_conversations,
     PrivacyPolicyView,
     TermsOfServiceView,
+    CommunityForumView,
 )
 
 router = DefaultRouter()
@@ -66,6 +67,7 @@ urlpatterns = [
     
     path("about/", AboutView.as_view(), name="about"),   # ✅ fix added here
     path("about-site/", AboutSiteView.as_view(), name="about_site"),
+    path("community/forum/", CommunityForumView.as_view(), name="community_forum"),
     path("privacy/", PrivacyPolicyView.as_view(), name="privacy_policy"),
     path("terms/", TermsOfServiceView.as_view(), name="terms_of_service"),
     path("docs/<slug:category_slug>/<slug:doc_slug>/", docs_detail, name="docs_detail"),
