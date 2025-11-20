@@ -1,0 +1,148 @@
+{% extends "designer_portfolio/base.html" %}
+
+{% block content %}
+<section class="legal-page">
+  <div class="legal-container">
+    <p class="legal-eyebrow">Effective {{ effective_date }}</p>
+    <h1>Privacy Policy</h1>
+    <p>
+      This Privacy Policy explains how {{ company_name }} (“we”, “us”, or “our”) collects,
+      uses, and protects information when you visit globaldesignerhub.com or use any of our
+      products, including the designer dashboard, portfolio pages, and Google OAuth login.
+    </p>
+
+    <h2>Information We Collect</h2>
+    <ul>
+      <li><strong>Account details:</strong> name, username, email address, and password.</li>
+      <li><strong>Designer portfolio content:</strong> brand story, designs, images, tech packs, and any files you upload.</li>
+      <li><strong>Usage data:</strong> log data, device information, browser type, and pages visited.</li>
+      <li><strong>Third‑party sign‑in data:</strong> when you use Google login we receive your name, email, and profile image.</li>
+      <li><strong>Support communications:</strong> messages you send us via email or in-product contact forms.</li>
+    </ul>
+
+    <h2>How We Use Your Information</h2>
+    <ul>
+      <li>Authenticate logins and secure your account.</li>
+      <li>Provide portfolio hosting, design collaboration, and dashboard features.</li>
+      <li>Send transactional emails (password resets, subscription notices, system alerts).</li>
+      <li>Improve site performance, troubleshoot issues, and develop new features.</li>
+      <li>Comply with legal obligations and enforce our Terms of Service.</li>
+    </ul>
+
+    <h2>Sharing & Disclosure</h2>
+    <p>
+      We only share personal information with:
+    </p>
+    <ul>
+      <li>Vetted service providers (hosting, analytics, payment processors) that support our platform.</li>
+      <li>Law enforcement or regulators when required by law or to protect rights, safety, or property.</li>
+      <li>Other users only when you intentionally make portfolio content public.</li>
+    </ul>
+    <p>We do not sell personal data.</p>
+
+    <h2>Cookies & Tracking</h2>
+    <p>
+      We use cookies and similar technologies to keep you signed in, remember preferences, and
+      measure product usage. You can manage cookies directly in your browser settings; disabling
+      cookies may limit certain features.
+    </p>
+
+    <h2>Data Retention & Security</h2>
+    <p>
+      We retain account data as long as needed to deliver the service or as required by law.
+      We apply administrative, technical, and physical safeguards; however, no online platform
+      can guarantee absolute security, so please use strong passwords and protect your devices.
+    </p>
+
+    <h2>Your Choices & Rights</h2>
+    <ul>
+      <li>Access or update your information via the designer dashboard.</li>
+      <li>Request account deletion by contacting us at <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.</li>
+      <li>Opt out of marketing emails using the unsubscribe link; we may still send transactional notices.</li>
+      <li>Disable Google OAuth access in your Google Account security settings.</li>
+    </ul>
+
+    <h2>Children</h2>
+    <p>
+      {{ company_name }} is intended for professionals aged 16 and older. We do not knowingly collect
+      information from children. If you believe a minor has provided data, contact us so we can remove it.
+    </p>
+
+    <h2>Changes to This Policy</h2>
+    <p>
+      We may update this Privacy Policy to reflect product changes or legal requirements. We will post
+      the revised date at the top of this page and, when material, notify you by email or in-app notice.
+    </p>
+
+    <h2>Contact Us</h2>
+    <p>
+      Questions or requests about privacy can be sent to
+      <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>. We aim to respond within two business days.
+    </p>
+
+    <p class="legal-updated">Last updated on {{ effective_date }}.</p>
+  </div>
+</section>
+
+<style>
+  .legal-page {
+    background: var(--color-surface, #f9f9fb);
+    padding: 60px 20px;
+  }
+
+  .legal-container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: var(--color-secondary, #fff);
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+    padding: 48px;
+    line-height: 1.7;
+    color: var(--color-primary, #0f172a);
+  }
+
+  .legal-eyebrow {
+    font-size: 0.9rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted, #6b7280);
+    margin-bottom: 0.5rem;
+  }
+
+  .legal-container h1 {
+    font-size: clamp(2rem, 3vw, 2.6rem);
+    margin-bottom: 1.5rem;
+  }
+
+  .legal-container h2 {
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 1.4rem;
+  }
+
+  .legal-container p {
+    margin-bottom: 1rem;
+  }
+
+  .legal-container ul {
+    padding-left: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .legal-container ul li {
+    margin-bottom: 0.5rem;
+  }
+
+  .legal-updated {
+    margin-top: 3rem;
+    font-style: italic;
+    color: var(--color-muted, #6b7280);
+  }
+
+  @media (max-width: 640px) {
+    .legal-container {
+      padding: 32px 24px;
+    }
+  }
+</style>
+{% endblock %}
