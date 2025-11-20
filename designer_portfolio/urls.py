@@ -36,6 +36,7 @@ from .views import (
     DesignersListView,
     designer_ai_chat,
     my_conversations,
+    PrivacyPolicyView,
 )
 
 router = DefaultRouter()
@@ -64,6 +65,7 @@ urlpatterns = [
     
     path("about/", AboutView.as_view(), name="about"),   # ✅ fix added here
     path("about-site/", AboutSiteView.as_view(), name="about_site"),
+    path("privacy/", PrivacyPolicyView.as_view(), name="privacy_policy"),
     path("docs/<slug:category_slug>/<slug:doc_slug>/", docs_detail, name="docs_detail"),
     path("docs/<slug:category_slug>/", docs_index, name="docs_category"),
     path("docs/", docs_index, name="docs_index"),
