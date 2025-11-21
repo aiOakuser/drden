@@ -28,6 +28,7 @@ from django.db import transaction
 from django.db.models import Q, Count
 from django.urls import reverse_lazy, reverse
 from django.utils.text import slugify
+from urllib.parse import urlencode
 from .forms import DesignerSignUpForm, DesignerLoginForm, DesignerPasswordResetForm
 from .auth_utils import ensure_designer_access
 from .models import (
@@ -779,6 +780,17 @@ class CommunityForumView(TemplateView):
         },
     ]
 
+    def _build_filter_url(self, topic_key: str, search_query: str) -> str:
+        normalized_topic = (topic_key or "").strip()
+        normalized_query = (search_query or "").strip()
+        params = {}
+        if normalized_topic and normalized_topic != "all":
+            params["topic"] = normalized_topic
+        if normalized_query:
+            params["q"] = normalized_query
+        query_string = urlencode(params)
+        return f"{self.request.path}?{query_string}" if query_string else self.request.path
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         forum_url = getattr(
@@ -787,25 +799,64 @@ class CommunityForumView(TemplateView):
             "https://community.globaldesignerhub.com",
         )
 
-        category_lookup = {item["key"]: item for item in self.FAQ_FILTERS}
+        search_query = (self.request.GET.get("q") or "").strip()
+        active_filter = (self.request.GET.get("topic") or "all").strip() or "all"
+        valid_categories = {item["key"] for item in self.FAQ_FILTERS}
+        if active_filter != "all" and active_filter not in valid_categories:
+            active_filter = "all"
+
+        filter_items = []
+        for item in self.FAQ_FILTERS:
+            item_copy = item.copy()
+            item_copy["url"] = self._build_filter_url(item["key"], search_query)
+            item_copy["is_active"] = item["key"] == active_filter
+            filter_items.append(item_copy)
+
+        category_lookup = {item["key"]: item for item in filter_items}
         faq_entries = []
-        for entry in self.FAQ_ENTRIES:
+        has_visible_faqs = False
+        search_query_lower = search_query.lower()
+
+        for idx, entry in enumerate(self.FAQ_ENTRIES):
             enriched_entry = entry.copy()
-            category_meta = category_lookup.get(entry["category"], {})
+            category_meta = category_lookup.get(entry["category"], {}) or {
+                "label": entry["category"].replace("_", " ").title(),
+                "icon": "fa-solid fa-circle",
+            }
             enriched_entry["category_label"] = category_meta.get(
                 "label", entry["category"].replace("_", " ").title()
             )
             enriched_entry["category_icon"] = category_meta.get(
                 "icon", "fa-solid fa-circle"
             )
-            enriched_entry["tags"] = entry.get("tags", [])
+            tags = entry.get("tags", [])
+            enriched_entry["tags"] = tags
+            search_components = [
+                enriched_entry["question"],
+                enriched_entry["answer"],
+                " ".join(tags),
+                enriched_entry["category_label"],
+            ]
+            search_blob = " ".join(filter(None, search_components))
+            matches_filter = active_filter == "all" or entry["category"] == active_filter
+            matches_search = not search_query_lower or search_query_lower in search_blob.lower()
+            should_show = matches_filter and matches_search
+            has_visible_faqs = has_visible_faqs or should_show
+            safe_slug = slugify(entry["question"]) or f"{entry['category']}-{idx}"
+            enriched_entry["html_id"] = f"faq-{safe_slug}"
+            enriched_entry["search_blob"] = search_blob
+            enriched_entry["should_show"] = should_show
             faq_entries.append(enriched_entry)
 
         context.update(
             {
                 "community_forum_url": forum_url,
-                "faq_filters": self.FAQ_FILTERS,
+                "faq_filters": filter_items,
                 "faq_entries": faq_entries,
+                "active_faq_filter": active_filter,
+                "search_query": search_query,
+                "all_filter_url": self._build_filter_url("all", search_query),
+                "has_visible_faqs": has_visible_faqs,
             }
         )
         return context

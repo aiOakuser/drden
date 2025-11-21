@@ -101,6 +101,12 @@
     gap: 0.5rem;
   }
 
+  .forum-search form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
   .forum-search input {
     padding: 0.95rem 1.25rem;
     border-radius: 16px;
@@ -293,43 +299,69 @@
 
   <div class="forum-toolbar">
     <div class="forum-search">
-      <label for="faq-search">Search FAQs</label>
-      <input
-        id="faq-search"
-        type="search"
-        name="q"
-        placeholder="Search by keyword, tag, or question…"
-        autocomplete="off"
-        aria-label="Search GlobalDesignerHub forum FAQs"
-      />
+      <form method="get" id="faq-search-form">
+        <label for="faq-search">Search FAQs</label>
+        <input
+          id="faq-search"
+          type="search"
+          name="q"
+          placeholder="Search by keyword, tag, or question…"
+          autocomplete="off"
+          aria-label="Search GlobalDesignerHub forum FAQs"
+          value="{{ search_query|default_if_none:'' }}"
+        />
+        {% if active_faq_filter != "all" %}
+        <input type="hidden" name="topic" value="{{ active_faq_filter }}" />
+        {% endif %}
+        <button type="submit" class="visually-hidden">Search FAQs</button>
+      </form>
     </div>
 
     <div class="forum-filters" role="group" aria-label="FAQ categories">
-      <button type="button" class="forum-filter active" data-filter="all" aria-pressed="true">
+      <a
+        href="{{ all_filter_url }}"
+        class="forum-filter{% if active_faq_filter == 'all' %} active{% endif %}"
+        data-filter="all"
+        role="button"
+        aria-pressed="{% if active_faq_filter == 'all' %}true{% else %}false{% endif %}"
+      >
         <i class="fa-solid fa-layer-group"></i>
         <div>
           <span>All topics</span>
           <small>Every GlobalDesignerHub FAQ</small>
         </div>
-      </button>
+      </a>
       {% for filter in faq_filters %}
-      <button type="button" class="forum-filter" data-filter="{{ filter.key }}" aria-pressed="false">
+      <a
+        href="{{ filter.url }}"
+        class="forum-filter{% if filter.is_active %} active{% endif %}"
+        data-filter="{{ filter.key }}"
+        role="button"
+        aria-pressed="{{ filter.is_active|yesno:'true,false' }}"
+      >
         <i class="{{ filter.icon }}"></i>
         <div>
           <span>{{ filter.label }}</span>
           <small>{{ filter.description }}</small>
         </div>
-      </button>
+      </a>
       {% endfor %}
     </div>
   </div>
 
-  <div class="forum-faqs" id="forum-faq-grid">
+  <div
+    class="forum-faqs"
+    id="forum-faq-grid"
+    data-initial-filter="{{ active_faq_filter|default:'all' }}"
+    data-initial-search="{{ search_query|default_if_none:''|escape }}"
+  >
     {% for faq in faq_entries %}
     <article
+      id="{{ faq.html_id }}"
       class="forum-faq-card"
       data-category="{{ faq.category }}"
-      data-searchable="{{ faq.question|escape }} {{ faq.answer|escape }} {{ faq.tags|join:' '|escape }}"
+      data-searchable="{{ faq.search_blob|escape }}"
+      {% if not faq.should_show %}style="display: none;"{% endif %}
     >
       <header>
         <span class="forum-chip">
@@ -351,7 +383,7 @@
     {% endfor %}
   </div>
 
-  <div class="forum-empty-state" hidden>
+  <div class="forum-empty-state" {% if has_visible_faqs %}hidden{% endif %}>
     <p>
       No FAQs match this filter yet. Try another topic or jump straight into the live community experience.
     </p>
@@ -385,17 +417,61 @@
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     const searchInput = document.getElementById("faq-search");
-    const filterButtons = document.querySelectorAll(".forum-filter");
-    const cards = document.querySelectorAll(".forum-faq-card");
+    const searchForm = document.getElementById("faq-search-form");
+    const filterButtons = Array.from(document.querySelectorAll(".forum-filter"));
+    const cards = Array.from(document.querySelectorAll(".forum-faq-card"));
     const emptyState = document.querySelector(".forum-empty-state");
-    let activeFilter = "all";
+    const faqGrid = document.getElementById("forum-faq-grid");
+
+    if (!searchInput || !faqGrid || !cards.length) {
+      return;
+    }
+
+    let activeFilter = (faqGrid.dataset.initialFilter || "all").toLowerCase();
+    const initialSearch = faqGrid.dataset.initialSearch || "";
+    if (!searchInput.value) {
+      searchInput.value = initialSearch;
+    }
+
+    const syncSearchForm = () => {
+      if (!searchForm) {
+        return;
+      }
+      let topicField = searchForm.querySelector('input[name="topic"]');
+      if (activeFilter !== "all") {
+        if (!topicField) {
+          topicField = document.createElement("input");
+          topicField.type = "hidden";
+          topicField.name = "topic";
+          searchForm.appendChild(topicField);
+        }
+        topicField.value = activeFilter;
+      } else if (topicField) {
+        topicField.remove();
+      }
+    };
+
+    const updateUrl = (term) => {
+      const params = new URLSearchParams();
+      if (activeFilter && activeFilter !== "all") {
+        params.set("topic", activeFilter);
+      }
+      if (term) {
+        params.set("q", term);
+      }
+      const query = params.toString();
+      const newUrl = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+      if (newUrl !== window.location.pathname + window.location.search) {
+        window.history.replaceState({}, "", newUrl);
+      }
+    };
 
     const applyFilters = () => {
       const term = (searchInput.value || "").trim().toLowerCase();
       let visibleCount = 0;
 
       cards.forEach((card) => {
-        const matchesFilter = activeFilter === "all" || card.dataset.category === activeFilter;
+        const matchesFilter = activeFilter === "all" || (card.dataset.category || "") === activeFilter;
         const searchable = (card.dataset.searchable || "").toLowerCase();
         const matchesSearch = !term || searchable.includes(term);
         const shouldShow = matchesFilter && matchesSearch;
@@ -408,22 +484,57 @@
       if (emptyState) {
         emptyState.hidden = visibleCount !== 0;
       }
+
+      syncSearchForm();
+      updateUrl(term);
+    };
+
+    const setActiveButton = (target) => {
+      filterButtons.forEach((btn) => {
+        const isActive = btn === target;
+        btn.classList.toggle("active", isActive);
+        btn.setAttribute("aria-pressed", isActive ? "true" : "false");
+      });
     };
 
     filterButtons.forEach((button) => {
-      button.addEventListener("click", () => {
-        filterButtons.forEach((btn) => {
-          btn.classList.remove("active");
-          btn.setAttribute("aria-pressed", "false");
-        });
-        button.classList.add("active");
-        button.setAttribute("aria-pressed", "true");
-        activeFilter = button.dataset.filter || "all";
+      button.addEventListener("click", (event) => {
+        const isModifiedClick =
+          event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button === 1;
+        if (isModifiedClick) {
+          return;
+        }
+        event.preventDefault();
+        const newFilter = (button.dataset.filter || "all").toLowerCase();
+        if (newFilter === activeFilter) {
+          setActiveButton(button);
+          updateUrl((searchInput.value || "").trim().toLowerCase());
+          return;
+        }
+        activeFilter = newFilter;
+        setActiveButton(button);
         applyFilters();
       });
     });
 
+    if (searchForm) {
+      searchForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        applyFilters();
+      });
+    }
+
     searchInput.addEventListener("input", applyFilters);
+
+    const initialButton = filterButtons.find(
+      (btn) => (btn.dataset.filter || "all").toLowerCase() === activeFilter
+    );
+    if (initialButton) {
+      setActiveButton(initialButton);
+    }
+
+    syncSearchForm();
+    applyFilters();
   });
 </script>
 {% endblock %}
