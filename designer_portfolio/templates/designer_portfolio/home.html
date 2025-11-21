@@ -82,6 +82,65 @@
   </div>
 </section>
 
+{% if global_fashion_cities %}
+<!-- Global Cities Section -->
+<section class="global-cities" aria-label="Global designer cities">
+  <div class="container">
+    <div class="global-cities-header">
+      <p class="section-eyebrow">Global network</p>
+      <h2 class="section-title">Designers across iconic cities</h2>
+      <p class="global-cities-description">
+        Our community stretches from historic ateliers in Paris to cinematic studios in Los Angeles,
+        showcasing fashion voices across every major creative capital.
+      </p>
+    </div>
+
+    <div class="cities-grid">
+      {% for city in global_fashion_cities %}
+      <article class="city-card">
+        <div class="city-card-header">
+          <div class="city-identity">
+            <span class="city-flag" aria-hidden="true">{{ city.flag }}</span>
+            <div>
+              <h3 class="city-name">{{ city.name }}</h3>
+              <p class="city-region">{{ city.region }}</p>
+            </div>
+          </div>
+          <div class="city-spotlight">
+            <span class="spotlight-label">Spotlight</span>
+            <span class="spotlight-event">{{ city.spotlight_event }}</span>
+          </div>
+        </div>
+        <p class="city-tagline">{{ city.tagline }}</p>
+        <div class="city-meta">
+          <div class="meta-block">
+            <span class="meta-label">Signature style</span>
+            <p class="meta-value">{{ city.signature_style }}</p>
+          </div>
+          <div class="meta-block">
+            <span class="meta-label">Focus areas</span>
+            <p class="meta-value">
+                {% with focus_list=city.specialties|slice:":2" %}
+                  {{ focus_list|join:", " }}
+                {% endwith %}
+                {% with extra_focus=city.specialties|slice:"2:" %}
+                  {% if extra_focus %}+{{ extra_focus|length }} more{% endif %}
+                {% endwith %}
+            </p>
+          </div>
+        </div>
+        <div class="city-chips" aria-label="Key specialties">
+          {% for specialty in city.specialties %}
+          <span class="chip">{{ specialty }}</span>
+          {% endfor %}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
 <!-- Featured Designers Slideshow -->
 <section class="featured-designers" aria-label="Featured Fashion Designers">
   <div class="container">
@@ -317,6 +376,150 @@
     justify-content: center;
     flex-wrap: wrap;
   }
+
+    /* Global Cities Section */
+    .global-cities {
+      padding: 80px 0;
+      background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-border) 100%);
+    }
+
+    .global-cities-header {
+      text-align: center;
+      max-width: 780px;
+      margin: 0 auto 50px;
+    }
+
+    .section-eyebrow {
+      display: inline-block;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      font-size: 0.85rem;
+      color: var(--color-accent);
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+
+    .global-cities-description {
+      font-size: 1.1rem;
+      color: var(--color-text);
+      line-height: 1.7;
+      margin-top: 15px;
+    }
+
+    .cities-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+    }
+
+    .city-card {
+      background: var(--color-secondary);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 20px 40px rgba(var(--color-primary-rgb), 0.1);
+      border: 1px solid rgba(var(--color-primary-rgb), 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .city-card-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .city-identity {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .city-flag {
+      font-size: 2rem;
+    }
+
+    .city-name {
+      margin: 0;
+      font-size: 1.3rem;
+      color: var(--color-primary);
+    }
+
+    .city-region {
+      margin: 4px 0 0;
+      font-size: 0.95rem;
+      color: var(--color-text-muted);
+    }
+
+    .city-spotlight {
+      text-align: right;
+    }
+
+    .spotlight-label {
+      display: block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--color-text-muted);
+    }
+
+    .spotlight-event {
+      display: block;
+      font-weight: 700;
+      color: var(--color-accent);
+      white-space: nowrap;
+    }
+
+    .city-tagline {
+      margin: 0;
+      font-size: 1rem;
+      color: var(--color-text);
+      line-height: 1.5;
+    }
+
+    .city-meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .meta-block {
+      background: var(--color-surface);
+      border-radius: 14px;
+      padding: 16px;
+      border: 1px solid rgba(var(--color-primary-rgb), 0.06);
+    }
+
+    .meta-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--color-text-muted);
+      font-weight: 600;
+    }
+
+    .meta-value {
+      margin: 6px 0 0;
+      font-weight: 600;
+      color: var(--color-primary);
+    }
+
+    .city-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .chip {
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(var(--color-primary-rgb), 0.08);
+      color: var(--color-primary);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
 
   /* Container */
   .container {
@@ -810,6 +1013,22 @@
 
   /* Responsive Design */
   @media (max-width: 768px) {
+      .global-cities {
+        padding: 60px 0;
+      }
+
+      .city-card {
+        padding: 22px;
+      }
+
+      .city-meta {
+        grid-template-columns: 1fr;
+      }
+
+      .spotlight-event {
+        white-space: normal;
+      }
+
     .hero-cta {
       flex-direction: column;
       align-items: center;

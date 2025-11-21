@@ -418,6 +418,100 @@ class HomePageView(TemplateView):
         except Exception:
             # Fallback to an empty list if the database or model is unavailable
             context["collections"] = []
+
+        # Highlight the global footprint of the designer community
+        context["global_fashion_cities"] = [
+            {
+                "name": "Paris",
+                "region": "France",
+                "flag": "🇫🇷",
+                "tagline": "Haute couture heritage with boundary-pushing ateliers.",
+                "signature_style": "Couture story-driven runway",
+                "spotlight_event": "Paris Fashion Week",
+                "specialties": ["Couture", "Luxury ready-to-wear", "Maison ateliers"],
+            },
+            {
+                "name": "New York",
+                "region": "United States",
+                "flag": "🇺🇸",
+                "tagline": "Editorial energy meets street-ready sophistication.",
+                "signature_style": "Runway-to-retail innovation",
+                "spotlight_event": "New York Fashion Week",
+                "specialties": ["Streetwear", "Editorial styling", "Fashion tech"],
+            },
+            {
+                "name": "Mumbai (Bombay)",
+                "region": "India",
+                "flag": "🇮🇳",
+                "tagline": "Cinematic drama and craft-first couture.",
+                "signature_style": "Embellished occasionwear",
+                "spotlight_event": "Lakme Fashion Week",
+                "specialties": ["Bridal couture", "Surface embellishment", "Textile innovation"],
+            },
+            {
+                "name": "Hyderabad",
+                "region": "India",
+                "flag": "🇮🇳",
+                "tagline": "Heritage textiles reimagined for modern silhouettes.",
+                "signature_style": "Handloom luxury",
+                "spotlight_event": "Hyderabad Couture Week",
+                "specialties": ["Handloom", "Occasionwear", "Fusion couture"],
+            },
+            {
+                "name": "Los Angeles",
+                "region": "United States",
+                "flag": "🇺🇸",
+                "tagline": "Red-carpet polish meets sustainable fabrication.",
+                "signature_style": "Cinematic ready-to-wear",
+                "spotlight_event": "LAFW",
+                "specialties": ["Red carpet", "Eco-luxury", "Celebrity styling"],
+            },
+            {
+                "name": "Milan",
+                "region": "Italy",
+                "flag": "🇮🇹",
+                "tagline": "Tailored precision and iconic maisons.",
+                "signature_style": "Architectural tailoring",
+                "spotlight_event": "Milan Fashion Week",
+                "specialties": ["Luxury tailoring", "Leather craftsmanship", "Accessories"],
+            },
+            {
+                "name": "London",
+                "region": "United Kingdom",
+                "flag": "🇬🇧",
+                "tagline": "Avant-garde experimentation with heritage craft.",
+                "signature_style": "Concept-led collections",
+                "spotlight_event": "London Fashion Week",
+                "specialties": ["Avant-garde", "Textile labs", "Graduate showcases"],
+            },
+            {
+                "name": "Tokyo",
+                "region": "Japan",
+                "flag": "🇯🇵",
+                "tagline": "Precision construction balanced with playful storytelling.",
+                "signature_style": "Tech-informed silhouettes",
+                "spotlight_event": "Rakuten Fashion Week Tokyo",
+                "specialties": ["Techwear", "Experimental patternmaking", "Street luxury"],
+            },
+            {
+                "name": "Seoul",
+                "region": "South Korea",
+                "flag": "🇰🇷",
+                "tagline": "Pop-culture influence driving bold ready-to-wear.",
+                "signature_style": "K-fashion future classics",
+                "spotlight_event": "Seoul Fashion Week",
+                "specialties": ["K-fashion", "Beauty crossovers", "Digital drops"],
+            },
+            {
+                "name": "Dubai",
+                "region": "United Arab Emirates",
+                "flag": "🇦🇪",
+                "tagline": "Luxury resortwear for a global audience.",
+                "signature_style": "Opulent resort couture",
+                "spotlight_event": "Dubai Fashion Week",
+                "specialties": ["Modest luxury", "Resortwear", "Fashion entrepreneurship"],
+            },
+        ]
         
         return context
 
