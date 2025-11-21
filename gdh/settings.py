@@ -131,8 +131,8 @@ CANONICAL_REDIRECT_HOSTS = [
 ]
 
 def _default_forum_url() -> str:
-    value = os.getenv("COMMUNITY_FORUM_URL", "https://community.globaldesignerhub.com").strip()
-    return value or "https://community.globaldesignerhub.com"
+    value = os.getenv("COMMUNITY_FORUM_URL", "https://globaldesignerhub.com/community").strip()
+    return value or "https://globaldesignerhub.com/community"
 
 COMMUNITY_FORUM_URL = _default_forum_url()
 

@@ -180,6 +180,144 @@
         </div>
       </div>
 
+      <!-- Password Change Section -->
+      <div class="form-section password-section">
+        <h3 class="section-title">Change Password</h3>
+        <p class="section-subtitle">Update your account password for security.</p>
+        
+        <div class="password-form" id="passwordForm" style="display: none;">
+          <div class="form-group">
+            <label for="id_current_password">Current Password</label>
+            <input type="password" id="id_current_password" name="current_password" 
+                   class="form-control" placeholder="Enter your current password">
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="id_new_password1">New Password</label>
+              <input type="password" id="id_new_password1" name="new_password1" 
+                     class="form-control" placeholder="Enter new password">
+            </div>
+            <div class="form-group">
+              <label for="id_new_password2">Confirm New Password</label>
+              <input type="password" id="id_new_password2" name="new_password2" 
+                     class="form-control" placeholder="Confirm new password">
+            </div>
+          </div>
+          
+          <div class="password-actions">
+            <button type="button" class="btn btn-primary" onclick="changePassword()">
+              🔑 Update Password
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="togglePasswordForm()">
+              Cancel
+            </button>
+          </div>
+        </div>
+        
+        <div class="password-toggle" id="passwordToggle">
+          <button type="button" class="btn btn-secondary" onclick="togglePasswordForm()">
+            🔑 Change Password
+          </button>
+        </div>
+      </div>
+
+      <!-- Adobe Creative Suite Management Section -->
+      <div class="form-section adobe-management-section">
+        <h3 class="section-title">Adobe Creative Suite Management</h3>
+        <p class="section-subtitle">Manage your Adobe account access and product selection.</p>
+        
+        {% if user.adobe_subscription %}
+        <!-- Existing Adobe Subscription -->
+        <div class="adobe-subscription-info">
+          <div class="subscription-status">
+            <div class="status-indicator status-{{ user.adobe_subscription.status }}">
+              {{ user.adobe_subscription.get_status_display }}
+            </div>
+            <div class="subscription-details">
+              <h4>{{ user.adobe_subscription.package.display_name }}</h4>
+              <p class="subscription-price">${{ user.adobe_subscription.monthly_cost }}/month</p>
+              <p class="subscription-products">
+                <strong>Selected Products:</strong> {{ user.adobe_subscription.get_product_names|default:"None selected" }}
+              </p>
+            </div>
+          </div>
+          
+          <div class="adobe-actions">
+            <a href="/dashboard/adobe/manage-products/" class="btn btn-secondary">
+              🎨 Manage Products
+            </a>
+            <a href="https://account.adobe.com" target="_blank" class="btn btn-primary">
+              🔗 Access Adobe Account
+            </a>
+            {% if user.adobe_subscription.status == 'active' %}
+            <button type="button" class="btn btn-outline" onclick="toggleAdobePackageChange()">
+              📦 Change Package
+            </button>
+            {% endif %}
+          </div>
+        </div>
+        
+        <!-- Package Change Form (hidden by default) -->
+        <div id="adobePackageChangeForm" class="package-change-form" style="display: none;">
+          <h4>Change Adobe Package</h4>
+          <div class="package-options">
+            <div class="current-package">
+              <strong>Current:</strong> {{ user.adobe_subscription.package.display_name }} 
+              (${{ user.adobe_subscription.monthly_cost }}/month)
+            </div>
+            <div class="package-selector">
+              <label>Select New Package:</label>
+              <select id="newAdobePackage" class="form-control">
+                <option value="">Choose a package...</option>
+                <option value="single">Single Product - $4.99/month</option>
+                <option value="duo">Duo Package - $8.99/month</option>
+                <option value="trio">Trio Package - $12.99/month</option>
+                <option value="quad">Quad Package - $16.99/month</option>
+                <option value="penta">Penta Package - $20.99/month</option>
+                <option value="full">Full Creative Suite - $29.99/month</option>
+              </select>
+            </div>
+            <div class="package-change-actions">
+              <button type="button" class="btn btn-primary" onclick="changeAdobePackage()">
+                Update Package
+              </button>
+              <button type="button" class="btn btn-secondary" onclick="toggleAdobePackageChange()">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        {% else %}
+        <!-- No Adobe Subscription -->
+        <div class="no-adobe-subscription">
+          <div class="adobe-offer">
+            <h4>🎨 Get Adobe Creative Suite Access</h4>
+            <p>Choose from our affordable Adobe packages to access professional design tools.</p>
+            <div class="package-preview">
+              <div class="package-highlight">
+                <strong>Most Popular:</strong> Trio Package - Choose 3 Adobe products for $12.99/month
+              </div>
+            </div>
+            <a href="/dashboard/adobe/setup/" class="btn btn-primary">
+              🚀 Setup Adobe Access
+            </a>
+          </div>
+        </div>
+        {% endif %}
+        
+        <!-- Adobe Help & Resources -->
+        <div class="adobe-help">
+          <h4>Need Help?</h4>
+          <ul class="help-links">
+            <li><a href="/dashboard/adobe/products/" target="_blank">Browse Available Products</a></li>
+            <li><a href="https://helpx.adobe.com/" target="_blank">Adobe Help Center</a></li>
+            <li><a href="/dashboard/contact/" target="_blank">Contact Support</a></li>
+          </ul>
+        </div>
+      </div>
+
       <!-- Passkey Security Section -->
       <div class="form-section passkey-section">
         <h3 class="section-title">Security &amp; Passkeys</h3>
@@ -475,6 +613,207 @@ textarea.form-control {
   font-size: 14px;
 }
 
+.password-section .section-subtitle {
+  margin-top: -8px;
+  margin-bottom: 18px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.password-form {
+  background: var(--color-surface);
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  margin-bottom: 15px;
+}
+
+.password-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-start;
+  margin-top: 20px;
+}
+
+.password-toggle {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.adobe-management-section {
+  background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+  border: 2px solid #ff6b6b;
+  color: white;
+}
+
+.adobe-management-section .section-title {
+  color: white !important;
+}
+
+.adobe-management-section .section-title::before {
+  background: white;
+}
+
+.adobe-subscription-info {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.subscription-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.status-indicator {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-active {
+  background: #4CAF50;
+  color: white;
+}
+
+.status-pending {
+  background: #FF9800;
+  color: white;
+}
+
+.status-suspended, .status-cancelled {
+  background: #f44336;
+  color: white;
+}
+
+.subscription-details h4 {
+  margin: 0 0 8px 0;
+  color: white;
+  font-size: 18px;
+}
+
+.subscription-price {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFD700;
+}
+
+.subscription-products {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+}
+
+.adobe-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.adobe-actions .btn {
+  padding: 10px 16px;
+  font-size: 14px;
+}
+
+.package-change-form {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.package-change-form h4 {
+  color: white;
+  margin: 0 0 15px 0;
+}
+
+.current-package {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  color: white;
+}
+
+.package-selector label {
+  display: block;
+  color: white;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.package-change-actions {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+}
+
+.no-adobe-subscription {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+}
+
+.adobe-offer h4 {
+  color: white;
+  margin: 0 0 10px 0;
+  font-size: 18px;
+}
+
+.adobe-offer p {
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 15px;
+}
+
+.package-highlight {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 12px;
+  border-radius: 8px;
+  margin: 15px 0;
+  color: white;
+}
+
+.adobe-help {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 15px;
+  margin-top: 20px;
+}
+
+.adobe-help h4 {
+  color: white;
+  margin: 0 0 10px 0;
+  font-size: 16px;
+}
+
+.help-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.help-links li {
+  margin-bottom: 8px;
+}
+
+.help-links a {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.help-links a:hover {
+  color: white;
+  text-decoration: underline;
+}
+
 .passkey-status {
   min-height: 20px;
   font-size: 13px;
@@ -671,6 +1010,117 @@ function autoSave() {
 document.querySelectorAll('.form-control').forEach(input => {
   input.addEventListener('input', autoSave);
 });
+
+// Password change functionality
+function togglePasswordForm() {
+  const passwordForm = document.getElementById('passwordForm');
+  const passwordToggle = document.getElementById('passwordToggle');
+  
+  if (passwordForm.style.display === 'none') {
+    passwordForm.style.display = 'block';
+    passwordToggle.style.display = 'none';
+    // Clear any previous values
+    document.getElementById('id_current_password').value = '';
+    document.getElementById('id_new_password1').value = '';
+    document.getElementById('id_new_password2').value = '';
+  } else {
+    passwordForm.style.display = 'none';
+    passwordToggle.style.display = 'block';
+  }
+}
+
+// Adobe package management functionality
+function toggleAdobePackageChange() {
+  const form = document.getElementById('adobePackageChangeForm');
+  if (form.style.display === 'none') {
+    form.style.display = 'block';
+  } else {
+    form.style.display = 'none';
+  }
+}
+
+async function changeAdobePackage() {
+  const newPackage = document.getElementById('newAdobePackage').value;
+  
+  if (!newPackage) {
+    alert('Please select a new package.');
+    return;
+  }
+  
+  try {
+    const response = await fetch('/dashboard/adobe/change-package/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken
+      },
+      body: JSON.stringify({
+        new_package: newPackage
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      alert('Adobe package change request submitted! You will receive an email confirmation.');
+      location.reload(); // Refresh to show updated package info
+    } else {
+      alert(data.error || 'Failed to change Adobe package. Please try again.');
+    }
+  } catch (error) {
+    console.error('Adobe package change error:', error);
+    alert('An error occurred. Please try again.');
+  }
+}
+
+async function changePassword() {
+  const currentPassword = document.getElementById('id_current_password').value;
+  const newPassword1 = document.getElementById('id_new_password1').value;
+  const newPassword2 = document.getElementById('id_new_password2').value;
+  
+  // Basic validation
+  if (!currentPassword || !newPassword1 || !newPassword2) {
+    alert('Please fill in all password fields.');
+    return;
+  }
+  
+  if (newPassword1 !== newPassword2) {
+    alert('New passwords do not match.');
+    return;
+  }
+  
+  if (newPassword1.length < 8) {
+    alert('New password must be at least 8 characters long.');
+    return;
+  }
+  
+  try {
+    const response = await fetch('/dashboard/change-password/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken
+      },
+      body: JSON.stringify({
+        current_password: currentPassword,
+        new_password1: newPassword1,
+        new_password2: newPassword2
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      alert('Password changed successfully!');
+      togglePasswordForm();
+    } else {
+      alert(data.error || 'Failed to change password. Please check your current password.');
+    }
+  } catch (error) {
+    console.error('Password change error:', error);
+    alert('An error occurred. Please try again.');
+  }
+}
 
 const createPasskeyBtn = document.getElementById('createPasskeyBtn');
 const passkeyStatus = document.getElementById('passkeyStatus');

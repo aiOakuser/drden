@@ -31,6 +31,7 @@ from .views import (
     designer_design_delete_view,
     designer_design_detail_api,
     designer_about_me_view,
+    designer_change_password_view,
     designer_contact_view,
     DesignerRegistrationView,
     DesignersListView,
@@ -38,7 +39,15 @@ from .views import (
     my_conversations,
     PrivacyPolicyView,
     TermsOfServiceView,
-    CommunityForumView,
+    ForumIndexView,
+    ForumCategoryView,
+    ForumTopicView,
+    ForumCreateTopicView,
+    ForumCreatePostView,
+    ForumSearchView,
+    forum_bookmark_toggle,
+    forum_post_like,
+    forum_post_toggle_solution,
 )
 
 router = DefaultRouter()
@@ -65,9 +74,21 @@ urlpatterns = [
     path("events/", EventListView.as_view(), name="event_list"),
     path("events/<slug:slug>/", EventDetailView.as_view(), name="event_detail"),
     
-    path("about/", AboutView.as_view(), name="about"),   # ✅ fix added here
+    path("about/", AboutView.as_view(), name="about"),
     path("about-site/", AboutSiteView.as_view(), name="about_site"),
-    path("community/forum/", CommunityForumView.as_view(), name="community_forum"),
+    
+    # Community Forum
+    path("community/", RedirectView.as_view(pattern_name="forum_index", permanent=False), name="community_redirect"),
+    path("community/forum/", ForumIndexView.as_view(), name="forum_index"),
+    path("community/forum/category/<slug:slug>/", ForumCategoryView.as_view(), name="forum_category"),
+    path("community/forum/topic/<slug:slug>/", ForumTopicView.as_view(), name="forum_topic"),
+    path("community/forum/new-topic/", ForumCreateTopicView.as_view(), name="forum_create_topic"),
+    path("community/forum/topic/<slug:slug>/reply/", ForumCreatePostView.as_view(), name="forum_create_post"),
+    path("community/forum/search/", ForumSearchView.as_view(), name="forum_search"),
+    path("community/forum/bookmark/<slug:topic_slug>/", forum_bookmark_toggle, name="forum_bookmark_toggle"),
+    path("community/forum/post/<int:post_id>/like/", forum_post_like, name="forum_post_like"),
+    path("community/forum/post/<int:post_id>/solution/", forum_post_toggle_solution, name="forum_post_toggle_solution"),
+    
     path("privacy/", PrivacyPolicyView.as_view(), name="privacy_policy"),
     path("terms/", TermsOfServiceView.as_view(), name="terms_of_service"),
     path("docs/<slug:category_slug>/<slug:doc_slug>/", docs_detail, name="docs_detail"),
@@ -82,6 +103,7 @@ urlpatterns = [
     path("dashboard/designs/<int:design_id>/delete/", designer_design_delete_view, name="designer_design_delete"),
     path("dashboard/designs/<int:design_id>/details/", designer_design_detail_api, name="designer_design_detail_api"),
     path("dashboard/about-me/", designer_about_me_view, name="designer_about_me"),
+    path("dashboard/change-password/", designer_change_password_view, name="designer_change_password"),
     path("dashboard/contact/", designer_contact_view, name="designer_contact"),
     # Common misspellings/legacy links -> redirect to dashboard
     path("dashephard/", RedirectView.as_view(pattern_name="designer_dashboard", permanent=False), name="dashephard"),

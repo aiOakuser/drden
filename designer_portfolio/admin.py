@@ -159,3 +159,199 @@ class DocPageAdmin(admin.ModelAdmin):
     search_fields = ("title", "content", "slug", "tags")
     prepopulated_fields = {"slug": ("title",)}
     readonly_fields = ("created_at", "updated_at")
+
+
+# ---------------- Adobe Package Admin ----------------
+@admin.register(m.AdobeProduct)
+class AdobeProductAdmin(admin.ModelAdmin):
+    list_display = ("display_name", "name", "product_icon", "is_popular", "is_active", "order")
+    list_filter = ("is_popular", "is_active")
+    search_fields = ("name", "display_name", "description")
+    ordering = ("order", "display_name")
+    list_editable = ("order", "is_popular", "is_active")
+
+
+@admin.register(m.AdobePackage)
+class AdobePackageAdmin(admin.ModelAdmin):
+    list_display = ("display_name", "package_type", "product_count", "monthly_price", "is_popular", "is_active")
+    list_filter = ("package_type", "is_popular", "is_active")
+    search_fields = ("display_name", "description")
+    ordering = ("order", "product_count")
+    list_editable = ("monthly_price", "is_popular", "is_active")
+    filter_horizontal = ("suggested_products",)
+
+
+@admin.register(m.UserAdobeSubscription)
+class UserAdobeSubscriptionAdmin(admin.ModelAdmin):
+    list_display = ("user", "package", "status", "monthly_cost", "subscription_start_date", "next_billing_date")
+    list_filter = ("status", "package", "auto_renewal")
+    search_fields = ("user__username", "user__email", "adobe_account_email")
+    ordering = ("-created_at",)
+    filter_horizontal = ("selected_products",)
+    readonly_fields = ("created_at", "updated_at")
+    
+    fieldsets = (
+        ("User & Package", {
+            "fields": ("user", "package", "selected_products", "status")
+        }),
+        ("Adobe Account", {
+            "fields": ("adobe_account_email", "adobe_account_status", "adobe_subscription_id")
+        }),
+        ("Billing Information", {
+            "fields": ("monthly_cost", "next_billing_date", "last_payment_date", "auto_renewal")
+        }),
+        ("Subscription Lifecycle", {
+            "fields": ("subscription_start_date", "subscription_end_date")
+        }),
+        ("Timestamps", {
+            "fields": ("created_at", "updated_at"),
+            "classes": ("collapse",)
+        })
+    )
+
+
+@admin.register(m.AdobeAccessLog)
+class AdobeAccessLogAdmin(admin.ModelAdmin):
+    list_display = ("user_subscription", "product_accessed", "access_type", "access_timestamp", "ip_address")
+    list_filter = ("access_type", "access_timestamp")
+    search_fields = ("user_subscription__user__username", "ip_address")
+    ordering = ("-access_timestamp",)
+    readonly_fields = ("access_timestamp",)
+
+
+# ---------------- Forum Admin ----------------
+@admin.register(m.ForumCategory)
+class ForumCategoryAdmin(admin.ModelAdmin):
+    list_display = ("name", "slug", "get_topic_count", "get_post_count", "order", "is_active")
+    list_editable = ("order", "is_active")
+    list_filter = ("is_active", "created_at")
+    search_fields = ("name", "description")
+    prepopulated_fields = {"slug": ("name",)}
+    filter_horizontal = ("moderators",)
+    
+    def get_topic_count(self, obj):
+        return obj.get_topic_count()
+    get_topic_count.short_description = "Topics"
+    
+    def get_post_count(self, obj):
+        return obj.get_post_count()
+    get_post_count.short_description = "Posts"
+
+
+class ForumPostInline(admin.TabularInline):
+    model = m.ForumPost
+    extra = 0
+    fields = ("author", "content", "is_solution", "is_flagged", "created_at")
+    readonly_fields = ("created_at",)
+
+
+@admin.register(m.ForumTopic)
+class ForumTopicAdmin(admin.ModelAdmin):
+    list_display = ("title", "category", "author", "get_post_count", "is_pinned", "is_locked", "is_featured", "view_count", "last_activity")
+    list_editable = ("is_pinned", "is_locked", "is_featured")
+    list_filter = ("category", "is_pinned", "is_locked", "is_featured", "is_active", "created_at")
+    search_fields = ("title", "content", "tags")
+    prepopulated_fields = {"slug": ("title",)}
+    inlines = [ForumPostInline]
+    
+    fieldsets = (
+        ("Topic Information", {
+            "fields": ("title", "slug", "content", "category", "author", "tags")
+        }),
+        ("Topic Status", {
+            "fields": ("is_active", "is_pinned", "is_locked", "is_featured")
+        }),
+        ("Statistics", {
+            "fields": ("view_count", "last_activity", "last_post"),
+            "classes": ("collapse",)
+        })
+    )
+    
+    def get_post_count(self, obj):
+        return obj.get_post_count()
+    get_post_count.short_description = "Posts"
+
+
+@admin.register(m.ForumPost)
+class ForumPostAdmin(admin.ModelAdmin):
+    list_display = ("topic", "author", "get_content_preview", "is_solution", "is_flagged", "get_reply_count", "created_at")
+    list_filter = ("is_solution", "is_flagged", "is_active", "created_at")
+    search_fields = ("content", "topic__title", "author__username")
+    raw_id_fields = ("topic", "author", "parent")
+    
+    fieldsets = (
+        ("Post Information", {
+            "fields": ("topic", "author", "content", "parent")
+        }),
+        ("Post Status", {
+            "fields": ("is_active", "is_solution", "is_flagged", "moderation_notes")
+        }),
+        ("Timestamps", {
+            "fields": ("created_at", "updated_at", "edited_at"),
+            "classes": ("collapse",)
+        })
+    )
+    
+    readonly_fields = ("created_at", "updated_at")
+    
+    def get_content_preview(self, obj):
+        return obj.content[:100] + "..." if len(obj.content) > 100 else obj.content
+    get_content_preview.short_description = "Content Preview"
+    
+    def get_reply_count(self, obj):
+        return obj.get_reply_count()
+    get_reply_count.short_description = "Replies"
+
+
+@admin.register(m.ForumUserProfile)
+class ForumUserProfileAdmin(admin.ModelAdmin):
+    list_display = ("user", "get_user_level", "post_count", "topic_count", "solution_count", "reputation_score", "is_banned")
+    list_filter = ("is_banned", "warning_count", "created_at")
+    search_fields = ("user__username", "user__email")
+    readonly_fields = ("post_count", "topic_count", "solution_count", "created_at", "updated_at")
+    
+    fieldsets = (
+        ("User Information", {
+            "fields": ("user", "signature")
+        }),
+        ("Forum Settings", {
+            "fields": ("show_online_status", "email_notifications")
+        }),
+        ("Statistics", {
+            "fields": ("post_count", "topic_count", "solution_count", "reputation_score"),
+            "classes": ("collapse",)
+        }),
+        ("Moderation", {
+            "fields": ("warning_count", "is_banned", "ban_reason", "ban_until")
+        }),
+        ("Timestamps", {
+            "fields": ("created_at", "updated_at"),
+            "classes": ("collapse",)
+        })
+    )
+    
+    def get_user_level(self, obj):
+        return obj.get_user_level()
+    get_user_level.short_description = "Level"
+
+
+@admin.register(m.ForumLike)
+class ForumLikeAdmin(admin.ModelAdmin):
+    list_display = ("user", "post", "created_at")
+    list_filter = ("created_at",)
+    search_fields = ("user__username", "post__topic__title")
+
+
+@admin.register(m.ForumBookmark)
+class ForumBookmarkAdmin(admin.ModelAdmin):
+    list_display = ("user", "topic", "created_at")
+    list_filter = ("created_at",)
+    search_fields = ("user__username", "topic__title")
+
+
+@admin.register(m.ForumNotification)
+class ForumNotificationAdmin(admin.ModelAdmin):
+    list_display = ("user", "notification_type", "topic", "triggered_by", "is_read", "created_at")
+    list_filter = ("notification_type", "is_read", "created_at")
+    search_fields = ("user__username", "topic__title", "message")
+    list_editable = ("is_read",)

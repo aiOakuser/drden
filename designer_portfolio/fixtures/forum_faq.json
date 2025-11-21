@@ -1,0 +1,86 @@
+[
+  {
+    "model": "designer_portfolio.forumcategory",
+    "pk": 1,
+    "fields": {
+      "name": "Portfolio & Showcase",
+      "slug": "portfolio-showcase",
+      "description": "Share your work, get feedback, and discuss portfolio best practices",
+      "icon": "🎨",
+      "order": 1,
+      "is_active": true,
+      "created_at": "2025-11-21T00:00:00Z",
+      "updated_at": "2025-11-21T00:00:00Z"
+    }
+  },
+  {
+    "model": "designer_portfolio.forumcategory",
+    "pk": 2,
+    "fields": {
+      "name": "Website Maintenance",
+      "slug": "website-maintenance",
+      "description": "Technical support, hosting, security, and performance optimization",
+      "icon": "🌐",
+      "order": 2,
+      "is_active": true,
+      "created_at": "2025-11-21T00:00:00Z",
+      "updated_at": "2025-11-21T00:00:00Z"
+    }
+  },
+  {
+    "model": "designer_portfolio.forumcategory",
+    "pk": 3,
+    "fields": {
+      "name": "UI/UX Design",
+      "slug": "ui-ux-design",
+      "description": "Design principles, tools, accessibility, and best practices",
+      "icon": "🖥️",
+      "order": 3,
+      "is_active": true,
+      "created_at": "2025-11-21T00:00:00Z",
+      "updated_at": "2025-11-21T00:00:00Z"
+    }
+  },
+  {
+    "model": "designer_portfolio.forumcategory",
+    "pk": 4,
+    "fields": {
+      "name": "Client Relations",
+      "slug": "client-relations",
+      "description": "Contracts, pricing, communication, and handling difficult clients",
+      "icon": "💬",
+      "order": 4,
+      "is_active": true,
+      "created_at": "2025-11-21T00:00:00Z",
+      "updated_at": "2025-11-21T00:00:00Z"
+    }
+  },
+  {
+    "model": "designer_portfolio.forumcategory",
+    "pk": 5,
+    "fields": {
+      "name": "Community & Networking",
+      "slug": "community-networking",
+      "description": "Connect with peers, collaborate, and grow your designer network",
+      "icon": "👥",
+      "order": 5,
+      "is_active": true,
+      "created_at": "2025-11-21T00:00:00Z",
+      "updated_at": "2025-11-21T00:00:00Z"
+    }
+  },
+  {
+    "model": "designer_portfolio.forumcategory",
+    "pk": 6,
+    "fields": {
+      "name": "Technical Help",
+      "slug": "technical-help",
+      "description": "Troubleshooting, debugging, and solving technical issues",
+      "icon": "🛠️",
+      "order": 6,
+      "is_active": true,
+      "created_at": "2025-11-21T00:00:00Z",
+      "updated_at": "2025-11-21T00:00:00Z"
+    }
+  }
+]

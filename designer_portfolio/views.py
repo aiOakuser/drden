@@ -8,8 +8,9 @@ from pathlib import Path
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
-from django.views.generic import TemplateView, DetailView, ListView
+from django.views.generic import TemplateView, DetailView, ListView, CreateView
 from django.contrib.auth.views import LoginView, PasswordResetView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import login, authenticate, get_user_model
@@ -25,9 +26,10 @@ from django.core.validators import URLValidator
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.db import transaction
-from django.db.models import Q, Count
+from django.db.models import Q, Count, F
 from django.urls import reverse_lazy, reverse
 from django.utils.text import slugify
+from django.core.paginator import Paginator
 from urllib.parse import urlencode
 from .forms import DesignerSignUpForm, DesignerLoginForm, DesignerPasswordResetForm
 from .auth_utils import ensure_designer_access
@@ -43,6 +45,13 @@ from .models import (
     DesignerAISession,
     DesignerAIMessage,
     DocPage,
+    ForumCategory,
+    ForumTopic,
+    ForumPost,
+    ForumLike,
+    ForumBookmark,
+    ForumNotification,
+    ForumUserProfile,
 )
 
 from webauthn import (
@@ -1718,6 +1727,56 @@ def designer_about_me_view(request):
         },
     )
 
+
+@login_required
+def designer_change_password_view(request):
+    """Handle password change requests via AJAX"""
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+    
+    try:
+        import json
+        data = json.loads(request.body)
+        current_password = data.get("current_password", "")
+        new_password1 = data.get("new_password1", "")
+        new_password2 = data.get("new_password2", "")
+        
+        # Validate inputs
+        if not current_password or not new_password1 or not new_password2:
+            return JsonResponse({"error": "All password fields are required"}, status=400)
+        
+        if new_password1 != new_password2:
+            return JsonResponse({"error": "New passwords do not match"}, status=400)
+        
+        # Check current password
+        user = request.user
+        if not user.check_password(current_password):
+            return JsonResponse({"error": "Current password is incorrect"}, status=400)
+        
+        # Validate new password
+        from django.contrib.auth.password_validation import validate_password
+        from django.core.exceptions import ValidationError
+        
+        try:
+            validate_password(new_password1, user)
+        except ValidationError as e:
+            return JsonResponse({"error": "; ".join(e.messages)}, status=400)
+        
+        # Change password
+        user.set_password(new_password1)
+        user.save()
+        
+        # Update session to keep user logged in
+        from django.contrib.auth import update_session_auth_hash
+        update_session_auth_hash(request, user)
+        
+        return JsonResponse({"success": True, "message": "Password changed successfully"})
+        
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON data"}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": "An error occurred while changing password"}, status=500)
+
 @login_required
 def designer_contact_view(request):
     profile, _ = DesignerProfile.objects.get_or_create(user=request.user)
@@ -2196,3 +2255,328 @@ def my_conversations(request):
     return render(request, "designer_portfolio/my_conversations.html", {
         "sessions": sessions
     })
+
+
+# ---------------- Enhanced Forum Views ----------------
+class ForumIndexView(TemplateView):
+    """Main forum index showing categories and recent activity"""
+    template_name = "designer_portfolio/forum/forum_index.html"
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get active categories with stats
+        categories = ForumCategory.objects.filter(is_active=True).prefetch_related('topics')
+        
+        # Get recent topics across all categories
+        recent_topics = ForumTopic.objects.filter(
+            is_active=True, 
+            category__is_active=True
+        ).select_related('author', 'category').order_by('-last_activity')[:5]
+        
+        # Get featured topics
+        featured_topics = ForumTopic.objects.filter(
+            is_featured=True, 
+            is_active=True,
+            category__is_active=True
+        ).select_related('author', 'category')[:3]
+        
+        # Get forum stats
+        total_topics = ForumTopic.objects.filter(is_active=True).count()
+        total_posts = ForumPost.objects.filter(is_active=True).count()
+        total_members = User.objects.filter(is_active=True).count()
+        
+        context.update({
+            'categories': categories,
+            'recent_topics': recent_topics,
+            'featured_topics': featured_topics,
+            'total_topics': total_topics,
+            'total_posts': total_posts,
+            'total_members': total_members,
+        })
+        
+        return context
+
+
+class ForumCategoryView(ListView):
+    """View topics in a specific category"""
+    model = ForumTopic
+    template_name = "designer_portfolio/forum/forum_category.html"
+    context_object_name = "topics"
+    paginate_by = 20
+    
+    def get_queryset(self):
+        self.category = get_object_or_404(ForumCategory, slug=self.kwargs['slug'], is_active=True)
+        queryset = ForumTopic.objects.filter(
+            category=self.category, 
+            is_active=True
+        ).select_related('author', 'last_post__author').order_by('-is_pinned', '-last_activity')
+        
+        # Search functionality
+        search_query = self.request.GET.get('search')
+        if search_query:
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) | 
+                Q(content__icontains=search_query) |
+                Q(tags__icontains=search_query)
+            )
+        
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['category'] = self.category
+        context['search_query'] = self.request.GET.get('search', '')
+        return context
+
+
+class ForumTopicView(DetailView):
+    """View a specific topic with posts"""
+    model = ForumTopic
+    template_name = "designer_portfolio/forum/forum_topic.html"
+    context_object_name = "topic"
+    
+    def get_queryset(self):
+        return ForumTopic.objects.filter(
+            is_active=True,
+            category__is_active=True
+        ).select_related('category', 'author')
+    
+    def get_object(self):
+        topic = super().get_object()
+        # Increment view count
+        topic.view_count = F('view_count') + 1
+        topic.save(update_fields=['view_count'])
+        topic.refresh_from_db()
+        return topic
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get posts with replies
+        posts = ForumPost.objects.filter(
+            topic=self.object,
+            is_active=True,
+            parent=None  # Only top-level posts
+        ).select_related('author').prefetch_related(
+            'replies__author', 'likes'
+        ).order_by('created_at')
+        
+        # Pagination for posts
+        paginator = Paginator(posts, 10)
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        # Check if user has bookmarked this topic
+        user_bookmarked = False
+        if self.request.user.is_authenticated:
+            user_bookmarked = ForumBookmark.objects.filter(
+                user=self.request.user,
+                topic=self.object
+            ).exists()
+        
+        context.update({
+            'posts': page_obj,
+            'page_obj': page_obj,
+            'user_bookmarked': user_bookmarked,
+        })
+        
+        return context
+
+
+class ForumCreateTopicView(LoginRequiredMixin, CreateView):
+    """Create a new forum topic"""
+    model = ForumTopic
+    template_name = "designer_portfolio/forum/forum_create_topic.html"
+    fields = ['title', 'content', 'category', 'tags']
+    
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        response = super().form_valid(form)
+        
+        # Update user's topic count
+        profile, created = ForumUserProfile.objects.get_or_create(user=self.request.user)
+        profile.topic_count = F('topic_count') + 1
+        profile.save()
+        
+        messages.success(self.request, 'Topic created successfully!')
+        return response
+    
+    def get_success_url(self):
+        return reverse('forum_topic_detail', kwargs={'slug': self.object.slug})
+
+
+class ForumCreatePostView(LoginRequiredMixin, CreateView):
+    """Create a new post in a topic"""
+    model = ForumPost
+    template_name = "designer_portfolio/forum/create_post.html"
+    fields = ['content']
+    
+    def dispatch(self, request, *args, **kwargs):
+        self.topic = get_object_or_404(ForumTopic, slug=kwargs['topic_slug'], is_active=True)
+        if self.topic.is_locked and not request.user.is_staff:
+            messages.error(request, 'This topic is locked.')
+            return redirect('forum_topic_detail', slug=self.topic.slug)
+        return super().dispatch(request, *args, **kwargs)
+    
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        form.instance.topic = self.topic
+        
+        # Handle parent post for replies
+        parent_id = self.request.POST.get('parent_id')
+        if parent_id:
+            form.instance.parent = get_object_or_404(ForumPost, id=parent_id, topic=self.topic)
+        
+        response = super().form_valid(form)
+        
+        # Update topic's last activity
+        self.topic.last_activity = timezone.now()
+        self.topic.last_post = form.instance
+        self.topic.save()
+        
+        # Update user's post count
+        profile, created = ForumUserProfile.objects.get_or_create(user=self.request.user)
+        profile.post_count = F('post_count') + 1
+        profile.save()
+        
+        messages.success(self.request, 'Post created successfully!')
+        return response
+    
+    def get_success_url(self):
+        return reverse('forum_topic_detail', kwargs={'slug': self.topic.slug})
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['topic'] = self.topic
+        
+        # Handle reply to specific post
+        parent_id = self.request.GET.get('reply_to')
+        if parent_id:
+            try:
+                context['parent_post'] = ForumPost.objects.get(id=parent_id, topic=self.topic)
+            except ForumPost.DoesNotExist:
+                pass
+        
+        return context
+
+
+@login_required
+def forum_bookmark_toggle(request, topic_slug):
+    """Toggle bookmark for a topic"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    
+    topic = get_object_or_404(ForumTopic, slug=topic_slug, is_active=True)
+    bookmark, created = ForumBookmark.objects.get_or_create(
+        user=request.user,
+        topic=topic
+    )
+    
+    if not created:
+        bookmark.delete()
+        bookmarked = False
+    else:
+        bookmarked = True
+    
+    return JsonResponse({
+        'bookmarked': bookmarked,
+        'message': 'Topic bookmarked!' if bookmarked else 'Bookmark removed!'
+    })
+
+
+@login_required
+def forum_post_like(request, post_id):
+    """Like/unlike a forum post"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    
+    post = get_object_or_404(ForumPost, id=post_id, is_active=True)
+    like, created = ForumLike.objects.get_or_create(
+        user=request.user,
+        post=post
+    )
+    
+    if not created:
+        like.delete()
+        liked = False
+    else:
+        liked = True
+    
+    like_count = post.likes.count()
+    
+    return JsonResponse({
+        'liked': liked,
+        'like_count': like_count,
+        'message': 'Post liked!' if liked else 'Like removed!'
+    })
+
+
+@staff_member_required
+def forum_post_toggle_solution(request, post_id):
+    """Mark/unmark post as solution (staff only)"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    
+    post = get_object_or_404(ForumPost, id=post_id, is_active=True)
+    
+    # Remove solution status from other posts in the topic
+    if not post.is_solution:
+        ForumPost.objects.filter(topic=post.topic).update(is_solution=False)
+        post.is_solution = True
+        message = 'Post marked as solution!'
+    else:
+        post.is_solution = False
+        message = 'Solution status removed!'
+    
+    post.save()
+    
+    return JsonResponse({
+        'is_solution': post.is_solution,
+        'message': message
+    })
+
+
+class ForumSearchView(TemplateView):
+    """Global forum search"""
+    template_name = "designer_portfolio/forum/forum_search.html"
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        search_query = self.request.GET.get('q', '').strip()
+        search_type = self.request.GET.get('type', 'all')
+        
+        if search_query:
+            if search_type == 'topics' or search_type == 'all':
+                topics = ForumTopic.objects.filter(
+                    Q(title__icontains=search_query) |
+                    Q(content__icontains=search_query) |
+                    Q(tags__icontains=search_query),
+                    is_active=True,
+                    category__is_active=True
+                ).select_related('author', 'category')[:20]
+            else:
+                topics = []
+            
+            if search_type == 'posts' or search_type == 'all':
+                posts = ForumPost.objects.filter(
+                    content__icontains=search_query,
+                    is_active=True,
+                    topic__is_active=True
+                ).select_related('author', 'topic', 'topic__category')[:20]
+            else:
+                posts = []
+        else:
+            topics = []
+            posts = []
+        
+        context.update({
+            'search_query': search_query,
+            'search_type': search_type,
+            'topics': topics,
+            'posts': posts,
+            'total_results': len(topics) + len(posts),
+        })
+        
+        return context

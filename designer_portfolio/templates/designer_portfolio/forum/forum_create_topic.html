@@ -1,0 +1,189 @@
+{% extends "designer_portfolio/base.html" %}
+{% load static %}
+
+{% block title %}Create New Topic | Forum | GlobalDesignerHub{% endblock %}
+
+{% block extra_css %}
+<style>
+  .forum-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .breadcrumb {
+    margin-bottom: 2rem;
+    font-size: 0.9rem;
+  }
+
+  .breadcrumb a {
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+
+  .form-container {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 2.5rem;
+  }
+
+  .form-container h1 {
+    color: var(--color-primary);
+    margin-bottom: 2rem;
+  }
+
+  .form-group {
+    margin-bottom: 2rem;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 0.75rem;
+    font-weight: bold;
+    color: #333;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 1rem;
+  }
+
+  .form-group textarea {
+    min-height: 200px;
+    resize: vertical;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(255, 168, 0, 0.1);
+  }
+
+  .form-help {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 0.5rem;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .btn {
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-primary {
+    background: var(--color-accent);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: darkorange;
+  }
+
+  .btn-secondary {
+    background: #6c757d;
+    color: white;
+  }
+
+  .btn-secondary:hover {
+    background: #5a6268;
+  }
+
+  .error {
+    color: #dc3545;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+  }
+
+  .errorlist {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0;
+  }
+
+  .errorlist li {
+    color: #dc3545;
+    font-size: 0.85rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="forum-page">
+  <div class="breadcrumb">
+    <a href="{% url 'forum_index' %}">🏠 Forum</a> / New Topic
+  </div>
+
+  <div class="form-container">
+    <h1>✏️ Create New Topic</h1>
+    
+    <form method="post">
+      {% csrf_token %}
+      
+      <div class="form-group">
+        <label for="id_category">Category *</label>
+        {{ form.category }}
+        {% if form.category.errors %}
+          <ul class="errorlist">
+            {% for error in form.category.errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+        <div class="form-help">Choose the most relevant category for your topic</div>
+      </div>
+
+      <div class="form-group">
+        <label for="id_title">Topic Title *</label>
+        {{ form.title }}
+        {% if form.title.errors %}
+          <ul class="errorlist">
+            {% for error in form.title.errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+        <div class="form-help">A clear, descriptive title helps others find your topic</div>
+      </div>
+
+      <div class="form-group">
+        <label for="id_content">Content *</label>
+        {{ form.content }}
+        {% if form.content.errors %}
+          <ul class="errorlist">
+            {% for error in form.content.errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+        <div class="form-help">Provide details, context, and any relevant information</div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Create Topic</button>
+        <a href="{% url 'forum_index' %}" class="btn btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

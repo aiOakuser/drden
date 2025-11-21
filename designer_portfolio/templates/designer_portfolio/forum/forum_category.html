@@ -1,0 +1,303 @@
+{% extends "designer_portfolio/base.html" %}
+{% load static %}
+
+{% block title %}{{ category.name }} | Forum | GlobalDesignerHub{% endblock %}
+
+{% block extra_css %}
+<style>
+  .forum-page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .breadcrumb {
+    margin-bottom: 2rem;
+    font-size: 0.9rem;
+  }
+
+  .breadcrumb a {
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+
+  .breadcrumb a:hover {
+    text-decoration: underline;
+  }
+
+  .category-header {
+    background: linear-gradient(135deg, rgba(255, 168, 0, 0.12), rgba(255, 255, 255, 0));
+    border: 1px solid rgba(255, 168, 0, 0.35);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .category-header h1 {
+    color: var(--color-primary);
+    margin-bottom: 0.5rem;
+  }
+
+  .category-header p {
+    color: #666;
+    font-size: 1.1rem;
+  }
+
+  .topics-list {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .topic-item {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e0e0e0;
+    align-items: center;
+    transition: background 0.2s ease;
+  }
+
+  .topic-item:last-child {
+    border-bottom: none;
+  }
+
+  .topic-item:hover {
+    background: #f8f9fa;
+  }
+
+  .topic-main {
+    min-width: 0;
+  }
+
+  .topic-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+
+  .topic-title a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .topic-title a:hover {
+    color: var(--color-accent);
+  }
+
+  .topic-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.85rem;
+    color: #666;
+  }
+
+  .topic-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+  }
+
+  .status-pinned {
+    background: #fff3cd;
+    color: #856404;
+  }
+
+  .status-closed {
+    background: #f8d7da;
+    color: #721c24;
+  }
+
+  .status-solved {
+    background: #d4edda;
+    color: #155724;
+  }
+
+  .topic-stats {
+    display: flex;
+    gap: 1.5rem;
+    font-size: 0.9rem;
+    color: #666;
+    text-align: center;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .stat-value {
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: var(--color-primary);
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+  }
+
+  .topic-author {
+    text-align: center;
+  }
+
+  .author-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin: 0 auto 0.5rem;
+  }
+
+  .author-name {
+    font-size: 0.85rem;
+    color: #666;
+  }
+
+  .pagination {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 2rem 0;
+  }
+
+  .pagination a, .pagination span {
+    padding: 0.5rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--color-primary);
+  }
+
+  .pagination .current {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: #666;
+  }
+
+  .btn-primary {
+    background: var(--color-accent);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    display: inline-block;
+    margin: 1rem 0;
+  }
+
+  .btn-primary:hover {
+    background: darkorange;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="forum-page">
+  <div class="breadcrumb">
+    <a href="{% url 'forum_index' %}">🏠 Forum</a> / {{ category.name }}
+  </div>
+
+  <div class="category-header">
+    <h1>{{ category.icon|default:"📁" }} {{ category.name }}</h1>
+    <p>{{ category.description }}</p>
+  </div>
+
+  {% if user.is_authenticated %}
+    <a href="{% url 'forum_create_topic' %}?category={{ category.slug }}" class="btn-primary">
+      ✏️ New Topic
+    </a>
+  {% endif %}
+
+  {% if object_list %}
+    <div class="topics-list">
+      {% for topic in object_list %}
+        <div class="topic-item">
+          <div class="topic-main">
+            <div class="topic-title">
+              <a href="{% url 'forum_topic' topic.slug %}">{{ topic.title }}</a>
+              {% if topic.is_pinned %}
+                <span class="topic-status status-pinned">📌 Pinned</span>
+              {% endif %}
+              {% if topic.is_closed %}
+                <span class="topic-status status-closed">🔒 Closed</span>
+              {% endif %}
+              {% if topic.is_solved %}
+                <span class="topic-status status-solved">✅ Solved</span>
+              {% endif %}
+            </div>
+            <div class="topic-meta">
+              <span>By {{ topic.author.username }}</span>
+              <span>{{ topic.created_at|timesince }} ago</span>
+            </div>
+          </div>
+
+          <div class="topic-stats">
+            <div class="stat">
+              <div class="stat-value">{{ topic.reply_count }}</div>
+              <div class="stat-label">Replies</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">{{ topic.view_count }}</div>
+              <div class="stat-label">Views</div>
+            </div>
+          </div>
+
+          <div class="topic-author">
+            <div class="author-avatar">{{ topic.author.username|slice:":1"|upper }}</div>
+            <div class="author-name">{{ topic.author.username }}</div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+      <div class="pagination">
+        {% if page_obj.has_previous %}
+          <a href="?page=1">« First</a>
+          <a href="?page={{ page_obj.previous_page_number }}">‹ Previous</a>
+        {% endif %}
+
+        <span class="current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}">Next ›</a>
+          <a href="?page={{ page_obj.paginator.num_pages }}">Last »</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  {% else %}
+    <div class="empty-state">
+      <h2>No Topics Yet</h2>
+      <p>Be the first to start a discussion in this category!</p>
+      {% if user.is_authenticated %}
+        <a href="{% url 'forum_create_topic' %}?category={{ category.slug }}" class="btn-primary">
+          Start a Topic
+        </a>
+      {% else %}
+        <a href="{% url 'login' %}?next={% url 'forum_create_topic' %}" class="btn-primary">
+          Login to Post
+        </a>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

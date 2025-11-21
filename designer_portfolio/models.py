@@ -405,6 +405,9 @@ class UserSubscription(models.Model):
     acquisition_landing_page = models.URLField(blank=True, null=True)
     acquisition_initial_referrer = models.URLField(blank=True, null=True)
     
+    # Adobe package inclusion
+    includes_adobe_access = models.BooleanField(default=True, help_text="Whether this subscription includes Adobe Creative Suite access")
+    
     def __str__(self):
         return f"{self.user.username} - {self.status}"
     
@@ -478,3 +481,319 @@ class DocPage(TimeStampedModel):
     
     def __str__(self):
         return self.title
+
+
+# ---------------- Adobe Package Models ----------------
+class AdobeProduct(models.Model):
+    """Individual Adobe products available for packages"""
+    name = models.CharField(max_length=100, unique=True)
+    display_name = models.CharField(max_length=120)
+    description = models.TextField(blank=True)
+    product_icon = models.CharField(max_length=50, blank=True)  # For emoji/icon display
+    adobe_product_id = models.CharField(max_length=100, blank=True)  # Adobe's internal ID
+    is_popular = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['order', 'display_name']
+    
+    def __str__(self):
+        return self.display_name
+
+
+class AdobePackage(models.Model):
+    """Adobe product packages with different product counts and pricing"""
+    PACKAGE_TYPES = [
+        ('single', 'Single Product'),
+        ('duo', '2 Products'),
+        ('trio', '3 Products'),
+        ('quad', '4 Products'),
+        ('penta', '5 Products'),
+        ('hexa', '6 Products'),
+        ('full', 'Full Creative Suite'),
+    ]
+    
+    package_type = models.CharField(max_length=20, choices=PACKAGE_TYPES, unique=True)
+    display_name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    product_count = models.PositiveIntegerField()
+    monthly_price = models.DecimalField(max_digits=6, decimal_places=2)
+    suggested_products = models.ManyToManyField(AdobeProduct, blank=True, help_text="Recommended products for this package")
+    is_popular = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['order', 'product_count']
+    
+    def __str__(self):
+        return f"{self.display_name} - ${self.monthly_price}/month"
+
+
+class UserAdobeSubscription(models.Model):
+    """User's Adobe subscription and product selection"""
+    STATUS_CHOICES = [
+        ('pending', 'Pending Setup'),
+        ('active', 'Active'),
+        ('suspended', 'Suspended'),
+        ('cancelled', 'Cancelled'),
+        ('expired', 'Expired'),
+    ]
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='adobe_subscription')
+    package = models.ForeignKey(AdobePackage, on_delete=models.CASCADE)
+    selected_products = models.ManyToManyField(AdobeProduct, help_text="Products selected by user")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    
+    # Adobe account details
+    adobe_account_email = models.EmailField(blank=True, null=True)
+    adobe_account_status = models.CharField(max_length=50, blank=True, null=True)
+    adobe_subscription_id = models.CharField(max_length=200, blank=True, null=True)
+    
+    # Billing information
+    monthly_cost = models.DecimalField(max_digits=6, decimal_places=2)
+    next_billing_date = models.DateTimeField(null=True, blank=True)
+    last_payment_date = models.DateTimeField(null=True, blank=True)
+    auto_renewal = models.BooleanField(default=True)
+    
+    # Subscription lifecycle
+    subscription_start_date = models.DateTimeField(null=True, blank=True)
+    subscription_end_date = models.DateTimeField(null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Adobe Subscription"
+        verbose_name_plural = "Adobe Subscriptions"
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.package.display_name} ({self.status})"
+    
+    def get_product_names(self):
+        """Return comma-separated list of selected product names"""
+        return ", ".join([product.display_name for product in self.selected_products.all()])
+
+
+class AdobeAccessLog(models.Model):
+    """Log Adobe account access and usage"""
+    user_subscription = models.ForeignKey(UserAdobeSubscription, on_delete=models.CASCADE, related_name='access_logs')
+    product_accessed = models.ForeignKey(AdobeProduct, on_delete=models.CASCADE, null=True, blank=True)
+    access_type = models.CharField(max_length=50, choices=[
+        ('login', 'Account Login'),
+        ('download', 'Product Download'),
+        ('usage', 'Product Usage'),
+        ('support', 'Support Access'),
+    ], default='login')
+    access_timestamp = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True)
+    notes = models.TextField(blank=True)
+    
+    class Meta:
+        ordering = ['-access_timestamp']
+        verbose_name = "Adobe Access Log"
+        verbose_name_plural = "Adobe Access Logs"
+    
+    def __str__(self):
+        return f"{self.user_subscription.user.username} - {self.access_type} - {self.access_timestamp.strftime('%Y-%m-%d %H:%M')}"
+
+
+# ---------------- Community Forum Models ----------------
+class ForumCategory(TimeStampedModel):
+    """Forum categories to organize topics"""
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True, blank=True)
+    description = models.TextField(blank=True)
+    icon = models.CharField(max_length=50, blank=True, help_text="FontAwesome icon class")
+    color = models.CharField(max_length=7, default="#FF6B35", help_text="Hex color code")
+    order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    moderators = models.ManyToManyField(User, related_name='moderated_categories', blank=True)
+    
+    class Meta:
+        ordering = ['order', 'name']
+        verbose_name_plural = "Forum Categories"
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return self.name
+    
+    def get_topic_count(self):
+        return self.topics.filter(is_active=True).count()
+    
+    def get_post_count(self):
+        return ForumPost.objects.filter(topic__category=self, is_active=True).count()
+
+
+class ForumTopic(TimeStampedModel):
+    """Forum topics/threads"""
+    title = models.CharField(max_length=200)
+    slug = models.SlugField(unique=True, blank=True)
+    content = models.TextField()
+    category = models.ForeignKey(ForumCategory, on_delete=models.CASCADE, related_name='topics')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='forum_topics')
+    
+    # Topic status
+    is_active = models.BooleanField(default=True)
+    is_pinned = models.BooleanField(default=False)
+    is_locked = models.BooleanField(default=False)
+    is_featured = models.BooleanField(default=False)
+    
+    # Topic metadata
+    view_count = models.PositiveIntegerField(default=0)
+    last_activity = models.DateTimeField(auto_now_add=True)
+    last_post = models.ForeignKey('ForumPost', on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+    
+    # Tags for better organization
+    tags = models.CharField(max_length=200, blank=True, help_text="Comma-separated tags")
+    
+    class Meta:
+        ordering = ['-is_pinned', '-last_activity']
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.title)
+            slug = base_slug
+            counter = 1
+            while ForumTopic.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return self.title
+    
+    def get_post_count(self):
+        return self.posts.filter(is_active=True).count()
+    
+    def get_tag_list(self):
+        return [tag.strip() for tag in self.tags.split(',') if tag.strip()]
+
+
+class ForumPost(TimeStampedModel):
+    """Forum posts/replies"""
+    topic = models.ForeignKey(ForumTopic, on_delete=models.CASCADE, related_name='posts')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='forum_posts')
+    content = models.TextField()
+    
+    # Post metadata
+    is_active = models.BooleanField(default=True)
+    is_solution = models.BooleanField(default=False, help_text="Mark as solution to the topic")
+    edited_at = models.DateTimeField(null=True, blank=True)
+    
+    # Moderation
+    is_flagged = models.BooleanField(default=False)
+    moderation_notes = models.TextField(blank=True)
+    
+    # Parent for threaded replies
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
+    
+    class Meta:
+        ordering = ['created_at']
+    
+    def __str__(self):
+        return f"Post by {self.author.username} in {self.topic.title}"
+    
+    def get_reply_count(self):
+        return self.replies.filter(is_active=True).count()
+
+
+class ForumLike(TimeStampedModel):
+    """Likes for forum posts"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    post = models.ForeignKey(ForumPost, on_delete=models.CASCADE, related_name='likes')
+    
+    class Meta:
+        unique_together = ['user', 'post']
+    
+    def __str__(self):
+        return f"{self.user.username} liked {self.post.id}"
+
+
+class ForumBookmark(TimeStampedModel):
+    """User bookmarks for topics"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    topic = models.ForeignKey(ForumTopic, on_delete=models.CASCADE, related_name='bookmarks')
+    
+    class Meta:
+        unique_together = ['user', 'topic']
+    
+    def __str__(self):
+        return f"{self.user.username} bookmarked {self.topic.title}"
+
+
+class ForumNotification(TimeStampedModel):
+    """Notifications for forum activity"""
+    NOTIFICATION_TYPES = [
+        ('reply', 'New Reply'),
+        ('mention', 'Mentioned'),
+        ('like', 'Post Liked'),
+        ('solution', 'Solution Marked'),
+        ('topic_created', 'New Topic in Category'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='forum_notifications')
+    notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES)
+    topic = models.ForeignKey(ForumTopic, on_delete=models.CASCADE, null=True)
+    post = models.ForeignKey(ForumPost, on_delete=models.CASCADE, null=True)
+    triggered_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='triggered_notifications')
+    
+    is_read = models.BooleanField(default=False)
+    message = models.CharField(max_length=200, blank=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Notification for {self.user.username}: {self.notification_type}"
+
+
+class ForumUserProfile(TimeStampedModel):
+    """Extended forum profile for users"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='forum_profile')
+    
+    # Forum-specific settings
+    signature = models.CharField(max_length=200, blank=True)
+    show_online_status = models.BooleanField(default=True)
+    email_notifications = models.BooleanField(default=True)
+    
+    # Forum statistics
+    post_count = models.PositiveIntegerField(default=0)
+    topic_count = models.PositiveIntegerField(default=0)
+    solution_count = models.PositiveIntegerField(default=0)
+    reputation_score = models.IntegerField(default=0)
+    
+    # Moderation
+    warning_count = models.PositiveIntegerField(default=0)
+    is_banned = models.BooleanField(default=False)
+    ban_reason = models.TextField(blank=True)
+    ban_until = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        verbose_name = "Forum User Profile"
+        verbose_name_plural = "Forum User Profiles"
+    
+    def __str__(self):
+        return f"Forum profile for {self.user.username}"
+    
+    def get_user_level(self):
+        """Return user level based on post count"""
+        if self.post_count >= 1000:
+            return "Expert"
+        elif self.post_count >= 500:
+            return "Advanced"
+        elif self.post_count >= 100:
+            return "Regular"
+        elif self.post_count >= 20:
+            return "Member"
+        else:
+            return "Newcomer"

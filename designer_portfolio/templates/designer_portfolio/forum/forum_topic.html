@@ -1,0 +1,378 @@
+{% extends "designer_portfolio/base.html" %}
+{% load static %}
+
+{% block title %}{{ topic.title }} | Forum | GlobalDesignerHub{% endblock %}
+
+{% block extra_css %}
+<style>
+  .forum-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .breadcrumb {
+    margin-bottom: 2rem;
+    font-size: 0.9rem;
+  }
+
+  .breadcrumb a {
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+
+  .topic-header {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .topic-title {
+    font-size: 2rem;
+    color: var(--color-primary);
+    margin-bottom: 1rem;
+  }
+
+  .topic-meta {
+    display: flex;
+    gap: 1.5rem;
+    color: #666;
+    font-size: 0.9rem;
+  }
+
+  .topic-actions {
+    display: flex;
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+
+  .btn {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+
+  .btn-primary {
+    background: var(--color-accent);
+    color: white;
+  }
+
+  .btn-secondary {
+    background: #6c757d;
+    color: white;
+  }
+
+  .posts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .post-item {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: 2rem;
+  }
+
+  .post-author {
+    text-align: center;
+  }
+
+  .author-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 0 auto 1rem;
+  }
+
+  .author-name {
+    font-weight: bold;
+    color: var(--color-primary);
+    margin-bottom: 0.5rem;
+  }
+
+  .author-role {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+  }
+
+  .author-stats {
+    font-size: 0.75rem;
+    color: #999;
+  }
+
+  .post-content-wrap {
+    min-width: 0;
+  }
+
+  .post-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .post-date {
+    font-size: 0.85rem;
+    color: #666;
+  }
+
+  .post-actions {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .post-action-btn {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .post-action-btn:hover {
+    color: var(--color-accent);
+  }
+
+  .post-content {
+    line-height: 1.8;
+    color: #333;
+  }
+
+  .post-solution {
+    background: #d4edda;
+    border: 2px solid #28a745;
+    position: relative;
+  }
+
+  .solution-badge {
+    position: absolute;
+    top: -12px;
+    right: 20px;
+    background: #28a745;
+    color: white;
+    padding: 0.25rem 1rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+  }
+
+  .reply-form {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-top: 2rem;
+  }
+
+  .reply-form h3 {
+    margin-bottom: 1rem;
+    color: var(--color-primary);
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+  }
+
+  .form-group textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 1rem;
+  }
+
+  .pagination {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 2rem 0;
+  }
+
+  .pagination a, .pagination span {
+    padding: 0.5rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--color-primary);
+  }
+
+  .pagination .current {
+    background: var(--color-primary);
+    color: white;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="forum-page">
+  <div class="breadcrumb">
+    <a href="{% url 'forum_index' %}">🏠 Forum</a> / 
+    <a href="{% url 'forum_category' topic.category.slug %}">{{ topic.category.name }}</a> / 
+    {{ topic.title }}
+  </div>
+
+  <div class="topic-header">
+    <h1 class="topic-title">{{ topic.title }}</h1>
+    <div class="topic-meta">
+      <span>By {{ topic.author.username }}</span>
+      <span>{{ topic.created_at|date:"F d, Y" }}</span>
+      <span>👁️ {{ topic.view_count }} views</span>
+      <span>💬 {{ posts.count }} replies</span>
+    </div>
+    <div class="topic-actions">
+      <button class="btn btn-secondary" onclick="bookmarkTopic()">🔖 Bookmark</button>
+      {% if user.is_authenticated and user == topic.author %}
+        <button class="btn btn-secondary">✏️ Edit</button>
+        <button class="btn btn-secondary">🔒 Close</button>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="posts-list">
+    <!-- Original post -->
+    <div class="post-item">
+      <div class="post-author">
+        <div class="author-avatar">{{ topic.author.username|slice:":1"|upper }}</div>
+        <div class="author-name">{{ topic.author.username }}</div>
+        <div class="author-role">Designer</div>
+        <div class="author-stats">Posts: {{ topic.author.forumpost_set.count }}</div>
+      </div>
+      <div class="post-content-wrap">
+        <div class="post-meta">
+          <span class="post-date">Posted {{ topic.created_at|timesince }} ago</span>
+        </div>
+        <div class="post-content">{{ topic.content|linebreaks }}</div>
+      </div>
+    </div>
+
+    <!-- Replies -->
+    {% for post in posts %}
+      <div class="post-item {% if post.is_solution %}post-solution{% endif %}">
+        {% if post.is_solution %}
+          <span class="solution-badge">✅ Solution</span>
+        {% endif %}
+        <div class="post-author">
+          <div class="author-avatar">{{ post.author.username|slice:":1"|upper }}</div>
+          <div class="author-name">{{ post.author.username }}</div>
+          <div class="author-role">Designer</div>
+          <div class="author-stats">Posts: {{ post.author.forumpost_set.count }}</div>
+        </div>
+        <div class="post-content-wrap">
+          <div class="post-meta">
+            <span class="post-date">Posted {{ post.created_at|timesince }} ago</span>
+            <div class="post-actions">
+              <button class="post-action-btn" onclick="likePost({{ post.id }})">
+                👍 Like ({{ post.like_count }})
+              </button>
+              {% if user.is_authenticated and user == topic.author and not topic.is_solved %}
+                <button class="post-action-btn" onclick="markSolution({{ post.id }})">
+                  ✅ Mark as Solution
+                </button>
+              {% endif %}
+            </div>
+          </div>
+          <div class="post-content">{{ post.content|linebreaks }}</div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  {% if user.is_authenticated %}
+    {% if not topic.is_closed %}
+      <div class="reply-form">
+        <h3>Post a Reply</h3>
+        <form method="post" action="{% url 'forum_create_post' topic.slug %}">
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="content">Your Reply</label>
+            <textarea name="content" id="content" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Post Reply</button>
+        </form>
+      </div>
+    {% else %}
+      <div class="reply-form">
+        <p style="text-align: center; color: #666;">This topic is closed. No new replies can be posted.</p>
+      </div>
+    {% endif %}
+  {% else %}
+    <div class="reply-form">
+      <p style="text-align: center;">
+        <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary">Login to Reply</a>
+      </p>
+    </div>
+  {% endif %}
+</div>
+
+<script>
+function bookmarkTopic() {
+  fetch("{% url 'forum_bookmark_toggle' topic.slug %}", {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': '{{ csrf_token }}',
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    alert(data.bookmarked ? 'Topic bookmarked!' : 'Bookmark removed!');
+  });
+}
+
+function likePost(postId) {
+  fetch(`/community/forum/post/${postId}/like/`, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': '{{ csrf_token }}',
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    location.reload();
+  });
+}
+
+function markSolution(postId) {
+  if (confirm('Mark this post as the solution?')) {
+    fetch(`/community/forum/post/${postId}/solution/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      location.reload();
+    });
+  }
+}
+</script>
+{% endblock %}
