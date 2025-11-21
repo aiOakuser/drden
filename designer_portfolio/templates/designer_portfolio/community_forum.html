@@ -249,24 +249,31 @@
 
 {% block content %}
 <section class="forum-page">
-  <div class="forum-hero">
+    <div class="forum-hero">
     <p class="forum-hero__eyebrow">GlobalDesignerHub Community</p>
     <h1 class="forum-hero__title">Community Forum</h1>
-    <p>
+      <p>
       Tap into designer-to-designer knowledge, get unstuck faster with Designer AI summaries,
       and follow topic filters tailored for fashion entrepreneurs. Use the search and category filters below to explore our most requested FAQs.
     </p>
 
-    <div class="forum-hero__actions">
-      <a href="{{ community_forum_url }}" target="_blank" rel="noopener" class="forum-btn forum-btn--primary">
-        <i class="fa-solid fa-comments"></i>
-        Visit Community Forum
-      </a>
-      <a href="{% url 'docs_index' %}" class="forum-btn forum-btn--ghost">
-        <i class="fa-solid fa-book-open"></i>
-        Explore documentation
-      </a>
-    </div>
+      <div class="forum-hero__actions">
+        <a
+          href="{{ community_forum_url }}"
+          target="_blank"
+          rel="noopener"
+          class="forum-btn forum-btn--primary"
+          data-testid="VisitCommunityForum"
+          aria-label="Open the GlobalDesignerHub community forum in a new tab"
+        >
+          <i class="fa-solid fa-comments"></i>
+          Visit Community Forum
+        </a>
+        <a href="{% url 'docs_index' %}" class="forum-btn forum-btn--ghost">
+          <i class="fa-solid fa-book-open"></i>
+          Explore documentation
+        </a>
+      </div>
 
     <div class="forum-hero__stats">
       <div class="forum-hero__stat">

@@ -512,7 +512,86 @@ class HomePageView(TemplateView):
                 "specialties": ["Modest luxury", "Resortwear", "Fashion entrepreneurship"],
             },
         ]
-        
+
+        forum_url = getattr(
+            settings,
+            "COMMUNITY_FORUM_URL",
+            "https://community.globaldesignerhub.com",
+        )
+        context["community_forum_url"] = forum_url
+        context["global_designer_features"] = [
+            {
+                "title": "Global designer profiles",
+                "icon": "fa-solid fa-id-card-clip",
+                "description": (
+                    "Verified bios, specialties, and regions show up next to every portfolio, pitch deck, "
+                    "and thread so collaborators immediately know your strengths."
+                ),
+                "bullets": [
+                    "Rich profile cards in the Designers directory",
+                    "Link collections, awards, and preferred markets",
+                ],
+                "cta": {
+                    "label": "Explore designers",
+                    "href": reverse("designers_list"),
+                    "icon": "fa-solid fa-user-group",
+                },
+            },
+            {
+                "title": "Runway-ready collections",
+                "icon": "fa-solid fa-layer-group",
+                "description": (
+                    "Publish collections with lookbooks, motion, and tech pack attachments. "
+                    "Share private review links or embed them across your site."
+                ),
+                "bullets": [
+                    "Versioned lookbooks with cover imagery",
+                    "Guest links expire automatically for security",
+                ],
+                "cta": {
+                    "label": "View collections",
+                    "href": reverse("collections"),
+                    "icon": "fa-solid fa-photo-film",
+                },
+            },
+            {
+                "title": "Designer AI copilot",
+                "icon": "fa-solid fa-robot",
+                "description": (
+                    "Ask portfolio questions, summarize briefs, or draft outreach messages using the embedded "
+                    "Designer AI assistant tuned for GlobalDesignerHub workflows."
+                ),
+                "bullets": [
+                    "Instant answers sourced from your docs",
+                    "Multi-language and session history support",
+                ],
+                "cta": {
+                    "label": "Open Designer AI",
+                    "href": reverse("designer_ai_history"),
+                    "icon": "fa-solid fa-sparkles",
+                },
+            },
+            {
+                "title": "Community forum + events",
+                "icon": "fa-solid fa-comments",
+                "description": (
+                    "Swap build-in-public updates, RSVP to AMAs, and tap Designer AI summaries directly "
+                    "inside threads with the GlobalDesignerHub community."
+                ),
+                "bullets": [
+                    "120+ curated topic filters and event recaps",
+                    "Flag issues or invite partners in seconds",
+                ],
+                "cta": {
+                    "label": "Visit Community Forum",
+                    "href": forum_url,
+                    "target": "_blank",
+                    "rel": "noopener",
+                    "icon": "fa-solid fa-arrow-up-right-from-square",
+                },
+            },
+        ]
+
         return context
 
 class AboutView(TemplateView):

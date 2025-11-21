@@ -130,6 +130,12 @@ CANONICAL_REDIRECT_HOSTS = [
     host for host in CANONICAL_REDIRECT_HOSTS if host and host != CANONICAL_HOST
 ]
 
+def _default_forum_url() -> str:
+    value = os.getenv("COMMUNITY_FORUM_URL", "https://community.globaldesignerhub.com").strip()
+    return value or "https://community.globaldesignerhub.com"
+
+COMMUNITY_FORUM_URL = _default_forum_url()
+
 CANONICAL_DOMAIN_REDIRECT_ENABLED = env_bool(
     "CANONICAL_DOMAIN_REDIRECT_ENABLED",
     default=bool(CANONICAL_HOST) and not DEBUG,

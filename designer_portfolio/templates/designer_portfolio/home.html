@@ -79,12 +79,60 @@
         >View Collections</a
       >
     </div>
-  </div>
-</section>
+    </div>
+  </section>
 
-{% if global_fashion_cities %}
-<!-- Global Cities Section -->
-<section class="global-cities" aria-label="Global designer cities">
+  {% if global_designer_features %}
+  <section class="global-features" aria-label="GlobalDesignerHub platform features">
+    <div class="container">
+      <div class="global-features__header">
+        <p class="section-eyebrow">GlobalDesignerHub Platform</p>
+        <h2 class="section-title">Build, launch, and grow with one toolkit</h2>
+        <p class="global-features__intro">
+          Showcase verified profiles, publish collections with tech packs, tap Designer AI, and visit the community forum without leaving your workspace.
+        </p>
+      </div>
+      <div class="global-feature-grid">
+        {% for feature in global_designer_features %}
+        <article class="global-feature-card">
+          <div class="global-feature-card__icon" aria-hidden="true">
+            <i class="{{ feature.icon }}"></i>
+          </div>
+          <div class="global-feature-card__body">
+            <h3>{{ feature.title }}</h3>
+            <p>{{ feature.description }}</p>
+            {% if feature.bullets %}
+            <ul>
+              {% for bullet in feature.bullets %}
+              <li>{{ bullet }}</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </div>
+          {% if feature.cta %}
+          <a
+            href="{{ feature.cta.href }}"
+            class="global-feature-card__cta"
+            {% if feature.cta.target %}target="{{ feature.cta.target }}"{% endif %}
+            {% if feature.cta.rel %}rel="{{ feature.cta.rel }}"{% endif %}
+            {% if feature.cta.data_qa %}data-testid="{{ feature.cta.data_qa }}"{% endif %}
+          >
+            {% if feature.cta.icon %}
+            <i class="{{ feature.cta.icon }}"></i>
+            {% endif %}
+            {{ feature.cta.label }}
+          </a>
+          {% endif %}
+        </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if global_fashion_cities %}
+  <!-- Global Cities Section -->
+  <section class="global-cities" aria-label="Global designer cities">
   <div class="container">
     <div class="global-cities-header">
       <p class="section-eyebrow">Global network</p>
@@ -318,8 +366,8 @@
   </div>
 </section>
 
-<style>
-  /* Hero Section */
+  <style>
+    /* Hero Section */
   .hero-section {
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary) 100%);
     color: var(--color-secondary);
@@ -375,7 +423,101 @@
     gap: 20px;
     justify-content: center;
     flex-wrap: wrap;
-  }
+    }
+
+    /* Global Features Section */
+    .global-features {
+      padding: 80px 0;
+      background: var(--color-secondary);
+    }
+
+    .global-features__header {
+      text-align: center;
+      max-width: 850px;
+      margin: 0 auto 50px;
+    }
+
+    .global-features__intro {
+      font-size: 1.1rem;
+      color: var(--color-text);
+      line-height: 1.7;
+      margin-top: 15px;
+    }
+
+    .global-feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 25px;
+    }
+
+    .global-feature-card {
+      background: var(--color-surface);
+      border-radius: 22px;
+      padding: 30px;
+      border: 1px solid rgba(var(--color-primary-rgb), 0.08);
+      box-shadow: 0 20px 40px rgba(var(--color-primary-rgb), 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      min-height: 100%;
+    }
+
+    .global-feature-card__icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: rgba(var(--color-primary-rgb), 0.08);
+      color: var(--color-primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+    }
+
+    .global-feature-card__body h3 {
+      margin: 0;
+      font-size: 1.35rem;
+      color: var(--color-primary);
+    }
+
+    .global-feature-card__body p {
+      margin: 0;
+      color: var(--color-text);
+      line-height: 1.6;
+    }
+
+    .global-feature-card__body ul {
+      margin: 12px 0 0;
+      padding-left: 20px;
+      color: var(--color-text);
+      line-height: 1.5;
+    }
+
+    .global-feature-card__body li + li {
+      margin-top: 6px;
+    }
+
+    .global-feature-card__cta {
+      margin-top: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      text-decoration: none;
+      color: var(--color-primary);
+      padding: 10px 0;
+      transition: color 0.3s ease;
+    }
+
+    .global-feature-card__cta:hover {
+      color: var(--color-accent);
+    }
+
+    @media (max-width: 768px) {
+      .global-features {
+        padding: 60px 0;
+      }
+    }
 
     /* Global Cities Section */
     .global-cities {
