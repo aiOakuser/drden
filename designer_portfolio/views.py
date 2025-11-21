@@ -2050,11 +2050,353 @@ Or check out our docs: (/docs/designers/getting-started)"""
 
 
 def _get_ai_response_fallback(message: str, context_page: str = "") -> str:
-    """Fallback response when AI service is not available."""
+    """Enhanced fallback response with FAQ integration."""
     message_lower = message.lower()
-    responses = _get_designer_ai_responses()
     
-    # Check for matching keywords
+    # Comprehensive FAQ-based responses
+    faq_responses = {
+        "portfolio": {
+            "keywords": ["portfolio", "showcase", "projects", "work samples", "display work"],
+            "response": """**Building a Strong Portfolio** 🎨
+
+Your portfolio should include:
+• Professional bio + headshot
+• 6-10 best projects (quality over quantity)
+• Detailed case studies showing your process
+• Before/after visuals demonstrating impact
+• Client testimonials for credibility
+• Clear contact or booking link
+
+**Pro tips:**
+- Update every 3 months
+- Use high-quality images (1200-1600px, under 250KB)
+- Focus on storytelling and results
+- Keep navigation simple and intuitive
+
+Need help with specific aspects? Just ask!"""
+        },
+        "registration": {
+            "keywords": ["register", "sign up", "create account", "join", "how to register"],
+            "response": """**Joining GlobalDesignerHub** 👋
+
+To register as a designer:
+1. Click "Start Free Trial" or "Sign Up" in the navigation
+2. Fill out your profile information
+3. Add your portfolio link (optional but recommended)
+4. Select an Adobe package if you'd like subscription access
+5. Complete verification
+
+**What you get:**
+✅ Personal designer profile
+✅ Project showcase capabilities
+✅ Access to community forum
+✅ Designer AI assistant
+✅ Collaboration opportunities
+
+Your profile is reviewed privately before going public. Ready to start? Click "Sign Up" in the top menu!"""
+        },
+        "website_slow": {
+            "keywords": ["slow", "loading", "performance", "speed", "fast", "optimize"],
+            "response": """**Improving Website Performance** ⚡
+
+Common causes of slow portfolios:
+1. **Large images** - Compress to under 250KB
+2. **Heavy videos** - Use lazy loading
+3. **Unused code** - Minify CSS/JavaScript
+4. **Poor hosting** - Consider upgrading
+
+**Quick fixes:**
+✅ Use WEBP format for images
+✅ Enable caching
+✅ Lazy-load media below the fold
+✅ Use a CDN for static assets
+✅ Remove unused plugins/libraries
+
+**Testing tools:**
+- Google PageSpeed Insights
+- GTmetrix
+- Lighthouse (Chrome DevTools)
+
+Want specific optimization help? Let me know what's slowing you down!"""
+        },
+        "security": {
+            "keywords": ["secure", "security", "hack", "ssl", "https", "password", "protect"],
+            "response": """**Website Security Best Practices** 🔒
+
+Essential security measures:
+
+**Access Control:**
+• Use strong, unique passwords
+• Enable two-factor authentication (2FA)
+• Limit login attempts
+
+**Technical Protection:**
+• Enable HTTPS with SSL certificate (free via Let's Encrypt)
+• Keep all software updated
+• Remove unused plugins
+• Use trusted hosting
+
+**Monitoring:**
+• Regular malware scans
+• Monitor suspicious activity
+• Set up security plugins (Wordfence, Sucuri)
+• Maintain regular backups
+
+**Remember:** A hacked portfolio damages your professional reputation. Security is essential!
+
+Need help setting up specific security features?"""
+        },
+        "responsive": {
+            "keywords": ["responsive", "mobile", "tablet", "device", "breakpoint", "adaptive"],
+            "response": """**Creating Responsive Designs** 📱
+
+**Best practices:**
+1. **Mobile-first approach** - Design for small screens first
+2. **Flexible layouts** - Use CSS Grid or Flexbox
+3. **Fluid units** - Use %, vw, rem instead of fixed pixels
+4. **Responsive images** - Implement srcset for multiple sizes
+
+**Standard breakpoints:**
+• Mobile: 320-480px
+• Tablet: 768-1024px
+• Desktop: 1200px+
+
+**Testing:**
+• Chrome DevTools device mode
+• Real device testing
+• Both portrait and landscape orientations
+
+**Common issues:**
+- Fixed-width elements
+- Non-responsive images
+- Missing media queries
+- Absolute positioning conflicts
+
+Need help with a specific responsive design challenge?"""
+        },
+        "client": {
+            "keywords": ["client", "revision", "payment", "contract", "scope", "unlimited"],
+            "response": """**Managing Client Relationships** 💼
+
+**Handling unlimited revision requests:**
+1. Set clear limits in your contract (2-3 rounds typical)
+2. Define what counts as a revision
+3. Charge for additional rounds
+4. Document all requests
+
+**Essential contract elements:**
+✓ Scope of work & deliverables
+✓ Timeline & milestones
+✓ Revision limits
+✓ Payment schedule (50% upfront common)
+✓ Copyright & usage rights
+✓ Cancellation terms
+
+**Pricing additional work:**
+• Hourly rate for extra revisions
+• Revision packages (e.g., 3 for $XXX)
+• Clear communication about boundaries
+
+**Pro tip:** Clear boundaries protect both your time and the client relationship.
+
+Need help with a specific client situation?"""
+        },
+        "ui_design": {
+            "keywords": ["ui", "user interface", "design principles", "visual design", "layout"],
+            "response": """**UI Design Principles** 🎨
+
+**Essential principles:**
+1. **Consistency** - Uniform patterns and spacing
+2. **Visual Hierarchy** - Clear emphasis on important elements
+3. **Spacing & Alignment** - Proper whitespace and grid-based layouts
+4. **Intuitive Navigation** - Clear menu structure and CTAs
+5. **Accessibility** - High contrast, keyboard navigation, screen reader support
+6. **Responsiveness** - Mobile-first, flexible grids
+
+**Design process:**
+• Start with low-fidelity wireframes
+• Create high-fidelity mockups
+• Build interactive prototypes
+• Test with real users
+• Iterate based on feedback
+
+**Popular tools:**
+Figma, Adobe XD, Sketch, Miro, Framer
+
+What specific aspect of UI design would you like to explore?"""
+        },
+        "backup": {
+            "keywords": ["backup", "restore", "recovery", "save", "data loss"],
+            "response": """**Website Backup Strategy** 💾
+
+**Backup frequency:**
+• Static sites: Weekly
+• Dynamic sites: Daily automated backups
+• Before major updates: Always!
+
+**What to backup:**
+✓ Website files
+✓ Database
+✓ Media/uploads
+✓ Configuration files
+
+**Best practices:**
+• Keep 30-day backup history
+• Store in multiple locations:
+  - Cloud storage (Google Drive, Dropbox)
+  - Offline external drive
+  - Hosting provider backups
+• Test restore process regularly
+
+**Recommended tools:**
+- UpdraftPlus (WordPress)
+- cPanel backup tools
+- Git for code versioning
+- Automated backup services
+
+**Remember:** The best backup is the one you never need but always have!
+
+Need help setting up automated backups?"""
+        },
+        "community": {
+            "keywords": ["community", "forum", "networking", "collaborate", "connect", "designers"],
+            "response": """**Designer Community Benefits** 👥
+
+**Why join our community:**
+🤝 **Networking** - Connect with designers globally
+💡 **Learning** - Get feedback and learn from others
+💼 **Opportunities** - Job leads and collaborations
+🎨 **Inspiration** - See diverse approaches
+🛠️ **Resources** - Templates, tools, and knowledge
+❤️ **Support** - Motivation and advice
+
+**How to participate:**
+• Share your work in Portfolio & Showcase
+• Ask questions in appropriate categories
+• Give constructive feedback to others
+• Join design challenges
+• Share tutorials and tips
+
+**Community guidelines:**
+- Be respectful and constructive
+- Give credit to original creators
+- No plagiarism
+- Keep discussions professional
+
+**Visit our forum:** /community/forum/
+
+Ready to connect with fellow designers?"""
+        },
+        "troubleshooting": {
+            "keywords": ["error", "not working", "broken", "fix", "problem", "issue", "help"],
+            "response": """**Common Issues & Solutions** 🛠️
+
+**Images not loading?**
+• Check file paths and extensions
+• Verify image format (JPG, PNG, WEBP)
+• Compress large files
+• Check HTTPS/HTTP mixed content
+
+**Contact form not working?**
+• Verify SMTP settings
+• Check form validation
+• Test email server
+• Check spam folder
+
+**Layout broken on mobile?**
+• Add responsive breakpoints
+• Use flexible layouts (Grid/Flexbox)
+• Test on real devices
+• Check fixed-width elements
+
+**Site not updating?**
+• Clear cache (browser + server)
+• Hard refresh (Ctrl+F5)
+• Check file upload completed
+• Verify deployment succeeded
+
+**Need specific help?** Describe your issue in detail and I'll provide targeted solutions!"""
+        },
+        "tools": {
+            "keywords": ["tools", "software", "figma", "adobe", "sketch", "xd", "photoshop"],
+            "response": """**Popular Design Tools** 🛠️
+
+**UI/UX Design:**
+• Figma - Collaborative interface design
+• Adobe XD - UI/UX and prototyping
+• Sketch - Mac-based design tool
+• Miro - Brainstorming and wireframing
+
+**Graphic Design:**
+• Adobe Photoshop - Image editing
+• Adobe Illustrator - Vector graphics
+• Canva - Quick designs and templates
+
+**Prototyping:**
+• Framer - Interactive prototypes
+• InVision - Design collaboration
+• Proto.io - Mobile prototyping
+
+**Development:**
+• Webflow - No-code web design
+• VS Code - Code editor
+• GitHub - Version control
+
+**GlobalDesignerHub offers:**
+Adobe Creative Suite packages ($4.99-$29.99/month) with account.adobe.com access for registered users!
+
+Which tools are you interested in learning more about?"""
+        },
+        "pricing": {
+            "keywords": ["price", "cost", "pricing", "rate", "charge", "fee", "payment"],
+            "response": """**Design Pricing Guide** 💰
+
+**Common pricing models:**
+
+**Hourly Rate:**
+• Beginners: $25-50/hour
+• Mid-level: $50-100/hour
+• Expert: $100-200+/hour
+
+**Project-Based:**
+• Logo design: $500-5,000
+• Website design: $2,000-20,000
+• App UI/UX: $5,000-50,000+
+
+**Retainer:**
+• Monthly ongoing work
+• Guaranteed availability
+• Usually discounted hourly rate
+
+**Value-Based:**
+• Price based on client ROI
+• Higher risk, higher reward
+• Best for experienced designers
+
+**Tips for pricing:**
+✓ Know your costs and desired profit
+✓ Research market rates in your area
+✓ Consider your experience level
+✓ Factor in revision rounds
+✓ Require deposit (50% common)
+
+**GlobalDesignerHub subscriptions:**
+• Basic plans: $4.99-$14.99/month
+• Pro plans: $19.99-$29.99/month
+• Includes Adobe access
+
+Need help pricing a specific project type?"""
+        }
+    }
+    
+    # Check FAQ responses first
+    for category, data in faq_responses.items():
+        for keyword in data["keywords"]:
+            if keyword in message_lower:
+                return data["response"]
+    
+    # Fallback to original responses
+    responses = _get_designer_ai_responses()
     for key, data in responses.items():
         if key == "default":
             continue
@@ -2062,7 +2404,25 @@ def _get_ai_response_fallback(message: str, context_page: str = "") -> str:
             if keyword in message_lower:
                 return data["response"]
     
-    return responses["default"]["response"]
+    # Default friendly response
+    return """Hi! I'm Designer AI, your creative assistant. 👋
+
+I can help you with:
+🎨 **Portfolio advice** - Building and showcasing your work
+🌐 **Website help** - Performance, security, troubleshooting
+💻 **Design tips** - UI/UX principles and best practices
+👥 **Community** - Connecting with other designers
+💼 **Client relations** - Contracts, pricing, communication
+🛠️ **Tools & software** - Recommendations and tutorials
+
+**Quick actions:**
+• "How do I register?" - Sign up guidance
+• "Portfolio tips" - Build a strong showcase
+• "Website slow" - Performance optimization
+• "Responsive design" - Mobile-first development
+• "Client revisions" - Managing scope
+
+What would you like to know about?"""
 
 
 @require_POST
