@@ -470,6 +470,8 @@ LOGOUT_REDIRECT_URL = "home"
 LOGIN_URL = "login"
 AUTHENTICATION_BACKENDS = [
     "social_core.backends.google.GoogleOAuth2",
+    "social_core.backends.linkedin.LinkedinOAuth2",
+    "social_core.backends.instagram.InstagramOAuth2",
     "designer_portfolio.auth_backends.EmailOrUsernameModelBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
@@ -490,6 +492,23 @@ SOCIAL_AUTH_REDIRECT_IS_HTTPS = env_bool(
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY") or os.getenv("GOOGLE_CLIENT_ID", "")
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET") or os.getenv("GOOGLE_CLIENT_SECRET", "")
 
+# LinkedIn OAuth (optional)
+SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = os.getenv("SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY") or os.getenv("LINKEDIN_CLIENT_ID", "")
+SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = os.getenv("SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET") or os.getenv("LINKEDIN_CLIENT_SECRET", "")
+SOCIAL_AUTH_LINKEDIN_OAUTH2_SCOPE = env_list("SOCIAL_AUTH_LINKEDIN_OAUTH2_SCOPE", default=["r_liteprofile", "r_emailaddress"])
+SOCIAL_AUTH_LINKEDIN_OAUTH2_FIELD_SELECTORS = ["emailAddress", "firstName", "lastName"]
+SOCIAL_AUTH_LINKEDIN_OAUTH2_EXTRA_DATA = [
+    ("id", "id"),
+    ("firstName", "first_name"),
+    ("lastName", "last_name"),
+    ("emailAddress", "email"),
+]
+
+# Instagram Basic Display (optional)
+SOCIAL_AUTH_INSTAGRAM_KEY = os.getenv("SOCIAL_AUTH_INSTAGRAM_KEY") or os.getenv("INSTAGRAM_CLIENT_ID", "")
+SOCIAL_AUTH_INSTAGRAM_SECRET = os.getenv("SOCIAL_AUTH_INSTAGRAM_SECRET") or os.getenv("INSTAGRAM_CLIENT_SECRET", "")
+SOCIAL_AUTH_INSTAGRAM_SCOPE = env_list("SOCIAL_AUTH_INSTAGRAM_SCOPE", default=["user_profile"])
+
 # Redirects for social auth
 SOCIAL_AUTH_LOGIN_REDIRECT_URL = "/dashboard/"
 SOCIAL_AUTH_LOGIN_ERROR_URL = "/accounts/login/"
@@ -507,6 +526,7 @@ SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.social_auth.associate_user",
     "social_core.pipeline.social_auth.load_extra_data",
     "designer_portfolio.social_pipeline.sync_user_details",
+    "designer_portfolio.social_pipeline.send_welcome_notification",
 )
 
 

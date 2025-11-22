@@ -11,6 +11,7 @@ from django.utils.text import slugify
 from social_core.exceptions import AuthForbidden
 
 from .auth_utils import ensure_designer_access
+from .emails import send_registration_notifications
 
 
 def _coerce_bool(value: Any) -> bool:
@@ -155,4 +156,20 @@ def sync_user_details(strategy, backend=None, user=None, details=None, response=
 
     if profile_updates:
         profile.save(update_fields=profile_updates)
+
+
+def send_welcome_notification(strategy, backend=None, user=None, is_new=False, *args, **kwargs):
+    """Fire the same registration email workflow for new social-auth users."""
+    if not user or not is_new:
+        return
+
+    request = getattr(strategy, "request", None)
+    backend_name = getattr(backend, "name", "") if backend else ""
+    source_label = backend_name.strip() or "oauth"
+
+    try:
+        send_registration_notifications(user, request=request, source=f"oauth:{source_label}")
+    except Exception:
+        # Never block login because an email provider behaved badly.
+        return
 

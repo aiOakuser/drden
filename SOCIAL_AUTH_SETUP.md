@@ -36,34 +36,38 @@ MIDDLEWARE = [
 ]
 ```
 
-Add authentication backends:
+Add authentication backends (Google is required, LinkedIn/Instagram are optional and only activate once keys + secrets are set):
 
 ```python
 AUTHENTICATION_BACKENDS = (
-    'social_core.backends.google.GoogleOAuth2',
-    'social_core.backends.linkedin.LinkedinOAuth2',
-    'social_core.backends.instagram.InstagramOAuth2',
-    'django.contrib.auth.backends.ModelBackend',
+    "social_core.backends.google.GoogleOAuth2",
+    "social_core.backends.linkedin.LinkedinOAuth2",
+    "social_core.backends.instagram.InstagramOAuth2",
+    "designer_portfolio.auth_backends.EmailOrUsernameModelBackend",
+    "django.contrib.auth.backends.ModelBackend",
 )
 ```
 
-Add social auth settings:
+Add social auth settings (keys live under the `SOCIAL_AUTH_*` namespace; we fall back to the legacy names like `GOOGLE_CLIENT_ID` if present):
 
 ```python
 # Social Auth Settings
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv('GOOGLE_OAUTH2_KEY')
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv('GOOGLE_OAUTH2_SECRET')
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY") or os.getenv("GOOGLE_CLIENT_ID")
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET") or os.getenv("GOOGLE_CLIENT_SECRET")
 
-SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = os.getenv('LINKEDIN_OAUTH2_KEY')
-SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = os.getenv('LINKEDIN_OAUTH2_SECRET')
-SOCIAL_AUTH_LINKEDIN_OAUTH2_SCOPE = ['r_liteprofile', 'r_emailaddress']
+# LinkedIn
+SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = os.getenv("SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY") or os.getenv("LINKEDIN_CLIENT_ID")
+SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = os.getenv("SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET") or os.getenv("LINKEDIN_CLIENT_SECRET")
+SOCIAL_AUTH_LINKEDIN_OAUTH2_SCOPE = ["r_liteprofile", "r_emailaddress"]
 
-SOCIAL_AUTH_INSTAGRAM_KEY = os.getenv('INSTAGRAM_KEY')
-SOCIAL_AUTH_INSTAGRAM_SECRET = os.getenv('INSTAGRAM_SECRET')
+# Instagram Basic Display
+SOCIAL_AUTH_INSTAGRAM_KEY = os.getenv("SOCIAL_AUTH_INSTAGRAM_KEY") or os.getenv("INSTAGRAM_CLIENT_ID")
+SOCIAL_AUTH_INSTAGRAM_SECRET = os.getenv("SOCIAL_AUTH_INSTAGRAM_SECRET") or os.getenv("INSTAGRAM_CLIENT_SECRET")
+SOCIAL_AUTH_INSTAGRAM_SCOPE = ["user_profile"]
 
 # Redirect URLs
-SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/'
-SOCIAL_AUTH_LOGIN_ERROR_URL = '/accounts/login/'
+SOCIAL_AUTH_LOGIN_REDIRECT_URL = "/dashboard/"
+SOCIAL_AUTH_LOGIN_ERROR_URL = "/accounts/login/"
 ```
 
 ## 4. Update main urls.py
@@ -112,13 +116,17 @@ python manage.py migrate
 Create a .env file or set environment variables:
 
 ```
-GOOGLE_OAUTH2_KEY=your_google_client_id
-GOOGLE_OAUTH2_SECRET=your_google_client_secret
-LINKEDIN_OAUTH2_KEY=your_linkedin_client_id
-LINKEDIN_OAUTH2_SECRET=your_linkedin_client_secret
-INSTAGRAM_KEY=your_instagram_app_id
-INSTAGRAM_SECRET=your_instagram_app_secret
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY=your_google_client_id
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET=your_google_client_secret
+
+SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY=your_linkedin_client_id
+SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET=your_linkedin_client_secret
+
+SOCIAL_AUTH_INSTAGRAM_KEY=your_instagram_app_id
+SOCIAL_AUTH_INSTAGRAM_SECRET=your_instagram_app_secret
 ```
+
+All social sign-ins share the same login page as designers. Admins can append `?next=/admin/` (or start from `/admin/login/`) to land back in Django admin after authenticating.
 
 ## 8. Update Copilot Instructions
 

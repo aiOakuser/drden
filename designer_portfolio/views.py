@@ -11,13 +11,12 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from django.views.generic import TemplateView, DetailView, ListView, CreateView
-from django.contrib.auth.views import LoginView, PasswordResetView
+from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetConfirmView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import login, authenticate, get_user_model
 from django.http import JsonResponse, Http404
 from django.views.decorators.csrf import requires_csrf_token
 from django.views.decorators.http import require_POST
-from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
@@ -33,6 +32,7 @@ from django.core.paginator import Paginator
 from urllib.parse import urlencode
 from .forms import DesignerSignUpForm, DesignerLoginForm, DesignerPasswordResetForm
 from .auth_utils import ensure_designer_access
+from .emails import send_registration_notifications, notify_user_password_reset_completion
 from .models import (
     DesignerProfile,
     SubscriptionPlan,
@@ -387,6 +387,9 @@ def signup_view(request):
         form = DesignerSignUpForm(request.POST)
         if form.is_valid():
             user = form.save()
+            transaction.on_commit(
+                lambda: send_registration_notifications(user, request=request, source="ui")
+            )
             raw_password = form.cleaned_data.get("password1")
             user_auth = authenticate(request, username=user.username, password=raw_password)
             if user_auth is not None and user_auth.is_active:
@@ -1142,37 +1145,9 @@ class DesignerRegistrationView(APIView):
             if update_fields:
                 subscription.save(update_fields=list(update_fields))
 
-            def send_registration_emails():
-                # Welcome email to designer
-                send_mail(
-                    subject="Welcome to designer ? Your Account Is Ready",
-                    message=(
-                        f"Hello {username},\n\n"
-                        "Thanks for registering as a designer with designer.\n"
-                        "Your account is now active. You can sign in and access your dashboard immediately.\n\n"
-                        "Best,\nTeam designer"
-                    ),
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[email],
-                    fail_silently=True,
-                )
-
-                # Internal notification email to owner
-                owner_email = getattr(settings, "ADMIN_EMAIL", None)
-                if owner_email:
-                    send_mail(
-                        subject="New Designer Registration ? Review Needed",
-                        message=(
-                            "A new designer has registered and is pending approval.\n\n"
-                            f"Username: {username}\n"
-                            f"Email: {email}\n"
-                        ),
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=[owner_email],
-                        fail_silently=True,
-                    )
-
-            transaction.on_commit(send_registration_emails)
+            transaction.on_commit(
+                lambda: send_registration_notifications(user, request=request, source="api")
+            )
 
         return Response(
             {"message": "Registration successful. You can now sign in."},
@@ -1834,6 +1809,55 @@ class DesignerLoginView(LoginView):
     template_name = "registration/login.html"
     authentication_form = DesignerLoginForm
 
+    def _provider_enabled(self, key_attr: str, secret_attr: str) -> bool:
+        key = getattr(settings, key_attr, "") or ""
+        secret = getattr(settings, secret_attr, "") or ""
+        return bool(key and secret)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        provider_catalog = [
+            (
+                "SOCIAL_AUTH_GOOGLE_OAUTH2_KEY",
+                "SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET",
+                "google-oauth2",
+                "Google",
+                "google",
+                "G",
+            ),
+            (
+                "SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY",
+                "SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET",
+                "linkedin-oauth2",
+                "LinkedIn",
+                "linkedin",
+                "in",
+            ),
+            (
+                "SOCIAL_AUTH_INSTAGRAM_KEY",
+                "SOCIAL_AUTH_INSTAGRAM_SECRET",
+                "instagram",
+                "Instagram",
+                "instagram",
+                "IG",
+            ),
+        ]
+
+        providers = []
+        for key_attr, secret_attr, backend_name, label, css_class, icon in provider_catalog:
+            if self._provider_enabled(key_attr, secret_attr):
+                providers.append(
+                    {
+                        "backend": backend_name,
+                        "label": label,
+                        "css_class": css_class,
+                        "icon": icon,
+                    }
+                )
+
+        context["social_login_providers"] = providers
+        return context
+
     def form_valid(self, form):
         response = super().form_valid(form)
         remember_me = form.cleaned_data.get("remember_me")
@@ -1857,6 +1881,18 @@ class DesignerPasswordResetView(PasswordResetView):
     email_template_name = "registration/password_reset_email.html"
     subject_template_name = "registration/password_reset_subject.txt"
     success_url = reverse_lazy("password_reset_done")
+
+
+class DesignerPasswordResetConfirmView(PasswordResetConfirmView):
+    template_name = "registration/password_reset_confirm.html"
+    success_url = reverse_lazy("password_reset_complete")
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        user = getattr(self, "user", None)
+        if user is not None:
+            notify_user_password_reset_completion(user, request=self.request)
+        return response
 
 
 # --- Security/Errors ---

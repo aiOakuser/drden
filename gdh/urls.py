@@ -7,6 +7,7 @@ from designer_portfolio.views import (
     signup_view,
     DesignerLoginView,
     DesignerPasswordResetView,
+    DesignerPasswordResetConfirmView,
 )  # Import the signup_view and custom login
 
 urlpatterns = [
@@ -16,6 +17,11 @@ urlpatterns = [
     path("accounts/login/", DesignerLoginView.as_view(), name="login"),
     path("accounts/logout/", auth_views.LogoutView.as_view(next_page="home"), name="logout"),
     path("accounts/password_reset/", DesignerPasswordResetView.as_view(), name="password_reset"),
+    path(
+        "accounts/reset/<uidb64>/<token>/",
+        DesignerPasswordResetConfirmView.as_view(),
+        name="password_reset_confirm",
+    ),
     path("accounts/", include("django.contrib.auth.urls")),  # includes reset/confirm/complete routes
     path("accounts/signup/", signup_view, name="signup"),
     # Social auth routes

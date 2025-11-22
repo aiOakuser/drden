@@ -110,16 +110,25 @@ designer{% endblock %} {% block content %}
     </div>
   </div>
 
-  <!-- Social Login -->
-  <div class="social-login-section" style="margin-top: 20px; text-align: center">
-    <p style="margin-bottom: 15px; color: var(--color-text-muted); font-size: 14px">Or continue with</p>
-    <div class="social-login-buttons" style="display: flex; justify-content: center; gap: 15px">
-      <a href="{% url 'social:begin' 'google-oauth2' %}{% if next %}?next={{ next|urlencode }}{% endif %}"
-         class="social-login-btn google" title="Sign in with Google" aria-label="Sign in with Google">
-        <span>G</span>
-      </a>
+    {% if social_login_providers %}
+    <!-- Social Login -->
+    <div class="social-login-section" style="margin-top: 20px; text-align: center">
+      <p style="margin-bottom: 15px; color: var(--color-text-muted); font-size: 14px">Or continue with</p>
+      <div class="social-login-buttons" style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap">
+        {% for provider in social_login_providers %}
+        <a href="{% url 'social:begin' provider.backend %}{% if next %}?next={{ next|urlencode }}{% endif %}"
+           class="social-login-btn {{ provider.css_class|default:'' }}"
+           title="Sign in with {{ provider.label }}"
+           aria-label="Sign in with {{ provider.label }}">
+          <span>{{ provider.icon }}</span>
+        </a>
+        {% endfor %}
+      </div>
+      <p style="margin-top: 12px; font-size: 12px; color: var(--color-text-muted);">
+        Admins can start here too—use <code>?next=/admin/</code> to jump straight back into the admin after signing in.
+      </p>
     </div>
-  </div>
+    {% endif %}
 </div>
 
 <style>

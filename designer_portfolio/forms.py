@@ -11,6 +11,7 @@ from django.db.models import Q
 from datetime import timedelta
 from .models import SubscriptionPlan, UserSubscription
 from .auth_utils import ensure_designer_access
+from .emails import notify_password_reset_request
 
 class DesignerSignUpForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -307,3 +308,4 @@ class DesignerPasswordResetForm(PasswordResetForm):
                 user_email,
                 html_email_template_name=html_email_template_name,
             )
+            notify_password_reset_request(user, request=request)
