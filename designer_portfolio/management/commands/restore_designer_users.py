@@ -28,5 +28,5 @@ class Command(BaseCommand):
         self.stdout.write(f"  Profiles updated: {summary['profiles_updated']}")
         self.stdout.write("")
         self.stdout.write(
-            "Tip: Set SERI_CONTACT_EMAIL in your environment before running to show the email icon for 'seri'."
+            "Tip: Set PRETTYPEARL_CONTACT_EMAIL in your environment before running to show the email icon for 'prettypearl'."
         )

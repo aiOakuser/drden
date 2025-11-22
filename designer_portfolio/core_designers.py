@@ -29,9 +29,9 @@ def _designer_seed_entries() -> list[Dict[str, Any]]:
         {"username": "Over-Stimulated", "portfolio_website": "https://stimulated.aioak.co"},
         {"username": "m1director", "portfolio_website": "https://m1director.aioak.co"},
         {
-            "username": "seri",
+            "username": "prettypearl",
             # Prefer environment variable; if empty, leaves contact hidden until set
-            "contact_email": os.getenv("SERI_CONTACT_EMAIL", "").strip(),
+            "contact_email": os.getenv("PRETTYPEARL_CONTACT_EMAIL", "").strip(),
         },
         {"username": "myrym", "portfolio_website": "https://myrym.aioak.co"},
         {"username": "ateliernova", "portfolio_website": "https://ateliernova.aioak.co"},

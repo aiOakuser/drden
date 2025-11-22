@@ -619,7 +619,7 @@ class PrivacyPolicyView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         contact_email = (
-            getattr(settings, "SERI_CONTACT_EMAIL", "")
+            getattr(settings, "PRETTYPEARL_CONTACT_EMAIL", "")
             or getattr(settings, "ADMIN_EMAIL", "")
             or "support@globaldesignerhub.com"
         )
@@ -638,7 +638,7 @@ class TermsOfServiceView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         support_email = (
-            getattr(settings, "SERI_CONTACT_EMAIL", "")
+            getattr(settings, "PRETTYPEARL_CONTACT_EMAIL", "")
             or getattr(settings, "ADMIN_EMAIL", "")
             or "support@globaldesignerhub.com"
         )

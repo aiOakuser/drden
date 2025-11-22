@@ -460,6 +460,7 @@ else:
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "GlobalDesignerHub <no-reply@globaldesignerhub.com>")
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 ADMIN_EMAIL = "chpreddy@gmail.com"
+PRETTYPEARL_CONTACT_EMAIL = os.getenv("PRETTYPEARL_CONTACT_EMAIL", "").strip()
 
 # Password reset settings
 PASSWORD_RESET_TIMEOUT = 86400  # 24 hours (in seconds)
