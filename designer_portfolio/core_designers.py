@@ -9,6 +9,7 @@ from django.db import transaction
 from designer_portfolio.models import DesignerProfile
 
 Notifier = Optional[Callable[[str], None]]
+PROFILE_FIELD_NAMES: tuple[str, ...] = ("portfolio_website", "contact_email", "location")
 
 
 def _notify(notifier: Notifier, message: str) -> None:
@@ -23,11 +24,27 @@ def _designer_seed_entries() -> list[Dict[str, Any]]:
     stay up to date across both management commands and automatic bootstrap steps.
     """
     return [
-        {"username": "caukin", "portfolio_website": "https://caukin.aioak.co"},
-        {"username": "jturner", "portfolio_website": "https://jturner.aioak.co"},
+        {
+            "username": "caukin",
+            "portfolio_website": "https://caukin.aioak.co",
+            "location": "Los Angeles, CA, USA",
+        },
+        {
+            "username": "jturner",
+            "portfolio_website": "https://jturner.aioak.co",
+            "location": "Los Angeles, CA, USA",
+        },
         {"username": "rossmason", "portfolio_website": "https://rossmason.aioak.co"},
-        {"username": "Over-Stimulated", "portfolio_website": "https://stimulated.aioak.co"},
-        {"username": "m1director", "portfolio_website": "https://m1director.aioak.co"},
+        {
+            "username": "Over-Stimulated",
+            "portfolio_website": "https://stimulated.aioak.co",
+            "location": "Los Angeles, CA, USA",
+        },
+        {
+            "username": "m1director",
+            "portfolio_website": "https://m1director.aioak.co",
+            "location": "Los Angeles, CA, USA",
+        },
         {
             "username": "prettypearl",
             # Prefer environment variable; if empty, leaves contact hidden until set
@@ -56,11 +73,11 @@ def ensure_core_designers(make_inactive: bool = False, notifier: Notifier = None
     for entry in _designer_seed_entries():
         username = entry["username"]
 
-        profile_fields: Dict[str, Any] = {}
-        if entry.get("portfolio_website"):
-            profile_fields["portfolio_website"] = entry["portfolio_website"]
-        if entry.get("contact_email"):
-            profile_fields["contact_email"] = entry["contact_email"]
+        profile_fields: Dict[str, Any] = {
+            field_name: entry[field_name]
+            for field_name in PROFILE_FIELD_NAMES
+            if entry.get(field_name)
+        }
 
         user, created = User.objects.get_or_create(username=username)
 
