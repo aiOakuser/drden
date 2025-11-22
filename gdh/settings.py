@@ -442,14 +442,27 @@ else:
     SESSION_ENGINE = "django.contrib.sessions.backends.db"
 
 # --- Email ---
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
-EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))
-EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", default=True)
+# Email Configuration
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
-DEFAULT_FROM_EMAIL = "no-reply@aioak.net"
+
+# Use console backend in development if no email credentials configured
+if DEBUG and not EMAIL_HOST_USER:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
+    EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))
+    EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", default=True)
+    EMAIL_USE_SSL = env_bool("EMAIL_USE_SSL", default=False)  # Use SSL for port 465
+    EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", 10))  # Connection timeout in seconds
+
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "GlobalDesignerHub <no-reply@globaldesignerhub.com>")
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
 ADMIN_EMAIL = "chpreddy@gmail.com"
+
+# Password reset settings
+PASSWORD_RESET_TIMEOUT = 86400  # 24 hours (in seconds)
 
 
 LOGIN_REDIRECT_URL = "designer_dashboard"
