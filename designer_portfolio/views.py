@@ -1804,6 +1804,22 @@ class DesignersListView(ListView):
             user__is_active=True
         ).select_related('user').order_by('-created_at')
 
+    def get_context_data(self, **kwargs):
+        """Expose viewer metadata for the follow interactions on the page."""
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        viewer_name = ""
+        if getattr(user, "is_authenticated", False):
+            viewer_name = (user.get_full_name() or "").strip() or user.username
+
+        context.update(
+            {
+                "viewer_name": viewer_name,
+                "viewer_is_authenticated": bool(getattr(user, "is_authenticated", False)),
+            }
+        )
+        return context
+
 
 class DesignerLoginView(LoginView):
     template_name = "registration/login.html"

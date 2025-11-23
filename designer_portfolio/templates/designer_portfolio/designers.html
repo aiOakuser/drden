@@ -150,16 +150,25 @@
             {% endif %}
           </div>
 
-          <div class="card-actions">
-              {% if contact_email %}
-              <a href="mailto:{{ contact_email }}" class="btn btn-primary">
-              <i class="fas fa-paper-plane"></i> Get In Touch
-            </a>
-            {% endif %}
-            <button class="btn btn-secondary" onclick="toggleFavorite(this)">
-              <i class="far fa-heart"></i> Follow
-            </button>
-          </div>
+            <div class="card-actions">
+                {% if contact_email %}
+                <a href="mailto:{{ contact_email }}" class="btn btn-primary">
+                <i class="fas fa-paper-plane"></i> Get In Touch
+              </a>
+              {% endif %}
+              <button
+                class="btn btn-secondary follow-btn"
+                type="button"
+                data-follow-button
+                data-designer-id="{{ designer.user_id }}"
+                data-designer-name="{{ designer.user.get_full_name|default:designer.user.username }}"
+                aria-pressed="false"
+              >
+                <i class="far fa-heart" aria-hidden="true"></i>
+                <span data-follow-text>Follow</span>
+              </button>
+            </div>
+            <div class="follow-status" data-follow-status aria-live="polite" hidden></div>
         </div>
         </article>
           {% endwith %}
@@ -244,6 +253,18 @@
 .designer-bio { font-size: clamp(0.98rem, 1.6vw, 1.12rem); line-height: 1.6; color: var(--color-text); }
 .designer-meta .meta-item { font-size: clamp(0.95rem, 1.5vw, 1.05rem); color: var(--color-text); }
   .portfolio-notice { margin-top: 16px; padding: 12px 14px; background: var(--color-accent-soft); border: 1px solid var(--color-accent-soft); border-radius: 10px; font-size: 0.95rem; color: var(--color-primary); line-height: 1.5; }
+  .card-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .follow-btn { display: inline-flex; align-items: center; gap: 8px; transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease; }
+  .follow-btn.is-following { background: var(--color-accent); color: var(--color-primary); transform: translateY(-1px); }
+  .follow-btn.is-following i { color: inherit; }
+  .follow-status { margin-top: 12px; min-height: 24px; font-size: 0.95rem; color: var(--color-text); }
+  .follow-status.active .follow-pill { animation: pulse-follow 0.3s ease-in; }
+  .follow-pill { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; font-weight: 600; background: rgba(var(--color-primary-rgb), 0.08); border: 1px solid rgba(var(--color-primary-rgb), 0.15); color: var(--color-primary); }
+  .follow-pill i { color: var(--color-accent); }
+  @keyframes pulse-follow {
+    from { transform: scale(0.96); opacity: 0.5; }
+    to { transform: scale(1); opacity: 1; }
+  }
 
 /* Make entire card feel clickable when website exists */
 .clickable-card { cursor: pointer; }
@@ -256,6 +277,11 @@
 </style>
 
 <script>
+window.GDH_FOLLOW_VIEWER = {
+  name: "{{ viewer_name|default_if_none:''|escapejs }}",
+  isAuthenticated: {{ viewer_is_authenticated|yesno:"true,false" }},
+};
+
 document.addEventListener("DOMContentLoaded", function () {
   const filterButtons = document.querySelectorAll(".filter-btn");
   const designerCards = document.querySelectorAll(".designer-card");
@@ -302,5 +328,173 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 });
+
+(function activateDesignerFollowButtons() {
+  const FOLLOW_STATE_KEY = "gdh_designer_follow_state";
+  const VIEWER_NAME_KEY = "gdh_follow_viewer_name";
+  const viewerBootstrap = window.GDH_FOLLOW_VIEWER || {};
+  let viewerName = (viewerBootstrap.name || "").trim();
+  let followState = loadFollowState();
+
+  if (!viewerName) {
+    viewerName = (safeGet(VIEWER_NAME_KEY) || "").trim();
+  } else {
+    safeSet(VIEWER_NAME_KEY, viewerName);
+  }
+
+  function safeGet(key) {
+    try {
+      return window.localStorage.getItem(key);
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function safeSet(key, value) {
+    try {
+      window.localStorage.setItem(key, value);
+    } catch (err) {
+      // Ignore storage restrictions (private mode, quota exceeded, etc.)
+    }
+  }
+
+  function loadFollowState() {
+    const raw = safeGet(FOLLOW_STATE_KEY);
+    if (!raw) return {};
+    try {
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (err) {
+      return {};
+    }
+  }
+
+  function persistFollowState() {
+    safeSet(FOLLOW_STATE_KEY, JSON.stringify(followState));
+  }
+
+  function escapeHtml(value) {
+    return (value || "").replace(/[&<>"']/g, function (character) {
+      switch (character) {
+        case "&":
+          return "&amp;";
+        case "<":
+          return "&lt;";
+        case ">":
+          return "&gt;";
+        case '"':
+          return "&quot;";
+        case "'":
+          return "&#39;";
+        default:
+          return character;
+      }
+    });
+  }
+
+  function updateButtonVisuals(button, isFollowing) {
+    if (!button) return;
+    button.classList.toggle("is-following", isFollowing);
+    button.setAttribute("aria-pressed", isFollowing ? "true" : "false");
+    const icon = button.querySelector("i");
+    if (icon) {
+      icon.classList.toggle("far", !isFollowing);
+      icon.classList.toggle("fas", isFollowing);
+    }
+    const label = button.querySelector("[data-follow-text]");
+    if (label) {
+      label.textContent = isFollowing ? "Following" : "Follow";
+    }
+  }
+
+  function updateStatus(element, isFollowing, designerName, followerName) {
+    if (!element) return;
+    if (!isFollowing) {
+      element.innerHTML = "";
+      element.hidden = true;
+      element.classList.remove("active");
+      return;
+    }
+    const safeDesigner = escapeHtml(designerName || "this designer");
+    const safeFollower = escapeHtml(followerName || viewerName || "You");
+    element.innerHTML =
+      '<span class="follow-pill">' +
+      '<i class="fas fa-heart" aria-hidden="true"></i>' +
+      " Following " + safeDesigner + " as <strong>" + safeFollower + "</strong>" +
+      "</span>";
+    element.hidden = false;
+    element.classList.add("active");
+  }
+
+  function promptForViewerName() {
+    const response = window.prompt("Add your name so designers see who followed them:", "");
+    if (!response) return "";
+    return response.trim();
+  }
+
+  function handleFollowClick(event) {
+    const button = event.currentTarget;
+    const designerId = button.dataset.designerId;
+    if (!designerId) return;
+    const designerName = button.dataset.designerName || "this designer";
+    const card = button.closest(".designer-card");
+    const statusElement = card ? card.querySelector("[data-follow-status]") : null;
+    let followerName = viewerName;
+    if (!followerName) {
+      followerName = promptForViewerName();
+      if (!followerName) {
+        button.blur();
+        return;
+      }
+      viewerName = followerName;
+      safeSet(VIEWER_NAME_KEY, viewerName);
+    }
+
+    const isFollowing = button.classList.contains("is-following");
+    if (isFollowing) {
+      delete followState[designerId];
+      persistFollowState();
+      updateButtonVisuals(button, false);
+      updateStatus(statusElement, false);
+    } else {
+      followState[designerId] = {
+        designerName: designerName,
+        viewerName: followerName,
+        followedAt: new Date().toISOString(),
+      };
+      persistFollowState();
+      updateButtonVisuals(button, true);
+      updateStatus(statusElement, true, designerName, followerName);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const buttons = document.querySelectorAll("[data-follow-button]");
+    if (!buttons.length) {
+      return;
+    }
+
+    buttons.forEach(function (button) {
+      const designerId = button.dataset.designerId;
+      const card = button.closest(".designer-card");
+      const statusElement = card ? card.querySelector("[data-follow-status]") : null;
+      const savedState = designerId ? followState[designerId] : null;
+      if (savedState) {
+        viewerName = viewerName || savedState.viewerName || "";
+        updateButtonVisuals(button, true);
+        updateStatus(
+          statusElement,
+          true,
+          savedState.designerName || button.dataset.designerName,
+          savedState.viewerName || viewerName
+        );
+      } else {
+        updateButtonVisuals(button, false);
+        updateStatus(statusElement, false);
+      }
+      button.addEventListener("click", handleFollowClick);
+    });
+  });
+})();
 </script>
 {% endblock %}
