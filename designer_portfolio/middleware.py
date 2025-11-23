@@ -6,7 +6,7 @@ from typing import Callable, Dict, Iterable, List
 
 from django.conf import settings
 from django.core.cache import cache
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, HttpResponsePermanentRedirect
 
 
 logger = logging.getLogger(__name__)

@@ -1,0 +1,42 @@
+{% extends "designer_portfolio/base.html" %}
+
+{% block title %}Thank you — GlobalDesignerHub{% endblock %}
+
+{% block content %}
+<section class="thanks">
+  <h1>Thanks for the heads up!</h1>
+  <p>We received your report and will follow up at {{ support_email|default:"support@globaldesignerhub.com" }} if we need more detail.</p>
+  <a href="{% url 'home' %}" class="btn-link">Back to home</a>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.thanks {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.thanks h1 {
+  font-size: clamp(2rem, 5vw, 2.8rem);
+  margin-bottom: 16px;
+}
+
+.thanks p {
+  font-size: 1.1rem;
+  color: var(--color-text-muted);
+  margin-bottom: 24px;
+}
+
+.btn-link {
+  display: inline-block;
+  padding: 12px 26px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--color-secondary);
+  text-decoration: none;
+}
+</style>
+{% endblock %}

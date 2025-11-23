@@ -152,6 +152,62 @@ class DesignerAIMessageAdmin(admin.ModelAdmin):
     short_content.short_description = "Content"
 
 
+@admin.register(m.ProblemReport)
+class ProblemReportAdmin(admin.ModelAdmin):
+    list_display = (
+        "subject",
+        "category",
+        "status",
+        "email",
+        "created_at",
+    )
+    list_filter = ("category", "status", "created_at")
+    search_fields = ("subject", "message", "email", "name", "page_url")
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+        "ip_address",
+        "user_agent",
+        "reporter",
+    )
+    fieldsets = (
+        (
+            "Report Details",
+            {
+                "fields": (
+                    "subject",
+                    "category",
+                    "status",
+                    "message",
+                    "page_url",
+                )
+            },
+        ),
+        (
+            "Reporter",
+            {
+                "fields": (
+                    "name",
+                    "email",
+                    "reporter",
+                )
+            },
+        ),
+        (
+            "Diagnostics",
+            {
+                "fields": (
+                    "ip_address",
+                    "user_agent",
+                    "created_at",
+                    "updated_at",
+                ),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+
+
 @admin.register(m.DocPage)
 class DocPageAdmin(admin.ModelAdmin):
     list_display = ("title", "slug", "category", "language", "published", "order")

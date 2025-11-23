@@ -252,6 +252,68 @@ class DesignerQuestion(models.Model):
         return self.question[:60]
 
 
+class ProblemReport(TimeStampedModel):
+    CATEGORY_WEBSITE = "website"
+    CATEGORY_TECHNICAL = "technical"
+    CATEGORY_BILLING = "billing"
+    CATEGORY_OTHER = "other"
+
+    CATEGORY_CHOICES = [
+        (CATEGORY_WEBSITE, "Website improvement"),
+        (CATEGORY_TECHNICAL, "Technical issue"),
+        (CATEGORY_BILLING, "Billing or subscription"),
+        (CATEGORY_OTHER, "Other"),
+    ]
+
+    STATUS_OPEN = "open"
+    STATUS_IN_PROGRESS = "in_progress"
+    STATUS_CLOSED = "closed"
+
+    STATUS_CHOICES = [
+        (STATUS_OPEN, "Open"),
+        (STATUS_IN_PROGRESS, "In progress"),
+        (STATUS_CLOSED, "Closed"),
+    ]
+
+    reporter = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="problem_reports",
+        help_text="Authenticated user who filed the report (if available).",
+    )
+    name = models.CharField(max_length=120, blank=True)
+    email = models.EmailField(help_text="Address we can reply to.")
+    category = models.CharField(
+        max_length=32, choices=CATEGORY_CHOICES, default=CATEGORY_OTHER
+    )
+    subject = models.CharField(max_length=200)
+    message = models.TextField()
+    page_url = models.CharField(
+        max_length=500, blank=True, help_text="Optional page URL where the issue occurred."
+    )
+    status = models.CharField(
+        max_length=32, choices=STATUS_CHOICES, default=STATUS_OPEN
+    )
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.CharField(max_length=500, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.get_category_display()} – {self.subject}"
+
+    @property
+    def reporter_display_name(self) -> str:
+        if self.name:
+            return self.name
+        if self.reporter:
+            return self.reporter.get_full_name() or self.reporter.get_username()
+        return "Anonymous"
+
+
 # ---------------- Designer Profile ----------------
 class DesignerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='designer_profile')

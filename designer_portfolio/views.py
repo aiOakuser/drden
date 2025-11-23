@@ -10,7 +10,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
-from django.views.generic import TemplateView, DetailView, ListView, CreateView
+from django.views.generic import TemplateView, DetailView, ListView, CreateView, FormView
 from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetConfirmView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import login, authenticate, get_user_model
@@ -30,9 +30,18 @@ from django.urls import reverse_lazy, reverse
 from django.utils.text import slugify
 from django.core.paginator import Paginator
 from urllib.parse import urlencode
-from .forms import DesignerSignUpForm, DesignerLoginForm, DesignerPasswordResetForm
+from .forms import (
+    DesignerSignUpForm,
+    DesignerLoginForm,
+    DesignerPasswordResetForm,
+    ReportProblemForm,
+)
 from .auth_utils import ensure_designer_access
-from .emails import send_registration_notifications, notify_user_password_reset_completion
+from .emails import (
+    send_registration_notifications,
+    notify_user_password_reset_completion,
+    notify_problem_report,
+)
 from .models import (
     DesignerProfile,
     SubscriptionPlan,
@@ -52,6 +61,7 @@ from .models import (
     ForumBookmark,
     ForumNotification,
     ForumUserProfile,
+    ProblemReport,
 )
 
 from webauthn import (
@@ -648,6 +658,104 @@ class TermsOfServiceView(TemplateView):
                 "effective_date": "November 19, 2025",
                 "contact_email": support_email,
             }
+        )
+        return context
+
+
+class ReportProblemView(FormView):
+    template_name = "designer_portfolio/report_problem.html"
+    form_class = ReportProblemForm
+    success_url = reverse_lazy("report_problem_thanks")
+
+    def get_initial(self):
+        initial = super().get_initial()
+        user = self.request.user
+        if user.is_authenticated:
+            initial.setdefault("name", user.get_full_name() or user.get_username())
+            if user.email:
+                initial.setdefault("email", user.email)
+        page_hint = (self.request.GET.get("page") or "").strip()
+        if page_hint:
+            initial.setdefault("page_url", page_hint)
+        return initial
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["support_email"] = (
+            getattr(settings, "PRETTYPEARL_CONTACT_EMAIL", "")
+            or getattr(settings, "ADMIN_EMAIL", "")
+            or "support@globaldesignerhub.com"
+        )
+        context["category_cards"] = [
+            {
+                "key": ProblemReport.CATEGORY_WEBSITE,
+                "title": "Website improvements",
+                "description": "Navigation confusion, missing content, or layout fixes.",
+                "icon": "fa-solid fa-sparkles",
+            },
+            {
+                "key": ProblemReport.CATEGORY_TECHNICAL,
+                "title": "Technical issues",
+                "description": "Errors, performance hiccups, sign-in or upload failures.",
+                "icon": "fa-solid fa-bug",
+            },
+            {
+                "key": ProblemReport.CATEGORY_BILLING,
+                "title": "Billing & subscriptions",
+                "description": "Plan upgrades, invoices, credit card or PayPal problems.",
+                "icon": "fa-solid fa-credit-card",
+            },
+            {
+                "key": ProblemReport.CATEGORY_OTHER,
+                "title": "Something else",
+                "description": "Anything that doesn't fit above — we still want to know.",
+                "icon": "fa-solid fa-comments",
+            },
+        ]
+        return context
+
+    def form_valid(self, form):
+        report: ProblemReport = form.save(commit=False)
+        request = self.request
+        if request.user.is_authenticated:
+            report.reporter = request.user
+            if not report.email:
+                report.email = (request.user.email or "").strip()
+            if not report.name:
+                report.name = request.user.get_full_name() or request.user.get_username()
+
+        report.ip_address = request.META.get("REMOTE_ADDR") or None
+        report.user_agent = (request.META.get("HTTP_USER_AGENT") or "")[:500]
+        report.save()
+
+        transaction.on_commit(lambda: notify_problem_report(report, request=request))
+
+        if _request_wants_json(request):
+            return JsonResponse(
+                {
+                    "status": "ok",
+                    "report_id": report.pk,
+                }
+            )
+
+        messages.success(request, "Thanks for sharing — our team will review your report shortly.")
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        if _request_wants_json(self.request):
+            return JsonResponse({"errors": form.errors}, status=400)
+        return super().form_invalid(form)
+
+
+class ReportProblemThanksView(TemplateView):
+    template_name = "designer_portfolio/report_problem_thanks.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["support_email"] = (
+            getattr(settings, "PRETTYPEARL_CONTACT_EMAIL", "")
+            or getattr(settings, "ADMIN_EMAIL", "")
+            or "support@globaldesignerhub.com"
         )
         return context
 

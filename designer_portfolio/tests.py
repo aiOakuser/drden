@@ -1,10 +1,10 @@
-from django.test import TestCase, override_settings
+from django.test import TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.core import mail
 from social_core.exceptions import AuthForbidden
 
-from .models import DesignerProfile, UserSubscription
+from .models import DesignerProfile, UserSubscription, ProblemReport
 from .social_pipeline import generate_username, ensure_verified_email, sync_user_details
 
 
@@ -187,3 +187,63 @@ class CanonicalDomainRedirectTests(TestCase):
     def test_canonical_host_serves_homepage(self):
         response = self.client.get("/", HTTP_HOST="globaldesignerhub.com")
         self.assertEqual(response.status_code, 200)
+
+
+@override_settings(
+    SECURE_SSL_REDIRECT=False,
+    SESSION_COOKIE_SECURE=False,
+    CSRF_COOKIE_SECURE=False,
+    STORAGES=TEST_STORAGE_BACKENDS,
+)
+class ReportProblemViewTests(TransactionTestCase):
+    def test_get_report_page_renders(self):
+        response = self.client.get(reverse("report_problem"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Report a problem")
+
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend", ADMIN_EMAIL="ops@example.com")
+    def test_anonymous_submission_creates_report_and_sends_email(self):
+        mail.outbox.clear()
+        payload = {
+            "name": "Guest",
+            "email": "guest@example.com",
+            "category": ProblemReport.CATEGORY_TECHNICAL,
+            "subject": "Uploader broken",
+            "message": "When I try to upload a new design I get a 500 error every time.",
+            "page_url": "https://globaldesignerhub.com/dashboard/",
+        }
+        response = self.client.post(reverse("report_problem"), payload)
+        self.assertRedirects(response, reverse("report_problem_thanks"))
+
+        report = ProblemReport.objects.get()
+        self.assertEqual(report.category, ProblemReport.CATEGORY_TECHNICAL)
+        self.assertEqual(report.email, payload["email"])
+        self.assertIsNone(report.reporter)
+        self.assertEqual(report.status, ProblemReport.STATUS_OPEN)
+
+        self.assertGreaterEqual(len(mail.outbox), 1, "Expected admin notification email")
+        self.assertEqual(mail.outbox[0].subject, "[GlobalDesignerHub] New problem report")
+        self.assertIn(payload["subject"], mail.outbox[0].body)
+
+    def test_authenticated_user_is_attached_to_report(self):
+        user = User.objects.create_user(
+            username="reporter",
+            email="reporter@example.com",
+            password="StrongPass123!",
+        )
+        self.client.login(username="reporter", password="StrongPass123!")
+
+        payload = {
+            "name": "Reporter",
+            "email": "reporter@example.com",
+            "category": ProblemReport.CATEGORY_BILLING,
+            "subject": "Billing invoice issue",
+            "message": "My invoice shows the wrong amount after upgrading the plan.",
+            "page_url": "/billing/",
+        }
+        response = self.client.post(reverse("report_problem"), payload)
+        self.assertRedirects(response, reverse("report_problem_thanks"))
+
+        report = ProblemReport.objects.get()
+        self.assertEqual(report.reporter, user)
+        self.assertEqual(report.category, ProblemReport.CATEGORY_BILLING)

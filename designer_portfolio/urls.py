@@ -39,6 +39,8 @@ from .views import (
     my_conversations,
     PrivacyPolicyView,
     TermsOfServiceView,
+    ReportProblemView,
+    ReportProblemThanksView,
     ForumIndexView,
     ForumCategoryView,
     ForumTopicView,
@@ -91,6 +93,8 @@ urlpatterns = [
     
     path("privacy/", PrivacyPolicyView.as_view(), name="privacy_policy"),
     path("terms/", TermsOfServiceView.as_view(), name="terms_of_service"),
+    path("report-problem/", ReportProblemView.as_view(), name="report_problem"),
+    path("report-problem/thanks/", ReportProblemThanksView.as_view(), name="report_problem_thanks"),
     path("docs/<slug:category_slug>/<slug:doc_slug>/", docs_detail, name="docs_detail"),
     path("docs/<slug:category_slug>/", docs_index, name="docs_category"),
     path("docs/", docs_index, name="docs_index"),

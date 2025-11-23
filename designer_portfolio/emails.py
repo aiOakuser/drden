@@ -133,3 +133,35 @@ def notify_user_password_reset_completion(user, *, request=None):
         recipient_list=[recipient],
         fail_silently=True,
     )
+
+
+def notify_problem_report(report, *, request=None):
+    """Alert admins whenever a new problem report is submitted."""
+
+    admin_email = (getattr(settings, "ADMIN_EMAIL", "") or "").strip()
+    if not admin_email:
+        return
+
+    issue_url = (report.page_url or "").strip()
+    if issue_url and request is not None and issue_url.startswith("/"):
+        issue_url = request.build_absolute_uri(issue_url)
+
+    reporter_name = report.reporter_display_name
+    message = (
+        f"A new issue was reported on {_site_name()}.\n\n"
+        f"Category: {report.get_category_display()}\n"
+        f"Subject: {report.subject}\n"
+        f"From: {reporter_name} <{report.email}>\n"
+        f"Page: {issue_url or 'n/a'}\n"
+        f"IP: {report.ip_address or 'n/a'}\n"
+        f"User agent: {report.user_agent or 'n/a'}\n\n"
+        f"Message:\n{report.message}\n"
+    )
+
+    send_mail(
+        subject=f"[{_site_name()}] New problem report",
+        message=message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[admin_email],
+        fail_silently=True,
+    )

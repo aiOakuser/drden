@@ -9,7 +9,7 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils import timezone
 from django.db.models import Q
 from datetime import timedelta
-from .models import SubscriptionPlan, UserSubscription
+from .models import SubscriptionPlan, UserSubscription, ProblemReport
 from .auth_utils import ensure_designer_access
 from .emails import notify_password_reset_request
 
@@ -309,3 +309,67 @@ class DesignerPasswordResetForm(PasswordResetForm):
                 html_email_template_name=html_email_template_name,
             )
             notify_password_reset_request(user, request=request)
+
+
+class ReportProblemForm(forms.ModelForm):
+    """Public form for reporting website, technical, billing, or other issues."""
+
+    class Meta:
+        model = ProblemReport
+        fields = ["name", "email", "category", "subject", "message", "page_url"]
+        widgets = {
+            "name": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Your name (optional)",
+                    "autocomplete": "name",
+                }
+            ),
+            "email": forms.EmailInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Email address we can reach",
+                    "autocomplete": "email",
+                    "required": True,
+                }
+            ),
+            "category": forms.Select(
+                attrs={
+                    "class": "form-control",
+                }
+            ),
+            "subject": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Short summary (e.g., Billing page is down)",
+                    "maxlength": 200,
+                    "required": True,
+                }
+            ),
+            "message": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 5,
+                    "placeholder": "Describe the issue or improvement in detail...",
+                }
+            ),
+            "page_url": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "https://globaldesignerhub.com/pricing (optional)",
+                    "autocomplete": "url",
+                }
+            ),
+        }
+
+    def clean_message(self):
+        message = (self.cleaned_data.get("message") or "").strip()
+        if len(message) < 20:
+            raise forms.ValidationError("Please share at least 20 characters so we understand the issue.")
+        return message
+
+    def clean_subject(self):
+        subject = (self.cleaned_data.get("subject") or "").strip()
+        if len(subject) < 5:
+            raise forms.ValidationError("Add a short subject (at least 5 characters).")
+        return subject
