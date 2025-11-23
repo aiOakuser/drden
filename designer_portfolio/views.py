@@ -1,5 +1,6 @@
 import base64
 import json
+import logging
 import os
 import uuid
 from decimal import Decimal, InvalidOperation
@@ -26,9 +27,10 @@ from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.db import transaction
 from django.db.models import Q, Count, F
-from django.urls import reverse_lazy, reverse
+from django.urls import reverse_lazy, reverse, NoReverseMatch
 from django.utils.text import slugify
 from django.core.paginator import Paginator
+from django.templatetags.static import static
 from urllib.parse import urlencode
 from .forms import (
     DesignerSignUpForm,
@@ -80,6 +82,41 @@ from webauthn.helpers.structs import (
     RegistrationCredential,
     UserVerificationRequirement,
 )
+
+
+logger = logging.getLogger(__name__)
+
+RUNWAY_GUEST_LINK_EXPIRY_DAYS = 7
+RUNWAY_VIDEO_EXTENSIONS = {".mp4", ".mov", ".m4v", ".webm", ".avi"}
+RUNWAY_COLLECTION_CAPABILITIES = [
+    {
+        "title": "Runway-ready lookbooks",
+        "description": "Versioned lookbooks with cover imagery, look numbers, and capsule notes keep every drop documented.",
+        "icon": "fa-solid fa-book-open",
+        "tagline": "Versioned lookbooks + cover imagery",
+    },
+    {
+        "title": "Motion & tech pack attachments",
+        "description": "Drop in motion references alongside PDF or XLS tech packs so factories receive everything in one link.",
+        "icon": "fa-solid fa-film",
+        "tagline": "Lookbooks, motion, and tech packs",
+    },
+    {
+        "title": "Private review & embeds",
+        "description": "Share a private review link or embed the same collection across your site without duplicating uploads.",
+        "icon": "fa-solid fa-share-nodes",
+        "tagline": "Share private review links or embed",
+    },
+    {
+        "title": "Auto-expiring guest access",
+        "description": (
+            f"Guest links expire automatically after {RUNWAY_GUEST_LINK_EXPIRY_DAYS} days, keeping review threads secure "
+            "while still being effortless for partners."
+        ),
+        "icon": "fa-solid fa-shield",
+        "tagline": "Guest links expire automatically",
+    },
+]
 
 
 def _base64url_from_bytes(value: bytes) -> str:
@@ -172,6 +209,154 @@ def _strtobool(value) -> bool:
     if value is None:
         return False
     return str(value).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _safe_file_url(file_field) -> str:
+    """
+    Return a safe URL for an uploaded file, handling missing or unloaded files gracefully.
+    """
+
+    if not file_field:
+        return ""
+    try:
+        return file_field.url
+    except (ValueError, AttributeError):
+        return ""
+
+
+def _infer_media_type(file_name: str) -> str:
+    """
+    Infer whether a media asset should be treated as an image or video based on its extension.
+    """
+
+    suffix = Path(file_name or "").suffix.lower()
+    return "video" if suffix in RUNWAY_VIDEO_EXTENSIONS else "image"
+
+
+def build_runway_collection_payload(collection, *, placeholder_url: str, guest_link_days: int) -> dict:
+    """
+    Build a normalized payload for a Collection so templates can render cards, list rows,
+    and detail modals without duplicating logic.
+    """
+
+    cover_url = _safe_file_url(getattr(collection, "cover_image", None))
+    gallery_rel = getattr(collection, "gallery", None)
+    look_rel = getattr(collection, "looks", None)
+
+    gallery_items = list(gallery_rel.all()) if gallery_rel is not None else []
+    look_items = list(look_rel.all()) if look_rel is not None else []
+
+    media_assets = []
+    for asset in gallery_items:
+        asset_url = _safe_file_url(getattr(asset, "image", None))
+        if not asset_url:
+            continue
+        media_assets.append(
+            {
+                "type": _infer_media_type(getattr(asset.image, "name", "")),
+                "url": asset_url,
+                "name": asset.caption or collection.name,
+                "caption": asset.caption or "",
+            }
+        )
+
+    lookbook_entries = []
+    attachments_count = 0
+
+    for look in look_items:
+        look_image_url = _safe_file_url(getattr(look, "image", None))
+        has_specs = any(
+            [
+                bool(getattr(look, "measurements", "")),
+                bool(getattr(look, "notes", "")),
+                bool(getattr(look, "fabric", "")),
+            ]
+        )
+        if has_specs:
+            attachments_count += 1
+
+        entry = {
+            "number": getattr(look, "look_number", len(lookbook_entries) + 1),
+            "title": getattr(look, "title", "") or f"Look {getattr(look, 'look_number', len(lookbook_entries) + 1)}",
+            "description": getattr(look, "description", ""),
+            "image": look_image_url,
+            "fabric": getattr(look, "fabric", ""),
+            "measurements": getattr(look, "measurements", ""),
+            "notes": getattr(look, "notes", ""),
+            "has_specs": has_specs,
+        }
+        lookbook_entries.append(entry)
+
+        if look_image_url:
+            media_assets.append(
+                {
+                    "type": "image",
+                    "url": look_image_url,
+                    "name": entry["title"],
+                    "caption": entry["description"],
+                }
+            )
+
+    if not cover_url and media_assets:
+        cover_url = media_assets[0]["url"]
+
+    cover_url = cover_url or placeholder_url
+    look_count = len(lookbook_entries)
+    has_motion = any(asset["type"] == "video" for asset in media_assets)
+    status_badge = "Viewer ready" if getattr(collection, "published", True) else "Private review"
+    access_scope = "Public viewers & guests" if getattr(collection, "published", True) else "Invite-only"
+    try:
+        view_url = reverse("collection_detail", kwargs={"slug": collection.slug})
+    except NoReverseMatch:
+        view_url = ""
+
+    capabilities = []
+    if look_count:
+        capabilities.append("Lookbook")
+    if attachments_count:
+        capabilities.append("Tech packs")
+    if has_motion:
+        capabilities.append("Motion")
+    if cover_url and cover_url != placeholder_url:
+        capabilities.append("Cover imagery")
+    capabilities.append("Embed-ready")
+    if getattr(collection, "published", True):
+        capabilities.append("Public")
+    else:
+        capabilities.append("Private review")
+
+    list_summary = f"{look_count or 0} looks • {attachments_count} attachments • {status_badge}"
+
+    return {
+        "id": getattr(collection, "id", None),
+        "name": getattr(collection, "name", "Untitled Capsule"),
+        "slug": getattr(collection, "slug", ""),
+        "season": getattr(collection, "season", "") or "Runway Capsule",
+        "year": getattr(collection, "year", ""),
+        "designer": getattr(collection, "designer", "") or "Independent Studio",
+        "description": getattr(collection, "description", "") or "Runway-ready capsule",
+        "cover_image_url": cover_url,
+        "cover_uses_placeholder": cover_url == placeholder_url,
+        "look_count": look_count,
+        "attachment_count": attachments_count,
+        "gallery_count": len(media_assets),
+        "has_motion": has_motion,
+        "capabilities": capabilities,
+        "published": getattr(collection, "published", True),
+        "status_badge": status_badge,
+        "access_scope": access_scope,
+        "guest_link_expiry_days": guest_link_days,
+        "lookbook_version": f"v{getattr(collection, 'year', timezone.now().year)}.{max(1, look_count or attachments_count or 1)}",
+        "version_label": f"{(getattr(collection, 'season', '') or 'Runway')} {getattr(collection, 'year', '')}",
+        "media": media_assets,
+        "lookbook": lookbook_entries,
+        "view_url": view_url,
+        "sharing_label": "Copy public link" if getattr(collection, "published", True) else "Send guest review link",
+        "security_summary": f"Guest links auto-expire after {guest_link_days} days.",
+        "list_summary": list_summary,
+        "embedding_ready": bool(media_assets),
+        "created_at": getattr(collection, "created_at", None),
+    }
 
 
 def _save_design_from_request(request, *, design=None):
@@ -1039,9 +1224,156 @@ def docs_detail(request, category_slug, doc_slug):
 
 class CollectionsPageView(TemplateView):
     template_name = "designer_portfolio/collections.html"
+    guest_link_expiry_days = RUNWAY_GUEST_LINK_EXPIRY_DAYS
+    SORT_MAP = {
+        "newest": "-year",
+        "oldest": "year",
+        "name": "name",
+        "season": "season",
+    }
+
+    def _resolve_view_mode(self) -> str:
+        view_mode = (self.request.GET.get("view") or "").lower()
+        return "list" if view_mode == "list" else "grid"
+
+    def _resolve_sort(self):
+        requested = (self.request.GET.get("sort") or "newest").lower()
+        sort_field = self.SORT_MAP.get(requested, "-year")
+        return requested if requested in self.SORT_MAP else "newest", sort_field
+
+    def _can_view_private(self) -> bool:
+        user = getattr(self.request, "user", None)
+        return bool(user and user.is_authenticated and (user.is_staff or user.is_superuser))
+
+    def _build_querystring(self, **overrides) -> str:
+        params = self.request.GET.copy()
+        for key, value in overrides.items():
+            if not value:
+                if key in params:
+                    del params[key]
+            else:
+                params[key] = value
+        encoded = params.urlencode()
+        return f"?{encoded}" if encoded else ""
+
+    def get_queryset(self):
+        queryset = Collection.objects.prefetch_related("gallery", "looks")
+        if not self._can_view_private():
+            queryset = queryset.filter(published=True)
+        return queryset
+
+    def _collection_metrics(self, payloads) -> dict:
+        total = len(payloads)
+        lookbook_entries = sum(item["look_count"] for item in payloads)
+        techpack_ready = sum(1 for item in payloads if item["attachment_count"])
+        motion_ready = sum(1 for item in payloads if item["has_motion"])
+        public_rows = sum(1 for item in payloads if item["published"])
+        return {
+            "total_collections": total,
+            "public_collections": public_rows,
+            "lookbook_entries": lookbook_entries,
+            "techpack_ready": techpack_ready,
+            "motion_enabled": motion_ready,
+        }
+
+    def _private_collection_count(self, allow_lookup: bool) -> int:
+        if not allow_lookup:
+            return 0
+        try:
+            return Collection.objects.filter(published=False).count()
+        except Exception:
+            return 0
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        placeholder = static("images/placehold.png")
+        view_mode = self._resolve_view_mode()
+        sort_key, sort_field = self._resolve_sort()
+        can_view_private = self._can_view_private()
+
+        try:
+            queryset = self.get_queryset().order_by(sort_field, "name")
+            collections_payload = [
+                build_runway_collection_payload(
+                    collection,
+                    placeholder_url=placeholder,
+                    guest_link_days=self.guest_link_expiry_days,
+                )
+                for collection in queryset
+            ]
+        except Exception as exc:
+            logger.exception("Failed to load collections list", exc_info=exc)
+            collections_payload = []
+            context["collections_error"] = (
+                "Runway collections are temporarily unavailable. Refresh to try again."
+            )
+
+        context.update(
+            {
+                "collections_payload": collections_payload,
+                "collection_placeholder": placeholder,
+                "runway_capabilities": RUNWAY_COLLECTION_CAPABILITIES,
+                "view_mode": view_mode,
+                "active_sort": sort_key,
+                "sort_options": [
+                    {"value": "newest", "label": "Newest first", "active": sort_key == "newest"},
+                    {"value": "oldest", "label": "Oldest first", "active": sort_key == "oldest"},
+                    {"value": "name", "label": "Designer A→Z", "active": sort_key == "name"},
+                    {"value": "season", "label": "Season", "active": sort_key == "season"},
+                ],
+                "view_toggle_links": {
+                    "grid": self._build_querystring(view="grid"),
+                    "list": self._build_querystring(view="list"),
+                },
+                "collection_metrics": self._collection_metrics(collections_payload),
+                "guest_link_expiry_days": self.guest_link_expiry_days,
+                "can_view_private": can_view_private,
+                "private_collection_count": self._private_collection_count(can_view_private),
+                "list_view_available": bool(collections_payload),
+                "list_view_is_public": True,
+                "audience_explainer": {
+                    "viewer": "Grid and list view cards for published collections are visible to every visitor.",
+                    "designer": "Sign in to surface draft or private review collections plus attachment controls.",
+                },
+            }
+        )
+
+        return context
+
 
 class CollectionDetailView(DetailView):
     template_name = "designer_portfolio/collection_detail.html"
+    model = Collection
+    context_object_name = "collection"
+    slug_url_kwarg = "slug"
+    guest_link_expiry_days = RUNWAY_GUEST_LINK_EXPIRY_DAYS
+
+    def get_queryset(self):
+        queryset = Collection.objects.prefetch_related("gallery", "looks")
+        if not (self.request.user.is_authenticated and self.request.user.is_staff):
+            queryset = queryset.filter(published=True)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        placeholder = static("images/placehold.png")
+        payload = build_runway_collection_payload(
+            context["collection"],
+            placeholder_url=placeholder,
+            guest_link_days=self.guest_link_expiry_days,
+        )
+        context.update(
+            {
+                "runway_collection": payload,
+                "media": payload["media"],
+                "lookbook": payload["lookbook"],
+                "lookbook_version": payload["lookbook_version"],
+                "guest_link_expiry_days": self.guest_link_expiry_days,
+                "runway_capabilities": RUNWAY_COLLECTION_CAPABILITIES,
+                "collection_placeholder": placeholder,
+            }
+        )
+        return context
 
 class DesignListView(TemplateView):
     template_name = "designer_portfolio/designs.html"

@@ -1,299 +1,654 @@
 {% extends "designer_portfolio/base.html" %}
 {% load static %}
-{% block content %}
-{% include "designer_portfolio/includes/slideshow.html" %}
-<section class="collections">
-  <h1 class="collections-title">Collections</h1>
 
-  <div class="collections-grid">
-    {% for col in collections %}
-    <div class="collection-item">
-      <a href="{% url 'collection_detail' slug=col.slug %}">
-        <img
-          src="{% static col.cover %}"
-          alt="{{ col.slug }}"
-          onerror="this.src='{% static 'images/placehold.png' %}'"
-        />
-        <div class="collection-caption">{{ col.title }}</div>
-      </a>
+{% block content %}
+<main class="runway-collections">
+  <section class="runway-hero">
+    <div class="hero-text">
+      <p class="eyebrow">Runway-ready collections</p>
+      <h1>Publish cinematic lookbooks with motion, tech packs, and auto-expiring guest links.</h1>
+      <p>
+        Launch every capsule with versioned cover imagery, embed-ready galleries, and private review links that expire automatically after
+        {{ guest_link_expiry_days }} days. Grid and list views showcase what viewers can see, while signed-in designers unlock drafts and attachments.
+      </p>
+      <div class="hero-actions">
+        <a href="{% url 'upload_design' %}" class="btn btn-primary">Upload a new lookbook</a>
+        <a href="{% url 'designer_dashboard' %}" class="btn btn-outline">Open designer dashboard</a>
+      </div>
     </div>
+    <div class="hero-callout">
+      <h3>List view access</h3>
+      <p class="audience-item"><strong>Viewers:</strong> {{ audience_explainer.viewer }}</p>
+      <p class="audience-item"><strong>Registered designers:</strong> {{ audience_explainer.designer }}</p>
+      <p class="audience-item">Private review rows stay hidden until you sign in. That keeps sensitive attachments behind authenticated access.</p>
+    </div>
+  </section>
+
+  {% if collections_error %}
+  <div class="alert alert-warning">
+    {{ collections_error }}
+  </div>
+  {% endif %}
+
+  <section class="runway-metrics">
+    <article class="metric-card">
+      <p class="metric-label">Total collections</p>
+      <p class="metric-value">{{ collection_metrics.total_collections }}</p>
+      <p class="metric-hint">{{ collection_metrics.public_collections }} viewer-ready</p>
+    </article>
+    <article class="metric-card">
+      <p class="metric-label">Lookbook entries</p>
+      <p class="metric-value">{{ collection_metrics.lookbook_entries }}</p>
+      <p class="metric-hint">Chronologically versioned</p>
+    </article>
+    <article class="metric-card">
+      <p class="metric-label">Tech pack attachments</p>
+      <p class="metric-value">{{ collection_metrics.techpack_ready }}</p>
+      <p class="metric-hint">PDF / XLS ready to download</p>
+    </article>
+    <article class="metric-card">
+      <p class="metric-label">Motion enabled</p>
+      <p class="metric-value">{{ collection_metrics.motion_enabled }}</p>
+      <p class="metric-hint">Clips + runway loops</p>
+    </article>
+  </section>
+
+  <section class="capabilities-grid">
+    {% for capability in runway_capabilities %}
+    <article class="capability-card">
+      <div class="capability-icon">
+        <i class="{{ capability.icon }}" aria-hidden="true"></i>
+      </div>
+      <p class="capability-tagline">{{ capability.tagline }}</p>
+      <h3>{{ capability.title }}</h3>
+      <p>{{ capability.description }}</p>
+    </article>
     {% endfor %}
+  </section>
+
+  <section class="runway-controls">
+    <div class="view-toggle">
+      <a href="{{ view_toggle_links.grid }}" class="view-btn {% if view_mode == 'grid' %}active{% endif %}" aria-label="Switch to grid view">Grid view</a>
+      <a href="{{ view_toggle_links.list }}" class="view-btn {% if view_mode == 'list' %}active{% endif %}" aria-label="Switch to list view">List view</a>
+      {% if list_view_is_public %}
+      <span class="view-note">List view is available to every viewer for published collections; private review rows require sign-in.</span>
+      {% endif %}
+    </div>
+
+    <form method="get" class="sort-form">
+      <input type="hidden" name="view" value="{{ view_mode }}" />
+      <label for="sort-select">Sort by</label>
+      <select id="sort-select" name="sort" onchange="this.form.submit()">
+        {% for option in sort_options %}
+        <option value="{{ option.value }}" {% if option.active %}selected{% endif %}>{{ option.label }}</option>
+        {% endfor %}
+      </select>
+    </form>
+  </section>
+
+  <section class="audience-panel">
+    {% if can_view_private and private_collection_count %}
+    <p class="audience-status">
+      <strong>{{ private_collection_count }}</strong> private review builds are visible because you're signed in with elevated access.
+    </p>
+    {% elif not can_view_private %}
+    <p class="audience-status">
+      Private review builds remain hidden until a registered designer or staff member signs in.
+    </p>
+    {% endif %}
+    <p class="audience-status">
+      Guest links expire automatically after {{ guest_link_expiry_days }} days to keep review threads secure.
+    </p>
+  </section>
+
+  {% if list_view_available %}
+    {% if view_mode == "grid" %}
+    <section class="collections-grid">
+      {% for collection in collections_payload %}
+      <article class="collection-card">
+        <div class="collection-cover">
+          <img
+            src="{{ collection.cover_image_url|default:collection_placeholder }}"
+            alt="{{ collection.name }}"
+            loading="lazy"
+            onerror="this.onerror=null;this.src='{{ collection_placeholder }}';"
+          />
+          <span class="status-pill">{{ collection.status_badge }}</span>
+        </div>
+        <div class="collection-body">
+          <header>
+            <p class="season">{{ collection.version_label }}</p>
+            <h3>{{ collection.name }}</h3>
+            <p class="designer">{{ collection.designer }}</p>
+            <p class="description">{{ collection.description|truncatewords:30 }}</p>
+          </header>
+          <ul class="collection-meta">
+            <li>
+              <span class="meta-value">{{ collection.look_count }}</span>
+              <span class="meta-label">Looks</span>
+            </li>
+            <li>
+              <span class="meta-value">{{ collection.attachment_count }}</span>
+              <span class="meta-label">Tech pack attachments</span>
+            </li>
+            <li>
+              <span class="meta-value">{{ collection.gallery_count }}</span>
+              <span class="meta-label">Media assets</span>
+            </li>
+          </ul>
+          <div class="capability-chips">
+            {% for capability in collection.capabilities %}
+            <span class="chip">{{ capability }}</span>
+            {% endfor %}
+          </div>
+          <footer class="card-footer">
+            <a href="{{ collection.view_url }}" class="btn btn-primary">{{ collection.sharing_label }}</a>
+            <div class="security-copy">
+              <p>{{ collection.security_summary }}</p>
+              <p class="access-scope">{{ collection.access_scope }}</p>
+            </div>
+          </footer>
+        </div>
+      </article>
+      {% endfor %}
+    </section>
+    {% else %}
+    <section class="collections-list" aria-label="Runway collections list view">
+      <div class="list-head">
+        <span>Name</span>
+        <span>Lookbook</span>
+        <span>Attachments</span>
+        <span>Status</span>
+        <span>Action</span>
+      </div>
+      {% for collection in collections_payload %}
+      <article class="list-row">
+        <div class="row-primary">
+          <a href="{{ collection.view_url }}" class="row-title">{{ collection.name }}</a>
+          <p class="row-subtitle">{{ collection.list_summary }}</p>
+        </div>
+        <div class="row-badge">
+          <span class="row-value">{{ collection.lookbook_version }}</span>
+          <span class="row-label">Version</span>
+        </div>
+        <div class="row-badge">
+          <span class="row-value">{{ collection.attachment_count }}</span>
+          <span class="row-label">Tech packs</span>
+        </div>
+        <div class="row-status">
+          <span class="status-pill small">{{ collection.status_badge }}</span>
+          <span class="row-label">{{ collection.access_scope }}</span>
+        </div>
+        <div class="row-actions">
+          <a href="{{ collection.view_url }}" class="btn btn-outline">Open</a>
+        </div>
+      </article>
+      {% endfor %}
+    </section>
+    {% endif %}
+  {% else %}
+  <section class="empty-state">
+    <h3>No runway-ready collections yet</h3>
+    <p>Publish your first capsule to unlock lookbook, motion, and tech pack attachments in both grid and list views.</p>
+    <a href="{% url 'upload_design' %}" class="btn btn-primary">Start uploading</a>
+  </section>
+  {% endif %}
+</main>
+
+<section class="security-panel">
+  <div class="security-content">
+    <h2>Share private review links or embed collections anywhere</h2>
+    <p>
+      Each runway collection can produce a private review link for brand partners or an embed snippet for your site. Guest links expire automatically after
+      {{ guest_link_expiry_days }} days and can be regenerated instantly, so you never have to worry about stale access.
+    </p>
+    <ul>
+      <li>One-click guest invites with automatic expiry</li>
+      <li>Motion clips, PDF/XLS tech packs, and cover imagery in a single link</li>
+      <li>Viewer mode for the public, authenticated mode for registered designers</li>
+    </ul>
   </div>
 </section>
 
 <style>
-  .collections {
+  .runway-collections {
     max-width: 1200px;
-    margin: 40px auto;
-    padding: 0 20px;
-    text-align: center;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
   }
 
-  .collections-title {
-    font-size: 28px;
-    font-weight: 800;
+  .runway-hero {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: 30px;
+    padding: 32px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.08), rgba(var(--color-primary-rgb), 0.02));
+    border: 1px solid rgba(var(--color-primary-rgb), 0.2);
+  }
+
+  .hero-text h1 {
+    font-size: clamp(2.2rem, 4vw, 3rem);
+    margin: 10px 0 16px;
+    color: var(--color-primary);
+  }
+
+  .hero-text p {
+    color: var(--color-text);
+    line-height: 1.6;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .hero-callout {
+    background: var(--color-secondary);
+    border-radius: 18px;
+    padding: 24px;
+    border: 1px solid rgba(var(--color-primary-rgb), 0.08);
+  }
+
+  .hero-callout h3 {
+    margin-top: 0;
+  }
+
+  .audience-item {
+    margin-bottom: 10px;
+  }
+
+  .runway-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+  }
+
+  .metric-card {
+    padding: 20px;
+    border-radius: 16px;
+    border: 1px solid rgba(var(--color-primary-rgb), 0.1);
+    background: var(--color-secondary);
+  }
+
+  .metric-label {
     text-transform: uppercase;
-    margin-bottom: 30px;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    letter-spacing: 0.08em;
+  }
+
+  .metric-value {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 8px 0;
+  }
+
+  .metric-hint {
+    margin: 0;
+    color: var(--color-text-muted);
+  }
+
+  .capabilities-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+  }
+
+  .capability-card {
+    border: 1px solid rgba(var(--color-primary-rgb), 0.1);
+    border-radius: 18px;
+    padding: 24px;
+    background: var(--color-secondary);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .capability-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: rgba(var(--color-primary-rgb), 0.08);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary);
+    font-size: 1.3rem;
+  }
+
+  .capability-tagline {
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    letter-spacing: 0.08em;
+  }
+
+  .runway-controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 20px;
+    align-items: center;
+  }
+
+  .view-toggle {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .view-btn {
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: 1px solid rgba(var(--color-primary-rgb), 0.2);
+    text-decoration: none;
+    font-weight: 600;
+    color: var(--color-primary);
+  }
+
+  .view-btn.active {
+    background: var(--color-primary);
+    color: var(--color-secondary);
+  }
+
+  .view-note {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+  }
+
+  .sort-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .sort-form select {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(var(--color-primary-rgb), 0.2);
+    background: var(--color-secondary);
+  }
+
+  .audience-panel {
+    border-radius: 16px;
+    border: 1px dashed rgba(var(--color-primary-rgb), 0.4);
+    padding: 20px;
+    background: rgba(var(--color-primary-rgb), 0.04);
+  }
+
+  .audience-status {
+    margin: 0;
+    color: var(--color-text);
   }
 
   .collections-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 30px;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
   }
 
-  @media (max-width: 900px) {
-    .collections-grid {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-    }
-  }
-  @media (max-width: 600px) {
-    .collections-grid {
-      grid-template-columns: 1fr;
-      gap: 15px;
-    }
-  }
-
-  .collection-item {
-    background: var(--color-secondary);
-    border-radius: 8px;
+  .collection-card {
+    border-radius: 20px;
     overflow: hidden;
-    box-shadow: 0 6px 16px rgba(var(--color-primary-rgb), 0.15);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  .collection-item:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 10px 20px rgba(var(--color-primary-rgb), 0.2);
-    background: var(--color-accent);
+    border: 1px solid rgba(var(--color-primary-rgb), 0.1);
+    background: var(--color-secondary);
+    display: flex;
+    flex-direction: column;
   }
 
-  .collection-item img {
+  .collection-cover {
+    position: relative;
+    height: 220px;
+    overflow: hidden;
+  }
+
+  .collection-cover img {
     width: 100%;
-    height: 250px;
+    height: 100%;
     object-fit: cover;
-    display: block;
   }
 
-  .collection-caption {
-    background: var(--color-primary);
+  .status-pill {
+    position: absolute;
+    left: 16px;
+    bottom: 16px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(var(--color-primary-rgb), 0.9);
     color: var(--color-secondary);
-    font-size: 15px;
-    font-weight: bold;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .status-pill.small {
+    position: static;
+    display: inline-flex;
+    margin-bottom: 6px;
+  }
+
+  .collection-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .season {
     text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+  }
+
+  .designer {
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 8px;
+  }
+
+  .collection-meta {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding: 0;
+    list-style: none;
+  }
+
+  .collection-meta li {
+    border: 1px solid rgba(var(--color-primary-rgb), 0.1);
+    border-radius: 12px;
     padding: 12px;
-    line-height: 1.4;
-  }
-</style>
-
-<style>
-  .designers {
-    max-width: 1200px;
-    margin: 40px auto;
-    padding: 0 20px;
-  }
-
-  .designers-title {
-    font-size: 32px;
-    font-weight: 800;
-    text-transform: uppercase;
-    margin-bottom: 40px;
     text-align: center;
+  }
+
+  .meta-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  .meta-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  .capability-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .chip {
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(var(--color-primary-rgb), 0.08);
+    color: var(--color-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .card-footer {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    justify-content: space-between;
+  }
+
+  .security-copy {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+  }
+
+  .access-scope {
+    margin: 4px 0 0;
+    font-weight: 600;
     color: var(--color-primary);
   }
 
-  .designers-grid {
+  .collections-list {
+    border: 1px solid rgba(var(--color-primary-rgb), 0.1);
+    border-radius: 16px;
+  }
+
+  .list-head,
+  .list-row {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 30px;
+    grid-template-columns: 2.2fr 1fr 1fr 1.2fr 0.8fr;
+    gap: 16px;
+    padding: 18px 24px;
   }
 
-  @media (max-width: 768px) {
-    .designers-grid {
-      grid-template-columns: 1fr;
-      gap: 20px;
-    }
+  .list-head {
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+    border-bottom: 1px solid rgba(var(--color-primary-rgb), 0.1);
   }
 
-  .designer-item {
-    background: var(--color-secondary);
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 6px 20px rgba(var(--color-primary-rgb), 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  .list-row {
+    border-bottom: 1px solid rgba(var(--color-primary-rgb), 0.08);
+    align-items: center;
   }
 
-  .designer-item:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 12px 30px rgba(var(--color-primary-rgb), 0.15);
+  .list-row:last-child {
+    border-bottom: none;
   }
 
-  .designer-card {
-    padding: 25px;
+  .row-title {
+    font-weight: 700;
+    text-decoration: none;
+    color: var(--color-primary);
   }
 
-  .designer-image {
+  .row-subtitle {
+    margin: 6px 0 0;
+    color: var(--color-text-muted);
+  }
+
+  .row-badge {
     text-align: center;
-    margin-bottom: 20px;
   }
 
-  .designer-image img {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid var(--color-primary);
+  .row-value {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: 700;
   }
 
-  .designer-avatar {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
+  .row-label {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+  }
+
+  .row-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 30px;
+    border-radius: 20px;
+    border: 1px dashed rgba(var(--color-primary-rgb), 0.4);
+    background: rgba(var(--color-primary-rgb), 0.04);
+  }
+
+  .security-panel {
     background: linear-gradient(135deg, var(--color-primary), var(--color-primary));
     color: var(--color-secondary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    font-weight: bold;
+    padding: 60px 20px;
+    margin-top: 40px;
+  }
+
+  .security-content {
+    max-width: 960px;
     margin: 0 auto;
   }
 
-  .designer-info {
-    text-align: center;
+  .security-content ul {
+    padding-left: 20px;
   }
 
-  .designer-name {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--color-primary);
-    margin: 0 0 8px 0;
-  }
-
-  .designer-brand {
-    margin-bottom: 12px;
-  }
-
-  .brand-name {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-primary));
-    color: var(--color-secondary);
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .designer-location,
-  .designer-experience {
-    font-size: 14px;
-    color: var(--color-text-muted);
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-  }
-
-  .designer-location i,
-  .designer-experience i {
-    color: var(--color-primary);
-    font-size: 12px;
-  }
-
-  .designer-bio {
-    font-size: 14px;
-    color: var(--color-text);
-    line-height: 1.5;
-    margin: 15px 0;
-    padding: 0 10px;
-  }
-
-  .designer-contact {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-    margin: 20px 0;
-  }
-
-  .contact-btn {
+  .btn {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 8px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
+    justify-content: center;
+    padding: 12px 20px;
+    border-radius: 12px;
     text-decoration: none;
-    transition: all 0.3s ease;
-    color: var(--color-secondary);
-  }
-
-  .email-btn {
-    background: var(--color-accent);
-  }
-
-  .email-btn:hover {
-    background: var(--color-accent);
-    color: var(--color-secondary);
-  }
-
-  .portfolio-btn {
-    background: var(--color-accent);
-  }
-
-  .portfolio-btn:hover {
-    background: var(--color-accent);
-    color: var(--color-secondary);
-  }
-
-  .instagram-btn {
-    background: var(--color-accent);
-  }
-
-  .instagram-btn:hover {
-    background: var(--color-accent);
-    color: var(--color-secondary);
-  }
-
-  .linkedin-btn {
-    background: var(--color-accent);
-  }
-
-  .linkedin-btn:hover {
-    background: var(--color-accent);
-    color: var(--color-secondary);
-  }
-
-  .collaboration-badge {
-    background: var(--color-accent-soft);
-    color: var(--color-accent);
-    padding: 8px 12px;
-    border-radius: 20px;
-    font-size: 12px;
     font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    margin-top: 10px;
+    border: none;
+    cursor: pointer;
   }
 
-  .collaboration-badge i {
-    color: var(--color-accent);
+  .btn-primary {
+    background: var(--color-primary);
+    color: var(--color-secondary);
   }
 
-  .no-designers {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--color-text-muted);
-    font-size: 18px;
+  .btn-outline {
+    border: 1px solid rgba(var(--color-primary-rgb), 0.3);
+    color: var(--color-primary);
+    background: transparent;
   }
 
-  .no-designers p {
-    margin: 0;
+  .btn-outline:hover {
+    border-color: var(--color-primary);
+  }
+
+  .alert {
+    padding: 14px 18px;
+    border-radius: 10px;
+    color: var(--color-text);
+  }
+
+  .alert-warning {
+    background: rgba(var(--color-accent-rgb), 0.15);
+    border: 1px solid rgba(var(--color-accent-rgb), 0.4);
+  }
+
+  @media (max-width: 900px) {
+    .runway-hero {
+      grid-template-columns: 1fr;
+    }
+    .list-head,
+    .list-row {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+    .card-footer {
+      flex-direction: column;
+      gap: 12px;
+    }
   }
 </style>
 {% endblock %}
