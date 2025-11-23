@@ -1,4 +1,9 @@
 {% load static %}
+<div class="header__apphub-banner">
+  <a href="https://apphub.aioak.app" target="_blank" rel="noopener">
+    apphub.aioak.app
+  </a>
+</div>
 <!-- HEADER -->
 <header class="header">
     <div class="header__inner">
@@ -98,6 +103,27 @@
 </script>
 
   <style>
+    .header__apphub-banner {
+      background: var(--color-secondary);
+      color: var(--color-primary);
+      text-align: center;
+      padding: 8px 30px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .header__apphub-banner a {
+      color: inherit;
+      text-decoration: none;
+      transition: opacity 0.2s ease;
+      display: inline-block;
+    }
+
+    .header__apphub-banner a:hover {
+      opacity: 0.8;
+    }
+
     /* ===== Header Base Styles ===== */
     .header {
       background: var(--color-primary);
@@ -305,6 +331,11 @@
 
   /* Tablet and mobile screens */
   @media (max-width: 768px) {
+      .header__apphub-banner {
+        padding: 8px 15px;
+        font-size: 13px;
+      }
+
     .header {
       padding: 15px;
     }
@@ -378,6 +409,10 @@
 
   /* Small mobile screens */
   @media (max-width: 480px) {
+      .header__apphub-banner {
+        font-size: 12px;
+      }
+
     .header {
       padding: 10px 15px;
     }
