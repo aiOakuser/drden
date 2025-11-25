@@ -213,9 +213,11 @@
               <p class="designer-specialty">
                 {{ profile.specialization|default:"Fashion Designer" }}
               </p>
+              {% with location_label=profile.location_display|default:profile.location %}
               <p class="designer-location">
-                📍 {{ profile.location|default:"Location not set" }}
+                📍 {{ location_label|default:"Location not set" }}
               </p>
+              {% endwith %}
               <p class="designer-experience">
                 🧵 {{ profile.years_of_experience|default:0 }} years experience
               </p>

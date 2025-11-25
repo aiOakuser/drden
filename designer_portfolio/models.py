@@ -332,6 +332,36 @@ class DesignerProfile(models.Model):
     )
     education = models.CharField(max_length=300, blank=True, help_text="Educational background")
     location = models.CharField(max_length=100, blank=True, help_text="City, Country")
+    region_area = models.CharField(
+        max_length=120,
+        blank=True,
+        help_text="Broader area or territory label (e.g., West Coast, EMEA).",
+        db_index=True,
+    )
+    country = models.CharField(
+        max_length=120,
+        blank=True,
+        help_text="Country",
+        db_index=True,
+    )
+    state_province = models.CharField(
+        max_length=120,
+        blank=True,
+        help_text="State or province",
+        db_index=True,
+    )
+    county = models.CharField(
+        max_length=120,
+        blank=True,
+        help_text="County or district",
+        db_index=True,
+    )
+    city = models.CharField(
+        max_length=120,
+        blank=True,
+        help_text="City or municipality",
+        db_index=True,
+    )
     
     # Contact preferences
     available_for_collaborations = models.BooleanField(default=True)
@@ -369,6 +399,65 @@ class DesignerProfile(models.Model):
 
         user_email = (getattr(self.user, "email", "") or "").strip()
         return user_email
+
+    def _structured_location_parts(self) -> list[str]:
+        return [
+            part.strip()
+            for part in [
+                self.city or "",
+                self.county or "",
+                self.state_province or "",
+                self.country or "",
+            ]
+            if part
+        ]
+
+    @property
+    def location_display(self) -> str:
+        parts = self._structured_location_parts()
+        if parts:
+            return ", ".join(parts)
+        return self.location or ""
+
+    def _hydrate_structured_location_fields(self) -> None:
+        """
+        Backfill structured location fields from the legacy free-form location field
+        when designers have not populated the new inputs yet.
+        """
+
+        if self._structured_location_parts():
+            return
+
+        legacy_label = (self.location or "").strip()
+        if not legacy_label:
+            return
+
+        tokens = [token.strip() for token in legacy_label.split(",") if token.strip()]
+        if not tokens:
+            return
+
+        if not self.city:
+            self.city = tokens[0]
+
+        if len(tokens) >= 3:
+            state_candidate = tokens[-2]
+            country_candidate = tokens[-1]
+        elif len(tokens) == 2:
+            state_candidate = tokens[1]
+            country_candidate = tokens[-1]
+        else:
+            state_candidate = ""
+            country_candidate = ""
+
+        if state_candidate and not self.state_province:
+            self.state_province = state_candidate
+
+        if country_candidate and not self.country:
+            self.country = country_candidate
+
+    def save(self, *args, **kwargs):
+        self._hydrate_structured_location_fields()
+        super().save(*args, **kwargs)
 
 
 # ---------------- Subscription Models ----------------

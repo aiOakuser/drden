@@ -9,7 +9,16 @@ from django.db import transaction
 from designer_portfolio.models import DesignerProfile
 
 Notifier = Optional[Callable[[str], None]]
-PROFILE_FIELD_NAMES: tuple[str, ...] = ("portfolio_website", "contact_email", "location")
+PROFILE_FIELD_NAMES: tuple[str, ...] = (
+    "portfolio_website",
+    "contact_email",
+    "region_area",
+    "country",
+    "state_province",
+    "county",
+    "city",
+    "location",
+)
 
 
 def _notify(notifier: Notifier, message: str) -> None:
@@ -27,22 +36,42 @@ def _designer_seed_entries() -> list[Dict[str, Any]]:
         {
             "username": "caukin",
             "portfolio_website": "https://caukin.aioak.co",
+            "region_area": "West Coast",
+            "country": "United States",
+            "state_province": "California",
+            "county": "Los Angeles County",
+            "city": "Los Angeles",
             "location": "Los Angeles, CA, USA",
         },
         {
             "username": "jturner",
             "portfolio_website": "https://jturner.aioak.co",
+            "region_area": "West Coast",
+            "country": "United States",
+            "state_province": "California",
+            "county": "Los Angeles County",
+            "city": "Los Angeles",
             "location": "Los Angeles, CA, USA",
         },
         {"username": "rossmason", "portfolio_website": "https://rossmason.aioak.co"},
         {
             "username": "Over-Stimulated",
             "portfolio_website": "https://stimulated.aioak.co",
+            "region_area": "West Coast",
+            "country": "United States",
+            "state_province": "California",
+            "county": "Los Angeles County",
+            "city": "Los Angeles",
             "location": "Los Angeles, CA, USA",
         },
         {
             "username": "m1director",
             "portfolio_website": "https://m1director.aioak.co",
+            "region_area": "West Coast",
+            "country": "United States",
+            "state_province": "California",
+            "county": "Los Angeles County",
+            "city": "Los Angeles",
             "location": "Los Angeles, CA, USA",
         },
         {

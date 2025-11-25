@@ -34,11 +34,13 @@
       <div class="profile-info">
         <h2>{{ user.get_full_name|default:user.username }}</h2>
         <p class="profile-title">{{ designer_profile.specialization|default:"Fashion Designer" }}</p>
+        {% with location_label=designer_profile.location_display|default:designer_profile.location %}
+        {% if location_label %}
         <p class="profile-location">
-          {% if designer_profile.location %}
-            📍 {{ designer_profile.location }}
-          {% endif %}
+          📍 {{ location_label }}
         </p>
+        {% endif %}
+        {% endwith %}
         <div class="profile-stats">
           <div class="stat">
             <span class="stat-number">{{ total_designs }}</span>
@@ -91,10 +93,47 @@
         </div>
 
         <div class="form-group">
-          <label for="id_location">Location</label>
+          <label for="id_location">Public Location Label</label>
           <input type="text" id="id_location" name="location" 
                  value="{{ designer_profile.location|default:'' }}" 
-                 placeholder="City, Country" class="form-control">
+                 placeholder="Los Angeles, CA, USA" class="form-control">
+          <small class="form-text">Displayed anywhere a single-line location reference is required.</small>
+        </div>
+
+        <div class="form-row location-details-row">
+          <div class="form-group">
+            <label for="id_region_area">Area / Region</label>
+            <input type="text" id="id_region_area" name="region_area"
+                   value="{{ designer_profile.region_area|default:'' }}"
+                   placeholder="West Coast, EMEA, LATAM" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="id_country">Country</label>
+            <input type="text" id="id_country" name="country"
+                   value="{{ designer_profile.country|default:'' }}"
+                   placeholder="United States" class="form-control">
+          </div>
+        </div>
+
+        <div class="form-row location-details-row">
+          <div class="form-group">
+            <label for="id_state_province">State / Province</label>
+            <input type="text" id="id_state_province" name="state_province"
+                   value="{{ designer_profile.state_province|default:'' }}"
+                   placeholder="California" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="id_county">County</label>
+            <input type="text" id="id_county" name="county"
+                   value="{{ designer_profile.county|default:'' }}"
+                   placeholder="Los Angeles County" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="id_city">City</label>
+            <input type="text" id="id_city" name="city"
+                   value="{{ designer_profile.city|default:'' }}"
+                   placeholder="Los Angeles" class="form-control">
+          </div>
         </div>
       </div>
 
@@ -535,6 +574,9 @@
   grid-template-columns: 1fr 1fr;
   gap: 20px;
   margin-bottom: 20px;
+}
+.location-details-row {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
 .form-group {

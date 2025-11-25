@@ -15,7 +15,7 @@ from django.views.generic import TemplateView, DetailView, ListView, CreateView,
 from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetConfirmView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import login, authenticate, get_user_model
-from django.http import JsonResponse, Http404
+from django.http import JsonResponse, Http404, QueryDict
 from django.views.decorators.csrf import requires_csrf_token
 from django.views.decorators.http import require_POST
 from django.conf import settings
@@ -2083,6 +2083,11 @@ def designer_about_me_view(request):
     passkeys = list(user.webauthn_credentials.order_by("created_at"))
 
     if request.method == "POST":
+        def cleaned_post(key, current_value):
+            if key not in request.POST:
+                return current_value
+            return (request.POST.get(key) or "").strip()
+
         # Update basic user fields
         first_name = (request.POST.get("first_name") or user.first_name).strip()
         last_name = (request.POST.get("last_name") or user.last_name).strip()
@@ -2094,9 +2099,14 @@ def designer_about_me_view(request):
         user.save()
 
         # Update profile fields (map template inputs to model fields)
-        profile.bio = request.POST.get("bio", profile.bio)
-        profile.location = request.POST.get("location", profile.location)
-        profile.education = request.POST.get("education", profile.education)
+        profile.bio = cleaned_post("bio", profile.bio)
+        profile.location = cleaned_post("location", profile.location)
+        profile.education = cleaned_post("education", profile.education)
+        profile.region_area = cleaned_post("region_area", profile.region_area)
+        profile.country = cleaned_post("country", profile.country)
+        profile.state_province = cleaned_post("state_province", profile.state_province)
+        profile.county = cleaned_post("county", profile.county)
+        profile.city = cleaned_post("city", profile.city)
         # years_of_experience may be empty; coerce safely
         years_val = request.POST.get("years_of_experience", "").strip()
         try:
@@ -2106,11 +2116,27 @@ def designer_about_me_view(request):
             pass
 
         # Social/portfolio links
-        profile.portfolio_website = request.POST.get("portfolio_website", request.POST.get("website", profile.portfolio_website))
-        profile.instagram_handle = request.POST.get("instagram_handle", request.POST.get("instagram", profile.instagram_handle))
-        profile.linkedin_profile = request.POST.get("linkedin_profile", request.POST.get("linkedin", profile.linkedin_profile))
-        profile.specialization = request.POST.get("specialization", request.POST.get("specializations", profile.specialization))
-        profile.contact_email = request.POST.get("contact_email", profile.contact_email)
+        if "portfolio_website" in request.POST:
+            profile.portfolio_website = (request.POST.get("portfolio_website") or "").strip()
+        elif "website" in request.POST:
+            profile.portfolio_website = (request.POST.get("website") or "").strip()
+
+        if "instagram_handle" in request.POST:
+            profile.instagram_handle = (request.POST.get("instagram_handle") or "").strip()
+        elif "instagram" in request.POST:
+            profile.instagram_handle = (request.POST.get("instagram") or "").strip()
+
+        if "linkedin_profile" in request.POST:
+            profile.linkedin_profile = (request.POST.get("linkedin_profile") or "").strip()
+        elif "linkedin" in request.POST:
+            profile.linkedin_profile = (request.POST.get("linkedin") or "").strip()
+
+        if "specialization" in request.POST:
+            profile.specialization = (request.POST.get("specialization") or "").strip()
+        elif "specializations" in request.POST:
+            profile.specialization = (request.POST.get("specializations") or "").strip()
+
+        profile.contact_email = cleaned_post("contact_email", profile.contact_email)
 
         # Collaboration preference (support old and corrected field names)
         available_flag = request.POST.get("available_for_collaborations") or request.POST.get("available_for_collaboration")
@@ -2237,12 +2263,179 @@ class DesignersListView(ListView):
     template_name = "designer_portfolio/designers.html"
     context_object_name = "designers"
     paginate_by = 20
+    LOCATION_FIELDS = [
+        ("area", "Area / Region"),
+        ("country", "Country"),
+        ("state", "State / Province"),
+        ("county", "County"),
+        ("city", "City"),
+    ]
+    LOCATION_PARAM_ORDER = [name for name, _ in LOCATION_FIELDS]
+    LOCATION_PARAM_FIELD_MAP = {
+        "area": "region_area",
+        "country": "country",
+        "state": "state_province",
+        "county": "county",
+        "city": "city",
+    }
+
+    def _base_queryset(self):
+        return (
+            DesignerProfile.objects.filter(user__is_active=True)
+            .select_related("user")
+        )
 
     def get_queryset(self):
-        # Only return profiles for active users
-        return DesignerProfile.objects.filter(
-            user__is_active=True
-        ).select_related('user').order_by('-created_at')
+        qs = self._base_queryset()
+        filters = self._selected_location_filters()
+
+        if filters["area"]:
+            qs = qs.filter(region_area__iexact=filters["area"])
+        if filters["country"]:
+            qs = qs.filter(country__iexact=filters["country"])
+        if filters["state"]:
+            qs = qs.filter(state_province__iexact=filters["state"])
+        if filters["county"]:
+            qs = qs.filter(county__iexact=filters["county"])
+        if filters["city"]:
+            qs = qs.filter(city__iexact=filters["city"])
+
+        qs = qs.order_by("-created_at")
+        self._filtered_queryset = qs
+        self._result_count = qs.count()
+        return qs
+
+    def _normalize_value(self, value: str) -> str:
+        return (value or "").strip()
+
+    def _selected_location_filters(self) -> dict[str, str]:
+        if not hasattr(self, "_location_filter_cache"):
+            self._location_filter_cache = {
+                param: self._normalize_value(self.request.GET.get(param))
+                for param in self.LOCATION_PARAM_ORDER
+            }
+        return self._location_filter_cache
+
+    def _location_rows(self):
+        if not hasattr(self, "_location_rows_cache"):
+            fields = list(self.LOCATION_PARAM_FIELD_MAP.values())
+            self._location_rows_cache = list(
+                DesignerProfile.objects.filter(user__is_active=True).values(*fields)
+            )
+        return self._location_rows_cache
+
+    def _row_matches(self, row: dict, depend_params: list[str]) -> bool:
+        filters = self._selected_location_filters()
+        for param in depend_params:
+            selected_value = filters.get(param)
+            if not selected_value:
+                continue
+            field_name = self.LOCATION_PARAM_FIELD_MAP[param]
+            row_value = self._normalize_value(row.get(field_name))
+            if not row_value:
+                return False
+            if row_value.casefold() != selected_value.casefold():
+                return False
+        return True
+
+    def _option_list(self, target_param: str, depend_params: list[str]) -> list[dict]:
+        field_name = self.LOCATION_PARAM_FIELD_MAP[target_param]
+        counters: dict[str, dict] = {}
+        for row in self._location_rows():
+            if not self._row_matches(row, depend_params):
+                continue
+            value = self._normalize_value(row.get(field_name))
+            if not value:
+                continue
+            key = value.casefold()
+            entry = counters.setdefault(
+                key,
+                {
+                    "value": value,
+                    "label": value,
+                    "count": 0,
+                },
+            )
+            entry["count"] += 1
+
+        return sorted(counters.values(), key=lambda item: item["label"].lower())
+
+    def _downstream_params(self, param: str) -> list[str]:
+        if param not in self.LOCATION_PARAM_ORDER:
+            return []
+        start_index = self.LOCATION_PARAM_ORDER.index(param) + 1
+        return self.LOCATION_PARAM_ORDER[start_index:]
+
+    def _build_remove_filter_url(self, param: str) -> str:
+        params_to_clear = [param] + self._downstream_params(param)
+        query: QueryDict = self.request.GET.copy()
+        for key in params_to_clear:
+            if key in query:
+                query.pop(key, None)
+        query.pop("page", None)
+        encoded = query.urlencode()
+        return f"{self.request.path}?{encoded}" if encoded else self.request.path
+
+    def _build_clear_filters_url(self) -> str:
+        query: QueryDict = self.request.GET.copy()
+        for key in self.LOCATION_PARAM_FIELD_MAP.keys():
+            query.pop(key, None)
+        query.pop("page", None)
+        encoded = query.urlencode()
+        return f"{self.request.path}?{encoded}" if encoded else self.request.path
+
+    def _build_active_filter_chips(self) -> list[dict]:
+        chips = []
+        labels = dict(self.LOCATION_FIELDS)
+        filters = self._selected_location_filters()
+        for param in self.LOCATION_PARAM_ORDER:
+            value = filters.get(param)
+            if not value:
+                continue
+            chips.append(
+                {
+                    "param": param,
+                    "label": labels[param],
+                    "value": value,
+                    "remove_url": self._build_remove_filter_url(param),
+                }
+            )
+        return chips
+
+    def _build_location_filter_context(self) -> dict:
+        filters = self._selected_location_filters()
+        options = {
+            "area": self._option_list("area", []),
+            "country": self._option_list("country", ["area"]),
+            "state": self._option_list("state", ["area", "country"]),
+            "county": self._option_list("county", ["area", "country", "state"]),
+            "city": self._option_list("city", ["area", "country", "state", "county"]),
+        }
+
+        fields_payload = []
+        for name, label in self.LOCATION_FIELDS:
+            fields_payload.append(
+                {
+                    "name": name,
+                    "label": label,
+                    "options": options[name],
+                    "selected": filters.get(name, ""),
+                }
+            )
+
+        chips = self._build_active_filter_chips()
+        return {
+            "fields": fields_payload,
+            "selected": filters,
+            "active_chips": chips,
+            "has_active": bool(chips),
+            "clear_url": self._build_clear_filters_url(),
+            "order": ",".join(self.LOCATION_PARAM_ORDER),
+            "result_count": getattr(self, "_result_count", 0),
+        }
+
+    def _get_result_count(self) -> int:
+        return getattr(self, "_result_count", 0)
 
     def get_context_data(self, **kwargs):
         """Expose viewer metadata for the follow interactions on the page."""
@@ -2252,6 +2445,8 @@ class DesignersListView(ListView):
         if getattr(user, "is_authenticated", False):
             viewer_name = (user.get_full_name() or "").strip() or user.username
 
+        context["designer_result_count"] = self._get_result_count()
+        context["location_filters"] = self._build_location_filter_context()
         context.update(
             {
                 "viewer_name": viewer_name,

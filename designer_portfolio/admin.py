@@ -96,16 +96,26 @@ class DesignerProfileAdmin(admin.ModelAdmin):
     list_display = (
         "user",
         "specialization",
-        "location",
+        "structured_location",
         "portfolio_template",
         "created_at",
     )
-    list_filter = ("portfolio_template", "available_for_collaborations")
+    list_filter = (
+        "portfolio_template",
+        "available_for_collaborations",
+        "region_area",
+        "country",
+        "state_province",
+    )
     search_fields = (
         "user__username",
         "user__email",
         "specialization",
         "location",
+        "region_area",
+        "country",
+        "state_province",
+        "city",
     )
     readonly_fields = ("created_at", "updated_at")
     fields = (
@@ -118,6 +128,11 @@ class DesignerProfileAdmin(admin.ModelAdmin):
         "years_of_experience",
         "specialization",
         "education",
+        "region_area",
+        "country",
+        "state_province",
+        "county",
+        "city",
         "location",
         "available_for_collaborations",
         "contact_email",
@@ -125,6 +140,10 @@ class DesignerProfileAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
+
+    @admin.display(description="Location", ordering="city")
+    def structured_location(self, obj):
+        return obj.location_display or "—"
 
 
 # ---------------- Designer AI ----------------

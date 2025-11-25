@@ -90,11 +90,11 @@
         </div>
 
         <div class="form-group">
-          <label for="id_location">Location</label>
+          <label for="id_location">Public Location Label</label>
           <input type="text" id="id_location" name="location" 
                  value="{{ designer_profile.location|default:'' }}" 
-                 placeholder="City, State/Province, Country" class="form-control">
-          <small class="form-text">Helps clients understand your time zone and availability</small>
+                 placeholder="Los Angeles, CA, USA" class="form-control">
+          <small class="form-text">Displayed when structured area/country/city fields are not set.</small>
         </div>
       </div>
 
@@ -281,9 +281,11 @@
           <div class="preview-info">
             <h4>{{ user.get_full_name|default:user.username }}</h4>
             <p>{{ designer_profile.professional_title|default:"Fashion Designer" }}</p>
-            {% if designer_profile.location %}
-              <p class="preview-location">📍 {{ designer_profile.location }}</p>
+            {% with location_label=designer_profile.location_display|default:designer_profile.location %}
+            {% if location_label %}
+              <p class="preview-location">📍 {{ location_label }}</p>
             {% endif %}
+            {% endwith %}
           </div>
         </div>
         

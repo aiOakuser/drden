@@ -172,6 +172,66 @@ class PasswordResetFlowTests(TestCase):
     SESSION_COOKIE_SECURE=False,
     CSRF_COOKIE_SECURE=False,
     STORAGES=TEST_STORAGE_BACKENDS,
+)
+class DesignerDirectoryFilterTests(TestCase):
+    def setUp(self) -> None:
+        self.us_user = User.objects.create_user(
+            username="west-coast",
+            email="west@example.com",
+            password="unused",
+            is_active=True,
+        )
+        self.fr_user = User.objects.create_user(
+            username="parisian",
+            email="paris@example.com",
+            password="unused",
+            is_active=True,
+        )
+
+        DesignerProfile.objects.create(
+            user=self.us_user,
+            region_area="West Coast",
+            country="United States",
+            state_province="California",
+            county="Los Angeles County",
+            city="Los Angeles",
+            specialization="Streetwear",
+            location="Los Angeles, CA, USA",
+        )
+        DesignerProfile.objects.create(
+            user=self.fr_user,
+            region_area="Europe",
+            country="France",
+            state_province="Île-de-France",
+            city="Paris",
+            specialization="Couture",
+            location="Paris, France",
+        )
+
+    def test_filter_by_country_limits_results(self):
+        response = self.client.get(reverse("designers_list"), {"country": "France"})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Paris")
+        self.assertNotContains(response, "Los Angeles")
+
+    def test_filter_by_city_within_country(self):
+        response = self.client.get(
+            reverse("designers_list"),
+            {
+                "country": "United States",
+                "city": "Los Angeles",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Los Angeles")
+        self.assertNotContains(response, "Paris")
+
+
+@override_settings(
+    SECURE_SSL_REDIRECT=False,
+    SESSION_COOKIE_SECURE=False,
+    CSRF_COOKIE_SECURE=False,
+    STORAGES=TEST_STORAGE_BACKENDS,
     CANONICAL_HOST="globaldesignerhub.com",
     CANONICAL_REDIRECT_HOSTS=["www.globaldesignerhub.com"],
     CANONICAL_DOMAIN_REDIRECT_ENABLED=True,

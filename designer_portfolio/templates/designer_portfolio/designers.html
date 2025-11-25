@@ -20,7 +20,7 @@
 
   <div class="hero-stats">
     <div class="stat-item">
-      <span class="stat-number">{{ designers|length }}</span>
+      <span class="stat-number">{{ designer_result_count }}</span>
       <span class="stat-label">Active Designers</span>
     </div>
     <div class="stat-item">
@@ -39,21 +39,75 @@
 
     <!-- Filters -->
     <div class="filters-container">
-      <div class="filter-group">
-        <button class="filter-btn active" data-filter="all">All Designers</button>
-        <button class="filter-btn" data-filter="sustainable">Sustainable</button>
-        <button class="filter-btn" data-filter="avant-garde">Avant-garde</button>
-        <button class="filter-btn" data-filter="streetwear">Streetwear</button>
-        <button class="filter-btn" data-filter="formal">Formal Wear</button>
-      </div>
+      <form id="designerLocationFilters"
+            method="get"
+            class="location-filter-form"
+            data-filter-order="{{ location_filters.order }}">
+        <div class="filter-grid">
+          {% for field in location_filters.fields %}
+          <div class="filter-field">
+            <label for="id_filter_{{ field.name }}">{{ field.label }}</label>
+            <select id="id_filter_{{ field.name }}"
+                    name="{{ field.name }}"
+                    data-auto-submit>
+              <option value="">
+                Any {{ field.label|lower }}
+              </option>
+              {% for option in field.options %}
+              <option value="{{ option.value }}"
+                      {% if option.value == field.selected %}selected{% endif %}>
+                {{ option.label }}{% if option.count %} ({{ option.count }}){% endif %}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="filter-form-footer">
+          <button type="submit" class="btn btn-primary apply-filters-btn">
+            <i class="fas fa-filter"></i> Apply filters
+          </button>
+          <div class="filter-form-meta">
+            <span class="filter-result-pill">
+              {{ location_filters.result_count }} match{{ location_filters.result_count|pluralize }}
+            </span>
+            {% if location_filters.has_active %}
+            <a href="{{ location_filters.clear_url }}" class="clear-filters-link" data-reset-filters>
+              <i class="fas fa-times-circle"></i> Reset filters
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      </form>
 
-      <div class="view-toggle">
-        <button class="view-btn grid-view active" aria-label="Grid view">
-          <i class="fas fa-th"></i>
-        </button>
-        <button class="view-btn list-view" aria-label="List view">
-          <i class="fas fa-list"></i>
-        </button>
+      <div class="filters-sidebar">
+        <div class="filters-header">
+          <div>
+            <p class="filters-label">Active location filters</p>
+            <p class="filters-count">{{ location_filters.result_count }} live profile{{ location_filters.result_count|pluralize }}</p>
+          </div>
+          <div class="view-toggle">
+            <button class="view-btn grid-view active" aria-label="Grid view">
+              <i class="fas fa-th"></i>
+            </button>
+            <button class="view-btn list-view" aria-label="List view">
+              <i class="fas fa-list"></i>
+            </button>
+          </div>
+        </div>
+        <div class="active-filters">
+          {% if location_filters.active_chips %}
+            {% for chip in location_filters.active_chips %}
+            <a href="{{ chip.remove_url }}" class="filter-chip">
+              <span class="chip-label">{{ chip.label }}</span>
+              <span class="chip-value">{{ chip.value }}</span>
+              <span class="chip-close" aria-hidden="true">&times;</span>
+            </a>
+            {% endfor %}
+          {% else %}
+            <span class="chip-placeholder">No location filters applied</span>
+          {% endif %}
+        </div>
       </div>
     </div>
 
@@ -110,11 +164,13 @@
           </div>
 
             <div class="designer-meta">
-              {% if designer.location %}
+              {% with location_label=designer.location_display|default:designer.location %}
+              {% if location_label %}
               <span class="meta-item">
-                <i class="fas fa-map-marker-alt"></i> {{ designer.location }}
+                <i class="fas fa-map-marker-alt"></i> {{ location_label }}
               </span>
               {% endif %}
+              {% endwith %}
               {% if designer.years_of_experience > 0 %}
               <span class="meta-item">
                 <i class="fas fa-award"></i> {{ designer.years_of_experience }} years
@@ -238,9 +294,28 @@
 .container { max-width: 1400px; margin: 0 auto; padding: 0 20px; }
 
 /* ===== Filters ===== */
-.filters-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 50px; padding: 20px; background: var(--color-secondary); border-radius: 16px; box-shadow: 0 4px 20px rgba(var(--color-primary-rgb), 0.08); }
-.filter-btn { padding: 10px 20px; border: 2px solid transparent; background: var(--color-surface); color: var(--color-text-muted); border-radius: 25px; font-weight: 600; transition: all 0.3s ease; }
-.filter-btn:hover, .filter-btn.active { background: var(--color-primary); color: var(--color-secondary); border-color: var(--color-primary); transform: translateY(-2px); }
+.filters-container { display: flex; flex-wrap: wrap; gap: 24px; margin-bottom: 50px; }
+.location-filter-form,
+.filters-sidebar { flex: 1 1 340px; background: var(--color-secondary); border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(var(--color-primary-rgb), 0.08); }
+.filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+.filter-field label { display: block; font-weight: 600; margin-bottom: 6px; color: var(--color-text); }
+.filter-field select { width: 100%; padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(var(--color-primary-rgb), 0.15); background: var(--color-surface); font-weight: 600; color: var(--color-text); }
+.filter-form-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.filter-form-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.filter-result-pill { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; background: rgba(var(--color-primary-rgb), 0.08); font-weight: 600; color: var(--color-primary); }
+.clear-filters-link { color: var(--color-accent); font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+.apply-filters-btn { display: inline-flex; align-items: center; gap: 8px; }
+.filters-sidebar { min-width: 260px; display: flex; flex-direction: column; gap: 16px; }
+.filters-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.filters-label { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; color: var(--color-text-muted); margin: 0; }
+.filters-count { font-size: 1.2rem; font-weight: 800; margin: 4px 0 0; }
+.active-filters { display: flex; flex-wrap: wrap; gap: 10px; }
+.filter-chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(var(--color-primary-rgb), 0.15); background: rgba(var(--color-primary-rgb), 0.05); font-weight: 600; color: var(--color-text); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.filter-chip:hover { transform: translateY(-1px); box-shadow: 0 6px 12px rgba(var(--color-primary-rgb), 0.1); }
+.chip-label { text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; color: var(--color-text-muted); }
+.chip-value { font-weight: 700; color: var(--color-primary); }
+.chip-close { font-size: 1rem; color: var(--color-text-muted); }
+.chip-placeholder { color: var(--color-text-muted); font-style: italic; }
 
 /* ===== Designers Grid ===== */
 .designers-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; }
@@ -272,6 +347,8 @@
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
   .filters-container { flex-direction: column; gap: 20px; }
+  .location-filter-form,
+  .filters-sidebar { width: 100%; }
   .designers-grid { grid-template-columns: 1fr; }
 }
 </style>
@@ -283,50 +360,66 @@ window.GDH_FOLLOW_VIEWER = {
 };
 
 document.addEventListener("DOMContentLoaded", function () {
-  const filterButtons = document.querySelectorAll(".filter-btn");
-  const designerCards = document.querySelectorAll(".designer-card");
   const gridViewBtn = document.querySelector(".grid-view");
   const listViewBtn = document.querySelector(".list-view");
   const designersGrid = document.getElementById("designersGrid");
+  const filterForm = document.getElementById("designerLocationFilters");
 
-  filterButtons.forEach(button => {
-    button.addEventListener("click", () => {
-      filterButtons.forEach(btn => btn.classList.remove("active"));
-      button.classList.add("active");
-      const filter = button.dataset.filter;
-      designerCards.forEach(card => {
-        const cat = card.dataset.category;
-        card.style.display = (filter === "all" || cat.includes(filter)) ? "block" : "none";
+  if (filterForm) {
+    const orderSequence = (filterForm.dataset.filterOrder || "")
+      .split(",")
+      .map((name) => name.trim())
+      .filter(Boolean);
+    const downstreamMap = new Map();
+    orderSequence.forEach((name, index) => {
+      downstreamMap.set(name, orderSequence.slice(index + 1));
+    });
+
+    const selects = filterForm.querySelectorAll("select[data-auto-submit]");
+    selects.forEach((select) => {
+      select.addEventListener("change", () => {
+        const downstream = downstreamMap.get(select.name) || [];
+        downstream.forEach((childName) => {
+          const child = filterForm.querySelector(`[name="${childName}"]`);
+          if (child) {
+            child.value = "";
+          }
+        });
+        filterForm.submit();
       });
     });
-  });
+  }
 
-  gridViewBtn.addEventListener("click", () => {
-    gridViewBtn.classList.add("active");
-    listViewBtn.classList.remove("active");
-    designersGrid.classList.remove("list-view");
-  });
+  if (gridViewBtn && listViewBtn && designersGrid) {
+    gridViewBtn.addEventListener("click", () => {
+      gridViewBtn.classList.add("active");
+      listViewBtn.classList.remove("active");
+      designersGrid.classList.remove("list-view");
+    });
 
-  listViewBtn.addEventListener("click", () => {
-    listViewBtn.classList.add("active");
-    gridViewBtn.classList.remove("active");
-    designersGrid.classList.add("list-view");
-  });
+    listViewBtn.addEventListener("click", () => {
+      listViewBtn.classList.add("active");
+      gridViewBtn.classList.remove("active");
+      designersGrid.classList.add("list-view");
+    });
+  }
 
   // Make entire designer cards open portfolio site when clicked (if available)
-  designersGrid.addEventListener("click", (event) => {
-    const target = event.target;
-    // Ignore clicks on explicit interactive elements
-    if (target.closest && target.closest("a, button, .action-btn, .btn")) {
-      return;
-    }
-    const card = target.closest ? target.closest(".designer-card") : null;
-    if (!card) return;
-    const website = card.getAttribute("data-website");
-    if (website) {
-      window.open(website, "_blank", "noopener");
-    }
-  });
+  if (designersGrid) {
+    designersGrid.addEventListener("click", (event) => {
+      const target = event.target;
+      // Ignore clicks on explicit interactive elements
+      if (target.closest && target.closest("a, button, .action-btn, .btn")) {
+        return;
+      }
+      const card = target.closest ? target.closest(".designer-card") : null;
+      if (!card) return;
+      const website = card.getAttribute("data-website");
+      if (website) {
+        window.open(website, "_blank", "noopener");
+      }
+    });
+  }
 });
 
 (function activateDesignerFollowButtons() {
