@@ -375,6 +375,41 @@ document.addEventListener("DOMContentLoaded", function () {
       downstreamMap.set(name, orderSequence.slice(index + 1));
     });
 
+    const FOCUS_STORAGE_KEY = "designerFiltersFocusNext";
+
+    function rememberNextFocus(fieldName) {
+      try {
+        if (fieldName) {
+          window.sessionStorage.setItem(FOCUS_STORAGE_KEY, fieldName);
+        } else {
+          window.sessionStorage.removeItem(FOCUS_STORAGE_KEY);
+        }
+      } catch (err) {
+        // Ignore storage access issues
+      }
+    }
+
+    function focusStoredFilterField() {
+      let storedName = null;
+      try {
+        storedName = window.sessionStorage.getItem(FOCUS_STORAGE_KEY);
+        if (storedName) {
+          window.sessionStorage.removeItem(FOCUS_STORAGE_KEY);
+        }
+      } catch (err) {
+        storedName = null;
+      }
+      if (!storedName) {
+        return;
+      }
+      const target = filterForm.querySelector(`[name="${storedName}"]`);
+      if (target && typeof target.focus === "function") {
+        target.focus();
+      }
+    }
+
+    focusStoredFilterField();
+
     const selects = filterForm.querySelectorAll("select[data-auto-submit]");
     selects.forEach((select) => {
       select.addEventListener("change", () => {
@@ -385,6 +420,17 @@ document.addEventListener("DOMContentLoaded", function () {
             child.value = "";
           }
         });
+
+        if (select.value) {
+          const nextFieldName =
+            downstream.find((childName) =>
+              Boolean(filterForm.querySelector(`[name="${childName}"]`))
+            ) || null;
+          rememberNextFocus(nextFieldName);
+        } else {
+          rememberNextFocus(null);
+        }
+
         filterForm.submit();
       });
     });
