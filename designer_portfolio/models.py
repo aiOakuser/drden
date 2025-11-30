@@ -335,6 +335,7 @@ class DesignerProfile(models.Model):
     region_area = models.CharField(
         max_length=120,
         blank=True,
+        default="West Coast",
         help_text="Broader area or territory label (e.g., West Coast, EMEA).",
         db_index=True,
     )

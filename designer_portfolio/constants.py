@@ -68,3 +68,66 @@ EVENT_DETAILS = {
         ],
     },
 }
+
+
+REGIONAL_HIRING_AREAS = [
+    {
+        "slug": "west-coast",
+        "name": "West Coast",
+        "default": True,
+        "tagline": "Film studios, tech teams, and families on the Pacific schedule designers first.",
+        "description": (
+            "GlobalDesignerHub.com launched with a West Coast heartbeat, so households planning milestone shoots "
+            "and founders refining one-on-one looks can book stylists in minutes. Families can reserve a single "
+            "creative director for everyone or hire separate designers for each person without leaving the platform."
+        ),
+        "states": [
+            "California (CA)",
+            "Oregon (OR)",
+            "Washington (WA)",
+            "Nevada (NV)",
+            "Arizona (AZ)",
+        ],
+        "cta": "Book family-wide styling or individual runway prep directly on GlobalDesignerHub.com.",
+    },
+    {
+        "slug": "east-coast",
+        "name": "East Coast",
+        "default": False,
+        "tagline": "Editorial powerhouses stretching from New York to Miami.",
+        "description": (
+            "From NYC townhouses to Miami penthouses, families and boutique agencies can tap GlobalDesignerHub.com "
+            "for couture fittings, coordinated wardrobes, or personal capsule collections. Hire one lead designer "
+            "for the entire family or match each person with their own specialist."
+        ),
+        "states": [
+            "New York (NY)",
+            "New Jersey (NJ)",
+            "Massachusetts (MA)",
+            "District of Columbia (DC)",
+            "Virginia (VA)",
+            "Florida (FL)",
+        ],
+        "cta": "Use the directory filters to book designers for family portraits or solo editorials.",
+    },
+    {
+        "slug": "central",
+        "name": "Central",
+        "default": False,
+        "tagline": "Production hubs covering the Midwest and Mountain markets.",
+        "description": (
+            "Brands across the Central region keep shoots nimble by hiring through GlobalDesignerHub.com. "
+            "Whether a family in Austin needs coordinated looks or a Denver creative wants personal runway prep, "
+            "designers can be hired individually or as a shared household team."
+        ),
+        "states": [
+            "Texas (TX)",
+            "Illinois (IL)",
+            "Colorado (CO)",
+            "Minnesota (MN)",
+            "Missouri (MO)",
+            "Michigan (MI)",
+        ],
+        "cta": "Coordinate household styling or individual commissions without leaving GlobalDesignerHub.com.",
+    },
+]

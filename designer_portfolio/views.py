@@ -65,6 +65,7 @@ from .models import (
     ForumUserProfile,
     ProblemReport,
 )
+from .constants import REGIONAL_HIRING_AREAS
 
 from webauthn import (
     generate_authentication_options,
@@ -720,6 +721,8 @@ class HomePageView(TemplateView):
                 "specialties": ["Modest luxury", "Resortwear", "Fashion entrepreneurship"],
             },
         ]
+
+        context["regional_hiring_areas"] = REGIONAL_HIRING_AREAS
 
         forum_url = getattr(
             settings,

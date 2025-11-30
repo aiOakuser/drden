@@ -189,6 +189,44 @@
 </section>
 {% endif %}
 
+{% if regional_hiring_areas %}
+<section class="regional-hiring" aria-label="Hire designers by region">
+  <div class="container">
+    <div class="regional-hiring-header">
+      <p class="section-eyebrow">United States coverage</p>
+      <h2 class="section-title">Hire designers for every household</h2>
+      <p class="regional-hiring-description">
+        GlobalDesignerHub.com keeps the West Coast as the default focus while making it simple for any family,
+        friend group, or individual to hire designers in other regions. Book one creative director for everyone
+        or match each person with their own specialist.
+      </p>
+    </div>
+    <div class="regional-hiring-grid">
+      {% for area in regional_hiring_areas %}
+      <article class="regional-card">
+        <div class="regional-card-headline">
+          <div>
+            <h3 class="regional-card-title">{{ area.name }}</h3>
+            <p class="regional-card-tagline">{{ area.tagline }}</p>
+          </div>
+          {% if area.default %}
+          <span class="regional-default-chip">Default focus</span>
+          {% endif %}
+        </div>
+        <p class="regional-card-description">{{ area.description }}</p>
+        <p class="regional-card-cta">{{ area.cta }}</p>
+        <div class="regional-card-states" aria-label="{{ area.name }} states">
+          {% for state in area.states %}
+          <span class="state-chip">{{ state }}</span>
+          {% endfor %}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
 <!-- Featured Designers Slideshow -->
 <section class="featured-designers" aria-label="Featured Fashion Designers">
   <div class="container">
@@ -663,6 +701,102 @@
       color: var(--color-primary);
       font-size: 0.85rem;
       font-weight: 600;
+    }
+
+    /* Regional hiring section */
+    .regional-hiring {
+      padding: 90px 0;
+      background: var(--color-surface);
+    }
+
+    .regional-hiring-header {
+      text-align: center;
+      max-width: 860px;
+      margin: 0 auto 60px;
+    }
+
+    .regional-hiring-description {
+      font-size: 1.1rem;
+      color: var(--color-text);
+      line-height: 1.7;
+      margin-top: 12px;
+    }
+
+    .regional-hiring-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 28px;
+    }
+
+    .regional-card {
+      background: var(--color-secondary);
+      border-radius: 24px;
+      padding: 32px;
+      border: 1px solid rgba(var(--color-primary-rgb), 0.08);
+      box-shadow: 0 24px 40px rgba(var(--color-primary-rgb), 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 100%;
+    }
+
+    .regional-card-headline {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .regional-card-title {
+      font-size: 1.5rem;
+      margin: 0;
+      color: var(--color-primary);
+    }
+
+    .regional-card-tagline {
+      margin: 4px 0 0;
+      font-size: 0.95rem;
+      color: var(--color-text-muted);
+    }
+
+    .regional-card-description,
+    .regional-card-cta {
+      margin: 0;
+      color: var(--color-text);
+      line-height: 1.6;
+    }
+
+    .regional-card-cta {
+      font-weight: 600;
+      color: var(--color-primary);
+    }
+
+    .regional-card-states {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .state-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(var(--color-primary-rgb), 0.12);
+      color: var(--color-primary);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .regional-default-chip {
+      background: var(--color-accent);
+      color: var(--color-primary);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      padding: 6px 12px;
+      border-radius: 999px;
     }
 
   /* Container */
