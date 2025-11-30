@@ -460,7 +460,7 @@ else:
 
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "GlobalDesignerHub <no-reply@globaldesignerhub.com>")
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
-ADMIN_EMAIL = "chpreddy@gmail.com"
+ADMIN_EMAIL = "admin@aioak.net"
 PRETTYPEARL_CONTACT_EMAIL = os.getenv("PRETTYPEARL_CONTACT_EMAIL", "").strip()
 
 # Password reset settings
