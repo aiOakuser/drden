@@ -201,6 +201,7 @@ INSTALLED_APPS = [
     
     # Local
     "designer_portfolio",
+    "marketing",
 ]
 
 # --- REST Framework ---

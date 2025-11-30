@@ -12,6 +12,7 @@ from designer_portfolio.views import (
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("", include("marketing.urls")),
     # Friendly alias: /login or /login/ -> accounts/login/ (preserve query string like ?next=)
     re_path(r"^login/?$", RedirectView.as_view(pattern_name="login", permanent=False, query_string=True)),
     path("accounts/login/", DesignerLoginView.as_view(), name="login"),

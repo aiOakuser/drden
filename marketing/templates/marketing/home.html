@@ -1,0 +1,215 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GlobalDesignerHub</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+            margin: 0;
+            padding: 48px 24px;
+            background: #f5f2fb;
+            min-height: 100vh;
+        }
+        h1 {
+            color: #2a0a40;
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+        p.page-subcopy {
+            color: #4f4561;
+            margin-bottom: 32px;
+            max-width: 640px;
+        }
+        .popup-trigger {
+            background: #3c1458;
+            color: #fff;
+            border: none;
+            border-radius: 999px;
+            padding: 12px 28px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(60, 20, 88, 0.15);
+        }
+        .popup-trigger:hover {
+            opacity: 0.92;
+        }
+        /* Overlay */
+        .popup-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .popup-hidden {
+            display: none;
+        }
+        /* Popup box */
+        .popup-box {
+            background: #ffffff;
+            border-radius: 18px;
+            width: 90%;
+            max-width: 420px;
+            padding: 32px 28px 24px;
+            font-family: inherit;
+            position: relative;
+            text-align: center;
+        }
+        .popup-close {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            font-size: 20px;
+            cursor: pointer;
+            color: #4a256a;
+        }
+        .popup-title {
+            font-size: 32px;
+            font-weight: 800;
+            color: #3c1458;
+            margin-bottom: 6px;
+        }
+        .popup-sub {
+            font-size: 15px;
+            color: #6b6b6b;
+            margin: 12px 0 20px;
+        }
+        .popup-input,
+        .popup-phone-input {
+            width: 100%;
+            border-radius: 999px;
+            border: 1px solid #e3e3e3;
+            padding: 12px 16px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            outline: none;
+        }
+        .popup-input:focus,
+        .popup-phone-input:focus,
+        .popup-country-code:focus {
+            border-color: #6b3dc7;
+            box-shadow: 0 0 0 1px rgba(107,61,199,.3);
+        }
+        .popup-phone-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .popup-country-code {
+            width: 72px;
+            border-radius: 999px;
+            border: 1px solid #e3e3e3;
+            padding: 12px 10px;
+            font-size: 14px;
+            text-align: center;
+            outline: none;
+        }
+        .popup-btn {
+            width: 100%;
+            border-radius: 999px;
+            border: none;
+            padding: 13px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            background: #3c1458;
+            color: #ffffff;
+            cursor: pointer;
+            margin: 10px 0 16px;
+        }
+        .popup-btn:hover {
+            opacity: 0.92;
+        }
+        .popup-consent {
+            font-size: 11px;
+            color: #555;
+            line-height: 1.5;
+        }
+        .popup-link {
+            color: #3c1458;
+            text-decoration: underline;
+        }
+        .popup-error {
+            color: #c62828;
+            font-size: 12px;
+            text-align: left;
+            margin: -2px 0 8px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>GlobalDesignerHub Home</h1>
+<p class="page-subcopy">
+    Unlock premium wardrobes designed by the world’s top fashion specialists.
+    Tap the button below to get early-access savings and concierge support.
+</p>
+<button class="popup-trigger" type="button" onclick="openPopup()">Get 20% Off</button>
+
+<!-- Popup Overlay -->
+<div id="gdh-popup" class="popup-overlay popup-hidden" role="dialog" aria-modal="true">
+    <div class="popup-box">
+        <button class="popup-close" type="button" aria-label="Close" onclick="closePopup()">&times;</button>
+
+        <div class="popup-title">Get up to 20% off!</div>
+        <div style="font-size:30px; font-weight:600; color:#3c1458;">+</div>
+        <div class="popup-sub">
+            Get your Free Fashion Designer consultation!
+        </div>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="popup-error">{{ form.non_field_errors|join:" " }}</div>
+            {% endif %}
+
+            {{ form.full_name }}
+            {% if form.full_name.errors %}
+                <div class="popup-error">{{ form.full_name.errors|join:" " }}</div>
+            {% endif %}
+
+            <div class="popup-phone-row">
+                <div style="flex:0 0 auto;">{{ form.country_code }}</div>
+                <div style="flex:1 1 auto;">{{ form.phone_number }}</div>
+            </div>
+            {% if form.country_code.errors %}
+                <div class="popup-error">{{ form.country_code.errors|join:" " }}</div>
+            {% endif %}
+            {% if form.phone_number.errors %}
+                <div class="popup-error">{{ form.phone_number.errors|join:" " }}</div>
+            {% endif %}
+
+            <button type="submit" class="popup-btn">SUBMIT</button>
+        </form>
+
+        <p class="popup-consent">
+            I agree to have GlobalDesignerHub call me and receive updates.
+            For more information on our privacy and data policy,
+            <a href="/privacy/" class="popup-link">click here.</a>
+        </p>
+    </div>
+</div>
+
+<script>
+    const popup = document.getElementById("gdh-popup");
+
+    function openPopup() {
+        popup.classList.remove("popup-hidden");
+    }
+
+    function closePopup() {
+        popup.classList.add("popup-hidden");
+    }
+
+    window.addEventListener("load", function () {
+        setTimeout(openPopup, 1200);
+    });
+</script>
+
+</body>
+</html>
