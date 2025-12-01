@@ -1,9 +1,11 @@
 import json
+from unittest.mock import patch
 
 from django.test import TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.core import mail
+from django.utils import timezone
 from social_core.exceptions import AuthForbidden
 
 from .models import DesignerProfile, UserSubscription, ProblemReport, Project
@@ -386,12 +388,50 @@ class VolumeOneViewTests(TestCase):
             is_active=True,
         )
 
-    def test_volume_one_page_renders_iframe(self):
+    def test_volume_one_dashboard_renders_iframe_to_public_page(self):
         self.client.login(username="volume", password="StrongPass123!")
         response = self.client.get(reverse("volume_one"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "iframe")
-        self.assertInHTML(
-            '<iframe src="https://globaldesignerhub.com/volumeone" title="Volume-One" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>',
-            response.content.decode(),
-        )
+        public_path = reverse("volume_one_public")
+        expected_src = f'src="http://testserver{public_path}"'
+        self.assertIn("iframe", response.content.decode())
+        self.assertIn(expected_src, response.content.decode())
+
+    @patch("designer_portfolio.views.get_volumeone_feed")
+    def test_volume_one_public_page_uses_feed(self, mock_feed):
+        feed = {
+            "profile": {
+                "handle": "runvolumeone",
+                "name": "RUNWAY",
+                "followers_display": "895",
+                "posts_display": "22",
+                "following_display": "6",
+                "avatar_url": "https://example.com/avatar.jpg",
+            },
+            "slides": [
+                {
+                    "id": "abc",
+                    "shortcode": "abc",
+                    "caption": "See you soon Honolulu",
+                    "caption_short": "See you soon Honolulu",
+                    "image_url": "https://example.com/post.jpg",
+                    "is_video": False,
+                    "permalink": "https://instagram.com/p/abc/",
+                    "taken_at": timezone.now(),
+                    "tags": ["runvolumeone"],
+                    "accessibility_caption": "",
+                    "like_display": "12",
+                    "comment_display": "3",
+                }
+            ],
+            "source": "live",
+            "fetched_at": timezone.now(),
+        }
+        mock_feed.return_value = feed
+
+        response = self.client.get(reverse("volume_one_public"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "RunVolumeOne Collective")
+        self.assertContains(response, feed["slides"][0]["caption"])
+        self.assertContains(response, feed["slides"][0]["permalink"])
+        mock_feed.assert_called_once()

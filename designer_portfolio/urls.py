@@ -36,6 +36,7 @@ from .views import (
     ProjectTemplateSelectionView,
     ProjectEditorView,
     VolumeOneView,
+    VolumeOneShowcaseView,
     DesignerRegistrationView,
     DesignersListView,
     designer_ai_chat,
@@ -114,7 +115,8 @@ urlpatterns = [
     path("dashboard/contact/", designer_contact_view, name="designer_contact"),
     path("dashboard/projects/new/", ProjectTemplateSelectionView.as_view(), name="project_create"),
     path("dashboard/projects/<int:pk>/", ProjectEditorView.as_view(), name="project_editor"),
-    path("volumeone/", VolumeOneView.as_view(), name="volume_one"),
+    path("volumeone/", VolumeOneShowcaseView.as_view(), name="volume_one_public"),
+    path("dashboard/volumeone/", VolumeOneView.as_view(), name="volume_one"),
     # Common misspellings/legacy links -> redirect to dashboard
     path("dashephard/", RedirectView.as_view(pattern_name="designer_dashboard", permanent=False), name="dashephard"),
     path("dashepard/", RedirectView.as_view(pattern_name="designer_dashboard", permanent=False), name="dashepard"),

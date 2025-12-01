@@ -1,12 +1,15 @@
 import base64
+import copy
 import json
 import logging
 import os
+import re
+import urllib.request
 import uuid
-import copy
 from decimal import Decimal, InvalidOperation
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
+from urllib.error import HTTPError, URLError
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -22,6 +25,7 @@ from django.views.decorators.http import require_POST
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
 from django.utils import timezone
@@ -130,6 +134,313 @@ RUNWAY_COLLECTION_CAPABILITIES = [
 PROJECT_TEMPLATE_DEFAULT_SUMMARY = [
     "Includes four stages + single product spec page",
 ]
+
+
+VOLUMEONE_INSTAGRAM_USERNAME = "runvolumeone"
+VOLUMEONE_INSTAGRAM_PROFILE_URL = f"https://www.instagram.com/{VOLUMEONE_INSTAGRAM_USERNAME}/"
+VOLUMEONE_INSTAGRAM_APP_ID = "936619743392459"
+VOLUMEONE_FEED_CACHE_KEY = "designer_portfolio:volumeone-feed"
+VOLUMEONE_FEED_CACHE_TTL = 60 * 30  # 30 minutes
+VOLUMEONE_MAX_SLIDES = 20
+VOLUMEONE_DEFAULT_SLIDES = 8
+VOLUMEONE_USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+)
+
+VOLUMEONE_FALLBACK_PROFILE = {
+    "handle": "runvolumeone",
+    "name": "RUNWAY",
+    "biography": "Design House",
+    "followers": 895,
+    "following": 6,
+    "posts": 22,
+    "avatar_url": (
+        "https://scontent-iad3-2.cdninstagram.com/v/t51.2885-19/581897756_17922125034192197_"
+        "4135739670115190840_n.jpg?stp=dst-jpg_s320x320_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVf"
+        "cGljLmRqYW5nby4xMDgwLmMyIn0&_nc_ht=scontent-iad3-2.cdninstagram.com&_nc_cat=105&_nc_oc="
+        "Q6cZ2QGmFgpA4VJsmOi_dBmZem9ZEcg66BSttejjnpJn8oKOY7DtxPnDNcz58XBKmyFJl8k&_nc_ohc="
+        "7yNlwzqGStYQ7kNvwEFNxoA&_nc_gid=KmbyDeXyeGNNQjIipsJhfg&edm=AOQ1c0wBAAAA&ccb=7-5&oh="
+        "00_AfiZ40InChy4Ge3SShAxKq6JYb4pvzjN3jxlYVJHGXjobQ&oe=6932D66C&_nc_sid=8b3546"
+    ),
+}
+
+VOLUMEONE_FALLBACK_SLIDES = [
+    {
+        "shortcode": "DRIH_xLgex5",
+        "image_url": (
+            "https://scontent-iad3-2.cdninstagram.com/v/t51.2885-15/583100306_864388666011821_"
+            "8294748503970614309_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-iad3-2.cdninstagram.com&_nc_cat=105&_nc_oc="
+            "Q6cZ2QGCT1VVVUQrA7mi6UEMWfTqtHK-XleOxwKy1cgUeQ3A0cqgJdqNU8Y6k34W4Vwi69Q&_nc_ohc=EkUDmdG73JMQ7kNvwGzwOp9&_"
+            "nc_gid=0g-Fhf5Kap5ntbSZ56-HDA&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_AfjYEhksyOocfS0LdJYnlFl5c6tomkDXa2Wi8sPgmvWg9Q"
+            "&oe=6932D6C8&_nc_sid=8b3546"
+        ),
+        "caption": (
+            "see you soon honolulu we are super excited to announce our final stages of prep for our teams first "
+            "collective marathon. if you are running honolulu make sure to join our team: runvolumeone"
+        ),
+        "timestamp": 1763316944,
+        "like_count": 38,
+        "comment_count": 9,
+        "is_video": True,
+    },
+    {
+        "shortcode": "DL07da1P3LP",
+        "image_url": (
+            "https://scontent-iad3-2.cdninstagram.com/v/t51.2885-15/563727218_18029975375721731_"
+            "6557020613612464348_n.jpg?stp=dst-jpg_e35_p1080x1080_sh0.08_tt6&_nc_ht=scontent-iad3-2.cdninstagram.com&_nc_cat="
+            "111&_nc_oc=Q6cZ2QGCT1VVVUQrA7mi6UEMWfTqtHK-XleOxwKy1cgUeQ3A0cqgJdqNU8Y6k34W4Vwi69Q&_nc_ohc=Vz9e2VgesIoQ7kNv"
+            "wHoywLt&_nc_gid=0g-Fhf5Kap5ntbSZ56-HDA&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_AfgPAc2cp4a7VAj_gR55J5T1vmhtC1dVvSQKSUY"
+            "3TZ2x6A&oe=6932DCEB&_nc_sid=8b3546"
+        ),
+        "caption": (
+            "recap of our recent pop-up with @runvolumeone huge thank you to everyone who pulled up and showed love. "
+            "energy was unreal. the community keeps growing and we are just getting started"
+        ),
+        "timestamp": 1751935686,
+        "like_count": 181,
+        "comment_count": 54,
+        "is_video": True,
+    },
+    {
+        "shortcode": "DLsnl5xS3pJ",
+        "image_url": (
+            "https://scontent-iad3-2.cdninstagram.com/v/t51.2885-15/582772375_17922124740192197_"
+            "6550530905529303132_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-iad3-2.cdninstagram.com&_nc_cat=105&_nc_oc="
+            "Q6cZ2QGCT1VVVUQrA7mi6UEMWfTqtHK-XleOxwKy1cgUeQ3A0cqgJdqNU8Y6k34W4Vwi69Q&_nc_ohc=mGWbwNfF68oQ7kNvwFWHkFR&_"
+            "nc_gid=0g-Fhf5Kap5ntbSZ56-HDA&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_AfgBg63L_ZdDjITNJF98U1TbidFUS73pao4oZc45PxgEbg&"
+            "oe=6932C946&_nc_sid=8b3546"
+        ),
+        "caption": (
+            "thank you. shot and edited by @copyzay designs by @copyzay and @manyamarri brands: @oasis.zm "
+            "@outlier.0001 @renovate.clo"
+        ),
+        "timestamp": 1751656718,
+        "like_count": 94,
+        "comment_count": 15,
+        "is_video": True,
+    },
+    {
+        "shortcode": "DLXzY0QSvvd",
+        "image_url": (
+            "https://scontent-iad3-1.cdninstagram.com/v/t51.2885-15/504490361_1167534535062625_"
+            "5724248030847994982_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-iad3-1.cdninstagram.com&_nc_cat=101&_nc_oc="
+            "Q6cZ2QGCT1VVVUQrA7mi6UEMWfTqtHK-XleOxwKy1cgUeQ3A0cqgJdqNU8Y6k34W4Vwi69Q&_nc_ohc=ygeC9oaBT3kQ7kNvwGzSlli&_"
+            "nc_gid=0g-Fhf5Kap5ntbSZ56-HDA&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_AfhtPz3oHpqTX-4gOFi8cXuqsXCX9HIQf9dctZJJb7jSKQ&"
+            "oe=6932CC2E&_nc_sid=8b3546"
+        ),
+        "caption": "",
+        "timestamp": 1750957971,
+        "like_count": 29,
+        "comment_count": 7,
+        "is_video": True,
+    },
+    {
+        "shortcode": "DLVOqclpPeJ",
+        "image_url": (
+            "https://scontent-iad3-2.cdninstagram.com/v/t51.2885-15/510961325_17905520445192197_"
+            "8408534836598788128_n.jpg?stp=dst-jpg_e35_p1080x1080_sh0.08_tt6&_nc_ht=scontent-iad3-2.cdninstagram.com&_nc_cat="
+            "105&_nc_oc=Q6cZ2QGCT1VVVUQrA7mi6UEMWfTqtHK-XleOxwKy1cgUeQ3A0cqgJdqNU8Y6k34W4Vwi69Q&_nc_ohc=b-BCm6smbIMQ7kNv"
+            "wFaacf_&_nc_gid=0g-Fhf5Kap5ntbSZ56-HDA&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_AfiHWYqaErNOEpuf-QMljNCVu7CUl9Qmuwr1kvM_5"
+            "G-nJQ&oe=6932D29D&_nc_sid=8b3546"
+        ),
+        "caption": "2 days out rsvp in bio",
+        "timestamp": 1750871533,
+        "like_count": 18,
+        "comment_count": 3,
+        "is_video": False,
+    },
+    {
+        "shortcode": "DLDTcQQoMMw",
+        "image_url": (
+            "https://scontent-iad3-2.cdninstagram.com/v/t51.2885-15/511533399_18015983099721731_"
+            "3685769038166561750_n.jpg?stp=dst-jpg_e35_p1080x1080_sh0.08_tt6&_nc_ht=scontent-iad3-2.cdninstagram.com&_nc_cat="
+            "111&_nc_oc=Q6cZ2QGCT1VVVUQrA7mi6UEMWfTqtHK-XleOxwKy1cgUeQ3A0cqgJdqNU8Y6k34W4Vwi69Q&_nc_ohc=YZBpjDxEjckQ7kNvwHzdfzg&_"
+            "nc_gid=0g-Fhf5Kap5ntbSZ56-HDA&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_AfgkZtFJbqhi1t8BGuEmIYhyaWmZJHJC5JhauQO6jpVSIA&oe=6932D724&_nc_sid=8b3546"
+        ),
+        "caption": (
+            "we teamed up with @runvolumeone for our first ever run club appreciate everyone who came out and put in "
+            "the early morning work with us"
+        ),
+        "timestamp": 1750270651,
+        "like_count": 98,
+        "comment_count": 17,
+        "is_video": True,
+    },
+]
+
+
+def _format_metric(value: int | None) -> str:
+    if not value:
+        return "0"
+    if value >= 1_000_000:
+        return f"{value / 1_000_000:.1f}".rstrip("0").rstrip(".") + "M"
+    if value >= 1_000:
+        return f"{value / 1_000:.1f}".rstrip("0").rstrip(".") + "K"
+    return str(value)
+
+
+def _normalize_caption(text: str | None) -> str:
+    if not text:
+        return ""
+    cleaned = re.sub(r"\s+", " ", text).strip()
+    return cleaned
+
+
+def _extract_tags(text: str) -> list[str]:
+    if not text:
+        return []
+    return [match.lower() for match in re.findall(r"#(\w+)", text)]
+
+
+def _timestamp_to_datetime(value) -> datetime | None:
+    if not value:
+        return None
+    try:
+        return datetime.fromtimestamp(int(value), tz=timezone.utc)
+    except (TypeError, ValueError, OSError):
+        return None
+
+
+def _build_permalink(shortcode: str | None) -> str:
+    if shortcode:
+        return f"https://www.instagram.com/p/{shortcode}/"
+    return VOLUMEONE_INSTAGRAM_PROFILE_URL
+
+
+def _request_instagram_profile(username: str) -> dict:
+    url = f"https://www.instagram.com/api/v1/users/web_profile_info/?username={username}"
+    headers = {
+        "User-Agent": VOLUMEONE_USER_AGENT,
+        "Accept": "application/json",
+        "Referer": f"https://www.instagram.com/{username}/",
+        "X-IG-App-ID": VOLUMEONE_INSTAGRAM_APP_ID,
+    }
+    request = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(request, timeout=10) as response:
+        payload = response.read().decode("utf-8")
+    return json.loads(payload)
+
+
+def _transform_instagram_payload(payload: dict, limit: int) -> dict:
+    data = (payload or {}).get("data") or {}
+    user = data.get("user") or {}
+    media = user.get("edge_owner_to_timeline_media") or {}
+    edges = media.get("edges") or []
+
+    slides = []
+    for edge in edges[:limit]:
+        node = edge.get("node") or {}
+        caption_edges = (node.get("edge_media_to_caption") or {}).get("edges") or []
+        caption_text = caption_edges[0]["node"].get("text") if caption_edges else ""
+        caption = _normalize_caption(caption_text)
+        taken_at = _timestamp_to_datetime(node.get("taken_at_timestamp"))
+        short_caption = caption
+        if len(short_caption) > 180:
+            short_caption = f"{short_caption[:177].rstrip()}…"
+        slides.append(
+            {
+                "id": node.get("id") or node.get("shortcode"),
+                "shortcode": node.get("shortcode"),
+                "caption": caption,
+                "caption_short": short_caption,
+                "image_url": node.get("display_url"),
+                "is_video": bool(node.get("is_video")),
+                "permalink": _build_permalink(node.get("shortcode")),
+                "taken_at": taken_at,
+                "tags": _extract_tags(caption),
+                "accessibility_caption": node.get("accessibility_caption") or "",
+                "like_count": node.get("edge_liked_by", {}).get("count", 0) or 0,
+                "like_display": _format_metric(node.get("edge_liked_by", {}).get("count", 0) or 0),
+                "comment_count": node.get("edge_media_to_comment", {}).get("count", 0) or 0,
+                "comment_display": _format_metric(node.get("edge_media_to_comment", {}).get("count", 0) or 0),
+            }
+        )
+
+    if not slides:
+        raise ValueError("Instagram payload did not include any media edges")
+
+    profile = {
+        "handle": user.get("username") or VOLUMEONE_INSTAGRAM_USERNAME,
+        "name": user.get("full_name") or "RUNWAY",
+        "biography": user.get("biography") or "",
+        "followers": user.get("edge_followed_by", {}).get("count", 0) or 0,
+        "following": user.get("edge_follow", {}).get("count", 0) or 0,
+        "posts": media.get("count", len(slides)) or len(slides),
+        "avatar_url": user.get("profile_pic_url_hd") or "",
+    }
+    profile["followers_display"] = _format_metric(profile["followers"])
+    profile["following_display"] = _format_metric(profile["following"])
+    profile["posts_display"] = _format_metric(profile["posts"])
+
+    return {
+        "profile": profile,
+        "slides": slides,
+        "source": "live",
+        "fetched_at": timezone.now(),
+    }
+
+
+def _volumeone_fallback_feed(limit: int) -> dict:
+    now = timezone.now()
+    slides = []
+    for raw in VOLUMEONE_FALLBACK_SLIDES[:limit]:
+        caption = _normalize_caption(raw.get("caption"))
+        taken_at = _timestamp_to_datetime(raw.get("timestamp")) or now
+        short_caption = caption
+        if len(short_caption) > 180:
+            short_caption = f"{short_caption[:177].rstrip()}…"
+        slides.append(
+            {
+                "id": raw.get("shortcode"),
+                "shortcode": raw.get("shortcode"),
+                "caption": caption,
+                "caption_short": short_caption,
+                "image_url": raw.get("image_url"),
+                "is_video": bool(raw.get("is_video")),
+                "permalink": _build_permalink(raw.get("shortcode")),
+                "taken_at": taken_at,
+                "tags": _extract_tags(caption),
+                "accessibility_caption": "",
+                "like_count": raw.get("like_count", 0) or 0,
+                "like_display": _format_metric(raw.get("like_count", 0) or 0),
+                "comment_count": raw.get("comment_count", 0) or 0,
+                "comment_display": _format_metric(raw.get("comment_count", 0) or 0),
+            }
+        )
+
+    profile = {
+        **VOLUMEONE_FALLBACK_PROFILE,
+        "followers_display": _format_metric(VOLUMEONE_FALLBACK_PROFILE.get("followers", 0)),
+        "following_display": _format_metric(VOLUMEONE_FALLBACK_PROFILE.get("following", 0)),
+        "posts_display": _format_metric(VOLUMEONE_FALLBACK_PROFILE.get("posts", 0)),
+    }
+
+    return {
+        "profile": profile,
+        "slides": slides,
+        "source": "fallback",
+        "fetched_at": now,
+    }
+
+
+def get_volumeone_feed(limit: int = VOLUMEONE_DEFAULT_SLIDES) -> dict:
+    limit = max(1, min(int(limit or VOLUMEONE_DEFAULT_SLIDES), VOLUMEONE_MAX_SLIDES))
+    cache_key = f"{VOLUMEONE_FEED_CACHE_KEY}:{limit}"
+    cached = cache.get(cache_key)
+    if cached:
+        return cached
+
+    try:
+        payload = _request_instagram_profile(VOLUMEONE_INSTAGRAM_USERNAME)
+        feed = _transform_instagram_payload(payload, limit)
+        cache.set(cache_key, feed, VOLUMEONE_FEED_CACHE_TTL)
+        return feed
+    except Exception as exc:
+        logger.warning("Falling back to cached VolumeOne feed: %s", exc, exc_info=isinstance(exc, (HTTPError, URLError)))
+        fallback = _volumeone_fallback_feed(limit)
+        cache.set(cache_key, fallback, 300)
+        return fallback
 
 
 def _base64url_from_bytes(value: bytes) -> str:
@@ -1581,7 +1892,30 @@ class VolumeOneView(LoginRequiredMixin, TemplateView):
             context.setdefault("total_designs", Design.objects.filter(designer=self.request.user).count())
         except Exception:
             context.setdefault("total_designs", 0)
-        context["volume_one_url"] = "https://globaldesignerhub.com/volumeone"
+        try:
+            public_url = reverse("volume_one_public")
+        except NoReverseMatch:
+            public_url = "/volumeone/"
+        context["volume_one_url"] = self.request.build_absolute_uri(public_url)
+        return context
+
+
+class VolumeOneShowcaseView(TemplateView):
+    template_name = "designer_portfolio/volume_one_public.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        feed = get_volumeone_feed()
+        context.update(
+            {
+                "feed_profile": feed.get("profile", {}),
+                "slides": feed.get("slides", []),
+                "feed_source": feed.get("source", "fallback"),
+                "feed_timestamp": feed.get("fetched_at"),
+                "instagram_profile_url": VOLUMEONE_INSTAGRAM_PROFILE_URL,
+                "instagram_username": VOLUMEONE_INSTAGRAM_USERNAME,
+            }
+        )
         return context
 
 
