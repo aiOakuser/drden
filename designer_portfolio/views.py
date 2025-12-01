@@ -11,7 +11,7 @@ from datetime import datetime, timedelta, timezone as dt_timezone
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404, resolve_url
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
@@ -2415,14 +2415,7 @@ def webauthn_authenticate_verify(request):
     else:
         request.session.set_expiry(0)
 
-    redirect_to = settings.LOGIN_REDIRECT_URL
-    if next_url and url_has_allowed_host_and_scheme(
-        next_url,
-        allowed_hosts={request.get_host()},
-        require_https=request.is_secure(),
-    ):
-        redirect_to = next_url
-
+    redirect_to = _resolve_post_login_redirect(request, next_url)
     return JsonResponse({"status": "ok", "redirect_url": redirect_to})
 
 
@@ -3088,6 +3081,24 @@ class DesignersListView(ListView):
             }
         )
         return context
+
+
+def _resolve_post_login_redirect(request, candidate: str | None = "") -> str:
+    """Return a safe redirect target after authentication flows."""
+
+    fallback = resolve_url(getattr(settings, "LOGIN_REDIRECT_URL", "designer_dashboard"))
+    if not candidate:
+        return fallback
+
+    allowed_hosts = {request.get_host()}
+    for host in getattr(settings, "ALLOWED_HOSTS", []) or []:
+        cleaned = (host or "").strip()
+        if cleaned and cleaned != "*":
+            allowed_hosts.add(cleaned)
+
+    if url_has_allowed_host_and_scheme(candidate, allowed_hosts=allowed_hosts, require_https=request.is_secure()):
+        return candidate
+    return fallback
 
 
 class DesignerLoginView(LoginView):

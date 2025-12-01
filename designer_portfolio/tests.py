@@ -1,7 +1,7 @@
 import json
 from unittest.mock import patch
 
-from django.test import TestCase, TransactionTestCase, override_settings
+from django.test import RequestFactory, TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.core import mail
@@ -11,6 +11,7 @@ from social_core.exceptions import AuthForbidden
 from .models import DesignerProfile, UserSubscription, ProblemReport, Project
 from .social_pipeline import generate_username, ensure_verified_email, sync_user_details
 from .project_templates import load_project_templates
+from .views import _resolve_post_login_redirect
 
 
 TEST_STORAGE_BACKENDS = {
@@ -95,6 +96,27 @@ class LoginFlowTests(TestCase):
 
         self.assertTrue(DesignerProfile.objects.filter(user=self.user).exists())
         self.assertTrue(UserSubscription.objects.filter(user=self.user).exists())
+
+
+class PostLoginRedirectTests(TestCase):
+    def setUp(self) -> None:
+        self.factory = RequestFactory()
+
+    def test_resolves_dashboard_path_when_next_missing(self):
+        request = self.factory.get("/accounts/login/", HTTP_HOST="testserver")
+        redirect_to = _resolve_post_login_redirect(request, "")
+        self.assertEqual(redirect_to, reverse("designer_dashboard"))
+
+    def test_accepts_relative_next_urls(self):
+        request = self.factory.get("/accounts/login/", HTTP_HOST="testserver")
+        candidate = "/dashboard/designs/"
+        redirect_to = _resolve_post_login_redirect(request, candidate)
+        self.assertEqual(redirect_to, candidate)
+
+    def test_rejects_external_urls(self):
+        request = self.factory.get("/accounts/login/", HTTP_HOST="testserver")
+        redirect_to = _resolve_post_login_redirect(request, "https://malicious.example.com")
+        self.assertEqual(redirect_to, reverse("designer_dashboard"))
 
 
 @override_settings(
