@@ -1,0 +1,105 @@
+{% extends "designer_portfolio/base.html" %}
+
+{% block content %}
+<section class="legal-page">
+  <div class="legal-container">
+    <p class="legal-eyebrow">Effective {{ effective_date }}</p>
+    <h1>E. {{ company_name }} &mdash; Data Collection, Use &amp; Deletion Policy (CCPA Notice)</h1>
+    <p>
+      This notice summarizes how {{ company_name }} handles personal information for California
+      residents and describes the controls available to every user of {{ service_brands|join:", " }}.
+    </p>
+
+    <h2>Your Rights</h2>
+    <ul>
+      <li>Request deletion of personal information we maintain about you.</li>
+      <li>Request copies of specific data we collected, including how it is used.</li>
+      <li>Request corrections to inaccurate or incomplete information.</li>
+      <li>Opt out of data sharing that is treated as a “sale” under the CCPA.</li>
+    </ul>
+
+    <h2>How to Request Data Deletion</h2>
+    <p>Send an email to <a href="mailto:{{ contact_email }}">{{ contact_email }}</a> and:</p>
+    <ul>
+      <li>Use the subject line “CCPA Data Deletion Request.”</li>
+      <li>Describe the scope of the request (delete all data, specific projects, etc.).</li>
+      <li>Include any relevant usernames, project IDs, or booking references.</li>
+    </ul>
+
+    <h2>Verification</h2>
+    <p>To protect your privacy we may require:</p>
+    <ul>
+      <li>The account email address and phone number on file.</li>
+      <li>Proof of identity (such as a code sent to your registered email or phone).</li>
+      <li>Additional documentation if you are an authorized agent submitting the request.</li>
+    </ul>
+    <p>
+      Once verified, we will complete most requests within 45 days, or notify you if more time is needed.
+    </p>
+
+    <p class="legal-updated">Last updated on {{ effective_date }}.</p>
+  </div>
+</section>
+
+<style>
+  .legal-page {
+    background: var(--color-surface, #f9f9fb);
+    padding: 60px 20px;
+  }
+
+  .legal-container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: var(--color-secondary, #fff);
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+    padding: 48px;
+    line-height: 1.7;
+    color: var(--color-primary, #0f172a);
+  }
+
+  .legal-eyebrow {
+    font-size: 0.9rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted, #6b7280);
+    margin-bottom: 0.5rem;
+  }
+
+  .legal-container h1 {
+    font-size: clamp(2rem, 3vw, 2.6rem);
+    margin-bottom: 1.5rem;
+  }
+
+  .legal-container h2 {
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 1.4rem;
+  }
+
+  .legal-container p {
+    margin-bottom: 1rem;
+  }
+
+  .legal-container ul {
+    padding-left: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .legal-container ul li {
+    margin-bottom: 0.5rem;
+  }
+
+  .legal-updated {
+    margin-top: 3rem;
+    font-style: italic;
+    color: var(--color-muted, #6b7280);
+  }
+
+  @media (max-width: 640px) {
+    .legal-container {
+      padding: 32px 24px;
+    }
+  }
+</style>
+{% endblock %}

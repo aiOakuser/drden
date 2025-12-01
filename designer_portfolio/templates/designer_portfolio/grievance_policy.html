@@ -1,0 +1,104 @@
+{% extends "designer_portfolio/base.html" %}
+
+{% block content %}
+<section class="legal-page">
+  <div class="legal-container">
+    <p class="legal-eyebrow">Effective {{ effective_date }}</p>
+    <h1>D. {{ company_name }} &mdash; Grievance &amp; Complaint Redressal Policy</h1>
+    <p>
+      Use this process to report concerns about designer behavior, tailoring services, billing,
+      privacy, accessibility, or any platform issue across {{ service_brands|join:", " }}.
+    </p>
+
+    <h2>1. How to File a Complaint</h2>
+    <p>
+      Send an email to <a href="mailto:{{ contact_email }}">{{ contact_email }}</a> with the subject
+      line “Grievance” and include:
+    </p>
+    <ul>
+      <li>Your name and the service(s) you used.</li>
+      <li>A concise summary of the issue or concern.</li>
+      <li>Relevant order IDs, usernames, or timestamps.</li>
+      <li>Screenshots or attachments that illustrate the problem (if applicable).</li>
+    </ul>
+
+    <h2>2. Response Timeline</h2>
+    <ul>
+      <li>We acknowledge every complaint within 48 hours.</li>
+      <li>We target a resolution or substantive update within seven (7) business days.</li>
+      <li>We will share interim updates if more investigation time is required.</li>
+    </ul>
+
+    <h2>3. Escalation</h2>
+    <p>
+      If you believe the issue remains unresolved after our response, reply to the same thread and
+      request an escalation to the AIOAK Compliance Team. Please include any new context so the team
+      can review quickly.
+    </p>
+
+    <p class="legal-updated">Last updated on {{ effective_date }}.</p>
+  </div>
+</section>
+
+<style>
+  .legal-page {
+    background: var(--color-surface, #f9f9fb);
+    padding: 60px 20px;
+  }
+
+  .legal-container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: var(--color-secondary, #fff);
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+    padding: 48px;
+    line-height: 1.7;
+    color: var(--color-primary, #0f172a);
+  }
+
+  .legal-eyebrow {
+    font-size: 0.9rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted, #6b7280);
+    margin-bottom: 0.5rem;
+  }
+
+  .legal-container h1 {
+    font-size: clamp(2rem, 3vw, 2.6rem);
+    margin-bottom: 1.5rem;
+  }
+
+  .legal-container h2 {
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 1.4rem;
+  }
+
+  .legal-container p {
+    margin-bottom: 1rem;
+  }
+
+  .legal-container ul {
+    padding-left: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .legal-container ul li {
+    margin-bottom: 0.5rem;
+  }
+
+  .legal-updated {
+    margin-top: 3rem;
+    font-style: italic;
+    color: var(--color-muted, #6b7280);
+  }
+
+  @media (max-width: 640px) {
+    .legal-container {
+      padding: 32px 24px;
+    }
+  }
+</style>
+{% endblock %}

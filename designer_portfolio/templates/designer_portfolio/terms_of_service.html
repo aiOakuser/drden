@@ -4,90 +4,76 @@
 <section class="legal-page">
   <div class="legal-container">
     <p class="legal-eyebrow">Effective {{ effective_date }}</p>
-    <h1>Terms of Service</h1>
+    <h1>B. {{ company_name }} &mdash; Terms of Service (ToS)</h1>
     <p>
-      Welcome to {{ company_name }} (“we”, “us”, “our”). These Terms of Service govern your access
-      to and use of globaldesignerhub.com, the designer dashboard, portfolio pages, and all related
-      services (collectively, the “Services”). By creating an account, using Google login, or accessing
-      the Services, you agree to these Terms.
+      These Terms govern all AIOAK services, including {{ service_brands|join:", " }}, our designer tools,
+      and any related experiences. By creating an account, submitting a project request, or otherwise
+      using the platform, you agree to these Terms.
     </p>
 
-    <h2>1. Eligibility & Accounts</h2>
+    <h2>1. Acceptance of Terms</h2>
+    <p>
+      You must be at least 16 years old (or the age of majority in your jurisdiction) and able to form
+      a binding contract. Accessing the Services after being notified of an update means you accept the
+      revised Terms.
+    </p>
+
+    <h2>2. Services</h2>
+    <p>AIOAK currently offers:</p>
     <ul>
-      <li>You must be at least 16 years old and able to form a binding contract.</li>
-      <li>You are responsible for maintaining the security of your login credentials.</li>
-      <li>Using Google OAuth or other single sign-on methods binds you to these Terms.</li>
+      <li>Designer portfolio hosting and showcase tooling.</li>
+      <li>AI-driven style suggestions and creative content services.</li>
+      <li>Fashion consultations, tailoring coordination, and booking tools.</li>
+      <li>Collaboration workflows between designers, tailors, and clients.</li>
+    </ul>
+    <p>We may update, expand, or discontinue features at any time.</p>
+
+    <h2>3. User Responsibilities</h2>
+    <ul>
+      <li>Provide accurate registration, payment, and measurement information.</li>
+      <li>Only upload content you have the rights to share.</li>
+      <li>Do not misuse, disrupt, or reverse engineer the platform.</li>
+      <li>Do not harass, impersonate, or harm other users, designers, or staff.</li>
     </ul>
 
-    <h2>2. Acceptable Use</h2>
-    <p>You agree not to:</p>
+    <h2>4. Payments</h2>
+    <p>
+      Payments are securely processed by vetted third-party gateways. AIOAK does not store full credit-card
+      numbers. By initiating a transaction you authorize the gateway to charge the selected method.
+    </p>
+
+    <h2>5. Refunds</h2>
+    <p>
+      Refunds and cancellations are handled under our
+      <a href="{% url 'refund_policy' %}">Refund &amp; Cancellation Policy</a>. Please review it before
+      booking services.
+    </p>
+
+    <h2>6. Account Termination</h2>
+    <p>We may suspend or terminate accounts for:</p>
     <ul>
-      <li>Upload unlawful, infringing, or hateful content.</li>
-      <li>Attempt to access another user’s account or data.</li>
-      <li>Reverse engineer, interfere with, or disrupt the Services.</li>
-      <li>Use the platform to send spam or unauthorized marketing messages.</li>
+      <li>Violations of these Terms or other AIOAK policies.</li>
+      <li>Fraud, abusive behavior, or threats to platform security.</li>
+      <li>Copyright infringement or misuse of designer content.</li>
     </ul>
 
-    <h2>3. Content & Intellectual Property</h2>
-    <ul>
-      <li>You retain ownership of the designs, files, and portfolio content you upload.</li>
-      <li>You grant {{ company_name }} a limited license to host, display, and process that content as needed to operate the Services.</li>
-      <li>You must have the necessary rights to share any content you upload.</li>
-    </ul>
-
-    <h2>4. Subscriptions & Payments</h2>
-    <ul>
-      <li>Paid plans may be billed monthly or annually according to the plan you choose.</li>
-      <li>You authorize us and our payment processors (Stripe, PayPal) to charge the provided payment method.</li>
-      <li>All fees are non-refundable unless required by law. You can cancel future renewals at any time from the dashboard.</li>
-    </ul>
-
-    <h2>5. Privacy</h2>
+    <h2>7. Limitation of Liability</h2>
     <p>
-      Your use of the Services is also governed by our
-      <a href="{% url 'privacy_policy' %}">Privacy Policy</a>, which explains how we collect and
-      use personal information, including data received from Google when you log in.
+      To the maximum extent permitted by law, {{ company_name }} is not liable for indirect, incidental,
+      or consequential damages, third-party errors, loss of data, or service delays. Our total liability
+      to you will not exceed the amount you paid to us in the preceding twelve months.
     </p>
 
-    <h2>6. Service Changes & Availability</h2>
-    <ul>
-      <li>We may update features, impose limits, or discontinue parts of the Services at any time.</li>
-      <li>We aim for high availability but do not guarantee uninterrupted access.</li>
-      <li>We may suspend your account if you violate these Terms or applicable laws.</li>
-    </ul>
-
-    <h2>7. Disclaimers & Liability</h2>
+    <h2>8. Governing Law</h2>
     <p>
-      The Services are provided “as is” without warranties of any kind. To the fullest extent permitted
-      by law, {{ company_name }} is not liable for indirect, incidental, or consequential damages,
-      loss of profits, or loss of data.
+      These Terms are governed by the laws of the State of California, USA. Disputes will be handled in
+      California courts unless consumer protection rules require a different venue.
     </p>
 
-    <h2>8. Termination</h2>
+    <h2>9. Contact</h2>
     <p>
-      You may stop using the Services at any time. We may suspend or terminate access if you breach
-      these Terms or create risk for other users. Upon termination, certain provisions (e.g., intellectual
-      property, disclaimers, indemnity) will continue to apply.
-    </p>
-
-    <h2>9. Governing Law</h2>
-    <p>
-      These Terms are governed by the laws of the State of Delaware, USA, without regard to conflict of
-      law principles. Disputes will be handled in the state or federal courts located in Delaware unless
-      required otherwise by consumer protection laws.
-    </p>
-
-    <h2>10. Changes to These Terms</h2>
-    <p>
-      We may update these Terms from time to time. When we do, we will revise the “Effective” date
-      and notify you via email or in-app notice for material updates. Continued use of the Services
-      after changes means you accept the revised Terms.
-    </p>
-
-    <h2>Contact Us</h2>
-    <p>
-      For questions about these Terms or to report a violation, email
-      <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.
+      Email <a href="mailto:{{ contact_email }}">{{ contact_email }}</a> for questions about these Terms or to
+      report a violation. Please include relevant project or booking details so we can respond quickly.
     </p>
 
     <p class="legal-updated">Last updated on {{ effective_date }}.</p>

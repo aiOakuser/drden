@@ -1206,43 +1206,58 @@ class AboutView(TemplateView):
 class AboutSiteView(TemplateView):
     template_name = "designer_portfolio/about_site.html"
 
-class PrivacyPolicyView(TemplateView):
-    template_name = "designer_portfolio/privacy_policy.html"
+class AIOAKLegalPageView(TemplateView):
+    """
+    Shared base view so every legal/policy page exposes the same company data.
+    """
+
+    company_name = "AIOAK"
+    effective_date = "December 1, 2025"
+    company_location = "Saratoga, CA – USA – 95070"
+    service_brands = ("GlobalDesignerHub", "TailorHub", "other AIOAK services")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         contact_email = (
-            getattr(settings, "PRETTYPEARL_CONTACT_EMAIL", "")
+            getattr(settings, "AIOAK_CONTACT_EMAIL", "")
+            or getattr(settings, "PRETTYPEARL_CONTACT_EMAIL", "")
             or getattr(settings, "ADMIN_EMAIL", "")
-            or "support@globaldesignerhub.com"
+            or "admin@aioak.net"
         )
         context.update(
             {
-                "company_name": "GlobalDesignerHub",
-                "effective_date": "November 19, 2025",
+                "company_name": self.company_name,
+                "effective_date": self.effective_date,
                 "contact_email": contact_email,
+                "company_location": self.company_location,
+                "service_brands": self.service_brands,
             }
         )
         return context
 
-class TermsOfServiceView(TemplateView):
+
+class PrivacyPolicyView(AIOAKLegalPageView):
+    template_name = "designer_portfolio/privacy_policy.html"
+
+
+class TermsOfServiceView(AIOAKLegalPageView):
     template_name = "designer_portfolio/terms_of_service.html"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        support_email = (
-            getattr(settings, "PRETTYPEARL_CONTACT_EMAIL", "")
-            or getattr(settings, "ADMIN_EMAIL", "")
-            or "support@globaldesignerhub.com"
-        )
-        context.update(
-            {
-                "company_name": "GlobalDesignerHub",
-                "effective_date": "November 19, 2025",
-                "contact_email": support_email,
-            }
-        )
-        return context
+
+class RefundPolicyView(AIOAKLegalPageView):
+    template_name = "designer_portfolio/refund_policy.html"
+
+
+class GrievancePolicyView(AIOAKLegalPageView):
+    template_name = "designer_portfolio/grievance_policy.html"
+
+
+class DataRightsPolicyView(AIOAKLegalPageView):
+    template_name = "designer_portfolio/data_rights_policy.html"
+
+
+class AccessibilityStatementView(AIOAKLegalPageView):
+    template_name = "designer_portfolio/accessibility_statement.html"
 
 
 class ReportProblemView(FormView):

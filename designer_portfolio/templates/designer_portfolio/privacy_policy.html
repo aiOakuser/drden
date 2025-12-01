@@ -3,81 +3,100 @@
 {% block content %}
 <section class="legal-page">
   <div class="legal-container">
-    <p class="legal-eyebrow">Effective {{ effective_date }}</p>
-    <h1>Privacy Policy</h1>
+    <p class="legal-eyebrow">Last updated {{ effective_date }}</p>
+    <h1>A. {{ company_name }} &mdash; Privacy Policy (CCPA + CalOPPA Compliant)</h1>
     <p>
-      This Privacy Policy explains how {{ company_name }} (“we”, “us”, or “our”) collects,
-      uses, and protects information when you visit globaldesignerhub.com or use any of our
-      products, including the designer dashboard, portfolio pages, and Google OAuth login.
+      This Privacy Policy explains how {{ company_name }} (“Company”, “we”, “us”, or “our”)
+      collects, uses, shares, and secures personal information across every AIOAK experience,
+      including {{ service_brands|join:", " }}, and any other platforms or services we operate.
     </p>
 
-    <h2>Information We Collect</h2>
+    <h2>1. Information We Collect</h2>
+    <div class="legal-subsection">
+      <h3>Information You Provide</h3>
+      <ul>
+        <li>Name and contact information (email, phone number).</li>
+        <li>Uploaded designs, photos, and full portfolio materials.</li>
+        <li>Messages, consultations, and chat content shared with our team or designers.</li>
+        <li>Payment details that are securely processed by our third-party gateways.</li>
+      </ul>
+    </div>
+    <div class="legal-subsection">
+      <h3>Automatic Information</h3>
+      <ul>
+        <li>IP address, device data, browser type, and operating system details.</li>
+        <li>Cookies, session identifiers, and usage analytics that describe how you interact with the platform.</li>
+        <li>Approximate location data derived from IP information to help localize services.</li>
+      </ul>
+    </div>
+    <div class="legal-subsection">
+      <h3>User-Generated Content</h3>
+      <ul>
+        <li>Designer profiles and brand bios.</li>
+        <li>Tailoring measurements and project requirements.</li>
+        <li>Design uploads, inspiration boards, and creative briefs.</li>
+        <li>Consultation notes, requests, and ongoing collaboration history.</li>
+      </ul>
+    </div>
+
+    <h2>2. How We Use Your Data</h2>
     <ul>
-      <li><strong>Account details:</strong> name, username, email address, and password.</li>
-      <li><strong>Designer portfolio content:</strong> brand story, designs, images, tech packs, and any files you upload.</li>
-      <li><strong>Usage data:</strong> log data, device information, browser type, and pages visited.</li>
-      <li><strong>Third‑party sign‑in data:</strong> when you use Google login we receive your name, email, and profile image.</li>
-      <li><strong>Support communications:</strong> messages you send us via email or in-product contact forms.</li>
+      <li>Creating, authenticating, and managing user accounts.</li>
+      <li>Providing designer consultations and coordinating tailoring services.</li>
+      <li>Improving features, personalization, and accessibility across our products.</li>
+      <li>Sending platform updates, alerts, marketing promotions, and service notices.</li>
+      <li>Preventing fraud, abuse, and unauthorized access.</li>
+      <li>Complying with applicable legal, tax, and regulatory requirements.</li>
     </ul>
 
-    <h2>How We Use Your Information</h2>
+    <h2>3. Data Sharing</h2>
+    <p>We do not sell personal information. We only share data with:</p>
     <ul>
-      <li>Authenticate logins and secure your account.</li>
-      <li>Provide portfolio hosting, design collaboration, and dashboard features.</li>
-      <li>Send transactional emails (password resets, subscription notices, system alerts).</li>
-      <li>Improve site performance, troubleshoot issues, and develop new features.</li>
-      <li>Comply with legal obligations and enforce our Terms of Service.</li>
+      <li>Payment processors that manage transactions on our behalf.</li>
+      <li>Hosting providers, customer-support platforms, and analytics vendors.</li>
+      <li>Designer and tailoring partners when a project requires collaboration.</li>
+      <li>Legal authorities when compelled or when needed to protect safety and rights.</li>
     </ul>
 
-    <h2>Sharing & Disclosure</h2>
-    <p>
-      We only share personal information with:
-    </p>
+    <h2>4. California Consumer Rights (CCPA)</h2>
+    <p>California residents may exercise the following rights:</p>
     <ul>
-      <li>Vetted service providers (hosting, analytics, payment processors) that support our platform.</li>
-      <li>Law enforcement or regulators when required by law or to protect rights, safety, or property.</li>
-      <li>Other users only when you intentionally make portfolio content public.</li>
+      <li>Know what categories of data we collect and why.</li>
+      <li>Request a copy of the personal information we maintain.</li>
+      <li>Request deletion of your personal information, subject to legal exceptions.</li>
+      <li>Opt out of data sharing that is considered a “sale” under CCPA.</li>
+      <li>Correct inaccurate or outdated personal information.</li>
     </ul>
-    <p>We do not sell personal data.</p>
-
-    <h2>Cookies & Tracking</h2>
     <p>
-      We use cookies and similar technologies to keep you signed in, remember preferences, and
-      measure product usage. You can manage cookies directly in your browser settings; disabling
-      cookies may limit certain features.
+      Submit requests by emailing <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.
+      We will verify your request and respond within the statutory timeframe.
     </p>
 
-    <h2>Data Retention & Security</h2>
+    <h2>5. Cookies & Tracking</h2>
     <p>
-      We retain account data as long as needed to deliver the service or as required by law.
-      We apply administrative, technical, and physical safeguards; however, no online platform
-      can guarantee absolute security, so please use strong passwords and protect your devices.
+      We rely on cookies and similar technologies for authentication, remembering preferences,
+      CalOPPA-compliant analytics, and session management. You can disable cookies in your browser,
+      but doing so may limit certain platform features.
     </p>
 
-    <h2>Your Choices & Rights</h2>
-    <ul>
-      <li>Access or update your information via the designer dashboard.</li>
-      <li>Request account deletion by contacting us at <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.</li>
-      <li>Opt out of marketing emails using the unsubscribe link; we may still send transactional notices.</li>
-      <li>Disable Google OAuth access in your Google Account security settings.</li>
-    </ul>
-
-    <h2>Children</h2>
+    <h2>6. Data Security</h2>
     <p>
-      {{ company_name }} is intended for professionals aged 16 and older. We do not knowingly collect
-      information from children. If you believe a minor has provided data, contact us so we can remove it.
+      We use encryption, access controls, monitoring, and secure infrastructure partners to safeguard
+      your information. No system is 100% secure, but we continually test and improve our defenses.
     </p>
 
-    <h2>Changes to This Policy</h2>
+    <h2>7. Privacy Policy Changes</h2>
     <p>
-      We may update this Privacy Policy to reflect product changes or legal requirements. We will post
-      the revised date at the top of this page and, when material, notify you by email or in-app notice.
+      We will update this policy periodically to reflect new features, regulations, or security practices.
+      When changes occur, the “Last updated” date will be revised and continued use of our services
+      means you accept the updated policy.
     </p>
 
-    <h2>Contact Us</h2>
+    <h2>8. Contact</h2>
     <p>
-      Questions or requests about privacy can be sent to
-      <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>. We aim to respond within two business days.
+      Email <a href="mailto:{{ contact_email }}">{{ contact_email }}</a> for privacy questions,
+      CCPA/CalOPPA requests, or accessibility assistance. You can also reach us at
+      {{ company_location }}.
     </p>
 
     <p class="legal-updated">Last updated on {{ effective_date }}.</p>
@@ -131,6 +150,15 @@
 
   .legal-container ul li {
     margin-bottom: 0.5rem;
+  }
+
+  .legal-subsection {
+    margin-bottom: 1.5rem;
+  }
+
+  .legal-subsection h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.35rem;
   }
 
   .legal-updated {
