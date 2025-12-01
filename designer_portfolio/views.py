@@ -7,7 +7,7 @@ import re
 import urllib.request
 import uuid
 from decimal import Decimal, InvalidOperation
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone as dt_timezone
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 
@@ -297,7 +297,7 @@ def _timestamp_to_datetime(value) -> datetime | None:
     if not value:
         return None
     try:
-        return datetime.fromtimestamp(int(value), tz=timezone.utc)
+        return datetime.fromtimestamp(int(value), tz=dt_timezone.utc)
     except (TypeError, ValueError, OSError):
         return None
 
