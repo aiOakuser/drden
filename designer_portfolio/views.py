@@ -78,6 +78,7 @@ from .models import (
 )
 from .constants import REGIONAL_HIRING_AREAS
 from .project_templates import load_project_templates, serialize_templates_for_client
+from .tekpak_blueprints import get_techpack_blueprint
 
 from webauthn import (
     generate_authentication_options,
@@ -2529,7 +2530,24 @@ def paypal_webhook(request):
     return JsonResponse({"status": "ok"})
 
 def generate_techpack(request, slug):
-    return JsonResponse({"status": "ok"})
+    blueprint = get_techpack_blueprint(slug)
+    if not blueprint:
+        raise Http404("Requested techpack blueprint was not found.")
+
+    hero = blueprint.get("hero", {})
+    project_breakdown = blueprint.get("project_breakdown", {})
+    hero_title = hero.get("title") or blueprint.get("title") or "Techpack"
+    breakdown_label = project_breakdown.get("label")
+    page_title = f"{hero_title} — {breakdown_label}" if breakdown_label else hero_title
+
+    return render(
+        request,
+        "designer_portfolio/techpack_blueprint.html",
+        {
+            "blueprint": blueprint,
+            "page_title": page_title,
+        },
+    )
 
 @login_required
 def dashboard_view(request):

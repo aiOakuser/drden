@@ -379,6 +379,25 @@ class ProjectCreationTests(TestCase):
     CSRF_COOKIE_SECURE=False,
     STORAGES=TEST_STORAGE_BACKENDS,
 )
+class TechpackBlueprintTests(TestCase):
+    def test_desert_shadows_blueprint_renders(self):
+        response = self.client.get(reverse("generate_techpack", args=["desert-shadows"]))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn("DESERT SHADOWS", content)
+        self.assertIn("ShadowFlex Jogger", content)
+
+    def test_missing_blueprint_returns_404(self):
+        response = self.client.get(reverse("generate_techpack", args=["missing-pack"]))
+        self.assertEqual(response.status_code, 404)
+
+
+@override_settings(
+    SECURE_SSL_REDIRECT=False,
+    SESSION_COOKIE_SECURE=False,
+    CSRF_COOKIE_SECURE=False,
+    STORAGES=TEST_STORAGE_BACKENDS,
+)
 class VolumeOneViewTests(TestCase):
     def setUp(self) -> None:
         self.user = User.objects.create_user(
