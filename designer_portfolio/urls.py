@@ -22,6 +22,7 @@ from .views import (
     reinstate_designer,
     AboutView,
     AboutSiteView,
+    contact_view,
     docs_index,
     docs_detail,
     DesignerDashboardView,
@@ -86,6 +87,7 @@ urlpatterns = [
     
     path("about/", AboutView.as_view(), name="about"),
     path("about-site/", AboutSiteView.as_view(), name="about_site"),
+    path("contact/", contact_view, name="contact"),
     
     # Community Forum
     path("community/", RedirectView.as_view(pattern_name="forum_index", permanent=False), name="community_redirect"),

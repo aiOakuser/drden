@@ -319,6 +319,51 @@ class ReportProblemViewTests(TransactionTestCase):
     SESSION_COOKIE_SECURE=False,
     CSRF_COOKIE_SECURE=False,
     STORAGES=TEST_STORAGE_BACKENDS,
+    ADMIN_EMAIL="studio@example.com",
+    DEFAULT_FROM_EMAIL="studio@example.com",
+)
+class ContactViewTests(TestCase):
+    def test_get_contact_page_renders(self):
+        response = self.client.get(reverse("contact"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Contact")
+
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_valid_submission_sends_email(self):
+        mail.outbox.clear()
+        payload = {
+            "name": "Volume One",
+            "email": "volume@example.com",
+            "subject": "Workspace request",
+            "message": "We would like to schedule a walkthrough of the dashboard.",
+        }
+        response = self.client.post(reverse("contact"), payload, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Thanks for reaching out.")
+        self.assertGreaterEqual(len(mail.outbox), 1, "Expected a contact email to be generated")
+        self.assertEqual(mail.outbox[0].to, ["studio@example.com"])
+        self.assertIn(payload["message"], mail.outbox[0].body)
+
+    def test_invalid_submission_shows_errors(self):
+        response = self.client.post(
+            reverse("contact"),
+            {
+                "name": "",
+                "email": "invalid-email",
+                "subject": "",
+                "message": "short",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Share at least 10 characters")
+        self.assertContains(response, "Enter a valid email address.")
+
+
+@override_settings(
+    SECURE_SSL_REDIRECT=False,
+    SESSION_COOKIE_SECURE=False,
+    CSRF_COOKIE_SECURE=False,
+    STORAGES=TEST_STORAGE_BACKENDS,
 )
 class ProjectCreationTests(TestCase):
     def setUp(self) -> None:

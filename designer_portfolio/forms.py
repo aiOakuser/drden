@@ -376,6 +376,36 @@ class ReportProblemForm(forms.ModelForm):
         return subject
 
 
+class ContactForm(forms.Form):
+    """Simple public contact form used at /contact."""
+
+    name = forms.CharField(max_length=80, label="Name")
+    email = forms.EmailField(label="Email address")
+    subject = forms.CharField(max_length=150, label="Subject")
+    message = forms.CharField(widget=forms.Textarea(attrs={"rows": 5}), label="Message")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        placeholders = {
+            "name": "Your name",
+            "email": "Email",
+            "subject": "Subject",
+            "message": "Message",
+        }
+        for field_name, field in self.fields.items():
+            attrs = field.widget.attrs
+            attrs.setdefault("class", "contact-field")
+            attrs["placeholder"] = placeholders[field_name]
+            if field_name != "message":
+                attrs.setdefault("autocomplete", "on")
+
+    def clean_message(self):
+        message = (self.cleaned_data.get("message") or "").strip()
+        if len(message) < 10:
+            raise forms.ValidationError("Share at least 10 characters so we can assist you.")
+        return message
+
+
 class ProjectCreateForm(forms.Form):
     template_id = forms.CharField(max_length=120)
     title = forms.CharField(max_length=255)

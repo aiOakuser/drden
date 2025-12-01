@@ -26,6 +26,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.cache import cache
+from django.core.mail import send_mail, BadHeaderError
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
 from django.utils import timezone
@@ -42,6 +43,7 @@ from .forms import (
     DesignerLoginForm,
     DesignerPasswordResetForm,
     ReportProblemForm,
+    ContactForm,
     ProjectCreateForm,
 )
 from .auth_utils import ensure_designer_access
@@ -269,6 +271,15 @@ VOLUMEONE_FALLBACK_SLIDES = [
         "is_video": True,
     },
 ]
+
+
+def _get_public_contact_email() -> str:
+    return (
+        getattr(settings, "AIOAK_CONTACT_EMAIL", "")
+        or getattr(settings, "PRETTYPEARL_CONTACT_EMAIL", "")
+        or getattr(settings, "ADMIN_EMAIL", "")
+        or "admin@aioak.net"
+    )
 
 
 def _format_metric(value: int | None) -> str:
@@ -1206,6 +1217,53 @@ class AboutView(TemplateView):
 
 class AboutSiteView(TemplateView):
     template_name = "designer_portfolio/about_site.html"
+
+def contact_view(request):
+    contact_email = _get_public_contact_email()
+    if request.method == "POST":
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            subject = f"[GlobalDesignerHub] Contact request: {data['subject']}"
+            body = (
+                "A new contact form submission was received on globaldesignerhub.com/contact\n\n"
+                f"Name: {data['name']}\n"
+                f"Email: {data['email']}\n"
+                f"Subject: {data['subject']}\n\n"
+                f"Message:\n{data['message']}\n"
+            )
+            try:
+                send_mail(
+                    subject=subject,
+                    message=body,
+                    from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@globaldesignerhub.com"),
+                    recipient_list=[contact_email],
+                    fail_silently=False,
+                    headers={"Reply-To": data["email"]},
+                )
+            except BadHeaderError:
+                messages.error(request, "Invalid header detected. Please email us directly instead.")
+            except Exception:
+                logger.exception("Contact form email failed")
+                messages.error(
+                    request,
+                    f"We couldn't send your message right now. Email {contact_email} while we investigate.",
+                )
+            else:
+                messages.success(request, "Thanks for reaching out. Our studio will reply shortly.")
+                return redirect("contact")
+    else:
+        form = ContactForm()
+
+    return render(
+        request,
+        "designer_portfolio/contact.html",
+        {
+            "form": form,
+            "contact_email": contact_email,
+        },
+    )
+
 
 class AIOAKLegalPageView(TemplateView):
     """
