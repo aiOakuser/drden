@@ -9,7 +9,8 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils import timezone
 from django.db.models import Q
 from datetime import timedelta
-from .models import SubscriptionPlan, UserSubscription, ProblemReport
+from .models import SubscriptionPlan, UserSubscription, ProblemReport, Project
+from .project_templates import get_project_template, ProjectTemplateNotFound
 from .auth_utils import ensure_designer_access
 from .emails import notify_password_reset_request
 
@@ -373,3 +374,49 @@ class ReportProblemForm(forms.ModelForm):
         if len(subject) < 5:
             raise forms.ValidationError("Add a short subject (at least 5 characters).")
         return subject
+
+
+class ProjectCreateForm(forms.Form):
+    template_id = forms.CharField(max_length=120)
+    title = forms.CharField(max_length=255)
+    client_name = forms.CharField(max_length=255, required=False)
+    season = forms.CharField(max_length=10, required=False)
+    product_type = forms.CharField(max_length=40, required=False, initial=Project.ProductType.HOODIE)
+    product_count = forms.IntegerField(min_value=1, max_value=50, initial=1)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._template = None
+
+    def clean_template_id(self):
+        template_id = (self.cleaned_data.get("template_id") or "").strip()
+        if not template_id:
+            raise forms.ValidationError("Choose a template to continue.")
+        try:
+            self._template = get_project_template(template_id)
+        except ProjectTemplateNotFound as exc:
+            raise forms.ValidationError(str(exc))
+        return template_id
+
+    def clean_season(self):
+        season = (self.cleaned_data.get("season") or "").strip()
+        if season and season not in dict(Project.SeasonChoices.choices):
+            raise forms.ValidationError("Invalid season selection.")
+        return season
+
+    def clean_product_type(self):
+        product_type = (self.cleaned_data.get("product_type") or Project.ProductType.HOODIE).strip()
+        valid_values = [choice[0] for choice in Project.ProductType.choices]
+        if product_type not in valid_values:
+            raise forms.ValidationError("Invalid product type.")
+        return product_type
+
+    def clean_product_count(self):
+        count = self.cleaned_data.get("product_count") or 1
+        if count < 1:
+            raise forms.ValidationError("Number of products must be at least 1.")
+        return count
+
+    @property
+    def template_data(self):
+        return self._template or {}

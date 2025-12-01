@@ -33,6 +33,9 @@ from .views import (
     designer_about_me_view,
     designer_change_password_view,
     designer_contact_view,
+    ProjectTemplateSelectionView,
+    ProjectEditorView,
+    VolumeOneView,
     DesignerRegistrationView,
     DesignersListView,
     designer_ai_chat,
@@ -109,6 +112,9 @@ urlpatterns = [
     path("dashboard/about-me/", designer_about_me_view, name="designer_about_me"),
     path("dashboard/change-password/", designer_change_password_view, name="designer_change_password"),
     path("dashboard/contact/", designer_contact_view, name="designer_contact"),
+    path("dashboard/projects/new/", ProjectTemplateSelectionView.as_view(), name="project_create"),
+    path("dashboard/projects/<int:pk>/", ProjectEditorView.as_view(), name="project_editor"),
+    path("volumeone/", VolumeOneView.as_view(), name="volume_one"),
     # Common misspellings/legacy links -> redirect to dashboard
     path("dashephard/", RedirectView.as_view(pattern_name="designer_dashboard", permanent=False), name="dashephard"),
     path("dashepard/", RedirectView.as_view(pattern_name="designer_dashboard", permanent=False), name="dashepard"),
@@ -117,6 +123,8 @@ urlpatterns = [
 
     # API
     path("api/", include(router.urls)),
+    path("api/project-templates/", views.project_templates_api, name="project_templates_api"),
+    path("api/projects/", views.create_project_api, name="project_create_api"),
     path("api/designers/register/", DesignerRegistrationView.as_view(), name="designer_register_api"),
     path("api/ai/designer-chat/", designer_ai_chat, name="designer_ai_chat"),
     path("designer-ai/history/", my_conversations, name="designer_ai_history"),

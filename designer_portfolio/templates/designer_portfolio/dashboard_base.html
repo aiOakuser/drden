@@ -57,6 +57,24 @@
         </li>
         <li class="nav-item">
           <a
+            href="{% url 'project_create' %}"
+            class="nav-link {% if current_section == 'projects' %}active{% endif %}"
+          >
+            <i class="icon">📁</i>
+            <span>Projects</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
+            href="{% url 'volume_one' %}"
+            class="nav-link {% if current_section == 'volume_one' %}active{% endif %}"
+          >
+            <i class="icon">📄</i>
+            <span>Volume-One</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
             href="{% url 'designer_about_me' %}"
             class="nav-link {% if current_section == 'about' %}active{% endif %}"
           >

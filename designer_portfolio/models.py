@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.text import slugify
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator
 
 
 # ---------------- Base Timestamp ----------------
@@ -949,3 +950,106 @@ class ForumUserProfile(TimeStampedModel):
             return "Member"
         else:
             return "Newcomer"
+
+
+# ---------------- Project Templates & Breakdowns ----------------
+class Project(TimeStampedModel):
+    class SeasonChoices(models.TextChoices):
+        SS25 = ("SS25", "Spring / Summer 2025")
+        FW25 = ("FW25", "Fall / Winter 2025")
+        SS26 = ("SS26", "Spring / Summer 2026")
+        FW26 = ("FW26", "Fall / Winter 2026")
+
+    class ProductType(models.TextChoices):
+        HOODIE = ("hoodie", "Hoodie")
+        SHELL = ("shell", "Shell / Outerwear")
+        TEE = ("tee", "Tee")
+        BOTTOM = ("bottom", "Bottom")
+        ACCESSORY = ("accessory", "Accessory")
+
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="projects")
+    template_id = models.CharField(max_length=120)
+    template_name = models.CharField(max_length=200)
+    template_category = models.CharField(max_length=120, blank=True)
+    template_layout_key = models.CharField(max_length=120, blank=True)
+    template_snapshot = models.JSONField(default=dict, blank=True, help_text="Frozen copy of template JSON used at creation time.")
+
+    title = models.CharField(max_length=255)
+    client_name = models.CharField(max_length=255, blank=True)
+    season = models.CharField(max_length=10, choices=SeasonChoices.choices, blank=True)
+    product_type = models.CharField(
+        max_length=40,
+        choices=ProductType.choices,
+        default=ProductType.HOODIE,
+    )
+    product_count = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
+    preview_copy = models.JSONField(default=list, blank=True, help_text="Short copy lines surfaced under the live preview.")
+    metadata = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.title} • {self.template_name}"
+
+    @property
+    def cover(self):
+        return self.template_snapshot.get("cover", {})
+
+    @property
+    def summary_lines(self):
+        return self.preview_copy or self.template_snapshot.get("summary", [])
+
+
+class ProjectStage(TimeStampedModel):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="stages")
+    stage_number = models.PositiveIntegerField(default=1)
+    title = models.CharField(max_length=200)
+    layout_hint = models.CharField(max_length=120, blank=True)
+    order = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        ordering = ["order", "stage_number"]
+        unique_together = [("project", "stage_number")]
+
+    def __str__(self):
+        return f"{self.project.title} – Stage {self.stage_number}"
+
+
+class ProjectStageBullet(TimeStampedModel):
+    stage = models.ForeignKey(ProjectStage, on_delete=models.CASCADE, related_name="bullets")
+    order = models.PositiveIntegerField(default=1)
+    text = models.CharField(max_length=300)
+
+    class Meta:
+        ordering = ["order", "id"]
+
+    def __str__(self):
+        return f"{self.stage} • {self.text[:40]}"
+
+
+class ProjectProductSpec(TimeStampedModel):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="product_specs")
+    title = models.CharField(max_length=200)
+    layout_key = models.CharField(max_length=120, blank=True)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["id"]
+
+    def __str__(self):
+        return f"{self.project.title} – {self.title}"
+
+
+class ProjectProductSpecField(TimeStampedModel):
+    product_spec = models.ForeignKey(ProjectProductSpec, on_delete=models.CASCADE, related_name="fields")
+    field_key = models.CharField(max_length=120)
+    label = models.CharField(max_length=200)
+    value = models.TextField(blank=True)
+    order = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        ordering = ["order", "id"]
+
+    def __str__(self):
+        return f"{self.product_spec} • {self.label}"

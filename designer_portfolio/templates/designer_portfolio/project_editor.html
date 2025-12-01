@@ -1,0 +1,296 @@
+{% extends "designer_portfolio/dashboard_base.html" %}
+
+{% block dashboard_title %}{{ project.title }}{% endblock %}
+
+{% block header_actions %}
+<div class="header-actions">
+  <a href="{% url 'project_create' %}" class="btn btn-primary">+ New Project</a>
+</div>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="project-editor">
+  <section class="preview-card">
+    <header class="preview-cover">
+      <div class="cover-meta">
+        <span class="pill">{{ project.template_category|default:"Template" }}</span>
+        <span class="pill subtle">{{ project.template_layout_key|default:"twoRow" }}</span>
+      </div>
+      <h1>{{ project.cover.titlePlaceholder|default:project.template_name }}</h1>
+      <p class="subtitle">
+        {{ project.cover.subtitle|default:"PROJECT BREAKDOWN" }}
+      </p>
+    </header>
+
+    <div class="preview-breakdown">
+      <div class="label-row">
+        <p>PROJECT BREAKDOWN</p>
+        <span class="pill subtle">{{ project.template_name }}</span>
+      </div>
+      <div class="preview-stages">
+        {% for stage in project.stages.all %}
+        <article class="preview-stage">
+          <h4>{{ stage.title }}</h4>
+          <ul>
+            {% for bullet in stage.bullets.all %}
+            <li>{{ bullet.text }}</li>
+            {% empty %}
+            <li>Ready for notes.</li>
+            {% endfor %}
+          </ul>
+        </article>
+        {% empty %}
+        <p class="muted">No stages copied from template.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% for spec in project.product_specs.all %}
+    <div class="preview-spec">
+      <div class="label-row">
+        <p>PRODUCT SPEC</p>
+        <span class="pill">{{ spec.title }}</span>
+      </div>
+      <div class="spec-grid">
+        {% for field in spec.fields.all %}
+        <div class="spec-item">
+          <span>{{ field.label }}</span>
+          <p>{{ field.value|default:"—" }}</p>
+        </div>
+        {% empty %}
+        <p class="muted">No fields defined.</p>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </section>
+
+  <aside class="project-sidebar">
+    <div class="info-card">
+      <h3>Project Details</h3>
+      <dl>
+        <div>
+          <dt>Template</dt>
+          <dd>{{ project.template_name }}</dd>
+        </div>
+        <div>
+          <dt>Client / Brand</dt>
+          <dd>{{ project.client_name|default:"—" }}</dd>
+        </div>
+        <div>
+          <dt>Season</dt>
+          <dd>{{ project.get_season_display|default:"—" }}</dd>
+        </div>
+        <div>
+          <dt>Product Type</dt>
+          <dd>{{ project.get_product_type_display }}</dd>
+        </div>
+        <div>
+          <dt>Products</dt>
+          <dd>{{ project.product_count }}</dd>
+        </div>
+        <div>
+          <dt>Created</dt>
+          <dd>{{ project.created_at|date:"M j, Y" }}</dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="info-card">
+      <h3>Summary Copy</h3>
+      <div class="copy-stack">
+        {% for line in project.summary_lines %}
+        <p>{{ line }}</p>
+        {% empty %}
+        <p>Includes four stages + single product spec page</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="info-card">
+      <h3>Next Steps</h3>
+      <ul class="next-steps">
+        <li>Click into each stage block above to add notes.</li>
+        <li>Fill in product spec fields as you finalize trims.</li>
+        <li>Export as PDF once everything is approved.</li>
+      </ul>
+    </div>
+  </aside>
+</div>
+
+<style>
+  .project-editor {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(280px, 1fr);
+    gap: 28px;
+  }
+
+  .preview-card {
+    background: linear-gradient(140deg, #090909, #14171b);
+    border-radius: 28px;
+    padding: 32px;
+    color: #f5f5f5;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+  }
+
+  .preview-cover h1 {
+    font-size: 40px;
+    letter-spacing: 0.1em;
+    margin: 8px 0 4px;
+  }
+
+  .cover-meta {
+    display: flex;
+    gap: 8px;
+  }
+
+  .subtitle {
+    letter-spacing: 0.25em;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: rgba(245, 245, 245, 0.7);
+  }
+
+  .label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    letter-spacing: 0.24em;
+    color: rgba(245, 245, 245, 0.6);
+  }
+
+  .preview-stages {
+    margin-top: 18px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 14px;
+  }
+
+  .preview-stage {
+    border-radius: 18px;
+    padding: 18px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .preview-stage h4 {
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin: 0 0 8px;
+    color: rgba(245, 245, 245, 0.85);
+  }
+
+  .preview-stage ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 13px;
+    color: rgba(245, 245, 245, 0.8);
+  }
+
+  .preview-spec {
+    margin-top: 28px;
+  }
+
+  .spec-grid {
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 12px;
+  }
+
+  .spec-item {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 16px;
+    padding: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .spec-item span {
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(245, 245, 245, 0.6);
+  }
+
+  .spec-item p {
+    margin: 8px 0 0;
+    font-size: 14px;
+    color: rgba(245, 245, 245, 0.9);
+  }
+
+  .project-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .info-card {
+    background: var(--color-secondary);
+    border-radius: 18px;
+    padding: 20px;
+    border: 1px solid var(--color-border);
+  }
+
+  .info-card h3 {
+    margin: 0 0 12px;
+    font-size: 16px;
+  }
+
+  dl {
+    margin: 0;
+  }
+
+  dl > div {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  dt {
+    font-size: 13px;
+    color: var(--color-text-muted);
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 600;
+  }
+
+  .copy-stack p {
+    margin: 0 0 6px;
+    color: var(--color-text-muted);
+  }
+
+  .next-steps {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--color-text-muted);
+  }
+
+  .pill {
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .pill.subtle {
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(245, 245, 245, 0.7);
+  }
+
+  .muted {
+    color: rgba(245, 245, 245, 0.6);
+  }
+
+  @media (max-width: 1024px) {
+    .project-editor {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}

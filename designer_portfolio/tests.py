@@ -1,11 +1,14 @@
+import json
+
 from django.test import TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.core import mail
 from social_core.exceptions import AuthForbidden
 
-from .models import DesignerProfile, UserSubscription, ProblemReport
+from .models import DesignerProfile, UserSubscription, ProblemReport, Project
 from .social_pipeline import generate_username, ensure_verified_email, sync_user_details
+from .project_templates import load_project_templates
 
 
 TEST_STORAGE_BACKENDS = {
@@ -307,3 +310,88 @@ class ReportProblemViewTests(TransactionTestCase):
         report = ProblemReport.objects.get()
         self.assertEqual(report.reporter, user)
         self.assertEqual(report.category, ProblemReport.CATEGORY_BILLING)
+
+
+@override_settings(
+    SECURE_SSL_REDIRECT=False,
+    SESSION_COOKIE_SECURE=False,
+    CSRF_COOKIE_SECURE=False,
+    STORAGES=TEST_STORAGE_BACKENDS,
+)
+class ProjectCreationTests(TestCase):
+    def setUp(self) -> None:
+        self.user = User.objects.create_user(
+            username="project-maker",
+            email="maker@example.com",
+            password="StrongPass123!",
+            is_active=True,
+        )
+        self.templates = load_project_templates()
+        self.primary_template = self.templates[0]
+
+    def test_create_project_from_template(self):
+        self.client.login(username="project-maker", password="StrongPass123!")
+        payload = {
+            "template_id": self.primary_template["id"],
+            "title": "Fuel Fortress Launch",
+            "client_name": "Run Volume One",
+            "season": "SS25",
+            "product_type": "hoodie",
+            "product_count": 2,
+        }
+        response = self.client.post(
+            reverse("project_create_api"),
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 201)
+        project = Project.objects.get()
+        self.assertEqual(project.title, payload["title"])
+        self.assertEqual(project.template_id, payload["template_id"])
+        self.assertEqual(project.stages.count(), len(self.primary_template["stages"]))
+        self.assertTrue(project.product_specs.exists())
+        first_spec = project.product_specs.first()
+        self.assertEqual(first_spec.fields.count(), len(self.primary_template["productSpec"]["fields"]))
+
+    def test_invalid_template_returns_error(self):
+        self.client.login(username="project-maker", password="StrongPass123!")
+        payload = {
+            "template_id": "missing-template",
+            "title": "Invalid Project",
+            "product_type": "hoodie",
+            "product_count": 1,
+        }
+        response = self.client.post(
+            reverse("project_create_api"),
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("errors", response.json())
+        self.assertFalse(Project.objects.exists())
+
+
+@override_settings(
+    SECURE_SSL_REDIRECT=False,
+    SESSION_COOKIE_SECURE=False,
+    CSRF_COOKIE_SECURE=False,
+    STORAGES=TEST_STORAGE_BACKENDS,
+)
+class VolumeOneViewTests(TestCase):
+    def setUp(self) -> None:
+        self.user = User.objects.create_user(
+            username="volume",
+            email="volume@example.com",
+            password="StrongPass123!",
+            is_active=True,
+        )
+
+    def test_volume_one_page_renders_iframe(self):
+        self.client.login(username="volume", password="StrongPass123!")
+        response = self.client.get(reverse("volume_one"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "iframe")
+        self.assertInHTML(
+            '<iframe src="https://globaldesignerhub.com/volumeone" title="Volume-One" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>',
+            response.content.decode(),
+        )

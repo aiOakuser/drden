@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import uuid
+import copy
 from decimal import Decimal, InvalidOperation
 from datetime import timedelta
 from pathlib import Path
@@ -37,6 +38,7 @@ from .forms import (
     DesignerLoginForm,
     DesignerPasswordResetForm,
     ReportProblemForm,
+    ProjectCreateForm,
 )
 from .auth_utils import ensure_designer_access
 from .emails import (
@@ -64,8 +66,14 @@ from .models import (
     ForumNotification,
     ForumUserProfile,
     ProblemReport,
+    Project,
+    ProjectStage,
+    ProjectStageBullet,
+    ProjectProductSpec,
+    ProjectProductSpecField,
 )
 from .constants import REGIONAL_HIRING_AREAS
+from .project_templates import load_project_templates, serialize_templates_for_client
 
 from webauthn import (
     generate_authentication_options,
@@ -117,6 +125,10 @@ RUNWAY_COLLECTION_CAPABILITIES = [
         "icon": "fa-solid fa-shield",
         "tagline": "Guest links expire automatically",
     },
+]
+
+PROJECT_TEMPLATE_DEFAULT_SUMMARY = [
+    "Includes four stages + single product spec page",
 ]
 
 
@@ -232,6 +244,78 @@ def _infer_media_type(file_name: str) -> str:
 
     suffix = Path(file_name or "").suffix.lower()
     return "video" if suffix in RUNWAY_VIDEO_EXTENSIONS else "image"
+
+
+def _default_field_label(key: str) -> str:
+    """Turn data keys into readable labels."""
+    key = (key or "").strip()
+    if not key:
+        return "Field"
+    buffer = []
+    prev_lower = False
+    for char in key:
+        if char in {"_", "-"}:
+            buffer.append(" ")
+            prev_lower = False
+            continue
+        if char.isupper() and prev_lower:
+            buffer.append(" ")
+        buffer.append(char)
+        prev_lower = char.isalpha() and char.islower()
+    label = "".join(buffer).strip()
+    return label.title() or "Field"
+
+
+def _coerce_spec_field(field_definition):
+    if isinstance(field_definition, dict):
+        key = (field_definition.get("key") or "").strip()
+        label = (field_definition.get("label") or "").strip()
+    else:
+        key = str(field_definition or "").strip()
+        label = ""
+    if not key and label:
+        key = slugify(label).replace("-", "_")
+    if not key:
+        key = "field"
+    label = label or _default_field_label(key)
+    return key, label
+
+
+def _copy_template_blueprint(project: Project, template_definition: dict) -> None:
+    stages = template_definition.get("stages") or []
+    for idx, stage_info in enumerate(stages, start=1):
+        stage = ProjectStage.objects.create(
+            project=project,
+            stage_number=stage_info.get("stageNumber") or idx,
+            title=stage_info.get("title") or f"Stage {idx}",
+            layout_hint=stage_info.get("layoutHint", ""),
+            order=idx,
+        )
+        for bullet_idx, bullet in enumerate(stage_info.get("defaultBullets") or [], start=1):
+            text = (bullet or "").strip()
+            if not text:
+                continue
+            ProjectStageBullet.objects.create(
+                stage=stage,
+                order=bullet_idx,
+                text=text,
+            )
+
+    product_spec = template_definition.get("productSpec") or {}
+    if product_spec:
+        spec = ProjectProductSpec.objects.create(
+            project=project,
+            title=product_spec.get("title") or "Product Spec",
+            layout_key=product_spec.get("layoutHint", ""),
+        )
+        for order, field_definition in enumerate(product_spec.get("fields") or [], start=1):
+            field_key, label = _coerce_spec_field(field_definition)
+            ProjectProductSpecField.objects.create(
+                product_spec=spec,
+                field_key=field_key,
+                label=label,
+                order=order,
+            )
 
 
 def build_runway_collection_payload(collection, *, placeholder_url: str, guest_link_days: int) -> dict:
@@ -1432,6 +1516,128 @@ class DesignerDashboardView(LoginRequiredMixin, TemplateView):
         )
 
         return context
+
+
+class ProjectTemplateSelectionView(LoginRequiredMixin, TemplateView):
+    template_name = "designer_portfolio/project_new.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        templates = load_project_templates()
+        default_template = templates[0] if templates else {}
+        form = ProjectCreateForm(
+            initial={
+                "product_type": Project.ProductType.HOODIE,
+                "product_count": 1,
+            }
+        )
+        context.update(
+            {
+                "current_section": "projects",
+                "project_templates": templates,
+                "project_templates_json": serialize_templates_for_client(),
+                "project_form": form,
+                "default_template_id": default_template.get("id"),
+                "season_choices": Project.SeasonChoices.choices,
+                "product_type_choices": Project.ProductType.choices,
+            }
+        )
+        try:
+            context.setdefault("total_designs", Design.objects.filter(designer=self.request.user).count())
+        except Exception:
+            context.setdefault("total_designs", 0)
+        return context
+
+
+class ProjectEditorView(LoginRequiredMixin, DetailView):
+    template_name = "designer_portfolio/project_editor.html"
+    model = Project
+    context_object_name = "project"
+
+    def get_queryset(self):
+        return (
+            Project.objects.filter(owner=self.request.user)
+            .prefetch_related("stages__bullets", "product_specs__fields")
+            .order_by("-created_at")
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["current_section"] = "projects"
+        try:
+            context.setdefault("total_designs", Design.objects.filter(designer=self.request.user).count())
+        except Exception:
+            context.setdefault("total_designs", 0)
+        return context
+
+
+class VolumeOneView(LoginRequiredMixin, TemplateView):
+    template_name = "designer_portfolio/volume_one.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["current_section"] = "volume_one"
+        try:
+            context.setdefault("total_designs", Design.objects.filter(designer=self.request.user).count())
+        except Exception:
+            context.setdefault("total_designs", 0)
+        context["volume_one_url"] = "https://globaldesignerhub.com/volumeone"
+        return context
+
+
+@login_required
+def project_templates_api(request):
+    return JsonResponse({"templates": load_project_templates()})
+
+
+@login_required
+@require_POST
+def create_project_api(request):
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except (AttributeError, ValueError, UnicodeDecodeError):
+        payload = request.POST.dict()
+
+    form = ProjectCreateForm(payload)
+    if not form.is_valid():
+        error_data = {
+            field: [message["message"] for message in messages]
+            for field, messages in form.errors.get_json_data().items()
+        }
+        return JsonResponse({"errors": error_data}, status=400)
+
+    template_definition = copy.deepcopy(form.template_data)
+    summary_lines = template_definition.get("summary") or PROJECT_TEMPLATE_DEFAULT_SUMMARY
+
+    with transaction.atomic():
+        project = Project.objects.create(
+            owner=request.user,
+            template_id=form.cleaned_data["template_id"],
+            template_name=template_definition.get("name") or template_definition.get("id") or "Template",
+            template_category=template_definition.get("category", ""),
+            template_layout_key=template_definition.get("layoutKey", ""),
+            template_snapshot=template_definition,
+            title=form.cleaned_data["title"],
+            client_name=form.cleaned_data.get("client_name", ""),
+            season=form.cleaned_data.get("season", ""),
+            product_type=form.cleaned_data["product_type"],
+            product_count=form.cleaned_data["product_count"],
+            preview_copy=summary_lines,
+            metadata={
+                "cover": template_definition.get("cover", {}),
+                "thumbnail": template_definition.get("thumbnail", {}),
+            },
+        )
+        _copy_template_blueprint(project, template_definition)
+
+    return JsonResponse(
+        {
+            "projectId": project.pk,
+            "redirectUrl": reverse("project_editor", args=[project.pk]),
+            "message": "Project created.",
+        },
+        status=201,
+    )
 
 class PendingDesignersView(ListView):
     template_name = "designer_portfolio/pending_designers.html"

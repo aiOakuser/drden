@@ -184,6 +184,14 @@
         style="display: flex; flex-direction: column; gap: 12px"
       >
         <a
+          href="{% url 'project_create' %}"
+          style="display: flex; align-items: center; padding: 15px; background: var(--color-secondary); color: var(--color-primary); text-decoration: none; border-radius: 8px; border: 1px dashed var(--color-primary); font-weight: 600; transition: all 0.3s ease"
+        >
+          <i class="fas fa-folder-plus" style="margin-right: 12px; font-size: 18px"></i>
+          <span>Create New Project</span>
+        </a>
+
+        <a
           href="{% url 'designer_design_create' %}"
           style="display: flex; align-items: center; padding: 15px; background: var(--color-primary); color: var(--color-secondary); text-decoration: none; border-radius: 8px; transition: all 0.3s ease"
         >

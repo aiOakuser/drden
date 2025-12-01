@@ -1,0 +1,406 @@
+{
+  "templates": [
+    {
+      "id": "fuel_fortress_layout",
+      "name": "Fuel Fortress Layout",
+      "category": "Hoodie Capsule",
+      "layoutKey": "twoRow_breakdown_plus_specs",
+      "thumbnail": {
+          "background": "#0D0D0E",
+          "panels": ["#1C1C20", "#222229", "#1A1B1F"]
+      },
+      "summary": [
+        "Includes four stages + single product spec page",
+        "Optimized for hoodies / outerwear"
+      ],
+      "cover": {
+        "titlePlaceholder": "FUEL FORTRESS",
+        "subtitle": "MERCH DEVELOPMENT LINE PRESENTED BY RUN VOLUME ONE"
+      },
+      "stages": [
+        {
+          "stageNumber": 1,
+          "title": "STAGE 01 / DESIGN & TECH DEV.",
+          "defaultBullets": [
+            "Technical flats / line sheet",
+            "Style number creation",
+            "Fabric & trim sourcing",
+            "Embellishment (prints / puff / embroidery) map",
+            "Print placement",
+            "Vendor & factory catalog"
+          ]
+        },
+        {
+          "stageNumber": 2,
+          "title": "STAGE 02 / PRE-PRODUCTION",
+          "defaultBullets": [
+            "Fabric vendor contacts",
+            "Swatching / lab dips / hand feel notes",
+            "Bulk fabric shrinkage / wash tests",
+            "Lead time sheet / in-house date",
+            "Pattern development",
+            "Fit sample approval"
+          ]
+        },
+        {
+          "stageNumber": 3,
+          "title": "STAGE 03 / PRODUCTION",
+          "defaultBullets": [
+            "Trim & fabric approval",
+            "Pre-production sample approval",
+            "Print strike-off approval",
+            "Bulk approval / rejection",
+            "Packing list",
+            "Freight & duty receipts"
+          ]
+        },
+        {
+          "stageNumber": 4,
+          "title": "STAGE 04 / MEDIA DIRECTION",
+          "defaultBullets": [
+            "Location scouting",
+            "Model casting",
+            "Shot list / storyboards",
+            "Styling direction",
+            "Scheduling",
+            "Budget sheet & call sheets"
+          ]
+        }
+      ],
+      "productSpec": {
+        "title": "AERO HOODIE",
+        "layoutHint": "single_column_specs",
+        "fields": [
+          {"key": "styleNumber", "label": "Style Number"},
+          {"key": "description", "label": "Description"},
+          {"key": "fabricShell", "label": "Fabric / Shell"},
+          {"key": "fabricContent", "label": "Fabric Content"},
+          {"key": "sizeRange", "label": "Size Range"},
+          {"key": "colorways", "label": "Colorways"}
+        ]
+      }
+    },
+    {
+      "id": "street_circuit",
+      "name": "Street Circuit",
+      "category": "Shell System",
+      "layoutKey": "twoRow_breakdown_plus_specs",
+      "thumbnail": {
+          "background": "#0B0C10",
+          "panels": ["#111727", "#1A2235", "#141B2C"]
+      },
+      "summary": [
+        "Urban-ready flow with reflective trims",
+        "Great for modular outerwear drops"
+      ],
+      "cover": {
+        "titlePlaceholder": "STREET CIRCUIT",
+        "subtitle": "PLAYBOOK FOR SHELL + WIND PROGRAMS"
+      },
+      "stages": [
+        {
+          "stageNumber": 1,
+          "title": "STAGE 01 / URBAN RESEARCH",
+          "defaultBullets": [
+            "City scouting & commuter profiles",
+            "Trend scrap + palette board",
+            "Material innovation benchmarks",
+            "Hardware / trims pull list",
+            "Graphic language directions",
+            "Fit map per commuter zone"
+          ]
+        },
+        {
+          "stageNumber": 2,
+          "title": "STAGE 02 / SYSTEM BUILD",
+          "defaultBullets": [
+            "Layering logic diagram",
+            "Vent + panel mockups",
+            "Bill of materials",
+            "Heat-seal + seam spec",
+            "Zip + snap callouts",
+            "Modular accessories pairing"
+          ]
+        },
+        {
+          "stageNumber": 3,
+          "title": "STAGE 03 / FIELD TEST",
+          "defaultBullets": [
+            "Wear-test itinerary",
+            "Feedback tags & form",
+            "Weather chamber report",
+            "Adjustment log",
+            "QC checkpoints",
+            "Factory feedback loop"
+          ]
+        },
+        {
+          "stageNumber": 4,
+          "title": "STAGE 04 / LAUNCH GRID",
+          "defaultBullets": [
+            "Lookbook cadence",
+            "Retail window plan",
+            "Paid media assets",
+            "Influencer seeding list",
+            "Drop site wireframes",
+            "Packaging treatments"
+          ]
+        }
+      ],
+      "productSpec": {
+        "title": "MODULAR SHELL",
+        "layoutHint": "single_column_specs",
+        "fields": [
+          {"key": "styleNumber", "label": "Style Number"},
+          {"key": "shellFabric", "label": "Shell Fabric"},
+          {"key": "membrane", "label": "Membrane / Coating"},
+          {"key": "lining", "label": "Lining"},
+          {"key": "hardware", "label": "Hardware"},
+          {"key": "care", "label": "Care Instructions"}
+        ]
+      }
+    },
+    {
+      "id": "midnight_relay",
+      "name": "Midnight Relay",
+      "category": "Capsule Drop",
+      "layoutKey": "twoRow_breakdown_plus_specs",
+      "thumbnail": {
+          "background": "#0A090F",
+          "panels": ["#151021", "#1E162F", "#241B3A"]
+      },
+      "summary": [
+        "Fast-turn creative for limited capsules",
+        "Pairs well with knit or fleece programs"
+      ],
+      "cover": {
+        "titlePlaceholder": "MIDNIGHT RELAY",
+        "subtitle": "RUN-OF-SHOW PLAN FOR AFTER-HOURS DROPS"
+      },
+      "stages": [
+        {
+          "stageNumber": 1,
+          "title": "STAGE 01 / STORY KERNEL",
+          "defaultBullets": [
+            "Narrative spine",
+            "Soundtrack / motion pulls",
+            "Typeface + wordmark tests",
+            "Hero color logic",
+            "Drop archetypes",
+            "Merch bundle plan"
+          ]
+        },
+        {
+          "stageNumber": 2,
+          "title": "STAGE 02 / MAKE",
+          "defaultBullets": [
+            "Fabric commitments",
+            "Cut tickets",
+            "Print + wash matrix",
+            "Sizing curves",
+            "Packaging dieline",
+            "Barcode + SKU map"
+          ]
+        },
+        {
+          "stageNumber": 3,
+          "title": "STAGE 03 / PRESENT",
+          "defaultBullets": [
+            "Livestream rundown",
+            "Retail takeover kit",
+            "Social countdown assets",
+            "Press release fragments",
+            "Influencer styling notes",
+            "Gifting crates checklist"
+          ]
+        },
+        {
+          "stageNumber": 4,
+          "title": "STAGE 04 / POST RUN",
+          "defaultBullets": [
+            "Sell-through tracker",
+            "Waitlist + restock logic",
+            "Community recap",
+            "UGC spotlight grid",
+            "Performance review deck",
+            "Next drop brief"
+          ]
+        }
+      ],
+      "productSpec": {
+        "title": "KNIT CREW",
+        "layoutHint": "single_column_specs",
+        "fields": [
+          {"key": "styleNumber", "label": "Style Number"},
+          {"key": "yarn", "label": "Yarn / Gauge"},
+          {"key": "finish", "label": "Finish"},
+          {"key": "fitNotes", "label": "Fit Notes"},
+          {"key": "colorways", "label": "Colorways"},
+          {"key": "packaging", "label": "Packaging"}
+        ]
+      }
+    },
+    {
+      "id": "metro_interval",
+      "name": "Metro Interval",
+      "category": "Performance Bottoms",
+      "layoutKey": "twoRow_breakdown_plus_specs",
+      "thumbnail": {
+          "background": "#080b10",
+          "panels": ["#112433", "#142D3F", "#10354A"]
+      },
+      "summary": [
+        "Data-backed sprint for high mileage product",
+        "Includes UX cues for fit + wear testing"
+      ],
+      "cover": {
+        "titlePlaceholder": "METRO INTERVAL",
+        "subtitle": "ENGINEERED PERFORMANCE ROADMAP"
+      },
+      "stages": [
+        {
+          "stageNumber": 1,
+          "title": "STAGE 01 / INPUT STREAM",
+          "defaultBullets": [
+            "Runner persona set",
+            "Heat map overlays",
+            "Compression + ease chart",
+            "Pocket & storage logic",
+            "Fabric lab shortlist",
+            "Colorfastness guardrails"
+          ]
+        },
+        {
+          "stageNumber": 2,
+          "title": "STAGE 02 / BUILD + TEST",
+          "defaultBullets": [
+            "Panel patterning",
+            "Seam placements",
+            "Bonding instructions",
+            "Reflectivity placements",
+            "Wash cycle plan",
+            "Fit session feedback"
+          ]
+        },
+        {
+          "stageNumber": 3,
+          "title": "STAGE 03 / OPERATIONS",
+          "defaultBullets": [
+            "Factory allocation",
+            "MOQ tracker",
+            "Freight timing map",
+            "Seasonal buy plan",
+            "SKU optimization",
+            "Retail VM direction"
+          ]
+        },
+        {
+          "stageNumber": 4,
+          "title": "STAGE 04 / CONTENT LOOP",
+          "defaultBullets": [
+            "Athlete roster",
+            "Retail staff training",
+            "Transit OOH plan",
+            "In-app story frames",
+            "Email flow copy",
+            "Performance claims proofs"
+          ]
+        }
+      ],
+      "productSpec": {
+        "title": "INTERVAL TIGHT",
+        "layoutHint": "single_column_specs",
+        "fields": [
+          {"key": "styleNumber", "label": "Style Number"},
+          {"key": "fabric", "label": "Fabric"},
+          {"key": "compression", "label": "Compression Level"},
+          {"key": "inseam", "label": "Inseam"},
+          {"key": "storage", "label": "Storage Notes"},
+          {"key": "care", "label": "Care"}
+        ]
+      }
+    },
+    {
+      "id": "ridgeline_ascent",
+      "name": "Ridgeline Ascent",
+      "category": "Outerwear Capsule",
+      "layoutKey": "twoRow_breakdown_plus_specs",
+      "thumbnail": {
+          "background": "#0A0F0D",
+          "panels": ["#1B2C1F", "#233929", "#1A3324"]
+      },
+      "summary": [
+        "Trail-focused with expedition staging",
+        "Includes dual-product spec blocks"
+      ],
+      "cover": {
+        "titlePlaceholder": "RIDGELINE ASCENT",
+        "subtitle": "FOUR-STAGE GUIDE FOR MOUNTAIN RUN PROGRAMS"
+      },
+      "stages": [
+        {
+          "stageNumber": 1,
+          "title": "STAGE 01 / TERRAIN MAPPING",
+          "defaultBullets": [
+            "Region + altitude grid",
+            "Weather system overlays",
+            "Competitor teardown",
+            "Gear layering sets",
+            "Trim corrosion notes",
+            "Color story per elevation"
+          ]
+        },
+        {
+          "stageNumber": 2,
+          "title": "STAGE 02 / MATERIAL PROOF",
+          "defaultBullets": [
+            "Laminate + membrane tests",
+            "DWR scorecard",
+            "Thermal retention data",
+            "Panel stress chart",
+            "Reinforcement map",
+            "Supplier scorecards"
+          ]
+        },
+        {
+          "stageNumber": 3,
+          "title": "STAGE 03 / SAMPLE OPS",
+          "defaultBullets": [
+            "Proto drop dates",
+            "Sample photo log",
+            "Change list + rev code",
+            "Costing + margin calc",
+            "Hangtag / trim approvals",
+            "Logistics buffer plan"
+          ]
+        },
+        {
+          "stageNumber": 4,
+          "title": "STAGE 04 / FIELD MEDIA",
+          "defaultBullets": [
+            "Guide + athlete casting",
+            "Shotlist by altitude",
+            "Film kit checklist",
+            "On-location gear care",
+            "Retail education deck",
+            "Evergreen footage bins"
+          ]
+        }
+      ],
+      "productSpec": {
+        "title": "ASCENT PARKA",
+        "layoutHint": "double_column_specs",
+        "fields": [
+          {"key": "styleNumber", "label": "Style Number"},
+          {"key": "insulation", "label": "Insulation"},
+          {"key": "shell", "label": "Shell"},
+          {"key": "lining", "label": "Lining"},
+          {"key": "hardware", "label": "Hardware"},
+          {"key": "weight", "label": "Weight"},
+          {"key": "fit", "label": "Fit"},
+          {"key": "colorways", "label": "Colorways"}
+        ]
+      }
+    }
+  ]
+}

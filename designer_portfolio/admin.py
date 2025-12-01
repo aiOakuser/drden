@@ -54,6 +54,91 @@ class DesignAdmin(admin.ModelAdmin):
     cover_preview.short_description = "Cover"
 
 
+# ---------------- Project Breakdown ----------------
+class ProjectStageInline(admin.TabularInline):
+    model = m.ProjectStage
+    extra = 0
+    fields = ("stage_number", "title", "order")
+    show_change_link = True
+
+
+class ProjectProductSpecInline(admin.TabularInline):
+    model = m.ProjectProductSpec
+    extra = 0
+    fields = ("title", "layout_key")
+    show_change_link = True
+
+
+@admin.register(m.Project)
+class ProjectAdmin(admin.ModelAdmin):
+    list_display = ("title", "template_name", "product_type", "product_count", "owner", "created_at")
+    list_filter = ("template_name", "product_type", "season", "created_at")
+    search_fields = ("title", "template_name", "client_name", "owner__username")
+    readonly_fields = ("created_at", "updated_at", "template_snapshot")
+    fieldsets = (
+        (
+            "Project Info",
+            {
+                "fields": (
+                    "owner",
+                    "title",
+                    "client_name",
+                    "season",
+                    "product_type",
+                    "product_count",
+                )
+            },
+        ),
+        (
+            "Template",
+            {
+                "fields": (
+                    "template_id",
+                    "template_name",
+                    "template_category",
+                    "template_layout_key",
+                    "preview_copy",
+                    "template_snapshot",
+                )
+            },
+        ),
+        (
+            "Metadata",
+            {
+                "fields": ("metadata", "created_at", "updated_at"),
+            },
+        ),
+    )
+    inlines = [ProjectStageInline, ProjectProductSpecInline]
+
+
+class ProjectStageBulletInline(admin.TabularInline):
+    model = m.ProjectStageBullet
+    extra = 0
+    fields = ("order", "text")
+
+
+@admin.register(m.ProjectStage)
+class ProjectStageAdmin(admin.ModelAdmin):
+    list_display = ("project", "stage_number", "title", "order")
+    list_filter = ("project__template_name",)
+    search_fields = ("title", "project__title")
+    inlines = [ProjectStageBulletInline]
+
+
+class ProjectProductSpecFieldInline(admin.TabularInline):
+    model = m.ProjectProductSpecField
+    extra = 0
+    fields = ("order", "field_key", "label", "value")
+
+
+@admin.register(m.ProjectProductSpec)
+class ProjectProductSpecAdmin(admin.ModelAdmin):
+    list_display = ("project", "title", "layout_key")
+    search_fields = ("title", "project__title")
+    inlines = [ProjectProductSpecFieldInline]
+
+
 # ---------------- Event Images ----------------
 class EventImageInline(admin.TabularInline):
     model = m.EventImage
