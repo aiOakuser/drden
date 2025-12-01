@@ -26,7 +26,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.cache import cache
-from django.core.mail import send_mail, BadHeaderError
+from django.core.mail import EmailMessage, BadHeaderError
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
 from django.utils import timezone
@@ -1232,15 +1232,15 @@ def contact_view(request):
                 f"Subject: {data['subject']}\n\n"
                 f"Message:\n{data['message']}\n"
             )
+            email = EmailMessage(
+                subject=subject,
+                body=body,
+                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@globaldesignerhub.com"),
+                to=[contact_email],
+                reply_to=[data["email"]],
+            )
             try:
-                send_mail(
-                    subject=subject,
-                    message=body,
-                    from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@globaldesignerhub.com"),
-                    recipient_list=[contact_email],
-                    fail_silently=False,
-                    headers={"Reply-To": data["email"]},
-                )
+                email.send(fail_silently=False)
             except BadHeaderError:
                 messages.error(request, "Invalid header detected. Please email us directly instead.")
             except Exception:
