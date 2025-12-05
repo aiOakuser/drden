@@ -12,6 +12,7 @@ from .models import DesignerProfile, UserSubscription, ProblemReport, Project
 from .social_pipeline import generate_username, ensure_verified_email, sync_user_details
 from .project_templates import load_project_templates
 from .views import _resolve_post_login_redirect
+from .tekpak_blueprints import TEKPAK_BLUEPRINTS
 
 
 TEST_STORAGE_BACKENDS = {
@@ -447,12 +448,17 @@ class ProjectCreationTests(TestCase):
     STORAGES=TEST_STORAGE_BACKENDS,
 )
 class TechpackBlueprintTests(TestCase):
-    def test_desert_shadows_blueprint_renders(self):
-        response = self.client.get(reverse("generate_techpack", args=["desert-shadows"]))
-        self.assertEqual(response.status_code, 200)
-        content = response.content.decode()
-        self.assertIn("DESERT SHADOWS", content)
-        self.assertIn("ShadowFlex Jogger", content)
+    def test_all_blueprints_render(self):
+        for slug in TEKPAK_BLUEPRINTS:
+            response = self.client.get(reverse("generate_techpack", args=[slug]))
+            self.assertEqual(response.status_code, 200, slug)
+            content = response.content.decode()
+            hero_title = TEKPAK_BLUEPRINTS[slug].get("hero", {}).get("title")
+            breakdown_label = TEKPAK_BLUEPRINTS[slug].get("project_breakdown", {}).get("label")
+            if hero_title:
+                self.assertIn(hero_title, content)
+            if breakdown_label:
+                self.assertIn(breakdown_label, content)
 
     def test_missing_blueprint_returns_404(self):
         response = self.client.get(reverse("generate_techpack", args=["missing-pack"]))
