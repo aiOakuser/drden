@@ -8,19 +8,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Space+Grotesk:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
     <style>
       :root {
         color-scheme: light;
-        --paper: #f8f4ef;
-        --ink: #1c1814;
-        --muted: #7c746a;
-        --card: #ffffff;
-        --border: rgba(10, 8, 6, 0.08);
-        --accent-sand: #cbb094;
-        --accent-olive: #4f6b4a;
       }
 
       *,
@@ -31,358 +24,491 @@
 
       body {
         margin: 0;
-        background: var(--paper);
-        color: var(--ink);
-        font-family: "Space Grotesk", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        line-height: 1.5;
-      }
-
-      .page-shell {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 72px 32px 96px;
-      }
-
-      h1,
-      h2 {
-        font-family: "Playfair Display", "Cormorant Garamond", serif;
-        font-weight: 600;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        margin: 0;
-      }
-
-      h1 {
-        font-size: clamp(3rem, 7vw, 4.5rem);
-        line-height: 1.05;
-      }
-
-      h2 {
-        font-size: clamp(1.5rem, 3vw, 2.25rem);
+        background: #f5efe8;
+        color: #2b1b1f;
+        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.6;
       }
 
       p {
         margin: 0;
       }
 
-      .hero {
-        padding-bottom: 32px;
-        border-bottom: 1px solid var(--border);
+      a {
+        color: inherit;
       }
 
-      .hero-badge {
-        text-transform: uppercase;
-        letter-spacing: 0.28em;
-        font-size: 0.8rem;
-        color: var(--muted);
-        margin-bottom: 20px;
+      .pack {
+        max-width: 1100px;
+        margin: 40px auto;
+        border: 1px solid #ddd;
+        padding: 32px 28px 24px;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+        background: #faf7f5;
+        border-radius: 18px;
       }
 
-      .hero-subtitle {
+      .pack-header {
+        text-align: center;
+        margin-bottom: 24px;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 16px;
+      }
+
+      .pack-title {
+        font-family: "Georgia", "Times New Roman", serif;
+        font-size: 40px;
+        letter-spacing: 0.08em;
+        font-weight: 700;
+        color: #6b1028;
         text-transform: uppercase;
-        letter-spacing: 0.32em;
-        font-size: 0.9rem;
-        color: var(--muted);
+        margin: 0;
+      }
+
+      .pack-subtitle {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: #555;
+        margin-top: 6px;
+      }
+
+      .pack-project-title {
+        font-family: "Georgia", "Times New Roman", serif;
+        font-size: 26px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: #6b1028;
         margin-top: 18px;
       }
 
-      .hero-copy {
-        margin-top: 24px;
-        max-width: 720px;
-        color: #645d54;
-      }
-
-      .section {
-        margin-top: 72px;
-      }
-
-      .section-heading {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 32px;
-        margin-bottom: 28px;
-      }
-
-      .eyebrow {
-        text-transform: uppercase;
-        letter-spacing: 0.32em;
-        font-size: 0.78rem;
-        color: var(--muted);
-        margin-bottom: 12px;
-      }
-
-      .section-note {
-        max-width: 420px;
-        color: #6a6358;
-        font-size: 0.95rem;
-      }
-
-      .stage-grid {
+      .pack-stages {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 20px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
+        margin-top: 28px;
       }
 
-      .stage-card {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 28px;
-        padding: 24px;
-        box-shadow: 0 28px 60px rgba(19, 12, 8, 0.08);
+      .pack-stage {
+        font-size: 12px;
+        line-height: 1.6;
       }
 
-      .stage-title {
-        font-size: 0.95rem;
-        letter-spacing: 0.24em;
+      .pack-stage-title {
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
         text-transform: uppercase;
-        color: #45403a;
-        margin-bottom: 18px;
+        color: #6b1028;
+        margin-bottom: 6px;
       }
 
-      .stage-card ul {
+      .pack-stage ul {
         list-style: none;
+        padding-left: 0;
         margin: 0;
-        padding: 0;
+      }
+
+      .pack-stage li::before {
+        content: "• ";
+      }
+
+      .pack-bottom {
+        border-top: 1px solid #ccc;
+        margin-top: 28px;
+        padding-top: 20px;
         display: grid;
-        gap: 8px;
+        grid-template-columns: 2fr 3fr;
+        gap: 24px;
+        font-size: 11px;
       }
 
-      .stage-card li {
-        position: relative;
-        padding-left: 18px;
-        font-size: 0.98rem;
-      }
-
-      .stage-card li::before {
-        content: "—";
-        position: absolute;
-        left: 0;
-        color: var(--accent-olive);
-      }
-
-      .spec-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 16px;
-        margin-bottom: 32px;
-      }
-
-      .spec-card {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 24px;
-        padding: 20px;
-      }
-
-      .spec-card span {
-        display: block;
+      .pack-style-title {
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.28em;
-        font-size: 0.75rem;
-        color: var(--muted);
+        letter-spacing: 0.14em;
+        margin-bottom: 6px;
       }
 
-      .spec-card p {
-        margin-top: 12px;
-        font-size: 1rem;
+      .pack-style-meta {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: #6b5c5e;
       }
 
-      .colorways {
+      .pack-style-meta div {
+        margin-bottom: 2px;
+      }
+
+      .pack-color-swatches {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+        flex-wrap: wrap;
+      }
+
+      .pack-swatch {
+        width: 28px;
+        height: 16px;
+        border-radius: 3px;
+        border: 1px solid #999;
+      }
+
+      /* just approximate colors */
+      .swatch-charcoal {
+        background: #333;
+      }
+      .swatch-icegrey {
+        background: #d7d7d7;
+      }
+      .swatch-sand {
+        background: #d3b48a;
+      }
+      .swatch-olive {
+        background: #7a8750;
+      }
+      .swatch-black {
+        background: #000;
+      }
+
+      .swatch-stone {
+        background: #cfc9c0;
+      }
+      .swatch-taupe {
+        background: #b29b87;
+      }
+      .swatch-earth {
+        background: #7a5a3a;
+      }
+      .swatch-cactus {
+        background: #56784e;
+      }
+      .swatch-night {
+        background: #171b2f;
+      }
+
+      .swatch-jet {
+        background: #101010;
+      }
+      .swatch-smoke {
+        background: #808080;
+      }
+      .swatch-frost {
+        background: #e4e7ea;
+      }
+
+      .swatch-slate {
+        background: #5c6472;
+      }
+      .swatch-midnight {
+        background: #121528;
+      }
+      .swatch-laser {
+        background: #2f60ff;
+      }
+      .swatch-infra {
+        background: #ff3b3b;
+      }
+
+      .swatch-sky {
+        background: #b5dfff;
+      }
+      .swatch-cream {
+        background: #f7f1de;
+      }
+      .swatch-drift {
+        background: #b89b7c;
+      }
+      .swatch-pebble {
+        background: #b7b7b7;
+      }
+
+      .pack-icon {
+        font-size: 14px;
+        margin-right: 6px;
+      }
+
+      .pack-hero-copy {
+        margin-top: 14px;
+        font-size: 14px;
+        color: #4f4843;
+      }
+
+      .pack-hero-copy p + p {
         margin-top: 8px;
       }
 
-      .swatch-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 14px 24px;
+      .pack-overview {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 24px;
         margin-top: 18px;
+        padding-top: 18px;
+        border-top: 1px solid #e8e0d9;
       }
 
-      .swatch-card {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        padding: 16px 0;
-        border-top: 1px solid var(--border);
-      }
-
-      .swatch-card:first-of-type {
-        border-top: none;
-      }
-
-      .swatch-chip {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        border: 1px solid rgba(0, 0, 0, 0.08);
-        background: var(--chip-color, #000);
-        box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.3);
-      }
-
-      .swatch-card strong {
-        display: block;
-        font-size: 1rem;
+      .pack-eyebrow {
+        font-size: 11px;
         text-transform: uppercase;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.22em;
+        color: #8b7c71;
+        margin-bottom: 6px;
       }
 
-      .swatch-card p {
-        color: #5b534a;
-        font-size: 0.9rem;
-      }
-
-      .sketch-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 16px;
-      }
-
-      .sketch-card {
-        border: 1px dashed rgba(28, 24, 20, 0.4);
-        border-radius: 20px;
-        padding: 18px;
-        background: rgba(255, 255, 255, 0.6);
-        font-size: 0.95rem;
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
-        min-height: 120px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-      }
-
-      .page-footer {
-        margin-top: 64px;
-        text-align: center;
-        font-size: 0.85rem;
+      .pack-overview-note {
+        font-size: 13px;
         letter-spacing: 0.18em;
         text-transform: uppercase;
-        color: #7a7066;
+        color: #5e4c46;
       }
 
-      @media (max-width: 768px) {
-        .section-heading {
+      .pack-overview-meta {
+        font-size: 13px;
+        color: #6b5c5e;
+        max-width: 360px;
+      }
+
+      .pack-overview-meta p + p {
+        margin-top: 4px;
+      }
+
+      .pack-stage ul li {
+        padding-left: 0;
+        color: #4a3d38;
+      }
+
+      .pack-specs {
+        font-size: 12px;
+      }
+
+      .pack-spec-list {
+        list-style: none;
+        margin: 16px 0 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .pack-spec-list li {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        padding-bottom: 12px;
+      }
+
+      .pack-spec-list li:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+
+      .pack-spec-list span {
+        font-size: 11px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: #8a7d72;
+        display: block;
+      }
+
+      .pack-spec-list strong {
+        font-family: "Georgia", "Times New Roman", serif;
+        font-size: 16px;
+        color: #2d131c;
+        margin-top: 4px;
+        display: block;
+      }
+
+      .pack-style-note {
+        font-size: 12px;
+        color: #6b5c5e;
+        margin-top: 6px;
+      }
+
+      .pack-sketches {
+        margin: 12px 0 0 16px;
+        padding: 0;
+        color: #4c403d;
+        font-size: 12px;
+      }
+
+      .pack-sketches li {
+        margin-bottom: 6px;
+      }
+
+      .pack-colors {
+        font-size: 12px;
+      }
+
+      .pack-color-notes {
+        list-style: none;
+        margin: 14px 0 0;
+        padding: 0;
+      }
+
+      .pack-color-notes li {
+        margin-bottom: 6px;
+      }
+
+      .pack-color-notes span {
+        color: #7c6d66;
+        margin-left: 4px;
+      }
+
+      .pack-footer {
+        border-top: 1px solid #ccc;
+        margin-top: 28px;
+        padding-top: 16px;
+        text-align: center;
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: #6d5e58;
+      }
+
+      @media (max-width: 900px) {
+        .pack-stages {
+          grid-template-columns: 1fr;
+        }
+
+        .pack-bottom {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .pack {
+          padding: 24px 22px;
+        }
+
+        .pack-overview {
           flex-direction: column;
-        }
-      }
-
-      @media print {
-        body {
-          background: #fff;
-        }
-        .page-shell {
-          padding: 40px 24px;
-        }
-        .stage-card,
-        .spec-card,
-        .sketch-card {
-          box-shadow: none;
         }
       }
     </style>
   </head>
   <body>
-    <div class="page-shell">
-      <header class="hero">
-        {% with hero=blueprint.hero %}
+    <div class="pack">
+      {% with hero=blueprint.hero %}
+      <header class="pack-header">
         {% if hero.badge or hero.icon %}
-        <p class="hero-badge">
-          {% if hero.icon %}{{ hero.icon }} {% endif %}
+        <p class="pack-subtitle">
+          {% if hero.icon %}<span class="pack-icon">{{ hero.icon }}</span>{% endif %}
           {{ hero.badge }}
         </p>
         {% endif %}
-        <h1>{{ hero.title }}</h1>
-        <p class="hero-subtitle">{{ hero.subtitle }}</p>
+        <h1 class="pack-title">{{ hero.title|default:"TekPak Blueprint" }}</h1>
+        {% if hero.subtitle %}
+        <p class="pack-project-title">{{ hero.subtitle }}</p>
+        {% endif %}
         {% if hero.supporting_copy %}
-        <div class="hero-copy">
+        <div class="pack-hero-copy">
           {% for line in hero.supporting_copy %}
           <p>{{ line }}</p>
           {% endfor %}
         </div>
         {% endif %}
-        {% endwith %}
       </header>
+      {% endwith %}
 
-      <section class="section breakdown">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">{{ blueprint.project_breakdown.label }}</p>
-            <h2>{{ blueprint.project_breakdown.kicker }}</h2>
-          </div>
-        </div>
-        <div class="stage-grid">
-          {% for stage in blueprint.stages %}
-          <article class="stage-card">
-            <p class="stage-title">{{ stage.title }}</p>
-            {% if stage.items %}
-            <ul>
-              {% for item in stage.items %}
-              <li>{{ item }}</li>
-              {% endfor %}
-            </ul>
-            {% endif %}
-          </article>
-          {% endfor %}
-        </div>
-      </section>
-
-      <section class="section style-sheet">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">{{ blueprint.style_sheet.brand }}</p>
-            <h2>{{ blueprint.style_sheet.title }}</h2>
-          </div>
-          {% if blueprint.style_sheet.notes %}
-          <p class="section-note">{{ blueprint.style_sheet.notes }}</p>
+      <section class="pack-overview">
+        <div>
+          {% if blueprint.project_breakdown.label %}
+          <p class="pack-eyebrow">{{ blueprint.project_breakdown.label }}</p>
+          {% endif %}
+          {% if blueprint.project_breakdown.kicker %}
+          <p class="pack-overview-note">{{ blueprint.project_breakdown.kicker }}</p>
           {% endif %}
         </div>
-        <div class="spec-grid">
-          {% for spec in blueprint.style_sheet.specs %}
-          <div class="spec-card">
-            <span>{{ spec.label }}</span>
-            <p>{{ spec.value }}</p>
-          </div>
-          {% endfor %}
-        </div>
-
-        <div class="colorways">
-          <p class="eyebrow">Colorways</p>
-          <div class="swatch-grid">
-            {% for swatch in blueprint.colorways %}
-            <div class="swatch-card">
-              <span class="swatch-chip" style="--chip-color: {{ swatch.hex }}"></span>
-              <div>
-                <strong>{{ swatch.name }}</strong>
-                {% if swatch.description %}
-                <p>{{ swatch.description }}</p>
-                {% endif %}
-              </div>
-            </div>
-            {% endfor %}
-          </div>
+        <div class="pack-overview-meta">
+          {% if blueprint.style_sheet.brand %}
+          <p>{{ blueprint.style_sheet.brand }}</p>
+          {% endif %}
+          {% if blueprint.style_sheet.notes %}
+          <p>{{ blueprint.style_sheet.notes }}</p>
+          {% endif %}
         </div>
       </section>
 
-      <section class="section design-sketches">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">{{ blueprint.design_sketches.label }}</p>
-            <h2>{{ blueprint.design_sketches.subtitle }}</h2>
+      {% if blueprint.stages %}
+      <section class="pack-stages">
+        {% for stage in blueprint.stages %}
+        <article class="pack-stage">
+          <p class="pack-stage-title">{{ stage.title }}</p>
+          {% if stage.items %}
+          <ul>
+            {% for item in stage.items %}
+            <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+        </article>
+        {% endfor %}
+      </section>
+      {% endif %}
+
+      <section class="pack-bottom">
+        <div class="pack-specs">
+          <p class="pack-style-title">{{ blueprint.style_sheet.title|default:"Style Sheet" }}</p>
+          {% if blueprint.style_sheet.brand or blueprint.style_sheet.notes %}
+          <div class="pack-style-meta">
+            {% if blueprint.style_sheet.brand %}
+            <div>{{ blueprint.style_sheet.brand }}</div>
+            {% endif %}
+            {% if blueprint.style_sheet.notes %}
+            <div>{{ blueprint.style_sheet.notes }}</div>
+            {% endif %}
           </div>
+          {% endif %}
+          {% if blueprint.style_sheet.specs %}
+          <ul class="pack-spec-list">
+            {% for spec in blueprint.style_sheet.specs %}
+            <li>
+              <span>{{ spec.label }}</span>
+              <strong>{{ spec.value }}</strong>
+            </li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+          {% if blueprint.design_sketches %}
+          <p class="pack-style-title">{{ blueprint.design_sketches.label }}</p>
+          {% if blueprint.design_sketches.subtitle %}
+          <p class="pack-style-note">{{ blueprint.design_sketches.subtitle }}</p>
+          {% endif %}
+          {% if blueprint.design_sketches.items %}
+          <ul class="pack-sketches">
+            {% for sketch in blueprint.design_sketches.items %}
+            <li>{{ sketch }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+          {% endif %}
         </div>
-        <div class="sketch-grid">
-          {% for sketch in blueprint.design_sketches.items %}
-          <div class="sketch-card">
-            <p>{{ sketch }}</p>
+        <div class="pack-colors">
+          <p class="pack-style-title">Colorways</p>
+          {% if blueprint.colorways %}
+          <div class="pack-color-swatches">
+            {% for swatch in blueprint.colorways %}
+            <span class="pack-swatch" style="background: {{ swatch.hex }};" title="{{ swatch.name }}"></span>
+            {% endfor %}
           </div>
-          {% endfor %}
+          <ul class="pack-color-notes">
+            {% for swatch in blueprint.colorways %}
+            <li>
+              <strong>{{ swatch.name }}</strong>
+              {% if swatch.description %}
+              <span>{{ swatch.description }}</span>
+              {% endif %}
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="pack-overview-note">Palette to be confirmed.</p>
+          {% endif %}
         </div>
       </section>
 
       {% if blueprint.footer_note %}
-      <footer class="page-footer">
+      <footer class="pack-footer">
         <p>{{ blueprint.footer_note }}</p>
       </footer>
       {% endif %}
