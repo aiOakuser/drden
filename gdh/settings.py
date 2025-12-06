@@ -314,79 +314,55 @@ CSRF_FAILURE_VIEW = "designer_portfolio.views.csrf_failure"
 # --- Database (Prefer DATABASE_URL for persistent DB in production) ---
 ENV = (os.getenv("ENV") or "").lower()
 DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("DB_URL")
+_POSTGRES_SCHEMES = {"postgres", "postgresql", "psql", "pgsql"}
 
-def _db_settings_from_url(database_url: str):
+
+def _db_settings_from_url(database_url: str) -> dict[str, str]:
     parsed = urlparse(database_url)
     scheme = (parsed.scheme or "").lower()
 
-    if scheme in {"postgres", "postgresql", "psql", "pgsql"}:
-        engine = "django.db.backends.postgresql"
-    elif scheme == "mysql":
-        engine = "django.db.backends.mysql"
-    elif scheme == "sqlite":
-        engine = "django.db.backends.sqlite3"
-    else:
-        raise ValueError(f"Unsupported DATABASE_URL scheme: {scheme}")
+    if scheme not in _POSTGRES_SCHEMES:
+        raise ImproperlyConfigured(
+            "DATABASE_URL must use a PostgreSQL scheme (e.g. postgres://username:password@host:port/dbname)."
+        )
 
-    if engine.endswith("sqlite3"):
-        name = parsed.path or (BASE_DIR / "db.sqlite3")
-    else:
-        # strip leading slash in /dbname
-        name = parsed.path[1:] if parsed.path.startswith("/") else parsed.path
+    path = parsed.path or ""
+    if path.startswith("/"):
+        path = path[1:]
+
+    host = parsed.hostname or os.getenv("DB_HOST", "127.0.0.1")
+    port = parsed.port or os.getenv("DB_PORT", "5432")
 
     return {
-        "ENGINE": engine,
-        "NAME": str(name),
-        "USER": unquote(parsed.username or ""),
-        "PASSWORD": unquote(parsed.password or ""),
-        "HOST": parsed.hostname or "",
-        "PORT": parsed.port or "",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": unquote(path or os.getenv("DB_NAME", "designer_db")),
+        "USER": unquote(parsed.username or os.getenv("DB_USER", "postgres")),
+        "PASSWORD": unquote(parsed.password or os.getenv("DB_PASSWORD", "")),
+        "HOST": host,
+        "PORT": str(port),
         "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
     }
+
+
+def _db_settings_from_env() -> dict[str, str]:
+    return {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("DB_NAME", "designer_db"),
+        "USER": os.getenv("DB_USER", "postgres"),
+        "PASSWORD": os.getenv("DB_PASSWORD", "postgres"),
+        "HOST": os.getenv("DB_HOST", "127.0.0.1"),
+        "PORT": os.getenv("DB_PORT", "5432"),
+        "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
+    }
+
 
 if DATABASE_URL:
     DATABASES = {"default": _db_settings_from_url(DATABASE_URL)}
 else:
-    # Default to SQLite unless DB_ENGINE is explicitly set.
-    configured_engine = os.getenv("DB_ENGINE") or "django.db.backends.sqlite3"
-    db_host_env = os.getenv("DB_HOST", "")
-    db_name_env = os.getenv("DB_NAME", "")
-    db_user_env = os.getenv("DB_USER", "")
+    DATABASES = {"default": _db_settings_from_env()}
 
-    default_name = (
-        str(BASE_DIR / "db.sqlite3") if configured_engine.endswith("sqlite3") else (db_name_env or "postgres")
-    )
-
-    DATABASES = {
-        "default": {
-            "ENGINE": configured_engine,
-            "NAME": os.getenv("DB_NAME", default_name),
-            "USER": os.getenv("DB_USER", ""),
-            "PASSWORD": os.getenv("DB_PASSWORD", ""),
-            "HOST": os.getenv("DB_HOST", ""),
-            "PORT": os.getenv("DB_PORT", ""),
-        }
-    }
-
-    if not str(DATABASES["default"]["ENGINE"]).endswith("sqlite3"):
-        DATABASES["default"]["CONN_MAX_AGE"] = int(os.getenv("DB_CONN_MAX_AGE", "60"))
-
-# Fail fast if SQLite is configured in production-like environments.
-engine_is_sqlite = DATABASES["default"]["ENGINE"].endswith("sqlite3")
-production_like = (not DEBUG)
-enforce_persistent_db = os.getenv("ENFORCE_PERSISTENT_DB", "False") == "True"
-
-if production_like and engine_is_sqlite and enforce_persistent_db:
-    raise ImproperlyConfigured(
-        "SQLite is configured in a production-like environment. Set DATABASE_URL or Postgres DB_* env vars to use a persistent database."
-    )
-
-# Warn in any other non-debug scenario as an extra safeguard
-if not DEBUG and engine_is_sqlite:
-    warnings.warn(
-        "SQLite is configured while DEBUG=False. Configure a persistent database via DATABASE_URL to avoid data loss.",
-        RuntimeWarning,
-    )
+if DATABASES["default"]["ENGINE"] != "django.db.backends.postgresql":
+    raise ImproperlyConfigured("Only PostgreSQL is supported for the default database.")
 
 # --- Password validation ---
 AUTH_PASSWORD_VALIDATORS = [

@@ -8,7 +8,7 @@
 
 - **`designer/`** - Django project settings and main URL routing
 - **`designer_portfolio/`** - Main application containing all business logic
-- **Database**: SQLite for local dev, configurable for Postgres in production via environment variables
+- **Database**: PostgreSQL everywhere; configure via `DATABASE_URL`/`DB_*` env vars
 
 ### Key Models & Relationships
 
@@ -71,8 +71,8 @@ python manage.py loaddata designer_portfolio/fixtures/brand.json
 
 ## Environment Configuration
 
-- **Local development**: Uses SQLite, no environment variables required
-- **Production**: Set `DB_ENGINE`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`
+- **Local development**: Requires PostgreSQL; see `.env.local` for default credentials
+- **Production**: Set `DATABASE_URL` or the `DB_*` variables for your PostgreSQL cluster
 - **Caching**: Redis in production (`REDIS_URL`), local memory cache in development
 - **Security**: Set `SECRET_KEY`, `DEBUG=False` for production
 
