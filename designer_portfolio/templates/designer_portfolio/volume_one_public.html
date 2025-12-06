@@ -99,6 +99,13 @@
       .cta.secondary {
         border-color: rgba(255, 255, 255, 0.25);
       }
+      .cta.tertiary {
+        border-color: rgba(255, 255, 255, 0.15);
+        color: #e0e7ff;
+      }
+      .cta.tertiary:hover {
+        border-color: #a855f7;
+      }
       .profile-card {
         display: flex;
         gap: 18px;
@@ -259,6 +266,78 @@
         letter-spacing: 0.1em;
         text-transform: uppercase;
       }
+      .design-pack-section {
+        margin-top: 56px;
+      }
+      .design-pack-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .design-pack-note {
+        max-width: 420px;
+        color: #cbd5f5;
+        margin: 0;
+      }
+      .design-pack-grid {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      }
+      .design-pack-card {
+        border-radius: 22px;
+        padding: 20px;
+        background: rgba(15, 23, 42, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .design-pack-card h3 {
+        margin: 0;
+        font-size: 22px;
+      }
+      .design-pack-subtitle {
+        margin: 0;
+        color: #cbd5f5;
+      }
+      .design-pack-badge {
+        margin: 0;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: #fef3c7;
+      }
+      .design-pack-copy {
+        margin: 0;
+        padding-left: 18px;
+        color: #e5e7eb;
+        font-size: 14px;
+      }
+      .design-pack-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        font-size: 13px;
+        color: #a5b4fc;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .design-pack-swatches {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .design-pack-swatch {
+        width: 26px;
+        height: 26px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: var(--chip-color, #fff);
+        box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.35);
+      }
       .sync-line {
         margin-top: 16px;
         font-size: 13px;
@@ -413,6 +492,59 @@
           | source: {{ feed_source|default:"fallback" }} | powered by VolumeOne ingestion
         </p>
       </section>
+
+      {% if design_packs %}
+      <section class="design-pack-section">
+        <div class="design-pack-header">
+          <div>
+            <p class="hero-eyebrow">VolumeOne design packs</p>
+            <h2 style="margin: 0">Upload-ready TekPak blueprints</h2>
+          </div>
+          <p class="design-pack-note">
+            Ready-to-share breakdowns for Desert Shadows and the Fuel Fortress programs so the VolumeOne desk can brief factories in minutes.
+          </p>
+        </div>
+        <div class="design-pack-grid">
+          {% for pack in design_packs %}
+          <article class="design-pack-card">
+            {% if pack.badge or pack.icon %}
+            <p class="design-pack-badge">
+              {% if pack.icon %}{{ pack.icon }} {% endif %}
+              {{ pack.badge }}
+            </p>
+            {% endif %}
+            <h3>{{ pack.title }}</h3>
+            {% if pack.subtitle %}
+            <p class="design-pack-subtitle">{{ pack.subtitle }}</p>
+            {% endif %}
+            {% if pack.supporting_copy %}
+            <ul class="design-pack-copy">
+              {% for line in pack.supporting_copy %}
+              <li>{{ line }}</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+            <div class="design-pack-meta">
+              {% if pack.project_breakdown_label %}
+              <span>{{ pack.project_breakdown_label }}</span>
+              {% endif %}
+              <span>{{ pack.stage_count }} stages</span>
+            </div>
+            {% if pack.colorways %}
+            <div class="design-pack-swatches">
+              {% for swatch in pack.colorways %}
+              <span class="design-pack-swatch" style="--chip-color: {{ swatch.hex }}" title="{{ swatch.name }}"></span>
+              {% endfor %}
+            </div>
+            {% endif %}
+            <a class="cta tertiary" href="{{ pack.url }}" target="_blank" rel="noopener">
+              Open design pack ->
+            </a>
+          </article>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
 
       <section class="footnotes">
         <div class="footnote-card">

@@ -273,6 +273,16 @@ VOLUMEONE_FALLBACK_SLIDES = [
 ]
 
 
+VOLUMEONE_DESIGN_PACK_SLUGS = (
+    "desert-shadows",
+    "fuel-fortress-aero",
+    "fuel-fortress-outpost",
+    "fuel-fortress-rally",
+    "fuel-fortress-signal",
+    "fuel-fortress-monolith",
+)
+
+
 def _get_public_contact_email() -> str:
     return (
         getattr(settings, "AIOAK_CONTACT_EMAIL", "")
@@ -453,6 +463,42 @@ def get_volumeone_feed(limit: int = VOLUMEONE_DEFAULT_SLIDES) -> dict:
         fallback = _volumeone_fallback_feed(limit)
         cache.set(cache_key, fallback, 300)
         return fallback
+
+
+def _get_volumeone_design_packs() -> list[dict]:
+    """Collect TekPak blueprint metadata for the VolumeOne showcase."""
+    packs: list[dict] = []
+    for slug in VOLUMEONE_DESIGN_PACK_SLUGS:
+        blueprint = get_techpack_blueprint(slug)
+        if not blueprint:
+            continue
+
+        hero = blueprint.get("hero", {})
+        project_breakdown = blueprint.get("project_breakdown", {})
+        colorways = (blueprint.get("colorways") or [])[:3]
+
+        try:
+            techpack_url = reverse("generate_techpack", args=[slug])
+        except NoReverseMatch:
+            techpack_url = f"/generate-techpack/{slug}/"
+
+        packs.append(
+            {
+                "slug": slug,
+                "title": hero.get("title")
+                or blueprint.get("title")
+                or slug.replace("-", " ").title(),
+                "subtitle": hero.get("subtitle") or project_breakdown.get("kicker", ""),
+                "badge": hero.get("badge", ""),
+                "icon": hero.get("icon", ""),
+                "supporting_copy": (hero.get("supporting_copy") or [])[:2],
+                "project_breakdown_label": project_breakdown.get("label", ""),
+                "stage_count": len(blueprint.get("stages") or []),
+                "colorways": colorways,
+                "url": techpack_url,
+            }
+        )
+    return packs
 
 
 def _base64url_from_bytes(value: bytes) -> str:
@@ -1988,6 +2034,7 @@ class VolumeOneShowcaseView(TemplateView):
                 "feed_timestamp": feed.get("fetched_at"),
                 "instagram_profile_url": VOLUMEONE_INSTAGRAM_PROFILE_URL,
                 "instagram_username": VOLUMEONE_INSTAGRAM_USERNAME,
+                "design_packs": _get_volumeone_design_packs(),
             }
         )
         return context

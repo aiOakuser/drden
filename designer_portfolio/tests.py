@@ -526,4 +526,9 @@ class VolumeOneViewTests(TestCase):
         self.assertContains(response, "RunVolumeOne Collective")
         self.assertContains(response, feed["slides"][0]["caption"])
         self.assertContains(response, feed["slides"][0]["permalink"])
+        self.assertContains(response, "Open design pack")
+        self.assertIn("design_packs", response.context)
+        self.assertTrue(response.context["design_packs"])
+        first_pack_title = TEKPAK_BLUEPRINTS["desert-shadows"]["hero"]["title"]
+        self.assertContains(response, first_pack_title)
         mock_feed.assert_called_once()
