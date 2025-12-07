@@ -76,6 +76,11 @@
         </label>
 
         <label>
+          <span>Subtitle <small>(optional)</small></span>
+          <input type="text" name="subtitle" id="projectSubtitle" placeholder="Enter subtitle to show under the cover" />
+        </label>
+
+        <label>
           <span>Client / Brand <small>(optional)</small></span>
           <input type="text" name="client_name" id="clientName" placeholder="Client or brand name" />
         </label>
@@ -159,6 +164,7 @@
     const cardsContainer = document.getElementById("templateCards");
     const templateIdInput = document.getElementById("templateIdInput");
     const projectTitleInput = document.getElementById("projectTitle");
+    const projectSubtitleInput = document.getElementById("projectSubtitle");
     const statusEl = document.getElementById("projectFormStatus");
     const previewTitle = document.getElementById("previewTitle");
     const previewSubtitle = document.getElementById("previewSubtitle");
@@ -181,8 +187,17 @@
       }
       previewTitle.textContent =
         (template.cover && template.cover.titlePlaceholder) || template.name || "Project";
+      const templateSubtitle =
+        (template.cover &&
+          (template.cover.subtitle || template.cover.subtitlePlaceholder)) ||
+        "PROJECT BREAKDOWN";
+      if (projectSubtitleInput && !projectSubtitleInput.value.trim()) {
+        projectSubtitleInput.value = templateSubtitle;
+      }
+      previewSubtitle.dataset.defaultSubtitle = templateSubtitle;
       previewSubtitle.textContent =
-        (template.cover && template.cover.subtitle) || "PROJECT BREAKDOWN";
+        (projectSubtitleInput && projectSubtitleInput.value.trim()) ||
+        templateSubtitle;
       previewCategory.textContent = template.category || "Template";
 
       if (!projectTitleInput.value.trim()) {
@@ -268,6 +283,14 @@
 
     selectTemplate(selectedTemplateId);
 
+    if (projectSubtitleInput) {
+      projectSubtitleInput.addEventListener("input", () => {
+        const fallback = previewSubtitle.dataset.defaultSubtitle || "PROJECT BREAKDOWN";
+        const value = projectSubtitleInput.value.trim();
+        previewSubtitle.textContent = value || fallback;
+      });
+    }
+
     const projectForm = document.getElementById("projectForm");
     if (projectForm) {
       projectForm.addEventListener("submit", async (event) => {
@@ -279,12 +302,13 @@
         formData.set("template_id", selectedTemplateId);
 
         const payload = {
-          template_id: formData.get("template_id"),
+          templateId: formData.get("template_id"),
           title: formData.get("title"),
-          client_name: formData.get("client_name"),
+          subtitle: formData.get("subtitle"),
+          clientName: formData.get("client_name"),
           season: formData.get("season"),
-          product_type: formData.get("product_type"),
-          product_count: Number(formData.get("product_count") || 1),
+          productType: formData.get("product_type"),
+          productCount: Number(formData.get("product_count") || 1),
         };
 
         const csrfToken = projectForm.querySelector("[name=csrfmiddlewaretoken]").value;

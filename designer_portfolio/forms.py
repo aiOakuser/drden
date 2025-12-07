@@ -9,8 +9,8 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils import timezone
 from django.db.models import Q
 from datetime import timedelta
-from .models import SubscriptionPlan, UserSubscription, ProblemReport, Project
-from .project_templates import get_project_template, ProjectTemplateNotFound
+from .models import SubscriptionPlan, UserSubscription, ProblemReport, Project, Template
+from .project_templates import serialize_template_instance
 from .auth_utils import ensure_designer_access
 from .emails import notify_password_reset_request
 
@@ -409,6 +409,7 @@ class ContactForm(forms.Form):
 class ProjectCreateForm(forms.Form):
     template_id = forms.CharField(max_length=120)
     title = forms.CharField(max_length=255)
+    subtitle = forms.CharField(max_length=255, required=False)
     client_name = forms.CharField(max_length=255, required=False)
     season = forms.CharField(max_length=10, required=False)
     product_type = forms.CharField(max_length=40, required=False, initial=Project.ProductType.HOODIE)
@@ -416,16 +417,20 @@ class ProjectCreateForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._template = None
+        self._template_instance = None
+        self._template_snapshot = None
 
     def clean_template_id(self):
         template_id = (self.cleaned_data.get("template_id") or "").strip()
         if not template_id:
             raise forms.ValidationError("Choose a template to continue.")
         try:
-            self._template = get_project_template(template_id)
-        except ProjectTemplateNotFound as exc:
-            raise forms.ValidationError(str(exc))
+            self._template_instance = (
+                Template.objects.prefetch_related("stages", "product_blocks")
+                .get(id=template_id)
+            )
+        except Template.DoesNotExist:
+            raise forms.ValidationError("Template not found.")
         return template_id
 
     def clean_season(self):
@@ -448,5 +453,11 @@ class ProjectCreateForm(forms.Form):
         return count
 
     @property
+    def template_instance(self):
+        return self._template_instance
+
+    @property
     def template_data(self):
-        return self._template or {}
+        if self._template_snapshot is None and self._template_instance is not None:
+            self._template_snapshot = serialize_template_instance(self._template_instance)
+        return self._template_snapshot or {}

@@ -10,6 +10,45 @@ class BrandAdmin(admin.ModelAdmin):
     search_fields = ("name", "tagline")
 
 
+# ---------------- Template Library ----------------
+class TemplateStageInline(admin.TabularInline):
+    model = m.TemplateStage
+    extra = 0
+    fields = ("stage_index", "title", "layout_hint")
+
+
+class TemplateProductBlockInline(admin.TabularInline):
+    model = m.TemplateProductBlock
+    extra = 0
+    fields = ("block_index", "label", "title_placeholder")
+
+
+@admin.register(m.Template)
+class TemplateAdmin(admin.ModelAdmin):
+    list_display = ("id", "name", "layout_key", "updated_at")
+    search_fields = ("id", "name")
+    list_filter = ("layout_key",)
+    readonly_fields = ("created_at", "updated_at")
+    fieldsets = (
+        (
+            None,
+            {
+                "fields": (
+                    "id",
+                    "name",
+                    "layout_key",
+                    "cover_title_placeholder",
+                    "cover_subtitle_placeholder",
+                    "summary",
+                    "metadata",
+                )
+            },
+        ),
+        ("Timestamps", {"fields": ("created_at", "updated_at")}),
+    )
+    inlines = [TemplateStageInline, TemplateProductBlockInline]
+
+
 # ---------------- Techpack (inline for Design) ----------------
 class TechpackInline(admin.StackedInline):
     model = m.Techpack
@@ -58,14 +97,14 @@ class DesignAdmin(admin.ModelAdmin):
 class ProjectStageInline(admin.TabularInline):
     model = m.ProjectStage
     extra = 0
-    fields = ("stage_number", "title", "order")
+    fields = ("stage_number", "title", "order", "template_stage")
     show_change_link = True
 
 
 class ProjectProductSpecInline(admin.TabularInline):
     model = m.ProjectProductSpec
     extra = 0
-    fields = ("title", "layout_key")
+    fields = ("block_index", "label", "title", "code", "layout_key")
     show_change_link = True
 
 
@@ -82,6 +121,7 @@ class ProjectAdmin(admin.ModelAdmin):
                 "fields": (
                     "owner",
                     "title",
+                    "subtitle",
                     "client_name",
                     "season",
                     "product_type",
@@ -120,9 +160,9 @@ class ProjectStageBulletInline(admin.TabularInline):
 
 @admin.register(m.ProjectStage)
 class ProjectStageAdmin(admin.ModelAdmin):
-    list_display = ("project", "stage_number", "title", "order")
-    list_filter = ("project__template_name",)
-    search_fields = ("title", "project__title")
+    list_display = ("project", "stage_number", "title", "order", "template_stage")
+    list_filter = ("project__template_name", "template_stage__template__name")
+    search_fields = ("title", "project__title", "template_stage__title")
     inlines = [ProjectStageBulletInline]
 
 
@@ -134,8 +174,8 @@ class ProjectProductSpecFieldInline(admin.TabularInline):
 
 @admin.register(m.ProjectProductSpec)
 class ProjectProductSpecAdmin(admin.ModelAdmin):
-    list_display = ("project", "title", "layout_key")
-    search_fields = ("title", "project__title")
+    list_display = ("project", "label", "title", "code", "layout_key")
+    search_fields = ("title", "project__title", "label", "code")
     inlines = [ProjectProductSpecFieldInline]
 
 

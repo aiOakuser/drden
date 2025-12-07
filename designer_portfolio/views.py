@@ -72,6 +72,7 @@ from .models import (
     ForumNotification,
     ForumUserProfile,
     ProblemReport,
+    Template,
     Project,
     ProjectStage,
     ProjectStageBullet,
@@ -1148,17 +1149,85 @@ def _coerce_spec_field(field_definition):
     return key, label
 
 
-def _copy_template_blueprint(project: Project, template_definition: dict) -> None:
-    stages = template_definition.get("stages") or []
-    for idx, stage_info in enumerate(stages, start=1):
+def _copy_template_blueprint(project: Project, template_source, snapshot: dict | None = None) -> None:
+    if isinstance(template_source, Template):
+        stage_entries = [
+            {
+                "template_stage": stage,
+                "stage_number": stage.stage_index or order,
+                "title": stage.title or f"Stage {order}",
+                "layout_hint": stage.layout_hint or "",
+                "items": list(stage.default_items or []),
+            }
+            for order, stage in enumerate(template_source.stages.all(), start=1)
+        ]
+        block_entries = [
+            {
+                "template_block": block,
+                "block_index": block.block_index or order,
+                "label": block.label or template_source.name,
+                "title": block.title_placeholder or block.label or template_source.name,
+                "code": block.code_placeholder or "",
+                "default_views": list(block.default_views or []),
+                "details": block.details_schema or {},
+            }
+            for order, block in enumerate(template_source.product_blocks.all(), start=1)
+        ]
+    else:
+        template_definition = template_source or {}
+        stage_entries = []
+        for idx, stage_info in enumerate(template_definition.get("stages") or [], start=1):
+            items = stage_info.get("defaultBullets") or stage_info.get("defaultItems") or []
+            stage_entries.append(
+                {
+                    "template_stage": None,
+                    "stage_number": stage_info.get("stageNumber") or idx,
+                    "title": stage_info.get("title") or f"Stage {idx}",
+                    "layout_hint": stage_info.get("layoutHint", ""),
+                    "items": [str(item).strip() for item in items if str(item).strip()],
+                }
+            )
+
+        block_entries = []
+        product_blocks = template_definition.get("productBlocks") or []
+        if not product_blocks and template_definition.get("productSpec"):
+            spec = template_definition["productSpec"]
+            product_blocks = [
+                {
+                    "label": template_definition.get("name") or template_definition.get("id") or "Product",
+                    "titlePlaceholder": spec.get("title") or "Product Spec",
+                    "codePlaceholder": spec.get("code") or "",
+                    "defaultViews": spec.get("defaultViews") or [],
+                    "detailsTemplate": {"fields": spec.get("fields") or []},
+                }
+            ]
+
+        for idx, block in enumerate(product_blocks, start=1):
+            block_entries.append(
+                {
+                    "template_block": None,
+                    "block_index": block.get("blockIndex") or block.get("block_index") or idx,
+                    "label": block.get("label") or template_definition.get("name") or "Product",
+                    "title": block.get("titlePlaceholder") or block.get("title") or "Product Spec",
+                    "code": block.get("codePlaceholder") or block.get("code") or "",
+                    "default_views": block.get("defaultViews") or [],
+                    "details": block.get("detailsTemplate") or block.get("details_schema") or {},
+                }
+            )
+
+    stages_to_use = stage_entries or []
+    for idx, stage_data in enumerate(stages_to_use, start=1):
+        items = stage_data.get("items") or []
         stage = ProjectStage.objects.create(
             project=project,
-            stage_number=stage_info.get("stageNumber") or idx,
-            title=stage_info.get("title") or f"Stage {idx}",
-            layout_hint=stage_info.get("layoutHint", ""),
+            template_stage=stage_data.get("template_stage"),
+            stage_number=stage_data.get("stage_number") or idx,
+            title=stage_data.get("title") or f"Stage {idx}",
+            layout_hint=stage_data.get("layout_hint", ""),
             order=idx,
+            items=items,
         )
-        for bullet_idx, bullet in enumerate(stage_info.get("defaultBullets") or [], start=1):
+        for bullet_idx, bullet in enumerate(items, start=1):
             text = (bullet or "").strip()
             if not text:
                 continue
@@ -1168,14 +1237,38 @@ def _copy_template_blueprint(project: Project, template_definition: dict) -> Non
                 text=text,
             )
 
-    product_spec = template_definition.get("productSpec") or {}
-    if product_spec:
+    blocks_to_use = block_entries or []
+    if not blocks_to_use and snapshot:
+        spec = snapshot.get("productSpec") or {}
+        fields = spec.get("fields") or []
+        block = ProjectProductSpec.objects.create(
+            project=project,
+            title=spec.get("title") or "Product Spec",
+            layout_key=spec.get("layoutHint", ""),
+        )
+        for order, field_definition in enumerate(fields, start=1):
+            field_key, label = _coerce_spec_field(field_definition)
+            ProjectProductSpecField.objects.create(
+                product_spec=block,
+                field_key=field_key,
+                label=label,
+                order=order,
+            )
+        return
+
+    for block_data in blocks_to_use:
+        details = block_data.get("details") or {}
         spec = ProjectProductSpec.objects.create(
             project=project,
-            title=product_spec.get("title") or "Product Spec",
-            layout_key=product_spec.get("layoutHint", ""),
+            template_block=block_data.get("template_block"),
+            block_index=block_data.get("block_index") or 1,
+            label=block_data.get("label") or "",
+            title=block_data.get("title") or "Product Spec",
+            code=block_data.get("code") or "",
+            layout_key=details.get("layoutHint", ""),
+            default_views=block_data.get("default_views") or [],
         )
-        for order, field_definition in enumerate(product_spec.get("fields") or [], start=1):
+        for order, field_definition in enumerate(details.get("fields") or [], start=1):
             field_key, label = _coerce_spec_field(field_definition)
             ProjectProductSpecField.objects.create(
                 product_spec=spec,
@@ -2553,7 +2646,17 @@ def create_project_api(request):
     except (AttributeError, ValueError, UnicodeDecodeError):
         payload = request.POST.dict()
 
-    form = ProjectCreateForm(payload)
+    normalized = {
+        "template_id": payload.get("templateId") or payload.get("template_id"),
+        "title": payload.get("title") or payload.get("projectTitle"),
+        "subtitle": payload.get("subtitle") or payload.get("coverSubtitle"),
+        "client_name": payload.get("clientName") or payload.get("client_name"),
+        "season": payload.get("season"),
+        "product_type": payload.get("productType") or payload.get("product_type"),
+        "product_count": payload.get("productCount") or payload.get("product_count") or 1,
+    }
+
+    form = ProjectCreateForm(normalized)
     if not form.is_valid():
         error_data = {
             field: [message["message"] for message in messages]
@@ -2561,38 +2664,54 @@ def create_project_api(request):
         }
         return JsonResponse({"errors": error_data}, status=400)
 
+    template_instance = form.template_instance
     template_definition = copy.deepcopy(form.template_data)
     summary_lines = template_definition.get("summary") or PROJECT_TEMPLATE_DEFAULT_SUMMARY
+    cover_snapshot = template_definition.get("cover") or {}
 
     with transaction.atomic():
         project = Project.objects.create(
             owner=request.user,
-            template_id=form.cleaned_data["template_id"],
-            template_name=template_definition.get("name") or template_definition.get("id") or "Template",
+            template_id=template_instance.id if template_instance else form.cleaned_data["template_id"],
+            template_name=template_definition.get("name") or (template_instance.name if template_instance else form.cleaned_data["template_id"]) or "Template",
             template_category=template_definition.get("category", ""),
             template_layout_key=template_definition.get("layoutKey", ""),
             template_snapshot=template_definition,
             title=form.cleaned_data["title"],
+            subtitle=form.cleaned_data.get("subtitle")
+            or cover_snapshot.get("subtitle")
+            or cover_snapshot.get("subtitlePlaceholder")
+            or "",
             client_name=form.cleaned_data.get("client_name", ""),
             season=form.cleaned_data.get("season", ""),
             product_type=form.cleaned_data["product_type"],
             product_count=form.cleaned_data["product_count"],
             preview_copy=summary_lines,
             metadata={
-                "cover": template_definition.get("cover", {}),
+                "cover": cover_snapshot,
                 "thumbnail": template_definition.get("thumbnail", {}),
+                "subtitle": form.cleaned_data.get("subtitle")
+                or cover_snapshot.get("subtitle")
+                or cover_snapshot.get("subtitlePlaceholder")
+                or "",
             },
         )
-        _copy_template_blueprint(project, template_definition)
+        _copy_template_blueprint(project, template_instance or template_definition, snapshot=template_definition)
 
-    return JsonResponse(
-        {
-            "projectId": project.pk,
-            "redirectUrl": reverse("project_editor", args=[project.pk]),
-            "message": "Project created.",
-        },
-        status=201,
-    )
+    created_iso = project.created_at.astimezone(dt_timezone.utc).isoformat().replace("+00:00", "Z")
+    response_payload = {
+        "id": project.pk,
+        "templateId": project.template_id,
+        "title": project.title,
+        "subtitle": project.subtitle,
+        "clientName": project.client_name,
+        "season": project.season,
+        "productType": project.product_type,
+        "createdAt": created_iso,
+        "redirectUrl": reverse("project_editor", args=[project.pk]),
+        "message": "Project created.",
+    }
+    return JsonResponse(response_payload, status=201)
 
 class PendingDesignersView(ListView):
     template_name = "designer_portfolio/pending_designers.html"

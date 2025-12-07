@@ -8,9 +8,17 @@ from django.core import mail
 from django.utils import timezone
 from social_core.exceptions import AuthForbidden
 
-from .models import DesignerProfile, UserSubscription, ProblemReport, Project
+from .models import (
+    DesignerProfile,
+    UserSubscription,
+    ProblemReport,
+    Project,
+    Template,
+    TemplateStage,
+    TemplateProductBlock,
+)
 from .social_pipeline import generate_username, ensure_verified_email, sync_user_details
-from .project_templates import load_project_templates
+from .project_templates import load_project_templates, refresh_project_template_cache
 from .views import _resolve_post_login_redirect
 from .tekpak_blueprints import TEKPAK_BLUEPRINTS
 
@@ -388,26 +396,128 @@ class ContactViewTests(TestCase):
     CSRF_COOKIE_SECURE=False,
     STORAGES=TEST_STORAGE_BACKENDS,
 )
+class TemplateLoaderTests(TestCase):
+    def setUp(self) -> None:
+        Template.objects.all().delete()
+        TemplateStage.objects.all().delete()
+        TemplateProductBlock.objects.all().delete()
+
+    def test_load_project_templates_prefers_database(self):
+        template = Template.objects.create(
+            id="db_template",
+            name="Database Template",
+            layout_key="db-layout",
+            cover_title_placeholder="DB TITLE",
+            cover_subtitle_placeholder="DB SUBTITLE",
+            summary=["Line 1"],
+            metadata={"cover": {"titlePlaceholder": "DB TITLE", "subtitle": "DB SUBTITLE"}},
+        )
+        TemplateStage.objects.create(
+            template=template,
+            stage_index=1,
+            title="Stage One",
+            default_items=["Item A", "Item B"],
+        )
+        TemplateProductBlock.objects.create(
+            template=template,
+            block_index=1,
+            label="RUN",
+            title_placeholder="DB PRODUCT",
+            code_placeholder="CODE-1",
+            default_views=["FRONT"],
+            details_schema={"fields": [{"key": "styleNumber", "label": "Style #"}]},
+        )
+        refresh_project_template_cache()
+
+        templates = load_project_templates()
+        self.assertEqual(len(templates), 1)
+        payload = templates[0]
+        self.assertEqual(payload["id"], template.id)
+        self.assertEqual(payload["stages"][0]["defaultBullets"], ["Item A", "Item B"])
+        self.assertTrue(payload["productBlocks"])
+        block = payload["productBlocks"][0]
+        self.assertEqual(block["detailsTemplate"]["fields"][0]["key"], "styleNumber")
+
+
+@override_settings(
+    SECURE_SSL_REDIRECT=False,
+    SESSION_COOKIE_SECURE=False,
+    CSRF_COOKIE_SECURE=False,
+    STORAGES=TEST_STORAGE_BACKENDS,
+)
 class ProjectCreationTests(TestCase):
     def setUp(self) -> None:
+        Template.objects.all().delete()
+        TemplateStage.objects.all().delete()
+        TemplateProductBlock.objects.all().delete()
         self.user = User.objects.create_user(
             username="project-maker",
             email="maker@example.com",
             password="StrongPass123!",
             is_active=True,
         )
+        self.template = Template.objects.create(
+            id="fuel_fortress",
+            name="Fuel Fortress Project Breakdown",
+            layout_key="fuel_fortress",
+            cover_title_placeholder="FUEL FORTRESS",
+            cover_subtitle_placeholder="RUN VOLUME ONE",
+            summary=["Stage coverage", "Product block coverage"],
+            metadata={
+                "category": "Run Volume One",
+                "thumbnail": {"background": "#000000"},
+                "cover": {
+                    "titlePlaceholder": "FUEL FORTRESS",
+                    "subtitle": "RUN VOLUME ONE",
+                },
+            },
+        )
+        self.stage_items = [
+            "Technical flats/line sheet",
+            "Fabric & trim sourcing",
+        ]
+        TemplateStage.objects.create(
+            template=self.template,
+            stage_index=1,
+            title="STAGE 01 / DESIGN & TECH DEV.",
+            default_items=self.stage_items,
+            layout_hint="two-column",
+        )
+        TemplateStage.objects.create(
+            template=self.template,
+            stage_index=2,
+            title="STAGE 02 / PRE-PRODUCTION",
+            default_items=["Lab dips", "Fit sample development"],
+        )
+        self.product_block = TemplateProductBlock.objects.create(
+            template=self.template,
+            block_index=1,
+            label="RUNVOLUMEONE",
+            title_placeholder="AERO HOODIE",
+            code_placeholder="[CODE: HAR#-2621]",
+            default_views=["FRONT", "BACK", "SIDE"],
+            details_schema={
+                "layoutHint": "single_column_specs",
+                "fields": [
+                    {"key": "styleNumber", "label": "Style #"},
+                    {"key": "description", "label": "Description"},
+                ],
+            },
+        )
+        refresh_project_template_cache()
         self.templates = load_project_templates()
         self.primary_template = self.templates[0]
 
     def test_create_project_from_template(self):
         self.client.login(username="project-maker", password="StrongPass123!")
         payload = {
-            "template_id": self.primary_template["id"],
+            "templateId": self.primary_template["id"],
             "title": "Fuel Fortress Launch",
-            "client_name": "Run Volume One",
+            "subtitle": "MERCH DEVELOPMENT LINE PRESENTED BY RUN VOLUME ONE",
+            "clientName": "Run Volume One",
             "season": "SS25",
-            "product_type": "hoodie",
-            "product_count": 2,
+            "productType": "hoodie",
+            "productCount": 2,
         }
         response = self.client.post(
             reverse("project_create_api"),
@@ -415,21 +525,33 @@ class ProjectCreationTests(TestCase):
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 201)
+        body = response.json()
+        self.assertEqual(body["subtitle"], payload["subtitle"])
+        self.assertIn("createdAt", body)
+        self.assertIn("redirectUrl", body)
+
         project = Project.objects.get()
         self.assertEqual(project.title, payload["title"])
-        self.assertEqual(project.template_id, payload["template_id"])
-        self.assertEqual(project.stages.count(), len(self.primary_template["stages"]))
-        self.assertTrue(project.product_specs.exists())
+        self.assertEqual(project.subtitle, payload["subtitle"])
+        self.assertEqual(project.template_id, payload["templateId"])
+        self.assertEqual(project.stages.count(), len(self.template.stages.all()))
+
+        stage = project.stages.order_by("stage_number").first()
+        self.assertIsNotNone(stage.template_stage)
+        self.assertListEqual(stage.items, self.stage_items)
+
         first_spec = project.product_specs.first()
-        self.assertEqual(first_spec.fields.count(), len(self.primary_template["productSpec"]["fields"]))
+        self.assertIsNotNone(first_spec)
+        self.assertEqual(first_spec.template_block, self.product_block)
+        self.assertEqual(first_spec.fields.count(), len(self.product_block.details_schema["fields"]))
 
     def test_invalid_template_returns_error(self):
         self.client.login(username="project-maker", password="StrongPass123!")
         payload = {
-            "template_id": "missing-template",
+            "templateId": "missing-template",
             "title": "Invalid Project",
-            "product_type": "hoodie",
-            "product_count": 1,
+            "productType": "hoodie",
+            "productCount": 1,
         }
         response = self.client.post(
             reverse("project_create_api"),

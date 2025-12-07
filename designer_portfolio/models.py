@@ -952,6 +952,66 @@ class ForumUserProfile(TimeStampedModel):
             return "Newcomer"
 
 
+# ---------------- Template Library ----------------
+class Template(TimeStampedModel):
+    id = models.CharField(primary_key=True, max_length=120)
+    name = models.CharField(max_length=255)
+    layout_key = models.CharField(max_length=120)
+    cover_title_placeholder = models.CharField(max_length=255)
+    cover_subtitle_placeholder = models.CharField(max_length=255)
+    summary = models.JSONField(default=list, blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        db_table = "templates"
+        ordering = ["name", "id"]
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def cover(self) -> dict[str, str]:
+        """Return cover settings as a dict with default fallbacks."""
+        return {
+            "titlePlaceholder": self.cover_title_placeholder,
+            "subtitlePlaceholder": self.cover_subtitle_placeholder,
+        }
+
+
+class TemplateStage(TimeStampedModel):
+    template = models.ForeignKey(Template, on_delete=models.CASCADE, related_name="stages")
+    stage_index = models.PositiveIntegerField()
+    title = models.CharField(max_length=200)
+    default_items = models.JSONField(default=list, blank=True)
+    layout_hint = models.CharField(max_length=120, blank=True)
+
+    class Meta:
+        db_table = "template_stages"
+        ordering = ["stage_index", "id"]
+        unique_together = [("template", "stage_index")]
+
+    def __str__(self):
+        return f"{self.template_id} – Stage {self.stage_index}"
+
+
+class TemplateProductBlock(TimeStampedModel):
+    template = models.ForeignKey(Template, on_delete=models.CASCADE, related_name="product_blocks")
+    block_index = models.PositiveIntegerField()
+    label = models.CharField(max_length=200)
+    title_placeholder = models.CharField(max_length=200)
+    code_placeholder = models.CharField(max_length=120, blank=True)
+    default_views = models.JSONField(default=list, blank=True)
+    details_schema = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        db_table = "template_product_blocks"
+        ordering = ["block_index", "id"]
+        unique_together = [("template", "block_index")]
+
+    def __str__(self):
+        return f"{self.template_id} – Block {self.block_index}"
+
+
 # ---------------- Project Templates & Breakdowns ----------------
 class Project(TimeStampedModel):
     class SeasonChoices(models.TextChoices):
@@ -975,6 +1035,7 @@ class Project(TimeStampedModel):
     template_snapshot = models.JSONField(default=dict, blank=True, help_text="Frozen copy of template JSON used at creation time.")
 
     title = models.CharField(max_length=255)
+    subtitle = models.CharField(max_length=255, blank=True)
     client_name = models.CharField(max_length=255, blank=True)
     season = models.CharField(max_length=10, choices=SeasonChoices.choices, blank=True)
     product_type = models.CharField(
@@ -994,7 +1055,14 @@ class Project(TimeStampedModel):
 
     @property
     def cover(self):
-        return self.template_snapshot.get("cover", {})
+        cover = self.template_snapshot.get("cover", {})
+        if not isinstance(cover, dict):
+            cover = {}
+        if self.subtitle:
+            cover = dict(cover)
+            cover["subtitle"] = self.subtitle
+            cover.setdefault("subtitlePlaceholder", self.subtitle)
+        return cover
 
     @property
     def summary_lines(self):
@@ -1003,10 +1071,18 @@ class Project(TimeStampedModel):
 
 class ProjectStage(TimeStampedModel):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="stages")
+    template_stage = models.ForeignKey(
+        TemplateStage,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="project_stages",
+    )
     stage_number = models.PositiveIntegerField(default=1)
     title = models.CharField(max_length=200)
     layout_hint = models.CharField(max_length=120, blank=True)
     order = models.PositiveIntegerField(default=1)
+    items = models.JSONField(default=list, blank=True)
 
     class Meta:
         ordering = ["order", "stage_number"]
@@ -1030,9 +1106,20 @@ class ProjectStageBullet(TimeStampedModel):
 
 class ProjectProductSpec(TimeStampedModel):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="product_specs")
+    template_block = models.ForeignKey(
+        TemplateProductBlock,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="project_products",
+    )
+    block_index = models.PositiveIntegerField(default=1)
+    label = models.CharField(max_length=200, blank=True)
     title = models.CharField(max_length=200)
     layout_key = models.CharField(max_length=120, blank=True)
     notes = models.TextField(blank=True)
+    code = models.CharField(max_length=120, blank=True)
+    default_views = models.JSONField(default=list, blank=True)
 
     class Meta:
         ordering = ["id"]
