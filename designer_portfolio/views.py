@@ -283,6 +283,504 @@ VOLUMEONE_DESIGN_PACK_SLUGS = (
 )
 
 
+def _build_template_library(entries: list[dict]) -> list[dict]:
+    templates: list[dict] = []
+    for entry in entries:
+        definition = entry["definition"]
+        product_blocks = definition.get("productBlocks") or []
+        primary_block = product_blocks[0] if product_blocks else {}
+        templates.append(
+            {
+                "id": definition.get("id", ""),
+                "name": definition.get("name", ""),
+                "summary": entry.get("summary", ""),
+                "layout": definition.get("layoutKey", ""),
+                "stage_count": len(definition.get("stages") or []),
+                "product_block_count": len(product_blocks),
+                "primary_views": ", ".join(primary_block.get("defaultViews", [])),
+                "primary_block_title": primary_block.get("titlePlaceholder", ""),
+                "primary_block_label": primary_block.get("label", ""),
+                "code_placeholder": primary_block.get("codePlaceholder", ""),
+                "json": json.dumps(definition, indent=2, ensure_ascii=False),
+            }
+        )
+    return templates
+
+
+_STREET_CIRCUIT_TEMPLATE = {
+    "id": "street_circuit",
+    "name": "Street Circuit Project Breakdown",
+    "layoutKey": "fuel_fortress",
+    "cover": {
+        "titlePlaceholder": "STREET CIRCUIT",
+        "subtitlePlaceholder": "MERCH DEVELOPMENT LINE PRESENTED BY RUN VOLUME ONE",
+    },
+    "stages": [
+        {
+            "id": "s1",
+            "title": "STAGE 01 / DESIGN & TECH DEV.",
+            "defaultItems": [
+                "Concept boards & reference pulls",
+                "Technical flats / line art",
+                "Style number creation & naming",
+                "Fabric & trim sourcing shortlist",
+                "Graphics / logo lockup exploration",
+            ],
+        },
+        {
+            "id": "s2",
+            "title": "STAGE 02 / PRE-PRODUCTION",
+            "defaultItems": [
+                "Fabric yardage cards & lab dips",
+                "Shrink / wash testing",
+                "Pattern draft & graded size set",
+                "Tech pack v1 (measurements + BOM)",
+                "Fit sample request to factory",
+            ],
+        },
+        {
+            "id": "s3",
+            "title": "STAGE 03 / PRODUCTION",
+            "defaultItems": [
+                "Fit sample try-on & notes",
+                "Pattern revision & spec update",
+                "TOP sample request & approval",
+                "Bulk PO confirmation & timeline",
+                "Final bulk QC checklist",
+            ],
+        },
+        {
+            "id": "s4",
+            "title": "STAGE 04 / MEDIA DIRECTION",
+            "defaultItems": [
+                "Shoot brief & reference deck",
+                "Location + model casting",
+                "Shot list / storyboard layout",
+                "Launch calendar & asset delivery",
+            ],
+        },
+    ],
+    "productBlocks": [
+        {
+            "id": "pb1",
+            "label": "RUNVOLUMEONE",
+            "titlePlaceholder": "STREET CIRCUIT ANORAK",
+            "codePlaceholder": "[CODE: SC-4401]",
+            "defaultViews": ["FRONT", "BACK", "DETAIL"],
+            "detailsTemplate": {
+                "fields": [
+                    {"key": "styleNumber", "label": "Style #"},
+                    {"key": "description", "label": "Description"},
+                    {"key": "fabricShell", "label": "Fabric (Shell)"},
+                    {"key": "fabricContent", "label": "Fabric Content"},
+                    {"key": "sizeRange", "label": "Size Range"},
+                    {"key": "colorways", "label": "Colorways"},
+                ]
+            },
+        }
+    ],
+}
+
+
+_MIDNIGHT_RELAY_TEMPLATE = {
+    "id": "midnight_relay",
+    "name": "Midnight Relay Night Run Capsule",
+    "layoutKey": "fuel_fortress",
+    "cover": {
+        "titlePlaceholder": "MIDNIGHT RELAY",
+        "subtitlePlaceholder": "NIGHT RUN CAPSULE PRESENTED BY RUN VOLUME ONE",
+    },
+    "stages": [
+        {
+            "id": "s1",
+            "title": "STAGE 01 / DESIGN & TECH DEV.",
+            "defaultItems": [
+                "Night-run theme & silhouette selection",
+                "Reflectivity map & safety requirements",
+                "Tech sketches: top, bottom, outerwear",
+                "Material callouts: reflective, mesh, jersey",
+            ],
+        },
+        {
+            "id": "s2",
+            "title": "STAGE 02 / PRE-PRODUCTION",
+            "defaultItems": [
+                "Vendor outreach for reflective trims",
+                "Lab tests: visibility & wash fastness",
+                "Pattern build & seam placement review",
+                "First proto sample order & costing targets",
+            ],
+        },
+        {
+            "id": "s3",
+            "title": "STAGE 03 / PRODUCTION",
+            "defaultItems": [
+                "Proto fit session & feedback",
+                "Grading & spec lock",
+                "Pre-production samples (PPS) approval",
+                "Bulk fabric & trim booking",
+            ],
+        },
+        {
+            "id": "s4",
+            "title": "STAGE 04 / MEDIA DIRECTION",
+            "defaultItems": [
+                "Night city location scout",
+                "Motion blur / long-exposure test shots",
+                "Social teaser plan",
+                "Product feature video outline",
+            ],
+        },
+    ],
+    "productBlocks": [
+        {
+            "id": "pb1",
+            "label": "RUNVOLUMEONE",
+            "titlePlaceholder": "MIDNIGHT RELAY SHELL PANT",
+            "codePlaceholder": "[CODE: MR-2212]",
+            "defaultViews": ["FRONT", "BACK", "SIDE"],
+            "detailsTemplate": {
+                "fields": [
+                    {"key": "styleNumber", "label": "Style #"},
+                    {"key": "description", "label": "Description"},
+                    {"key": "fabricShell", "label": "Fabric (Shell)"},
+                    {"key": "fabricContent", "label": "Fabric Content"},
+                    {"key": "sizeRange", "label": "Size Range"},
+                    {"key": "colorways", "label": "Colorways"},
+                ]
+            },
+        }
+    ],
+}
+
+
+_DESERT_PACE_TEMPLATE = {
+    "id": "desert_pace",
+    "name": "Desert Pace Heat-Ready Pack",
+    "layoutKey": "fuel_fortress",
+    "cover": {
+        "titlePlaceholder": "DESERT PACE",
+        "subtitlePlaceholder": "HEAT-READY COLLECTION PRESENTED BY RUN VOLUME ONE",
+    },
+    "stages": [
+        {
+            "id": "s1",
+            "title": "STAGE 01 / DESIGN & TECH DEV.",
+            "defaultItems": [
+                "Hot-weather use-case notes",
+                "Ventilation panel strategy",
+                "Tech flats: singlet, short, cap",
+                "Fabric shortlist: mesh, micro-pique, ripstop",
+            ],
+        },
+        {
+            "id": "s2",
+            "title": "STAGE 02 / PRE-PRODUCTION",
+            "defaultItems": [
+                "Breathability & wicking lab tests",
+                "UV protection rating target",
+                "Prototype patterns & sample cutting",
+                "Updated tech pack + BOM",
+            ],
+        },
+        {
+            "id": "s3",
+            "title": "STAGE 03 / PRODUCTION",
+            "defaultItems": [
+                "Size run fit test in motion",
+                "Measurement fine-tuning",
+                "PPS approval & comments to factory",
+                "Inline inspection checklist",
+            ],
+        },
+        {
+            "id": "s4",
+            "title": "STAGE 04 / MEDIA DIRECTION",
+            "defaultItems": [
+                "Desert / trail location shortlist",
+                "Lighting plan for harsh sun",
+                "Editorial vs e-comm shot mix",
+                "Launch email + landing page wireframe",
+            ],
+        },
+    ],
+    "productBlocks": [
+        {
+            "id": "pb1",
+            "label": "RUNVOLUMEONE",
+            "titlePlaceholder": "DESERT PACE AERO SHORT",
+            "codePlaceholder": "[CODE: DP-3104]",
+            "defaultViews": ["FRONT", "BACK", "SIDE"],
+            "detailsTemplate": {
+                "fields": [
+                    {"key": "styleNumber", "label": "Style #"},
+                    {"key": "description", "label": "Description"},
+                    {"key": "fabricShell", "label": "Fabric (Shell)"},
+                    {"key": "fabricContent", "label": "Fabric Content"},
+                    {"key": "sizeRange", "label": "Size Range"},
+                    {"key": "colorways", "label": "Colorways"},
+                ]
+            },
+        }
+    ],
+}
+
+
+_METRO_INTERVAL_TEMPLATE = {
+    "id": "metro_interval",
+    "name": "Metro Interval City Commute Line",
+    "layoutKey": "fuel_fortress",
+    "cover": {
+        "titlePlaceholder": "METRO INTERVAL",
+        "subtitlePlaceholder": "CITY COMMUTE LINE PRESENTED BY RUN VOLUME ONE",
+    },
+    "stages": [
+        {
+            "id": "s1",
+            "title": "STAGE 01 / DESIGN & TECH DEV.",
+            "defaultItems": [
+                "Commute-to-run scenario mapping",
+                "Convertible feature ideation",
+                "Tech sketches: jacket, pant, packable layer",
+                "Fabric matrix: weather-resistant vs stretch",
+            ],
+        },
+        {
+            "id": "s2",
+            "title": "STAGE 02 / PRE-PRODUCTION",
+            "defaultItems": [
+                "Fabric handfeel & drape review",
+                "Water-repellency and seam sealing tests",
+                "Pattern draft for convertible features",
+                "Hardware selection: snaps, zips, cords",
+            ],
+        },
+        {
+            "id": "s3",
+            "title": "STAGE 03 / PRODUCTION",
+            "defaultItems": [
+                "Function test on prototypes (bike/train/run)",
+                "Pattern and spec modifications logged",
+                "Final TOP sample approval",
+                "Bulk PO + ex-factory timeline",
+            ],
+        },
+        {
+            "id": "s4",
+            "title": "STAGE 04 / MEDIA DIRECTION",
+            "defaultItems": [
+                "Transit-focused shot list",
+                "BTS content plan for social",
+                "Short-form video storyboard",
+                "Campaign asset delivery schedule",
+            ],
+        },
+    ],
+    "productBlocks": [
+        {
+            "id": "pb1",
+            "label": "RUNVOLUMEONE",
+            "titlePlaceholder": "METRO INTERVAL COMMUTER JACKET",
+            "codePlaceholder": "[CODE: MI-5507]",
+            "defaultViews": ["FRONT", "BACK", "SIDE"],
+            "detailsTemplate": {
+                "fields": [
+                    {"key": "styleNumber", "label": "Style #"},
+                    {"key": "description", "label": "Description"},
+                    {"key": "fabricShell", "label": "Fabric (Shell)"},
+                    {"key": "fabricContent", "label": "Fabric Content"},
+                    {"key": "sizeRange", "label": "Size Range"},
+                    {"key": "colorways", "label": "Colorways"},
+                ]
+            },
+        }
+    ],
+}
+
+
+VOLUMEONE_DB_SCHEMA = [
+    {
+        "name": "users",
+        "label": "Workspace members",
+        "description": "Owners and collaborators when you keep auth inside VolumeOne. Safe to skip if you lean entirely on SSO.",
+        "optional": True,
+        "columns": [
+            {"name": "id", "type": "UUID PRIMARY KEY", "notes": "DEFAULT gen_random_uuid()"},
+            {"name": "email", "type": "TEXT UNIQUE NOT NULL", "notes": "Primary login + notification channel"},
+            {"name": "name", "type": "TEXT", "notes": "Display name"},
+            {"name": "created_at", "type": "TIMESTAMPTZ NOT NULL", "notes": "DEFAULT NOW()"},
+        ],
+    },
+    {
+        "name": "templates",
+        "label": "Reusable template shells",
+        "description": "Each pack blueprint (Fuel Fortress, Street Circuit, etc.) with cover copy + layout wiring.",
+        "optional": False,
+        "columns": [
+            {"name": "id", "type": "TEXT PRIMARY KEY", "notes": "slug such as fuel_fortress"},
+            {"name": "name", "type": "TEXT NOT NULL", "notes": "Marketing-friendly name"},
+            {"name": "layout_key", "type": "TEXT NOT NULL", "notes": "Front-end layout switch"},
+            {
+                "name": "cover_title_placeholder",
+                "type": "TEXT NOT NULL",
+                "notes": "Hero headline placeholder",
+            },
+            {
+                "name": "cover_subtitle_placeholder",
+                "type": "TEXT NOT NULL",
+                "notes": "Hero subtitle placeholder",
+            },
+            {"name": "created_at", "type": "TIMESTAMPTZ NOT NULL", "notes": "DEFAULT NOW()"},
+            {"name": "updated_at", "type": "TIMESTAMPTZ NOT NULL", "notes": "DEFAULT NOW()"},
+        ],
+    },
+    {
+        "name": "template_stages",
+        "label": "Default stage bullets",
+        "description": "Stage scaffolding for each template so projects inherit the same rhythm.",
+        "optional": False,
+        "columns": [
+            {"name": "id", "type": "UUID PRIMARY KEY", "notes": "DEFAULT gen_random_uuid()"},
+            {"name": "template_id", "type": "TEXT NOT NULL", "notes": "FK -> templates.id (CASCADE)"},
+            {"name": "stage_index", "type": "INT NOT NULL", "notes": "1-based ordering"},
+            {"name": "title", "type": "TEXT NOT NULL", "notes": "Stage title (all-caps ok)"},
+            {"name": "default_items", "type": "JSONB NOT NULL", "notes": "Ordered bullet copy"},
+        ],
+        "constraints": ["UNIQUE (template_id, stage_index)"],
+    },
+    {
+        "name": "template_product_blocks",
+        "label": "Default product spec blocks",
+        "description": "Reusable spec sections per template, including view list + detail field schema.",
+        "optional": False,
+        "columns": [
+            {"name": "id", "type": "UUID PRIMARY KEY", "notes": "DEFAULT gen_random_uuid()"},
+            {"name": "template_id", "type": "TEXT NOT NULL", "notes": "FK -> templates.id (CASCADE)"},
+            {"name": "block_index", "type": "INT NOT NULL", "notes": "Ordering / block number"},
+            {"name": "label", "type": "TEXT NOT NULL", "notes": "Badge like RUNVOLUMEONE"},
+            {"name": "title_placeholder", "type": "TEXT NOT NULL", "notes": "e.g. 'AERO HOODIE'"},
+            {"name": "code_placeholder", "type": "TEXT", "notes": "Optional code slug"},
+            {"name": "default_views", "type": "JSONB NOT NULL", "notes": "List of view labels"},
+            {"name": "details_schema", "type": "JSONB NOT NULL", "notes": "Field definitions for spec form"},
+        ],
+        "constraints": ["UNIQUE (template_id, block_index)"],
+    },
+    {
+        "name": "projects",
+        "label": "Live design packs",
+        "description": "Each instanced client pack referencing a template snapshot + owner.",
+        "optional": False,
+        "columns": [
+            {"name": "id", "type": "UUID PRIMARY KEY", "notes": "DEFAULT gen_random_uuid()"},
+            {"name": "owner_id", "type": "UUID", "notes": "FK -> users.id (nullable when external auth)"},
+            {"name": "template_id", "type": "TEXT NOT NULL", "notes": "FK -> templates.id"},
+            {"name": "title", "type": "TEXT NOT NULL", "notes": "Project title"},
+            {"name": "subtitle", "type": "TEXT", "notes": "Optional subtitle pulled from template"},
+            {"name": "client_name", "type": "TEXT", "notes": "Brand / buyer"},
+            {"name": "season", "type": "TEXT", "notes": "SS25 / FW25 etc."},
+            {"name": "product_type", "type": "TEXT", "notes": "Enum: hoodie, shell, etc."},
+            {"name": "status", "type": "TEXT", "notes": "DEFAULT 'draft' (draft/in_progress/approved)"},
+            {"name": "created_at", "type": "TIMESTAMPTZ NOT NULL", "notes": "DEFAULT NOW()"},
+            {"name": "updated_at", "type": "TIMESTAMPTZ NOT NULL", "notes": "DEFAULT NOW()"},
+        ],
+    },
+    {
+        "name": "project_stages",
+        "label": "Editable stage content",
+        "description": "Concrete bullets for a given project, initially cloned from the template.",
+        "optional": False,
+        "columns": [
+            {"name": "id", "type": "UUID PRIMARY KEY", "notes": "DEFAULT gen_random_uuid()"},
+            {"name": "project_id", "type": "UUID NOT NULL", "notes": "FK -> projects.id (CASCADE)"},
+            {"name": "template_stage_id", "type": "UUID", "notes": "FK -> template_stages.id (nullable once detached)"},
+            {"name": "stage_index", "type": "INT NOT NULL", "notes": "Matches template ordering"},
+            {"name": "title", "type": "TEXT NOT NULL", "notes": "Editable title"},
+            {"name": "items", "type": "JSONB NOT NULL", "notes": "Editable bullet list"},
+            {"name": "created_at", "type": "TIMESTAMPTZ NOT NULL", "notes": "DEFAULT NOW()"},
+            {"name": "updated_at", "type": "TIMESTAMPTZ NOT NULL", "notes": "DEFAULT NOW()"},
+        ],
+        "constraints": ["UNIQUE (project_id, stage_index)"],
+    },
+    {
+        "name": "project_products",
+        "label": "Product spec entries",
+        "description": "One row per block (i.e., two hoodie variants) with editable copy for factories.",
+        "optional": False,
+        "columns": [
+            {"name": "id", "type": "UUID PRIMARY KEY", "notes": "DEFAULT gen_random_uuid()"},
+            {"name": "project_id", "type": "UUID NOT NULL", "notes": "FK -> projects.id (CASCADE)"},
+            {
+                "name": "template_block_id",
+                "type": "UUID",
+                "notes": "FK -> template_product_blocks.id (nullable once customized)",
+            },
+            {"name": "block_index", "type": "INT NOT NULL", "notes": "Ordering / block number"},
+            {"name": "label", "type": "TEXT NOT NULL", "notes": "Pack label such as RUNVOLUMEONE"},
+            {"name": "title", "type": "TEXT NOT NULL", "notes": "Product title"},
+            {"name": "code", "type": "TEXT", "notes": "Optional code displayed on cover"},
+            {"name": "style_number", "type": "TEXT", "notes": "Editable field"},
+            {"name": "description", "type": "TEXT", "notes": "Editable field"},
+            {"name": "fabric_shell", "type": "TEXT", "notes": "Editable field"},
+            {"name": "fabric_content", "type": "TEXT", "notes": "Editable field"},
+            {"name": "size_range", "type": "TEXT", "notes": "Editable field"},
+            {"name": "created_at", "type": "TIMESTAMPTZ NOT NULL", "notes": "DEFAULT NOW()"},
+            {"name": "updated_at", "type": "TIMESTAMPTZ NOT NULL", "notes": "DEFAULT NOW()"},
+        ],
+        "constraints": ["UNIQUE (project_id, block_index)"],
+    },
+    {
+        "name": "product_colorways",
+        "label": "Colorway chips",
+        "description": "Flexible color rows so merch + marketing can tag swatches beyond the spec body.",
+        "optional": False,
+        "columns": [
+            {"name": "id", "type": "UUID PRIMARY KEY", "notes": "DEFAULT gen_random_uuid()"},
+            {"name": "product_id", "type": "UUID NOT NULL", "notes": "FK -> project_products.id (CASCADE)"},
+            {"name": "name", "type": "TEXT NOT NULL", "notes": "Display name (Bone, Charcoal)"},
+            {"name": "hex_code", "type": "TEXT", "notes": "Optional HEX for swatch previews"},
+            {"name": "sort_index", "type": "INT DEFAULT 0", "notes": "Manual ordering"},
+        ],
+    },
+    {
+        "name": "project_assets",
+        "label": "Linked assets",
+        "description": "Flats, lookbook stills, swatches, or logos tied to a project.",
+        "optional": False,
+        "columns": [
+            {"name": "id", "type": "UUID PRIMARY KEY", "notes": "DEFAULT gen_random_uuid()"},
+            {"name": "project_id", "type": "UUID NOT NULL", "notes": "FK -> projects.id (CASCADE)"},
+            {"name": "type", "type": "TEXT NOT NULL", "notes": "Enum: flat/photo/swatch/logo"},
+            {"name": "url", "type": "TEXT NOT NULL", "notes": "Object storage path or CDN URL"},
+            {"name": "label", "type": "TEXT", "notes": "Optional caption like 'Front flat'"},
+            {"name": "meta", "type": "JSONB", "notes": "Arbitrary metadata e.g. {'view':'FRONT','productBlock':1}"},
+            {"name": "created_at", "type": "TIMESTAMPTZ NOT NULL", "notes": "DEFAULT NOW()"},
+        ],
+    },
+]
+
+
+VOLUMEONE_TEMPLATE_LIBRARY = _build_template_library(
+    [
+        {
+            "summary": "City circuit merch program with reflective-ready outerwear + storyboard-ready bullets.",
+            "definition": _STREET_CIRCUIT_TEMPLATE,
+        },
+        {
+            "summary": "Night-run capsule focused on safety requirements, reflective trims, and motion-heavy marketing.",
+            "definition": _MIDNIGHT_RELAY_TEMPLATE,
+        },
+        {
+            "summary": "Heat-ready drop for desert or trail events with breathable specs and sun-proof media direction.",
+            "definition": _DESERT_PACE_TEMPLATE,
+        },
+        {
+            "summary": "Commute-to-run layering system with convertible hardware callouts and transit media cadence.",
+            "definition": _METRO_INTERVAL_TEMPLATE,
+        },
+    ]
+)
+
+
 def _get_public_contact_email() -> str:
     return (
         getattr(settings, "AIOAK_CONTACT_EMAIL", "")
@@ -2035,6 +2533,8 @@ class VolumeOneShowcaseView(TemplateView):
                 "instagram_profile_url": VOLUMEONE_INSTAGRAM_PROFILE_URL,
                 "instagram_username": VOLUMEONE_INSTAGRAM_USERNAME,
                 "design_packs": _get_volumeone_design_packs(),
+                "db_schema_tables": VOLUMEONE_DB_SCHEMA,
+                "template_library": VOLUMEONE_TEMPLATE_LIBRARY,
             }
         )
         return context

@@ -338,6 +338,170 @@
         background: var(--chip-color, #fff);
         box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.35);
       }
+      .schema-section {
+        margin-top: 64px;
+      }
+      .schema-header {
+        max-width: 640px;
+        margin-bottom: 28px;
+      }
+      .schema-grid {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      }
+      .schema-card {
+        padding: 22px;
+        border-radius: 20px;
+        background: rgba(15, 23, 42, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .schema-card-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+      }
+      .schema-table-name {
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        font-size: 11px;
+        color: #94a3b8;
+      }
+      .schema-card h3 {
+        margin: 4px 0;
+        font-size: 20px;
+      }
+      .schema-tag {
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        color: #e0e7ff;
+      }
+      .schema-columns {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .schema-columns li {
+        padding: 10px 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .schema-columns li:first-child {
+        border-top: none;
+        padding-top: 0;
+      }
+      .schema-column-name {
+        font-weight: 600;
+      }
+      .schema-column-type {
+        font-size: 12px;
+        color: #cbd5f5;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .schema-column-notes {
+        font-size: 13px;
+        color: #a5b4fc;
+      }
+      .schema-desc {
+        margin: 0;
+        color: #cbd5f5;
+      }
+      .schema-constraints {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #fde68a;
+      }
+      .template-library {
+        margin-top: 64px;
+      }
+      .template-library-header {
+        max-width: 640px;
+        margin-bottom: 28px;
+      }
+      .template-library-grid {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+      .template-card {
+        padding: 24px;
+        border-radius: 22px;
+        background: rgba(10, 14, 25, 0.55);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .template-card-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+      }
+      .template-id {
+        margin: 0;
+        font-size: 12px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: #9ca3af;
+      }
+      .template-layout {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: #cbd5f5;
+      }
+      .template-desc {
+        margin: 0;
+        color: #d1d5db;
+      }
+      .template-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #a5b4fc;
+      }
+      .template-block-label {
+        margin: 0;
+        font-size: 13px;
+        color: #e0f2fe;
+      }
+      .template-json {
+        margin: 0;
+        border-radius: 16px;
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        padding: 16px;
+        font-size: 13px;
+        line-height: 1.5;
+        overflow: auto;
+        max-height: 360px;
+        word-break: break-word;
+        font-family: "JetBrains Mono", "SFMono-Regular", "Menlo", monospace;
+        white-space: pre-wrap;
+      }
+      .template-json code {
+        color: #d1fae5;
+      }
       .sync-line {
         margin-top: 16px;
         font-size: 13px;
@@ -540,6 +704,99 @@
             <a class="cta tertiary" href="{{ pack.url }}" target="_blank" rel="noopener">
               Open design pack ->
             </a>
+          </article>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+      {% if db_schema_tables %}
+      <section class="schema-section">
+        <div class="schema-header">
+          <p class="hero-eyebrow">Data layer</p>
+          <h2 style="margin: 0">Postgres schema powering VolumeOne</h2>
+          <p class="design-pack-note">
+            Copy these tables into Neon, Supabase, or RDS and you can persist template scaffolding, real projects, and
+            linked assets in minutes.
+          </p>
+        </div>
+        <div class="schema-grid">
+          {% for table in db_schema_tables %}
+          <article class="schema-card">
+            <header class="schema-card-head">
+              <div>
+                <p class="schema-table-name">{{ table.name }}</p>
+                <h3>{{ table.label }}</h3>
+              </div>
+              {% if table.optional %}
+              <span class="schema-tag">Optional</span>
+              {% endif %}
+            </header>
+            <p class="schema-desc">{{ table.description }}</p>
+            <ul class="schema-columns">
+              {% for column in table.columns %}
+              <li>
+                <div class="schema-column-name">{{ column.name }}</div>
+                <div class="schema-column-type">{{ column.type }}</div>
+                <div class="schema-column-notes">{{ column.notes }}</div>
+              </li>
+              {% endfor %}
+            </ul>
+            {% if table.constraints %}
+            <div class="schema-constraints">
+              {% for constraint in table.constraints %}
+              <span>{{ constraint }}</span>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </article>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+      {% if template_library %}
+      <section class="template-library">
+        <div class="template-library-header">
+          <p class="hero-eyebrow">Template JSON library</p>
+          <h2 style="margin: 0">Starter packs for VolumeOne drop boards</h2>
+          <p class="design-pack-note">
+            Every JSON block sticks to the same shape as the Fuel Fortress template so you can seed the database or kick
+            off new packs without staring at a blank cursor.
+          </p>
+        </div>
+        <div class="template-library-grid">
+          {% for template in template_library %}
+          <article class="template-card">
+            <header class="template-card-head">
+              <div>
+                <p class="template-id">{{ template.id }}</p>
+                <h3>{{ template.name }}</h3>
+              </div>
+              {% if template.layout %}
+              <span class="template-layout">{{ template.layout }}</span>
+              {% endif %}
+            </header>
+            <p class="template-desc">{{ template.summary }}</p>
+            <div class="template-meta">
+              <span>{{ template.stage_count }} stages</span>
+              <span>{{ template.product_block_count }} product block{{ template.product_block_count|pluralize }}</span>
+              {% if template.primary_views %}
+              <span>{{ template.primary_views }}</span>
+              {% endif %}
+            </div>
+            {% if template.primary_block_title or template.primary_block_label or template.code_placeholder %}
+            <p class="template-block-label">
+              {% if template.primary_block_label %}{{ template.primary_block_label }}{% endif %}
+              {% if template.primary_block_title %}
+              {% if template.primary_block_label %} · {% endif %}{{ template.primary_block_title }}
+              {% endif %}
+              {% if template.code_placeholder %}
+              {% if template.primary_block_label or template.primary_block_title %} · {% endif %}{{ template.code_placeholder }}
+              {% endif %}
+            </p>
+            {% endif %}
+            <pre class="template-json"><code>{{ template.json|safe }}</code></pre>
           </article>
           {% endfor %}
         </div>

@@ -531,4 +531,6 @@ class VolumeOneViewTests(TestCase):
         self.assertTrue(response.context["design_packs"])
         first_pack_title = TEKPAK_BLUEPRINTS["desert-shadows"]["hero"]["title"]
         self.assertContains(response, first_pack_title)
+        self.assertContains(response, "Postgres schema powering VolumeOne")
+        self.assertContains(response, "Street Circuit Project Breakdown")
         mock_feed.assert_called_once()
