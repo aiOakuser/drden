@@ -71,7 +71,7 @@ img {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 90%;
+  width: 50%; /* Reduced from 90% to 50% */
   margin: 0 auto;
   padding: 14px 24px;
 }
@@ -82,8 +82,8 @@ img {
 }
 
 .brand__mark {
-  width: 58px;
-  height: 58px;
+  width: 116px;
+  height: 116px;
   object-fit: contain;
   transition: 0.3s ease;
 }
@@ -139,16 +139,16 @@ img {
   margin: 20px 0;
 }
 .logo-center img {
-  max-width: 180px;
+  max-width: 360px;
   height: auto;
 }
 
 .banner {
-  width: 90%; /* 10% smaller than full width */
-  max-width: 2200px; /* safety cap */
-  margin: 30px auto;
+  width: 98%; /* Increased from 90% to 98% */
+  max-width: 2400px; /* Increased from 2200px */
+  margin: 10px auto 40px; /* Reduced top margin to bring closer to navbar */
   position: relative;
-  aspect-ratio: 16/7;
+  aspect-ratio: 16/6; /* Taller banner (was 16/7) */
   background: var(--color-surface);
   border-radius: 10px;
   overflow: hidden;

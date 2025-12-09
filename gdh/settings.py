@@ -315,15 +315,29 @@ CSRF_FAILURE_VIEW = "designer_portfolio.views.csrf_failure"
 ENV = (os.getenv("ENV") or "").lower()
 DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("DB_URL")
 _POSTGRES_SCHEMES = {"postgres", "postgresql", "psql", "pgsql"}
+_SQLITE_SCHEMES = {"sqlite", "sqlite3"}
 
 
 def _db_settings_from_url(database_url: str) -> dict[str, str]:
     parsed = urlparse(database_url)
     scheme = (parsed.scheme or "").lower()
 
+    # Support SQLite for local development
+    if scheme in _SQLITE_SCHEMES:
+        # SQLite URL format: sqlite:///path/to/db.sqlite3
+        db_path = database_url.replace("sqlite:///", "").replace("sqlite://", "")
+        if db_path.startswith("./"):
+            db_path = BASE_DIR / db_path[2:]
+        elif not os.path.isabs(db_path):
+            db_path = BASE_DIR / db_path
+        return {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": str(db_path),
+        }
+
     if scheme not in _POSTGRES_SCHEMES:
         raise ImproperlyConfigured(
-            "DATABASE_URL must use a PostgreSQL scheme (e.g. postgres://username:password@host:port/dbname)."
+            "DATABASE_URL must use a PostgreSQL or SQLite scheme (e.g. postgres://username:password@host:port/dbname or sqlite:///./db.sqlite3)."
         )
 
     path = parsed.path or ""
