@@ -315,15 +315,61 @@ CSRF_FAILURE_VIEW = "designer_portfolio.views.csrf_failure"
 ENV = (os.getenv("ENV") or "").lower()
 DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("DB_URL")
 _POSTGRES_SCHEMES = {"postgres", "postgresql", "psql", "pgsql"}
+_SQLITE_SCHEMES = {"sqlite", "sqlite3"}
+
+
+def _sqlite_db_settings(
+    path_override: str | None = None,
+    *,
+    treat_as_relative: bool | None = None,
+) -> dict[str, str]:
+    """
+    Build SQLite settings using either an explicit path override or env defaults.
+
+    treat_as_relative=True forces the resolved path to live under BASE_DIR regardless
+    of whether the supplied override starts with a leading slash (useful for sqlite:/// urls).
+    """
+    env_default = os.getenv("SQLITE_NAME") or os.getenv("DB_NAME") or "designer_db"
+    candidate = (path_override or env_default).strip()
+    if candidate == "":
+        candidate = env_default
+
+    candidate = os.path.expanduser(candidate)
+    if candidate in {":memory:", "memory"}:
+        return {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}
+
+    if treat_as_relative:
+        candidate = candidate.lstrip("/\\")
+
+    sqlite_path = Path(candidate)
+    if treat_as_relative or not sqlite_path.is_absolute():
+        sqlite_path = BASE_DIR / sqlite_path
+
+    return {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": str(sqlite_path),
+    }
 
 
 def _db_settings_from_url(database_url: str) -> dict[str, str]:
     parsed = urlparse(database_url)
     scheme = (parsed.scheme or "").lower()
 
+    if scheme in _SQLITE_SCHEMES:
+        raw_path = unquote(parsed.path or "")
+        if parsed.netloc:
+            raw_path = f"//{parsed.netloc}{raw_path}"
+            treat_as_relative = False
+        else:
+            treat_as_relative = not database_url.startswith("sqlite:////")
+        return _sqlite_db_settings(
+            path_override=raw_path or None,
+            treat_as_relative=treat_as_relative,
+        )
+
     if scheme not in _POSTGRES_SCHEMES:
         raise ImproperlyConfigured(
-            "DATABASE_URL must use a PostgreSQL scheme (e.g. postgres://username:password@host:port/dbname)."
+            "DATABASE_URL must use a PostgreSQL or SQLite scheme."
         )
 
     path = parsed.path or ""
@@ -345,6 +391,10 @@ def _db_settings_from_url(database_url: str) -> dict[str, str]:
 
 
 def _db_settings_from_env() -> dict[str, str]:
+    db_engine = (os.getenv("DB_ENGINE") or "").strip().lower()
+    if db_engine in _SQLITE_SCHEMES:
+        return _sqlite_db_settings()
+
     return {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.getenv("DB_NAME", "designer_db"),
@@ -356,13 +406,29 @@ def _db_settings_from_env() -> dict[str, str]:
     }
 
 
-if DATABASE_URL:
+_db_engine_env = (os.getenv("DB_ENGINE") or "").strip().lower()
+_use_sqlite = (_db_engine_env in _SQLITE_SCHEMES) or env_bool("USE_SQLITE", default=False)
+
+if _use_sqlite:
+    DATABASES = {"default": _sqlite_db_settings()}
+elif DATABASE_URL:
     DATABASES = {"default": _db_settings_from_url(DATABASE_URL)}
 else:
     DATABASES = {"default": _db_settings_from_env()}
 
-if DATABASES["default"]["ENGINE"] != "django.db.backends.postgresql":
-    raise ImproperlyConfigured("Only PostgreSQL is supported for the default database.")
+REQUIRE_POSTGRES_DATABASE = env_bool(
+    "REQUIRE_POSTGRES_DATABASE",
+    default=not DEBUG,
+)
+
+if (
+    REQUIRE_POSTGRES_DATABASE
+    and DATABASES["default"]["ENGINE"] != "django.db.backends.postgresql"
+):
+    raise ImproperlyConfigured(
+        "PostgreSQL is required for this environment. Set DB_ENGINE=postgres or "
+        "disable this check via REQUIRE_POSTGRES_DATABASE=0 if SQLite is acceptable."
+    )
 
 # --- Password validation ---
 AUTH_PASSWORD_VALIDATORS = [
