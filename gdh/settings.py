@@ -76,6 +76,7 @@ def env_list(name: str, default: list[str] | None = None) -> list[str]:
 # Helpful flags derived from environment for consistent HTTPS behavior
 BASE_URL_SERVER = os.getenv("BASE_URL_SERVER", "")
 SERVER_URL_IS_HTTPS = BASE_URL_SERVER.lower().startswith("https://")
+_base_url_hostname = (urlparse(BASE_URL_SERVER).hostname or "").strip().lower() if BASE_URL_SERVER else ""
 
 # --- Core ---
 SECRET_KEY = 'django-insecure-ck*q$d@!w83)@m36n=)%3m$jxp6#k53sh86j^i2q*lz1&klq&+'
@@ -87,6 +88,8 @@ ALLOWED_HOSTS = [
     "localhost",
     "globaldesignerhub.com",
     "www.globaldesignerhub.com",
+    # AIOAK hosted apps (e.g. finmate.aioak.app)
+    "finmate.aioak.app",
 ]
 if os.getenv("ALLOWED_HOSTS"):
     # Allow overriding via env (comma-separated)
@@ -104,7 +107,21 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 CSRF_TRUSTED_ORIGINS = [
     "https://globaldesignerhub.com",
     "https://www.globaldesignerhub.com",
+    "https://finmate.aioak.app",
 ]
+
+# If BASE_URL_SERVER is provided, trust/allow its hostname automatically.
+if _base_url_hostname:
+    if _base_url_hostname not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_base_url_hostname)
+    if f"www.{_base_url_hostname}" not in ALLOWED_HOSTS and not _base_url_hostname.startswith("www."):
+        ALLOWED_HOSTS.append(f"www.{_base_url_hostname}")
+
+    scheme = (urlparse(BASE_URL_SERVER).scheme or "").strip().lower()
+    if scheme in {"http", "https"}:
+        origin = f"{scheme}://{_base_url_hostname}"
+        if origin not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(origin)
 
 # --- Canonical host enforcement ---
 CANONICAL_HOST = (os.getenv("CANONICAL_HOST") or "globaldesignerhub.com").strip().lower()
@@ -223,10 +240,12 @@ SPECTACULAR_SETTINGS = {
 # --- Middleware ---
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
-    "designer_portfolio.middleware.CanonicalDomainRedirectMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    # WhiteNoise should be directly after SecurityMiddleware so static files
+    # are served before any custom redirect/throttle middleware runs.
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "designer_portfolio.middleware.CanonicalDomainRedirectMiddleware",
     "designer_portfolio.middleware.SuspiciousRequestThrottleMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",  # ✅ compressed static files
     "django.contrib.sessions.middleware.SessionMiddleware",
     "designer_portfolio.middleware.UTMTrackingMiddleware",  # ✅ capture UTM/session attribution
     "django.middleware.common.CommonMiddleware",
@@ -279,6 +298,10 @@ else:
     }
     MEDIA_URL = "/media/"
     MEDIA_ROOT = BASE_DIR / "media"
+
+# When not using S3, explicitly allow Django to serve /media/ if enabled.
+# Many PaaS setups only serve /static/ (via WhiteNoise) unless /media/ is wired up.
+SERVE_MEDIA = env_bool("SERVE_MEDIA", default=not USE_S3_MEDIA)
 
 # In DEBUG and test runs, avoid Manifest storage which requires collectstatic
 if DEBUG:

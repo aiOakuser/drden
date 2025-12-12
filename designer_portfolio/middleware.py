@@ -222,6 +222,12 @@ class CanonicalDomainRedirectMiddleware:
         if not self.enabled or not self.canonical_host:
             return self.get_response(request)
 
+        # Never redirect static/media assets. Redirects here can make CSS/JS/images
+        # appear "not loading" when a site is deployed on a new hostname.
+        path = request.path or ""
+        if path.startswith("/static/") or path.startswith("/media/"):
+            return self.get_response(request)
+
         host = self._normalize_host(request.get_host())
         if not host or host == self.canonical_host:
             return self.get_response(request)
