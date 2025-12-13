@@ -158,6 +158,44 @@ class PostLoginRedirectTests(TestCase):
 
 
 @override_settings(
+    # Deterministic canonical redirect settings for test hostnames
+    CANONICAL_DOMAIN_REDIRECT_ENABLED=True,
+    CANONICAL_HOST="globaldesignerhub.com",
+    CANONICAL_REDIRECT_HOSTS=["www.globaldesignerhub.com"],
+    CANONICAL_REDIRECT_SCHEME="https",
+    SECURE_SSL_REDIRECT=False,
+    SESSION_COOKIE_SECURE=False,
+    CSRF_COOKIE_SECURE=False,
+    STORAGES=TEST_STORAGE_BACKENDS,
+)
+class CanonicalDomainRedirectMiddlewareTests(TestCase):
+    def test_get_request_redirects_with_301(self):
+        response = self.client.get(
+            reverse("login"),
+            HTTP_HOST="www.globaldesignerhub.com",
+            follow=False,
+        )
+        self.assertEqual(response.status_code, 301)
+        self.assertEqual(
+            response.headers.get("Location"),
+            "https://globaldesignerhub.com" + reverse("login"),
+        )
+
+    def test_post_request_redirects_with_308_preserving_method(self):
+        response = self.client.post(
+            reverse("login"),
+            {"username": "someone", "password": "secret"},
+            HTTP_HOST="www.globaldesignerhub.com",
+            follow=False,
+        )
+        self.assertEqual(response.status_code, 308)
+        self.assertEqual(
+            response.headers.get("Location"),
+            "https://globaldesignerhub.com" + reverse("login"),
+        )
+
+
+@override_settings(
     SECURE_SSL_REDIRECT=False,
     SESSION_COOKIE_SECURE=False,
     CSRF_COOKIE_SECURE=False,
