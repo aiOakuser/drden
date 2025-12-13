@@ -217,7 +217,7 @@ INSTALLED_APPS = [
     "social_django",
     
     # Local
-    "designer_portfolio",
+    "designer_portfolio.apps.DesignerPortfolioConfig",
     "marketing",
 ]
 

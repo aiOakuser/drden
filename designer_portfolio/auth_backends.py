@@ -2,6 +2,8 @@ from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 
+from .auth_utils import ensure_designer_access
+
 
 class EmailOrUsernameModelBackend(ModelBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
@@ -31,6 +33,11 @@ class EmailOrUsernameModelBackend(ModelBackend):
         # Iterate all candidates and return the first whose password matches
         for candidate_user in candidate_users_qs:
             if candidate_user.check_password(password):
+                # Legacy imports can be missing required related rows. Ensure the
+                # dashboard prerequisites exist as soon as we have a valid
+                # password, so the user can reach their dashboard right away.
+                ensure_designer_access(candidate_user)
+
                 # If an account was mistakenly deactivated, allow a successful
                 # password-based login to reactivate *designer* accounts (those
                 # with a profile) so they can reach the dashboard again.
