@@ -5,8 +5,11 @@ import re
 import tempfile
 from typing import Optional
 
+from django.apps import apps
+from django.core.management.color import no_style
 from django.core.files.storage import default_storage
 from django.core.management import BaseCommand, call_command
+from django.db import connection
 
 
 class Command(BaseCommand):
@@ -25,6 +28,24 @@ class Command(BaseCommand):
             dest="noinput",
             help="Do not prompt for confirmation.",
         )
+        parser.add_argument(
+            "--flush",
+            action="store_true",
+            dest="flush",
+            help="Flush existing data before loading the backup (recommended when restoring into a non-empty DB).",
+        )
+        parser.add_argument(
+            "--skip-migrate",
+            action="store_true",
+            dest="skip_migrate",
+            help="Skip running migrations before loading data.",
+        )
+        parser.add_argument(
+            "--ignore-nonexistent",
+            action="store_true",
+            dest="ignore_nonexistent",
+            help="Ignore objects/fields for apps/models that no longer exist.",
+        )
 
     def _find_latest_backup(self) -> Optional[str]:
         prefix = "backups"
@@ -39,6 +60,19 @@ class Command(BaseCommand):
         # Sort lexicographically; timestamp ensures correct order
         candidates.sort()
         return candidates[-1]
+
+    def _reset_sequences(self) -> None:
+        """
+        After loading fixtures with explicit PKs, bring database sequences back in sync
+        so future inserts don't hit duplicate-key errors.
+        """
+        models = list(apps.get_models(include_auto_created=True))
+        sql_list = connection.ops.sequence_reset_sql(no_style(), models)
+        if not sql_list:
+            return
+        with connection.cursor() as cursor:
+            for sql in sql_list:
+                cursor.execute(sql)
 
     def handle(self, *args, **options):
         input_path = options.get("input") or self._find_latest_backup()
@@ -58,6 +92,22 @@ class Command(BaseCommand):
             self.stderr.write(f"Backup not found: {input_path}")
             return
 
+        # Ensure schema exists and content types / permissions are present.
+        # This is critical when backups exclude `contenttypes` (common) but include
+        # `auth.permission` rows that reference content types via natural keys.
+        did_migrate = False
+        if not options.get("skip_migrate"):
+            call_command("migrate", interactive=False, verbosity=1)
+            did_migrate = True
+
+        # Optional: wipe current data to avoid unique/constraint collisions.
+        # NOTE: `flush` removes contenttypes/permissions too, so if we migrated above
+        # we must re-run migrations to re-create them before loaddata runs.
+        if options.get("flush"):
+            call_command("flush", interactive=False, verbosity=1)
+            if did_migrate:
+                call_command("migrate", interactive=False, verbosity=1)
+
         # Read and decompress
         with default_storage.open(input_path, "rb") as f:
             compressed = f.read()
@@ -70,7 +120,11 @@ class Command(BaseCommand):
             temp_path = tmp.name
 
         try:
-            call_command("loaddata", temp_path, verbosity=1)
+            loaddata_kwargs = {"verbosity": 1}
+            if options.get("ignore_nonexistent"):
+                loaddata_kwargs["ignorenonexistent"] = True
+            call_command("loaddata", temp_path, **loaddata_kwargs)
+            self._reset_sequences()
             self.stdout.write(self.style.SUCCESS(f"Restore completed from {input_path}"))
         finally:
             try:
