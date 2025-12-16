@@ -63,6 +63,35 @@ class LoginFlowTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.headers.get("Location"), reverse("designer_dashboard"))
 
+    def test_login_with_profile_contact_email_redirects_to_dashboard(self):
+        # Simulate a legacy/imported designer account where the email was stored
+        # on the DesignerProfile rather than the User record.
+        self.user.email = ""
+        self.user.save(update_fields=["email"])
+        DesignerProfile.objects.create(user=self.user, contact_email="legacy-contact@example.com")
+
+        response = self.client.post(
+            reverse("login"),
+            {"username": "legacy-contact@example.com", "password": self.password},
+            follow=False,
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers.get("Location"), reverse("designer_dashboard"))
+
+    def test_login_reactivates_designer_account_when_password_valid(self):
+        self.user.is_active = False
+        self.user.save(update_fields=["is_active"])
+        DesignerProfile.objects.create(user=self.user, contact_email="reactivate@example.com")
+
+        response = self.client.post(
+            reverse("login"),
+            {"username": "reactivate@example.com", "password": self.password},
+            follow=False,
+        )
+        self.assertEqual(response.status_code, 302)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.is_active)
+
     @override_settings(REMEMBER_ME_SESSION_AGE=3600)
     def test_remember_me_sets_persistent_session(self):
         response = self.client.post(
@@ -126,6 +155,44 @@ class PostLoginRedirectTests(TestCase):
         request = self.factory.get("/accounts/login/", HTTP_HOST="testserver")
         redirect_to = _resolve_post_login_redirect(request, "https://malicious.example.com")
         self.assertEqual(redirect_to, reverse("designer_dashboard"))
+
+
+@override_settings(
+    # Deterministic canonical redirect settings for test hostnames
+    CANONICAL_DOMAIN_REDIRECT_ENABLED=True,
+    CANONICAL_HOST="globaldesignerhub.com",
+    CANONICAL_REDIRECT_HOSTS=["www.globaldesignerhub.com"],
+    CANONICAL_REDIRECT_SCHEME="https",
+    SECURE_SSL_REDIRECT=False,
+    SESSION_COOKIE_SECURE=False,
+    CSRF_COOKIE_SECURE=False,
+    STORAGES=TEST_STORAGE_BACKENDS,
+)
+class CanonicalDomainRedirectMiddlewareTests(TestCase):
+    def test_get_request_redirects_with_301(self):
+        response = self.client.get(
+            reverse("login"),
+            HTTP_HOST="www.globaldesignerhub.com",
+            follow=False,
+        )
+        self.assertEqual(response.status_code, 301)
+        self.assertEqual(
+            response.headers.get("Location"),
+            "https://globaldesignerhub.com" + reverse("login"),
+        )
+
+    def test_post_request_redirects_with_308_preserving_method(self):
+        response = self.client.post(
+            reverse("login"),
+            {"username": "someone", "password": "secret"},
+            HTTP_HOST="www.globaldesignerhub.com",
+            follow=False,
+        )
+        self.assertEqual(response.status_code, 308)
+        self.assertEqual(
+            response.headers.get("Location"),
+            "https://globaldesignerhub.com" + reverse("login"),
+        )
 
 
 @override_settings(

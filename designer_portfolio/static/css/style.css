@@ -481,7 +481,11 @@ img {
 
 /* ===== Promo Bars (Free trial until satisfied) ===== */
 .promo-bar {
-  width: 100%;
+  /* Full-width, even if wrapped by a constrained layout */
+  width: 100vw;
+  max-width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
   background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
   color: var(--color-secondary);
   border-bottom: 1px solid rgba(var(--color-secondary-rgb), 0.15);
@@ -497,7 +501,8 @@ img {
   display: inline-flex;
   align-items: center;
   gap: 18px;
-  padding: 8px 12px;
+  padding: 8px max(12px, env(safe-area-inset-right));
+  padding-left: max(12px, env(safe-area-inset-left));
   animation: promo-scroll 28s linear infinite;
 }
 

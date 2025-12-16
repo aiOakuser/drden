@@ -222,6 +222,12 @@ class CanonicalDomainRedirectMiddleware:
         if not self.enabled or not self.canonical_host:
             return self.get_response(request)
 
+        # Never redirect static/media assets. Redirects here can make CSS/JS/images
+        # appear "not loading" when a site is deployed on a new hostname.
+        path = request.path or ""
+        if path.startswith("/static/") or path.startswith("/media/"):
+            return self.get_response(request)
+
         host = self._normalize_host(request.get_host())
         if not host or host == self.canonical_host:
             return self.get_response(request)
@@ -230,4 +236,14 @@ class CanonicalDomainRedirectMiddleware:
             return self.get_response(request)
 
         target_url = f"{self._target_scheme(request)}://{self.canonical_host}{request.get_full_path()}"
-        return HttpResponsePermanentRedirect(target_url)
+        # Important: for non-idempotent methods (POST/PUT/PATCH/DELETE), a 301 can
+        # cause some clients to drop the request body or change the method to GET,
+        # which breaks form submissions (e.g., login) and API calls.
+        #
+        # 308 is a permanent redirect that preserves method + body.
+        if request.method in {"GET", "HEAD"}:
+            return HttpResponsePermanentRedirect(target_url)
+
+        response = HttpResponsePermanentRedirect(target_url)
+        response.status_code = 308
+        return response

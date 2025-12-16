@@ -3,6 +3,8 @@ from django.urls import path, include, re_path
 from django.views.generic import TemplateView
 from django.contrib.auth import views as auth_views
 from django.views.generic.base import RedirectView
+from django.conf import settings
+from django.conf.urls.static import static
 from designer_portfolio.views import (
     signup_view,
     DesignerLoginView,
@@ -29,3 +31,7 @@ urlpatterns = [
     path("auth/", include("social_django.urls", namespace="social")),
     path("", include("designer_portfolio.urls")),  # your app
 ]
+
+# Serve user-uploaded media when enabled (use S3 in production if possible).
+if getattr(settings, "SERVE_MEDIA", False) and getattr(settings, "MEDIA_ROOT", None):
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

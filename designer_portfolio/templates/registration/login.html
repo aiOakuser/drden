@@ -8,7 +8,7 @@ designer{% endblock %} {% block content %}
     Designer Login
   </h2>
   <p style="text-align: center; color: var(--color-text-muted); font-size: 14px; margin-top: -10px; margin-bottom: 10px">
-    Please enter a correct username and password. Note that both fields may be case-sensitive.
+    Sign in with your username or email to access your dashboard.
   </p>
 
   {% if form.errors or form.non_field_errors %}
@@ -25,9 +25,6 @@ designer{% endblock %} {% block content %}
       {% for error in form.password.errors %}
         <div>{{ error }}</div>
       {% endfor %}
-    {% endif %}
-    {% if not form.non_field_errors and not form.username.errors and not form.password.errors %}
-      <div>Please enter a correct username and password. Note that both fields may be case-sensitive.</div>
     {% endif %}
   </div>
   {% endif %}
