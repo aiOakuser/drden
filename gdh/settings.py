@@ -475,7 +475,10 @@ elif DATABASE_URL:
     _is_localhost_postgres = scheme in _POSTGRES_SCHEMES and host in {"localhost", "127.0.0.1", "::1"}
     _allow_localhost_sqlite_fallback = env_bool(
         "ALLOW_SQLITE_FALLBACK_FOR_LOCALHOST_POSTGRES",
-        default=(DEBUG or ENV in {"local", "development", "dev"}),
+        # When ENV is unset, treat it like local/CI rather than production.
+        # This keeps management commands usable in build containers where a
+        # localhost DATABASE_URL may be present but Postgres isn't running.
+        default=(DEBUG or ENV in {"", "local", "development", "dev"}),
     )
 
     if _is_localhost_postgres and _allow_localhost_sqlite_fallback and not _tcp_port_open(host, port):
