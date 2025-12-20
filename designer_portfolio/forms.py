@@ -226,9 +226,17 @@ class DesignerPasswordResetForm(PasswordResetForm):
             return []
 
         UserModel = get_user_model()
-        candidates = UserModel._default_manager.filter(
-            Q(email__iexact=identifier) | Q(username__iexact=identifier)
-        ).order_by("id")
+        # Support legacy/imported designers where the only reachable email lives
+        # on the related DesignerProfile.contact_email field.
+        candidates = (
+            UserModel._default_manager.filter(
+                Q(email__iexact=identifier)
+                | Q(username__iexact=identifier)
+                | Q(designer_profile__contact_email__iexact=identifier)
+            )
+            .distinct()
+            .order_by("id")
+        )
 
         # Avoid sending multiple emails when username/email map to the same
         # underlying account. Track via primary key.

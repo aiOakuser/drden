@@ -269,6 +269,29 @@ class PasswordResetFlowTests(TestCase):
             "Expected the reset email to use the profile contact address when user.email is empty",
         )
 
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_password_reset_can_lookup_by_contact_email(self):
+        mail.outbox.clear()
+        fallback_email = "sleepy-contact-lookup@example.com"
+
+        # Ensure the user record has no email but the profile exposes a contact address
+        self.user.email = ""
+        self.user.save(update_fields=["email"])
+        DesignerProfile.objects.create(user=self.user, contact_email=fallback_email)
+
+        response = self.client.post(
+            reverse("password_reset"),
+            {"email": fallback_email},
+            follow=False,
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("password_reset_done"))
+        self.assertTrue(
+            any(fallback_email in (message.to or []) for message in mail.outbox),
+            "Expected a reset email to be sent when identifying by profile contact email",
+        )
+
 
 @override_settings(
     SECURE_SSL_REDIRECT=False,
