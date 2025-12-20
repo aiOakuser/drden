@@ -432,16 +432,74 @@ def _db_settings_from_env() -> dict[str, str]:
 _db_engine_env = (os.getenv("DB_ENGINE") or "").strip().lower()
 _use_sqlite = (_db_engine_env in _SQLITE_SCHEMES) or env_bool("USE_SQLITE", default=False)
 
+_explicit_db_env_present = any(
+    (os.getenv(name) or "").strip() != ""
+    for name in (
+        "DATABASE_URL",
+        "DB_URL",
+        "DB_ENGINE",
+        "DB_HOST",
+        "DB_PORT",
+        "DB_NAME",
+        "DB_USER",
+        "DB_PASSWORD",
+    )
+)
+
+def _tcp_port_open(host: str, port: int, *, timeout: float = 0.25) -> bool:
+    """
+    Best-effort reachability check for dev ergonomics.
+
+    We only use this for localhost DB URLs to avoid accidentally masking
+    production outages by silently switching databases.
+    """
+    try:
+        with socket.create_connection((host, port), timeout=timeout):
+            return True
+    except OSError:
+        return False
+
+
 if _use_sqlite:
+    # Explicitly forced via env.
     DATABASES = {"default": _sqlite_db_settings()}
 elif DATABASE_URL:
-    DATABASES = {"default": _db_settings_from_url(DATABASE_URL)}
-else:
+    # Explicit connection string usually wins, but in local/dev it's common for
+    # DATABASE_URL to point at localhost even when Postgres isn't running.
+    # In that case, fall back to SQLite to keep commands like `migrate` usable.
+    parsed = urlparse(DATABASE_URL)
+    scheme = (parsed.scheme or "").lower()
+    host = (parsed.hostname or "").strip().lower()
+    port = int(parsed.port or 5432)
+
+    _is_localhost_postgres = scheme in _POSTGRES_SCHEMES and host in {"localhost", "127.0.0.1", "::1"}
+    _allow_localhost_sqlite_fallback = env_bool(
+        "ALLOW_SQLITE_FALLBACK_FOR_LOCALHOST_POSTGRES",
+        default=(DEBUG or ENV in {"local", "development", "dev"}),
+    )
+
+    if _is_localhost_postgres and _allow_localhost_sqlite_fallback and not _tcp_port_open(host, port):
+        warnings.warn(
+            f"PostgreSQL at {host}:{port} is not reachable; falling back to SQLite. "
+            "Set ALLOW_SQLITE_FALLBACK_FOR_LOCALHOST_POSTGRES=0 to disable.",
+            RuntimeWarning,
+        )
+        DATABASES = {"default": _sqlite_db_settings()}
+    else:
+        DATABASES = {"default": _db_settings_from_url(DATABASE_URL)}
+elif _explicit_db_env_present:
+    # If any DB_* env is provided (even partially), assume Postgres is intended.
     DATABASES = {"default": _db_settings_from_env()}
+else:
+    # Safe default: if nothing is configured, use local SQLite instead of attempting
+    # to connect to Postgres on localhost (common in CI/build containers).
+    DATABASES = {"default": _sqlite_db_settings()}
 
 REQUIRE_POSTGRES_DATABASE = env_bool(
     "REQUIRE_POSTGRES_DATABASE",
-    default=not DEBUG,
+    # Production deployments should explicitly set DATABASE_URL/DB_*.
+    # In unconfigured environments, default to SQLite for stability.
+    default=(ENV in {"production", "prod"} and not DEBUG),
 )
 
 if (
