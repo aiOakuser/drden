@@ -475,16 +475,17 @@ elif DATABASE_URL:
     _is_localhost_postgres = scheme in _POSTGRES_SCHEMES and host in {"localhost", "127.0.0.1", "::1"}
     _allow_localhost_sqlite_fallback = env_bool(
         "ALLOW_SQLITE_FALLBACK_FOR_LOCALHOST_POSTGRES",
-        # When ENV is unset, treat it like local/CI rather than production.
-        # This keeps management commands usable in build containers where a
-        # localhost DATABASE_URL may be present but Postgres isn't running.
-        default=(DEBUG or ENV in {"", "local", "development", "dev"}),
+        # Only allow the SQLite fallback automatically in DEBUG mode.
+        # In container/production environments, localhost refers to *this* container, so
+        # falling back can accidentally run production on SQLite and mask DB misconfig.
+        default=DEBUG,
     )
 
     if _is_localhost_postgres and _allow_localhost_sqlite_fallback and not _tcp_port_open(host, port):
         warnings.warn(
             f"PostgreSQL at {host}:{port} is not reachable; falling back to SQLite. "
-            "Set ALLOW_SQLITE_FALLBACK_FOR_LOCALHOST_POSTGRES=0 to disable.",
+            "Set ALLOW_SQLITE_FALLBACK_FOR_LOCALHOST_POSTGRES=0 to disable (recommended for production). "
+            "If you're deploying in Docker/Coolify, set DB_HOST to your Postgres service name (e.g. 'postgres' or 'db'), not 'localhost'.",
             RuntimeWarning,
         )
         DATABASES = {"default": _sqlite_db_settings()}
@@ -500,9 +501,11 @@ else:
 
 REQUIRE_POSTGRES_DATABASE = env_bool(
     "REQUIRE_POSTGRES_DATABASE",
-    # Production deployments should explicitly set DATABASE_URL/DB_*.
-    # In unconfigured environments, default to SQLite for stability.
-    default=(ENV in {"production", "prod"} and not DEBUG),
+    # Fail loudly when we're clearly in production (either ENV says so, or the configured
+    # base URL is HTTPS). This avoids accidentally running production on SQLite, while
+    # still allowing CI/build containers to run management commands without a DB when
+    # production env vars are not present.
+    default=(not DEBUG and (ENV in {"production", "prod"} or SERVER_URL_IS_HTTPS)),
 )
 
 if (
