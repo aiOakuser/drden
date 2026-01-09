@@ -78,6 +78,12 @@ BASE_URL_SERVER = os.getenv("BASE_URL_SERVER", "")
 SERVER_URL_IS_HTTPS = BASE_URL_SERVER.lower().startswith("https://")
 _base_url_hostname = (urlparse(BASE_URL_SERVER).hostname or "").strip().lower() if BASE_URL_SERVER else ""
 
+# Coolify deployment platform support - use COOLIFY_FQDN if available
+COOLIFY_FQDN = (os.getenv("COOLIFY_FQDN") or "").strip().lower()
+if COOLIFY_FQDN and not _base_url_hostname:
+    # If BASE_URL_SERVER is not set but COOLIFY_FQDN is, derive from it
+    _base_url_hostname = COOLIFY_FQDN
+
 # --- Core ---
 SECRET_KEY = 'django-insecure-ck*q$d@!w83)@m36n=)%3m$jxp6#k53sh86j^i2q*lz1&klq&+'
 SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-change-this-in-production")
@@ -94,6 +100,13 @@ ALLOWED_HOSTS = [
 if os.getenv("ALLOWED_HOSTS"):
     # Allow overriding via env (comma-separated)
     ALLOWED_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS").split(",") if h.strip()]
+
+# Add COOLIFY_FQDN to ALLOWED_HOSTS if set
+if COOLIFY_FQDN and COOLIFY_FQDN not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(COOLIFY_FQDN)
+    # Also add www variant if not already present
+    if not COOLIFY_FQDN.startswith("www.") and f"www.{COOLIFY_FQDN}" not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(f"www.{COOLIFY_FQDN}")
 if DEBUG:
     # Allow Django test client and local dev hostnames
     ALLOWED_HOSTS += ["testserver", "0.0.0.0"]
@@ -122,9 +135,28 @@ if _base_url_hostname:
         origin = f"{scheme}://{_base_url_hostname}"
         if origin not in CSRF_TRUSTED_ORIGINS:
             CSRF_TRUSTED_ORIGINS.append(origin)
+    elif COOLIFY_FQDN:
+        # If COOLIFY_FQDN is set but BASE_URL_SERVER scheme is missing, use https for production
+        # Check COOLIFY_URL for scheme, otherwise default to https
+        coolify_url = (os.getenv("COOLIFY_URL") or "").strip().lower()
+        if coolify_url.startswith("https://"):
+            origin = f"https://{_base_url_hostname}"
+            if origin not in CSRF_TRUSTED_ORIGINS:
+                CSRF_TRUSTED_ORIGINS.append(origin)
+        elif not DEBUG:
+            # In production without explicit scheme, default to https
+            origin = f"https://{_base_url_hostname}"
+            if origin not in CSRF_TRUSTED_ORIGINS:
+                CSRF_TRUSTED_ORIGINS.append(origin)
 
 # --- Canonical host enforcement ---
-CANONICAL_HOST = (os.getenv("CANONICAL_HOST") or "globaldesignerhub.com").strip().lower()
+# Prefer COOLIFY_FQDN if available, then CANONICAL_HOST, then default
+CANONICAL_HOST = (
+    COOLIFY_FQDN or 
+    os.getenv("CANONICAL_HOST") or 
+    _base_url_hostname or 
+    "globaldesignerhub.com"
+).strip().lower()
 if CANONICAL_HOST == "":
     CANONICAL_HOST = ""
 
