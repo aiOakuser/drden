@@ -79,7 +79,6 @@ SERVER_URL_IS_HTTPS = BASE_URL_SERVER.lower().startswith("https://")
 _base_url_hostname = (urlparse(BASE_URL_SERVER).hostname or "").strip().lower() if BASE_URL_SERVER else ""
 
 # --- Core ---
-SECRET_KEY = 'django-insecure-ck*q$d@!w83)@m36n=)%3m$jxp6#k53sh86j^i2q*lz1&klq&+'
 SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-change-this-in-production")
 DEBUG = env_bool("DEBUG", default=False)
 
