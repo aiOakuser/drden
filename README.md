@@ -5,14 +5,25 @@ The platform offers a user-friendly interface and a robust authentication system
 
 This app is intended to run on **PostgreSQL** in production.
 
-- **Do not use `localhost` for Postgres inside containers**: in Docker/Coolify, `localhost` means “this same container”, not your Postgres container. Set `DB_HOST` (or `DATABASE_URL`) to the **service name / internal hostname** of your Postgres service (commonly `postgres` or `db`).
-- **Required env vars (if not using `DATABASE_URL`)**:
+### Coolify steps (Postgres service)
+
+1. Create a Postgres service (v15+).
+2. **Do not use `localhost` inside containers**: use the **service name / internal hostname** (commonly `postgres` or `db`).
+3. Link the Postgres service to the app (Coolify injects `POSTGRES_*` env vars) or copy those values into the app env.
+4. Set **either** `DATABASE_URL` **or** the discrete variables listed below, then redeploy.
+
+### App configuration (repo)
+
+- `gdh/settings.py` reads `DATABASE_URL` first; otherwise it uses `DB_*` or `POSTGRES_*/PG*` equivalents.
+- `.env.example` lists the supported variables for local dev and hosting providers.
+- There is **no SQLite fallback** in production; tests use in-memory SQLite.
+- Discrete vars (if not using `DATABASE_URL`):
   - `DB_HOST`, `DB_PORT` (usually `5432`)
   - `DB_NAME`, `DB_USER`, `DB_PASSWORD`
-- **Disable SQLite fallback in production** (recommended):
-  - `ALLOW_SQLITE_FALLBACK_FOR_LOCALHOST_POSTGRES=0`
-  - `REQUIRE_POSTGRES_DATABASE=1`
-  - (Optionally) set `ENV=production` to make the environment intent explicit.
+  - Coolify equivalents: `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`
+
+### Other deployment notes
+
 - **Static files**: run `python manage.py collectstatic --noinput` as part of your build/release. Static assets are served via WhiteNoise.
 - **Container cleanup logs**: during rolling updates some platforms auto-remove build containers. If you see `No such container` while cleaning up, it is usually safe. For custom automation, use `./docker_cleanup.sh <container>` to make cleanup idempotent.
 
