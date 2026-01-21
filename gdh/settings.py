@@ -1,10 +1,11 @@
 from pathlib import Path
 import os
-from dotenv import load_dotenv
-import socket
+import sys
 import warnings
-from urllib.parse import urlparse, unquote
-from django.core.exceptions import ImproperlyConfigured
+from urllib.parse import urlparse
+
+from dotenv import load_dotenv
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -333,188 +334,72 @@ WSGI_APPLICATION = "gdh.wsgi.application"
 # Use a custom failure view that returns friendlier HTML and JSON responses.
 CSRF_FAILURE_VIEW = "designer_portfolio.views.csrf_failure"
 
-# --- Database (PostgreSQL for both local and production) ---
-ENV = (os.getenv("ENV") or "").lower()
-DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("DB_URL")
-_POSTGRES_SCHEMES = {"postgres", "postgresql", "psql", "pgsql"}
-_SQLITE_SCHEMES = {"sqlite", "sqlite3"}
+# --- Database ---
+# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+RUNNING_TESTS = "test" in sys.argv
 
-
-def _sqlite_db_settings(
-    path_override: str | None = None,
-    *,
-    treat_as_relative: bool | None = None,
-) -> dict[str, str]:
-    """
-    Build SQLite settings using either an explicit path override or env defaults.
-
-    treat_as_relative=True forces the resolved path to live under BASE_DIR regardless
-    of whether the supplied override starts with a leading slash (useful for sqlite:/// urls).
-    """
-    env_default = os.getenv("SQLITE_NAME") or os.getenv("DB_NAME") or "designer_db"
-    candidate = (path_override or env_default).strip()
-    if candidate == "":
-        candidate = env_default
-
-    candidate = os.path.expanduser(candidate)
-    if candidate in {":memory:", "memory"}:
-        return {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}
-
-    if treat_as_relative:
-        candidate = candidate.lstrip("/\\")
-
-    sqlite_path = Path(candidate)
-    if treat_as_relative or not sqlite_path.is_absolute():
-        sqlite_path = BASE_DIR / sqlite_path
-
-    return {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": str(sqlite_path),
+if RUNNING_TESTS:
+    # Keep tests self-contained; avoid requiring a running Postgres instance.
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": ":memory:",
+        }
     }
-
-
-def _db_settings_from_url(database_url: str) -> dict[str, str]:
-    parsed = urlparse(database_url)
-    scheme = (parsed.scheme or "").lower()
-
-    if scheme in _SQLITE_SCHEMES:
-        raw_path = unquote(parsed.path or "")
-        if parsed.netloc:
-            raw_path = f"//{parsed.netloc}{raw_path}"
-            treat_as_relative = False
-        else:
-            treat_as_relative = not database_url.startswith("sqlite:////")
-        return _sqlite_db_settings(
-            path_override=raw_path or None,
-            treat_as_relative=treat_as_relative,
-        )
-
-    if scheme not in _POSTGRES_SCHEMES:
-        raise ImproperlyConfigured(
-            "DATABASE_URL must use a PostgreSQL scheme (e.g. postgres://username:password@host:port/dbname or postgresql://username:password@host:port/dbname)."
-        )
-
-    path = parsed.path or ""
-    if path.startswith("/"):
-        path = path[1:]
-
-    host = parsed.hostname or os.getenv("DB_HOST", "127.0.0.1")
-    port = parsed.port or os.getenv("DB_PORT", "5432")
-
-    return {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": unquote(path or os.getenv("DB_NAME", "designer_db")),
-        "USER": unquote(parsed.username or os.getenv("DB_USER", "postgres")),
-        "PASSWORD": unquote(parsed.password or os.getenv("DB_PASSWORD", "")),
-        "HOST": host,
-        "PORT": str(port),
-        "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
-    }
-
-
-def _db_settings_from_env() -> dict[str, str]:
-    db_engine = (os.getenv("DB_ENGINE") or "").strip().lower()
-    if db_engine in _SQLITE_SCHEMES:
-        return _sqlite_db_settings()
-
-    return {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("DB_NAME", "designer_db"),
-        "USER": os.getenv("DB_USER", "postgres"),
-        "PASSWORD": os.getenv("DB_PASSWORD", "postgres"),
-        "HOST": os.getenv("DB_HOST", "127.0.0.1"),
-        "PORT": os.getenv("DB_PORT", "5432"),
-        "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
-    }
-
-
-_db_engine_env = (os.getenv("DB_ENGINE") or "").strip().lower()
-_use_sqlite = (_db_engine_env in _SQLITE_SCHEMES) or env_bool("USE_SQLITE", default=False)
-
-_explicit_db_env_present = any(
-    (os.getenv(name) or "").strip() != ""
-    for name in (
-        "DATABASE_URL",
-        "DB_URL",
-        "DB_ENGINE",
-        "DB_HOST",
-        "DB_PORT",
-        "DB_NAME",
-        "DB_USER",
-        "DB_PASSWORD",
-    )
-)
-
-def _tcp_port_open(host: str, port: int, *, timeout: float = 0.25) -> bool:
-    """
-    Best-effort reachability check for dev ergonomics.
-
-    We only use this for localhost DB URLs to avoid accidentally masking
-    production outages by silently switching databases.
-    """
-    try:
-        with socket.create_connection((host, port), timeout=timeout):
-            return True
-    except OSError:
-        return False
-
-
-if _use_sqlite:
-    # Explicitly forced via env.
-    DATABASES = {"default": _sqlite_db_settings()}
-elif DATABASE_URL:
-    # Explicit connection string usually wins, but in local/dev it's common for
-    # DATABASE_URL to point at localhost even when Postgres isn't running.
-    # In that case, fall back to SQLite to keep commands like `migrate` usable.
-    parsed = urlparse(DATABASE_URL)
-    scheme = (parsed.scheme or "").lower()
-    host = (parsed.hostname or "").strip().lower()
-    port = int(parsed.port or 5432)
-
-    _is_localhost_postgres = scheme in _POSTGRES_SCHEMES and host in {"localhost", "127.0.0.1", "::1"}
-    _allow_localhost_sqlite_fallback = env_bool(
-        "ALLOW_SQLITE_FALLBACK_FOR_LOCALHOST_POSTGRES",
-        # Only allow the SQLite fallback automatically in DEBUG mode.
-        # In container/production environments, localhost refers to *this* container, so
-        # falling back can accidentally run production on SQLite and mask DB misconfig.
-        default=DEBUG,
-    )
-
-    if _is_localhost_postgres and _allow_localhost_sqlite_fallback and not _tcp_port_open(host, port):
-        warnings.warn(
-            f"PostgreSQL at {host}:{port} is not reachable; falling back to SQLite. "
-            "Set ALLOW_SQLITE_FALLBACK_FOR_LOCALHOST_POSTGRES=0 to disable (recommended for production). "
-            "If you're deploying in Docker/Coolify, set DB_HOST to your Postgres service name (e.g. 'postgres' or 'db'), not 'localhost'.",
-            RuntimeWarning,
-        )
-        DATABASES = {"default": _sqlite_db_settings()}
-    else:
-        DATABASES = {"default": _db_settings_from_url(DATABASE_URL)}
-elif _explicit_db_env_present:
-    # If any DB_* env is provided (even partially), assume Postgres is intended.
-    DATABASES = {"default": _db_settings_from_env()}
 else:
-    # Safe default: if nothing is configured, use local SQLite instead of attempting
-    # to connect to Postgres on localhost (common in CI/build containers).
-    DATABASES = {"default": _sqlite_db_settings()}
+    DATABASE_URL = os.getenv("DATABASE_URL")
+    if DATABASE_URL:
+        DATABASES = {
+            "default": dj_database_url.parse(
+                DATABASE_URL,
+                conn_max_age=600,
+                ssl_require=False,  # set True only if you use managed PG w/ SSL
+            )
+        }
+    else:
+        # Allow configuring Postgres via discrete variables (common in Coolify):
+        # DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, DB_PORT
+        DB_HOST = os.getenv("DB_HOST")
+        DB_NAME = os.getenv("DB_NAME")
+        DB_USER = os.getenv("DB_USER")
+        DB_PASSWORD = os.getenv("DB_PASSWORD")
+        DB_PORT = os.getenv("DB_PORT", "5432")
 
-REQUIRE_POSTGRES_DATABASE = env_bool(
-    "REQUIRE_POSTGRES_DATABASE",
-    # Fail loudly when we're clearly in production (either ENV says so, or the configured
-    # base URL is HTTPS). This avoids accidentally running production on SQLite, while
-    # still allowing CI/build containers to run management commands without a DB when
-    # production env vars are not present.
-    default=(not DEBUG and (ENV in {"production", "prod"} or SERVER_URL_IS_HTTPS)),
-)
+        any_db_vars = any([DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, os.getenv("DB_PORT")])
+        if not any_db_vars:
+            raise RuntimeError(
+                "DATABASE_URL is required (Postgres only). Alternatively set "
+                "DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, and (optional) DB_PORT."
+            )
 
-if (
-    REQUIRE_POSTGRES_DATABASE
-    and DATABASES["default"]["ENGINE"] != "django.db.backends.postgresql"
-):
-    raise ImproperlyConfigured(
-        "PostgreSQL is required for this environment. Set DB_ENGINE=postgres or "
-        "disable this check via REQUIRE_POSTGRES_DATABASE=0 if SQLite is acceptable."
-    )
+        missing = [
+            name
+            for name, value in {
+                "DB_HOST": DB_HOST,
+                "DB_NAME": DB_NAME,
+                "DB_USER": DB_USER,
+                "DB_PASSWORD": DB_PASSWORD,
+            }.items()
+            if not value
+        ]
+        if missing:
+            raise RuntimeError(
+                "Missing required database environment variables: "
+                + ", ".join(missing)
+                + ". Provide DATABASE_URL instead, or set all DB_* variables."
+            )
+
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.postgresql",
+                "NAME": DB_NAME,
+                "USER": DB_USER,
+                "PASSWORD": DB_PASSWORD,
+                "HOST": DB_HOST,
+                "PORT": DB_PORT,
+                "CONN_MAX_AGE": 600,
+            }
+        }
 
 # --- Password validation ---
 AUTH_PASSWORD_VALIDATORS = [
