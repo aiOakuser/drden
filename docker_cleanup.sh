@@ -7,15 +7,27 @@ if [[ -z "$container" ]]; then
   exit 2
 fi
 
-if ! docker inspect "$container" >/dev/null 2>&1; then
+container_exists() {
+  docker inspect "$container" >/dev/null 2>&1
+}
+
+if ! container_exists; then
   echo "Container '$container' not found; skipping cleanup."
   exit 0
 fi
 
 if ! docker stop --time=30 "$container" >/dev/null 2>&1; then
+  if ! container_exists; then
+    echo "Container '$container' already removed; skipping cleanup."
+    exit 0
+  fi
   echo "Container '$container' already stopped; continuing."
 fi
 
 if ! docker rm -f "$container" >/dev/null 2>&1; then
-  echo "Container '$container' already removed; skipping."
+  if ! container_exists; then
+    echo "Container '$container' already removed; skipping."
+  else
+    echo "Container '$container' could not be removed; leaving it in place."
+  fi
 fi
