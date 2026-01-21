@@ -74,6 +74,17 @@ def env_list(name: str, default: list[str] | None = None) -> list[str]:
     normalized = raw.replace("\n", ",")
     return [item.strip() for item in normalized.split(",") if item.strip()]
 
+
+def env_first(*names: str) -> str | None:
+    for name in names:
+        value = os.getenv(name)
+        if value is None:
+            continue
+        if value.strip() == "":
+            continue
+        return value
+    return None
+
 # Helpful flags derived from environment for consistent HTTPS behavior
 BASE_URL_SERVER = os.getenv("BASE_URL_SERVER", "")
 SERVER_URL_IS_HTTPS = BASE_URL_SERVER.lower().startswith("https://")
@@ -347,7 +358,7 @@ if RUNNING_TESTS:
         }
     }
 else:
-    DATABASE_URL = os.getenv("DATABASE_URL")
+    DATABASE_URL = env_first("DATABASE_URL", "POSTGRES_URL", "POSTGRESQL_URL")
     if DATABASE_URL:
         DATABASES = {
             "default": dj_database_url.parse(
@@ -357,19 +368,21 @@ else:
             )
         }
     else:
-        # Allow configuring Postgres via discrete variables (common in Coolify):
-        # DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, DB_PORT
-        DB_HOST = os.getenv("DB_HOST")
-        DB_NAME = os.getenv("DB_NAME")
-        DB_USER = os.getenv("DB_USER")
-        DB_PASSWORD = os.getenv("DB_PASSWORD")
-        DB_PORT = os.getenv("DB_PORT", "5432")
+        # Allow configuring Postgres via discrete variables (common in Coolify).
+        # DB_* is preferred; POSTGRES_* and PG* equivalents are also accepted.
+        DB_HOST = env_first("DB_HOST", "POSTGRES_HOST", "PGHOST")
+        DB_NAME = env_first("DB_NAME", "POSTGRES_DB", "PGDATABASE")
+        DB_USER = env_first("DB_USER", "POSTGRES_USER", "PGUSER")
+        DB_PASSWORD = env_first("DB_PASSWORD", "POSTGRES_PASSWORD", "PGPASSWORD")
+        DB_PORT_RAW = env_first("DB_PORT", "POSTGRES_PORT", "PGPORT")
+        DB_PORT = DB_PORT_RAW or "5432"
 
-        any_db_vars = any([DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, os.getenv("DB_PORT")])
+        any_db_vars = any([DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, DB_PORT_RAW])
         if not any_db_vars:
             raise RuntimeError(
                 "DATABASE_URL is required (Postgres only). Alternatively set "
-                "DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, and (optional) DB_PORT."
+                "DB_HOST/DB_NAME/DB_USER/DB_PASSWORD (or POSTGRES_*/PG* equivalents) "
+                "and optional DB_PORT."
             )
 
         missing = [
@@ -386,7 +399,8 @@ else:
             raise RuntimeError(
                 "Missing required database environment variables: "
                 + ", ".join(missing)
-                + ". Provide DATABASE_URL instead, or set all DB_* variables."
+                + ". Provide DATABASE_URL instead, or set DB_* variables "
+                "(Coolify POSTGRES_*/PG* equivalents are also supported)."
             )
 
         DATABASES = {
