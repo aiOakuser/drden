@@ -11,6 +11,7 @@ This app is intended to run on **PostgreSQL** in production.
 2. **Do not use `localhost` inside containers**: use the **service name / internal hostname** (commonly `postgres` or `db`).
 3. Link the Postgres service to the app (Coolify injects `POSTGRES_*` env vars) or copy those values into the app env.
 4. Set **either** `DATABASE_URL` **or** the discrete variables listed below, then redeploy.
+   - If `DATABASE_URL` is left as the example `USER:PASSWORD@HOST`, the app ignores it and expects the `DB_*` vars.
 
 ### App configuration (repo)
 
