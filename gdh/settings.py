@@ -85,6 +85,44 @@ def env_first(*names: str) -> str | None:
         return value
     return None
 
+
+_PLACEHOLDER_HOST_VALUES = {"host", "hostname"}
+_PLACEHOLDER_USER_VALUES = {"user", "username"}
+_PLACEHOLDER_PASSWORD_VALUES = {"password", "pass"}
+
+
+def _is_placeholder(value: str | None, placeholders: set[str]) -> bool:
+    if value is None:
+        return False
+    return value.strip().lower() in placeholders
+
+
+def _database_url_is_placeholder(database_url: str) -> bool:
+    normalized = database_url.strip().lower()
+    # Quick check for the sample URL in .env.example.
+    if "user:password@host" in normalized:
+        return True
+    parsed = urlparse(database_url)
+    placeholder_hits = 0
+    if _is_placeholder(parsed.username, _PLACEHOLDER_USER_VALUES):
+        placeholder_hits += 1
+    if _is_placeholder(parsed.password, _PLACEHOLDER_PASSWORD_VALUES):
+        placeholder_hits += 1
+    if _is_placeholder(parsed.hostname, _PLACEHOLDER_HOST_VALUES):
+        placeholder_hits += 1
+    return placeholder_hits >= 2
+
+
+def _db_vars_placeholder_fields(db_host: str | None, db_user: str | None, db_password: str | None) -> list[str]:
+    placeholders = []
+    if _is_placeholder(db_host, _PLACEHOLDER_HOST_VALUES):
+        placeholders.append("DB_HOST")
+    if _is_placeholder(db_user, _PLACEHOLDER_USER_VALUES):
+        placeholders.append("DB_USER")
+    if _is_placeholder(db_password, _PLACEHOLDER_PASSWORD_VALUES):
+        placeholders.append("DB_PASSWORD")
+    return placeholders
+
 # Helpful flags derived from environment for consistent HTTPS behavior
 BASE_URL_SERVER = os.getenv("BASE_URL_SERVER", "")
 SERVER_URL_IS_HTTPS = BASE_URL_SERVER.lower().startswith("https://")
@@ -359,6 +397,13 @@ if RUNNING_TESTS:
     }
 else:
     DATABASE_URL = env_first("DATABASE_URL", "POSTGRES_URL", "POSTGRESQL_URL")
+    if DATABASE_URL and _database_url_is_placeholder(DATABASE_URL):
+        warnings.warn(
+            "DATABASE_URL looks like the example placeholder (USER:PASSWORD@HOST). "
+            "Unset DATABASE_URL or replace it with real credentials; falling back to DB_*.",
+            RuntimeWarning,
+        )
+        DATABASE_URL = None
     if DATABASE_URL:
         DATABASES = {
             "default": dj_database_url.parse(
@@ -401,6 +446,14 @@ else:
                 + ", ".join(missing)
                 + ". Provide DATABASE_URL instead, or set DB_* variables "
                 "(Coolify POSTGRES_*/PG* equivalents are also supported)."
+            )
+
+        placeholder_fields = _db_vars_placeholder_fields(DB_HOST, DB_USER, DB_PASSWORD)
+        if placeholder_fields and {"DB_HOST", "DB_USER"} & set(placeholder_fields):
+            raise RuntimeError(
+                "Database environment variables look like placeholder values: "
+                + ", ".join(placeholder_fields)
+                + ". Replace them with real values, or set DATABASE_URL."
             )
 
         DATABASES = {
