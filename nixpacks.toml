@@ -1,2 +1,5 @@
+[variables]
+  NIXPACKS_PATH = "/nix/var/nix/profiles/default"
+
 [start]
   cmd = "python manage.py migrate --noinput && (python manage.py restore_designer_users || true) && python manage.py collectstatic --noinput && gunicorn gdh.wsgi:application --bind 0.0.0.0:${PORT:-8021} --workers ${WORKERS:-3}"
