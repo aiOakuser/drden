@@ -28,6 +28,7 @@ This app is intended to run on **PostgreSQL** in production.
 - **Static files**: run `python manage.py collectstatic --noinput` as part of your build/release. Static assets are served via WhiteNoise.
 - **Container cleanup logs**: during rolling updates some platforms auto-remove build containers. If you see `No such container` while cleaning up, it is usually safe. For custom automation, use `./docker_cleanup.sh <container>` to make cleanup idempotent.
 - **Orphan container warnings**: after renaming/removing services, you may see "Found orphan containers". Run your deploy with `--remove-orphans` (or use your platform's cleanup action) to remove the old containers.
+- **Email env warnings**: if you see `GMAIL_APP_PASSWORD` not set in Docker logs, it's an optional alias for `EMAIL_HOST_PASSWORD`. Set it to the same value (or remove it from your platform env list) to silence the warning.
 
 ## Authentication highlights
 
