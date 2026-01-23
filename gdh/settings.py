@@ -525,7 +525,8 @@ else:
 # --- Email ---
 # Email Configuration
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+# Allow Gmail app-password alias used by some hosts.
+EMAIL_HOST_PASSWORD = env_first("EMAIL_HOST_PASSWORD", "GMAIL_APP_PASSWORD") or ""
 
 # Use console backend in development if no email credentials configured
 if DEBUG and not EMAIL_HOST_USER:
