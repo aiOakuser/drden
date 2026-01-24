@@ -23,6 +23,16 @@ This app is intended to run on **PostgreSQL** in production.
   - `DB_NAME`, `DB_USER`, `DB_PASSWORD`
   - Coolify equivalents: `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`
 
+### Restore + bootstrap (production)
+
+- `python manage.py wait_for_db` now auto-creates the database if it is missing.
+  - Disable with `DB_AUTO_CREATE=false` if you want to manage DB creation manually.
+- To restore data on startup:
+  - Set `AUTO_RESTORE_DB=1` to load the latest `backups/db-*.json.gz` from default storage.
+  - Or set `RESTORE_DB_INPUT=backups/<file>.json.gz` to restore a specific backup.
+- Backups are created with `python manage.py backup_db` and stored under `media/backups/`
+  (or S3 when `USE_S3_MEDIA=true`).
+
 ### Other deployment notes
 
 - **Static files**: run `python manage.py collectstatic --noinput` as part of your build/release. Static assets are served via WhiteNoise.
