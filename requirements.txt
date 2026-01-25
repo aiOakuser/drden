@@ -1,3 +1,4 @@
+# Requirements file must be UTF-8 encoded (no UTF-16/BOM).
 asgiref==3.8.1
 attrs==25.3.0
 boto3==1.40.22
