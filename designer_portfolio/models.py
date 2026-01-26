@@ -206,6 +206,20 @@ class Event(TimeStampedModel):
     description = models.TextField(blank=True)
     cover = models.ImageField(upload_to="events/covers/", blank=True, null=True)
     event_date = models.DateField(blank=True, null=True)
+    end_date = models.DateField(blank=True, null=True)
+    location = models.CharField(max_length=160, blank=True)
+    venue = models.CharField(max_length=160, blank=True)
+    attendee_capacity = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(1)],
+        help_text="Optional headcount limit for attendee RSVPs.",
+    )
+    collaboration_deadline = models.DateField(
+        blank=True,
+        null=True,
+        help_text="Optional cutoff for collaboration requests.",
+    )
     is_popup = models.BooleanField(default=False)  # popup event toggle
     popup_order = models.PositiveIntegerField(default=0)
 
@@ -233,6 +247,55 @@ class EventImage(TimeStampedModel):
 
     def __str__(self):
         return f"Image for {self.event.title}"
+
+
+class EventAttendee(TimeStampedModel):
+    event = models.ForeignKey(Event, related_name="attendees", on_delete=models.CASCADE)
+    full_name = models.CharField(max_length=120)
+    email = models.EmailField()
+    company = models.CharField(max_length=120, blank=True)
+    title = models.CharField(max_length=120, blank=True)
+    ticket_count = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
+    notes = models.TextField(blank=True)
+    checked_in = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["-created_at"]
+        unique_together = [("event", "email")]
+
+    def __str__(self):
+        return f"{self.full_name} – {self.event.title}"
+
+
+class EventCollaboration(TimeStampedModel):
+    STATUS_NEW = "new"
+    STATUS_REVIEWED = "reviewed"
+    STATUS_ACCEPTED = "accepted"
+    STATUS_DECLINED = "declined"
+
+    STATUS_CHOICES = [
+        (STATUS_NEW, "New"),
+        (STATUS_REVIEWED, "Reviewed"),
+        (STATUS_ACCEPTED, "Accepted"),
+        (STATUS_DECLINED, "Declined"),
+    ]
+
+    event = models.ForeignKey(Event, related_name="collaboration_requests", on_delete=models.CASCADE)
+    full_name = models.CharField(max_length=120)
+    email = models.EmailField()
+    company = models.CharField(max_length=120, blank=True)
+    role = models.CharField(max_length=120, blank=True)
+    portfolio_url = models.URLField(blank=True)
+    message = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_NEW)
+    is_contacted = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["-created_at"]
+        unique_together = [("event", "email")]
+
+    def __str__(self):
+        return f"{self.full_name} – {self.event.title}"
 
 
 class RejectedDesigner(models.Model):

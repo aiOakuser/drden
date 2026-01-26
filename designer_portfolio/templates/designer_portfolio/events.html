@@ -161,8 +161,14 @@
           </p>
 
           <div class="event-meta">
-            <span class="event-location">📍 Fashion District</span>
-            <span class="event-time">🕒 7:00 PM</span>
+            <span class="event-location">📍 {{ event.location|default:"Fashion District" }}</span>
+            {% if event.venue %}
+              <span class="event-time">🏛 {{ event.venue }}</span>
+            {% elif event.end_date %}
+              <span class="event-time">📆 Multi-day showcase</span>
+            {% else %}
+              <span class="event-time">🕒 Time TBA</span>
+            {% endif %}
           </div>
 
           <a href="{% url 'event_detail' event.slug %}" class="btn btn-primary"
