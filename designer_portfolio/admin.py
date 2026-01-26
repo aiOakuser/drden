@@ -196,14 +196,39 @@ class EventImageInline(admin.TabularInline):
     preview.short_description = "Preview"
 
 
+class EventAttendeeInline(admin.TabularInline):
+    model = m.EventAttendee
+    extra = 0
+    fields = ("full_name", "email", "company", "ticket_count", "checked_in", "created_at")
+    readonly_fields = ("created_at",)
+
+
+class EventCollaborationInline(admin.TabularInline):
+    model = m.EventCollaboration
+    extra = 0
+    fields = ("full_name", "email", "company", "role", "status", "is_contacted", "created_at")
+    readonly_fields = ("created_at",)
+
+
 # ---------------- Event ----------------
 @admin.register(m.Event)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ("title", "event_date", "is_popup", "popup_order", "cover_preview", "created_at")
-    list_filter = ("is_popup", "event_date")
+    list_display = (
+        "title",
+        "event_date",
+        "end_date",
+        "location",
+        "venue",
+        "attendee_capacity",
+        "is_popup",
+        "popup_order",
+        "cover_preview",
+        "created_at",
+    )
+    list_filter = ("is_popup", "event_date", "end_date")
     search_fields = ("title", "description")
     prepopulated_fields = {"slug": ("title",)}
-    inlines = [EventImageInline]
+    inlines = [EventImageInline, EventAttendeeInline, EventCollaborationInline]
 
     def cover_preview(self, obj):
         if obj.cover:
@@ -213,6 +238,22 @@ class EventAdmin(admin.ModelAdmin):
             )
         return "-"
     cover_preview.short_description = "Cover"
+
+
+@admin.register(m.EventAttendee)
+class EventAttendeeAdmin(admin.ModelAdmin):
+    list_display = ("full_name", "event", "email", "company", "ticket_count", "checked_in", "created_at")
+    list_filter = ("checked_in", "created_at")
+    search_fields = ("full_name", "email", "company", "event__title")
+    readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(m.EventCollaboration)
+class EventCollaborationAdmin(admin.ModelAdmin):
+    list_display = ("full_name", "event", "email", "company", "role", "status", "is_contacted", "created_at")
+    list_filter = ("status", "is_contacted", "created_at")
+    search_fields = ("full_name", "email", "company", "role", "event__title")
+    readonly_fields = ("created_at", "updated_at")
 
 
 # ---------------- Designer Profile ----------------

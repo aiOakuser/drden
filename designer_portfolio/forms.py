@@ -9,7 +9,15 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils import timezone
 from django.db.models import Q
 from datetime import timedelta
-from .models import SubscriptionPlan, UserSubscription, ProblemReport, Project, Template
+from .models import (
+    SubscriptionPlan,
+    UserSubscription,
+    ProblemReport,
+    Project,
+    Template,
+    EventAttendee,
+    EventCollaboration,
+)
 from .project_templates import serialize_template_instance
 from .auth_utils import ensure_designer_access
 from .emails import notify_password_reset_request
@@ -412,6 +420,72 @@ class ContactForm(forms.Form):
         if len(message) < 10:
             raise forms.ValidationError("Share at least 10 characters so we can assist you.")
         return message
+
+
+class EventAttendeeForm(forms.ModelForm):
+    class Meta:
+        model = EventAttendee
+        fields = ["full_name", "email", "company", "title", "ticket_count", "notes"]
+        widgets = {
+            "full_name": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Full name", "autocomplete": "name"}
+            ),
+            "email": forms.EmailInput(
+                attrs={"class": "form-control", "placeholder": "Email address", "autocomplete": "email"}
+            ),
+            "company": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Company or label (optional)"}
+            ),
+            "title": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Role or title (optional)"}
+            ),
+            "ticket_count": forms.NumberInput(
+                attrs={"class": "form-control", "min": 1, "max": 10}
+            ),
+            "notes": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 3,
+                    "placeholder": "Any accessibility or guest notes (optional)",
+                }
+            ),
+        }
+
+    def clean_ticket_count(self):
+        count = self.cleaned_data.get("ticket_count") or 1
+        if count < 1:
+            raise forms.ValidationError("Ticket quantity must be at least 1.")
+        return count
+
+
+class EventCollaborationForm(forms.ModelForm):
+    class Meta:
+        model = EventCollaboration
+        fields = ["full_name", "email", "company", "role", "portfolio_url", "message"]
+        widgets = {
+            "full_name": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Full name", "autocomplete": "name"}
+            ),
+            "email": forms.EmailInput(
+                attrs={"class": "form-control", "placeholder": "Email address", "autocomplete": "email"}
+            ),
+            "company": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Company or label (optional)"}
+            ),
+            "role": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Collaboration focus (styling, PR, production)"}
+            ),
+            "portfolio_url": forms.URLInput(
+                attrs={"class": "form-control", "placeholder": "Portfolio or reel link (optional)"}
+            ),
+            "message": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 4,
+                    "placeholder": "Tell us how you would like to collaborate",
+                }
+            ),
+        }
 
 
 class ProjectCreateForm(forms.Form):
