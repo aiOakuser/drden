@@ -787,10 +787,10 @@ VOLUMEONE_TEMPLATE_LIBRARY = _build_template_library(
 
 def _get_public_contact_email() -> str:
     return (
-        getattr(settings, "AIOAK_CONTACT_EMAIL", "")
+        getattr(settings, "GLOBALDESIGNERHUB_CONTACT_EMAIL", "")
         or getattr(settings, "PRETTYPEARL_CONTACT_EMAIL", "")
         or getattr(settings, "ADMIN_EMAIL", "")
-        or "admin@aioak.net"
+        or "support@globaldesignerhub.com"
     )
 
 
@@ -1905,7 +1905,7 @@ def contact_view(request):
     )
 
 
-class AIOAKLegalPageView(TemplateView):
+class GlobalDesignerHubLegalPageView(TemplateView):
     """
     Shared base view so every legal/policy page exposes the same company data.
     """
@@ -1913,15 +1913,15 @@ class AIOAKLegalPageView(TemplateView):
     company_name = "GlobalDesignerHub"
     effective_date = "December 1, 2025"
     company_location = "Saratoga, CA – USA – 95070"
-    service_brands = ("GlobalDesignerHub", "TailorHub", "other related services")
+    service_brands = ("GlobalDesignerHub", "TailorHub", "VolumeOne")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         contact_email = (
-            getattr(settings, "AIOAK_CONTACT_EMAIL", "")
+            getattr(settings, "GLOBALDESIGNERHUB_CONTACT_EMAIL", "")
             or getattr(settings, "PRETTYPEARL_CONTACT_EMAIL", "")
             or getattr(settings, "ADMIN_EMAIL", "")
-            or "admin@aioak.net"
+            or "support@globaldesignerhub.com"
         )
         context.update(
             {
@@ -1935,27 +1935,27 @@ class AIOAKLegalPageView(TemplateView):
         return context
 
 
-class PrivacyPolicyView(AIOAKLegalPageView):
+class PrivacyPolicyView(GlobalDesignerHubLegalPageView):
     template_name = "designer_portfolio/privacy_policy.html"
 
 
-class TermsOfServiceView(AIOAKLegalPageView):
+class TermsOfServiceView(GlobalDesignerHubLegalPageView):
     template_name = "designer_portfolio/terms_of_service.html"
 
 
-class RefundPolicyView(AIOAKLegalPageView):
+class RefundPolicyView(GlobalDesignerHubLegalPageView):
     template_name = "designer_portfolio/refund_policy.html"
 
 
-class GrievancePolicyView(AIOAKLegalPageView):
+class GrievancePolicyView(GlobalDesignerHubLegalPageView):
     template_name = "designer_portfolio/grievance_policy.html"
 
 
-class DataRightsPolicyView(AIOAKLegalPageView):
+class DataRightsPolicyView(GlobalDesignerHubLegalPageView):
     template_name = "designer_portfolio/data_rights_policy.html"
 
 
-class AccessibilityStatementView(AIOAKLegalPageView):
+class AccessibilityStatementView(GlobalDesignerHubLegalPageView):
     template_name = "designer_portfolio/accessibility_statement.html"
 
 

@@ -137,8 +137,6 @@ ALLOWED_HOSTS = [
     "localhost",
     "globaldesignerhub.com",
     "www.globaldesignerhub.com",
-    # AIOAK hosted apps (e.g. finmate.aioak.app)
-    "finmate.aioak.app",
 ]
 if os.getenv("ALLOWED_HOSTS"):
     # Allow overriding via env (comma-separated)
@@ -156,7 +154,6 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 CSRF_TRUSTED_ORIGINS = [
     "https://globaldesignerhub.com",
     "https://www.globaldesignerhub.com",
-    "https://finmate.aioak.app",
 ]
 
 # If BASE_URL_SERVER is provided, trust/allow its hostname automatically.
@@ -541,7 +538,7 @@ else:
 
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "GlobalDesignerHub <no-reply@globaldesignerhub.com>")
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
-ADMIN_EMAIL = "admin@aioak.net"
+ADMIN_EMAIL = "admin@globaldesignerhub.com"
 PRETTYPEARL_CONTACT_EMAIL = os.getenv("PRETTYPEARL_CONTACT_EMAIL", "").strip()
 
 # Password reset settings
@@ -622,7 +619,7 @@ if not _derived_rp_id:
         _derived_rp_id = "localhost"
 
 WEBAUTHN_RP_ID = _derived_rp_id
-WEBAUTHN_RP_NAME = os.getenv("WEBAUTHN_RP_NAME", "AIOAK Designer")
+WEBAUTHN_RP_NAME = os.getenv("WEBAUTHN_RP_NAME", "GlobalDesignerHub Designer")
 
 if os.getenv("WEBAUTHN_ORIGIN"):
     WEBAUTHN_ORIGIN = os.getenv("WEBAUTHN_ORIGIN").rstrip("/")

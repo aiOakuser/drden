@@ -1,11 +1,11 @@
 {% load static %}
 <div class="header__apphub-banner">
-  <a href="https://apphub.aioak.app" target="_blank" rel="noopener">
-    oneapp
+  <a href="{% url 'home' %}">
+    GlobalDesignerHub
   </a>
   <span class="header__apphub-divider" aria-hidden="true">|</span>
-    <a href="https://aioakinc.com" target="_blank" rel="noopener">
-    jobs
+  <a href="{% url 'contact' %}">
+    Contact
   </a>
   <span class="header__apphub-divider" aria-hidden="true">|</span>
   <a href="{% url 'volume_one' %}">

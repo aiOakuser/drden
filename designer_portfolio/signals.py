@@ -26,7 +26,7 @@ def notify_designer_on_approval(sender, instance, created, **kwargs):
                 f"Hello {instance.username},\n\n"
                 "Good news! Your designer account has been approved. "
                 "You can now log in and upload your designs + techpacks.\n\n"
-                "Login here: https://designer.aioak.co/login\n\n"
+                "Login here: https://globaldesignerhub.com/login\n\n"
                 "Best,\nTeam designer"
             ),
             from_email=settings.DEFAULT_FROM_EMAIL,

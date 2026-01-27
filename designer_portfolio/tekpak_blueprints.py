@@ -19,7 +19,7 @@ DESERT_SHADOWS_BLUEPRINT: Dict[str, Any] = {
         "badge": "Pack 02 · Activewear Capsule",
         "icon": "✅",
         "title": "DESERT SHADOWS",
-        "subtitle": "Performance Activewear Capsule by AIOAK Athletica",
+        "subtitle": "Performance Activewear Capsule by GlobalDesignerHub Athletica",
         "supporting_copy": [
             "Same serif-forward layout system used on the Fuel Fortress sample.",
             "Minimal, high-fashion grid with disciplined spacing and refined typography.",
@@ -82,7 +82,7 @@ DESERT_SHADOWS_BLUEPRINT: Dict[str, Any] = {
         },
     ],
     "style_sheet": {
-        "brand": "AIOAKATHLETICA",
+        "brand": "GLOBALDESIGNERHUB ATHLETICA",
         "title": "Style Sheet — ShadowFlex Jogger (DS-A102)",
         "notes": "Style numbers + fabric details locked for investor-ready deck.",
         "specs": [
