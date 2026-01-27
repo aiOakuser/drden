@@ -1910,10 +1910,10 @@ class AIOAKLegalPageView(TemplateView):
     Shared base view so every legal/policy page exposes the same company data.
     """
 
-    company_name = "AIOAK"
+    company_name = "GlobalDesignerHub"
     effective_date = "December 1, 2025"
     company_location = "Saratoga, CA – USA – 95070"
-    service_brands = ("GlobalDesignerHub", "TailorHub", "other AIOAK services")
+    service_brands = ("GlobalDesignerHub", "TailorHub", "other related services")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
