@@ -621,9 +621,6 @@ class UserSubscription(models.Model):
     acquisition_landing_page = models.URLField(blank=True, null=True)
     acquisition_initial_referrer = models.URLField(blank=True, null=True)
     
-    # Adobe package inclusion
-    includes_adobe_access = models.BooleanField(default=True, help_text="Whether this subscription includes Adobe Creative Suite access")
-    
     def __str__(self):
         return f"{self.user.username} - {self.status}"
     
@@ -697,125 +694,6 @@ class DocPage(TimeStampedModel):
     
     def __str__(self):
         return self.title
-
-
-# ---------------- Adobe Package Models ----------------
-class AdobeProduct(models.Model):
-    """Individual Adobe products available for packages"""
-    name = models.CharField(max_length=100, unique=True)
-    display_name = models.CharField(max_length=120)
-    description = models.TextField(blank=True)
-    product_icon = models.CharField(max_length=50, blank=True)  # For emoji/icon display
-    adobe_product_id = models.CharField(max_length=100, blank=True)  # Adobe's internal ID
-    is_popular = models.BooleanField(default=False)
-    order = models.PositiveIntegerField(default=0)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        ordering = ['order', 'display_name']
-    
-    def __str__(self):
-        return self.display_name
-
-
-class AdobePackage(models.Model):
-    """Adobe product packages with different product counts and pricing"""
-    PACKAGE_TYPES = [
-        ('single', 'Single Product'),
-        ('duo', '2 Products'),
-        ('trio', '3 Products'),
-        ('quad', '4 Products'),
-        ('penta', '5 Products'),
-        ('hexa', '6 Products'),
-        ('full', 'Full Creative Suite'),
-    ]
-    
-    package_type = models.CharField(max_length=20, choices=PACKAGE_TYPES, unique=True)
-    display_name = models.CharField(max_length=100)
-    description = models.TextField(blank=True)
-    product_count = models.PositiveIntegerField()
-    monthly_price = models.DecimalField(max_digits=6, decimal_places=2)
-    suggested_products = models.ManyToManyField(AdobeProduct, blank=True, help_text="Recommended products for this package")
-    is_popular = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
-    order = models.PositiveIntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        ordering = ['order', 'product_count']
-    
-    def __str__(self):
-        return f"{self.display_name} - ${self.monthly_price}/month"
-
-
-class UserAdobeSubscription(models.Model):
-    """User's Adobe subscription and product selection"""
-    STATUS_CHOICES = [
-        ('pending', 'Pending Setup'),
-        ('active', 'Active'),
-        ('suspended', 'Suspended'),
-        ('cancelled', 'Cancelled'),
-        ('expired', 'Expired'),
-    ]
-    
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='adobe_subscription')
-    package = models.ForeignKey(AdobePackage, on_delete=models.CASCADE)
-    selected_products = models.ManyToManyField(AdobeProduct, help_text="Products selected by user")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    
-    # Adobe account details
-    adobe_account_email = models.EmailField(blank=True, null=True)
-    adobe_account_status = models.CharField(max_length=50, blank=True, null=True)
-    adobe_subscription_id = models.CharField(max_length=200, blank=True, null=True)
-    
-    # Billing information
-    monthly_cost = models.DecimalField(max_digits=6, decimal_places=2)
-    next_billing_date = models.DateTimeField(null=True, blank=True)
-    last_payment_date = models.DateTimeField(null=True, blank=True)
-    auto_renewal = models.BooleanField(default=True)
-    
-    # Subscription lifecycle
-    subscription_start_date = models.DateTimeField(null=True, blank=True)
-    subscription_end_date = models.DateTimeField(null=True, blank=True)
-    
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        verbose_name = "Adobe Subscription"
-        verbose_name_plural = "Adobe Subscriptions"
-    
-    def __str__(self):
-        return f"{self.user.username} - {self.package.display_name} ({self.status})"
-    
-    def get_product_names(self):
-        """Return comma-separated list of selected product names"""
-        return ", ".join([product.display_name for product in self.selected_products.all()])
-
-
-class AdobeAccessLog(models.Model):
-    """Log Adobe account access and usage"""
-    user_subscription = models.ForeignKey(UserAdobeSubscription, on_delete=models.CASCADE, related_name='access_logs')
-    product_accessed = models.ForeignKey(AdobeProduct, on_delete=models.CASCADE, null=True, blank=True)
-    access_type = models.CharField(max_length=50, choices=[
-        ('login', 'Account Login'),
-        ('download', 'Product Download'),
-        ('usage', 'Product Usage'),
-        ('support', 'Support Access'),
-    ], default='login')
-    access_timestamp = models.DateTimeField(auto_now_add=True)
-    ip_address = models.GenericIPAddressField(null=True, blank=True)
-    user_agent = models.TextField(blank=True)
-    notes = models.TextField(blank=True)
-    
-    class Meta:
-        ordering = ['-access_timestamp']
-        verbose_name = "Adobe Access Log"
-        verbose_name_plural = "Adobe Access Logs"
-    
-    def __str__(self):
-        return f"{self.user_subscription.user.username} - {self.access_type} - {self.access_timestamp.strftime('%Y-%m-%d %H:%M')}"
 
 
 # ---------------- Community Forum Models ----------------
