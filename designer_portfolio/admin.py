@@ -196,14 +196,39 @@ class EventImageInline(admin.TabularInline):
     preview.short_description = "Preview"
 
 
+class EventAttendeeInline(admin.TabularInline):
+    model = m.EventAttendee
+    extra = 0
+    fields = ("full_name", "email", "company", "ticket_count", "checked_in", "created_at")
+    readonly_fields = ("created_at",)
+
+
+class EventCollaborationInline(admin.TabularInline):
+    model = m.EventCollaboration
+    extra = 0
+    fields = ("full_name", "email", "company", "role", "status", "is_contacted", "created_at")
+    readonly_fields = ("created_at",)
+
+
 # ---------------- Event ----------------
 @admin.register(m.Event)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ("title", "event_date", "is_popup", "popup_order", "cover_preview", "created_at")
-    list_filter = ("is_popup", "event_date")
+    list_display = (
+        "title",
+        "event_date",
+        "end_date",
+        "location",
+        "venue",
+        "attendee_capacity",
+        "is_popup",
+        "popup_order",
+        "cover_preview",
+        "created_at",
+    )
+    list_filter = ("is_popup", "event_date", "end_date")
     search_fields = ("title", "description")
     prepopulated_fields = {"slug": ("title",)}
-    inlines = [EventImageInline]
+    inlines = [EventImageInline, EventAttendeeInline, EventCollaborationInline]
 
     def cover_preview(self, obj):
         if obj.cover:
@@ -213,6 +238,22 @@ class EventAdmin(admin.ModelAdmin):
             )
         return "-"
     cover_preview.short_description = "Cover"
+
+
+@admin.register(m.EventAttendee)
+class EventAttendeeAdmin(admin.ModelAdmin):
+    list_display = ("full_name", "event", "email", "company", "ticket_count", "checked_in", "created_at")
+    list_filter = ("checked_in", "created_at")
+    search_fields = ("full_name", "email", "company", "event__title")
+    readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(m.EventCollaboration)
+class EventCollaborationAdmin(admin.ModelAdmin):
+    list_display = ("full_name", "event", "email", "company", "role", "status", "is_contacted", "created_at")
+    list_filter = ("status", "is_contacted", "created_at")
+    search_fields = ("full_name", "email", "company", "role", "event__title")
+    readonly_fields = ("created_at", "updated_at")
 
 
 # ---------------- Designer Profile ----------------
@@ -359,64 +400,6 @@ class DocPageAdmin(admin.ModelAdmin):
     search_fields = ("title", "content", "slug", "tags")
     prepopulated_fields = {"slug": ("title",)}
     readonly_fields = ("created_at", "updated_at")
-
-
-# ---------------- Adobe Package Admin ----------------
-@admin.register(m.AdobeProduct)
-class AdobeProductAdmin(admin.ModelAdmin):
-    list_display = ("display_name", "name", "product_icon", "is_popular", "is_active", "order")
-    list_filter = ("is_popular", "is_active")
-    search_fields = ("name", "display_name", "description")
-    ordering = ("order", "display_name")
-    list_editable = ("order", "is_popular", "is_active")
-
-
-@admin.register(m.AdobePackage)
-class AdobePackageAdmin(admin.ModelAdmin):
-    list_display = ("display_name", "package_type", "product_count", "monthly_price", "is_popular", "is_active")
-    list_filter = ("package_type", "is_popular", "is_active")
-    search_fields = ("display_name", "description")
-    ordering = ("order", "product_count")
-    list_editable = ("monthly_price", "is_popular", "is_active")
-    filter_horizontal = ("suggested_products",)
-
-
-@admin.register(m.UserAdobeSubscription)
-class UserAdobeSubscriptionAdmin(admin.ModelAdmin):
-    list_display = ("user", "package", "status", "monthly_cost", "subscription_start_date", "next_billing_date")
-    list_filter = ("status", "package", "auto_renewal")
-    search_fields = ("user__username", "user__email", "adobe_account_email")
-    ordering = ("-created_at",)
-    filter_horizontal = ("selected_products",)
-    readonly_fields = ("created_at", "updated_at")
-    
-    fieldsets = (
-        ("User & Package", {
-            "fields": ("user", "package", "selected_products", "status")
-        }),
-        ("Adobe Account", {
-            "fields": ("adobe_account_email", "adobe_account_status", "adobe_subscription_id")
-        }),
-        ("Billing Information", {
-            "fields": ("monthly_cost", "next_billing_date", "last_payment_date", "auto_renewal")
-        }),
-        ("Subscription Lifecycle", {
-            "fields": ("subscription_start_date", "subscription_end_date")
-        }),
-        ("Timestamps", {
-            "fields": ("created_at", "updated_at"),
-            "classes": ("collapse",)
-        })
-    )
-
-
-@admin.register(m.AdobeAccessLog)
-class AdobeAccessLogAdmin(admin.ModelAdmin):
-    list_display = ("user_subscription", "product_accessed", "access_type", "access_timestamp", "ip_address")
-    list_filter = ("access_type", "access_timestamp")
-    search_fields = ("user_subscription__user__username", "ip_address")
-    ordering = ("-access_timestamp",)
-    readonly_fields = ("access_timestamp",)
 
 
 # ---------------- Forum Admin ----------------

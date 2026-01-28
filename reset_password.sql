@@ -1,1 +1,3 @@
-ALTER USER postgres WITH PASSWORD 'V50tAlnqCDi6nt9rdjcR4o1bSc3qZ8JIoulxs1D7KIZ21gsEoW0MOMxDCsn20OKC';
+-- Example only: reset a Postgres user's password.
+-- DO NOT COMMIT REAL PASSWORDS. Use your secret manager / environment vars.
+ALTER USER postgres WITH PASSWORD 'CHANGE_ME';

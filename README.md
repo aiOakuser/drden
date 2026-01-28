@@ -1,19 +1,44 @@
-Resume.aioak.co is a secure, tech-forward application designed for fashion designers to effortlessly upload and manage their design portfolios with detailed, clean, and organized tech pack information.
-The platform offers a user-friendly interface and a robust authentication system, allowing users (including staff admins) to sign in securely via Google, LinkedIn, or Instagram OAuth flows or with traditional credentials. Built with both usability and security in mind, Resume.aioak.co streamlines the process of presenting, storing, and sharing professional design documents in the fashion industry.
+GlobalDesignerHub.com is a secure, tech-forward application designed for fashion designers to effortlessly upload and manage their design portfolios with detailed, clean, and organized tech pack information.
+The platform offers a user-friendly interface and a robust authentication system, allowing users (including staff admins) to sign in securely via Google, LinkedIn, or Instagram OAuth flows or with traditional credentials. Built with both usability and security in mind, GlobalDesignerHub.com streamlines the process of presenting, storing, and sharing professional design documents in the fashion industry.
 
 ## Database + deployment notes (Docker/Coolify)
 
 This app is intended to run on **PostgreSQL** in production.
 
-- **Do not use `localhost` for Postgres inside containers**: in Docker/Coolify, `localhost` means “this same container”, not your Postgres container. Set `DB_HOST` (or `DATABASE_URL`) to the **service name / internal hostname** of your Postgres service (commonly `postgres` or `db`).
-- **Required env vars (if not using `DATABASE_URL`)**:
+### Coolify steps (Postgres service)
+
+1. Create a Postgres service (v15+).
+2. **Do not use `localhost` inside containers**: use the **service name / internal hostname** (commonly `postgres` or `db`).
+3. Link the Postgres service to the app (Coolify injects `POSTGRES_*` env vars) or copy those values into the app env.
+4. Set **either** `DATABASE_URL` **or** the discrete variables listed below, then redeploy.
+   - If `DATABASE_URL` is left as the example `USER:PASSWORD@HOST`, the app ignores it and expects the `DB_*` vars.
+
+### App configuration (repo)
+
+- `gdh/settings.py` reads `DATABASE_URL` first; otherwise it uses `DB_*` or `POSTGRES_*/PG*` equivalents.
+- `.env.example` lists the supported variables for local dev and hosting providers.
+- There is **no SQLite fallback** in production; tests use in-memory SQLite.
+- Discrete vars (if not using `DATABASE_URL`):
   - `DB_HOST`, `DB_PORT` (usually `5432`)
   - `DB_NAME`, `DB_USER`, `DB_PASSWORD`
-- **Disable SQLite fallback in production** (recommended):
-  - `ALLOW_SQLITE_FALLBACK_FOR_LOCALHOST_POSTGRES=0`
-  - `REQUIRE_POSTGRES_DATABASE=1`
-  - (Optionally) set `ENV=production` to make the environment intent explicit.
+  - Coolify equivalents: `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`
+
+### Restore + bootstrap (production)
+
+- `python manage.py wait_for_db` now auto-creates the database if it is missing.
+  - Disable with `DB_AUTO_CREATE=false` if you want to manage DB creation manually.
+- To restore data on startup:
+  - Set `AUTO_RESTORE_DB=1` to load the latest `backups/db-*.json.gz` from default storage.
+  - Or set `RESTORE_DB_INPUT=backups/<file>.json.gz` to restore a specific backup.
+- Backups are created with `python manage.py backup_db` and stored under `media/backups/`
+  (or S3 when `USE_S3_MEDIA=true`).
+
+### Other deployment notes
+
 - **Static files**: run `python manage.py collectstatic --noinput` as part of your build/release. Static assets are served via WhiteNoise.
+- **Container cleanup logs**: during rolling updates some platforms auto-remove build containers. If you see `No such container` while cleaning up, it is usually safe. For custom automation, use `./docker_cleanup.sh <container>` to make cleanup idempotent.
+- **Orphan container warnings**: after renaming/removing services, you may see "Found orphan containers". Run your deploy with `--remove-orphans` (or use your platform's cleanup action) to remove the old containers.
+- **Email env warnings**: if you see `GMAIL_APP_PASSWORD` not set in Docker logs, it's an optional alias for `EMAIL_HOST_PASSWORD`. Set it to the same value (or remove it from your platform env list) to silence the warning.
 
 ## Authentication highlights
 

@@ -31,7 +31,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.db.models import Q, Count, F
 from django.urls import reverse_lazy, reverse, NoReverseMatch
 from django.utils.text import slugify
@@ -45,6 +45,8 @@ from .forms import (
     ReportProblemForm,
     ContactForm,
     ProjectCreateForm,
+    EventAttendeeForm,
+    EventCollaborationForm,
 )
 from .auth_utils import ensure_designer_access
 from .emails import (
@@ -82,6 +84,7 @@ from .models import (
 from .constants import REGIONAL_HIRING_AREAS
 from .project_templates import load_project_templates, serialize_templates_for_client
 from .tekpak_blueprints import get_techpack_blueprint
+from .serializers import EventSerializer
 
 from webauthn import (
     generate_authentication_options,
@@ -784,10 +787,10 @@ VOLUMEONE_TEMPLATE_LIBRARY = _build_template_library(
 
 def _get_public_contact_email() -> str:
     return (
-        getattr(settings, "AIOAK_CONTACT_EMAIL", "")
+        getattr(settings, "GLOBALDESIGNERHUB_CONTACT_EMAIL", "")
         or getattr(settings, "PRETTYPEARL_CONTACT_EMAIL", "")
         or getattr(settings, "ADMIN_EMAIL", "")
-        or "admin@aioak.net"
+        or "support@globaldesignerhub.com"
     )
 
 
@@ -1902,23 +1905,23 @@ def contact_view(request):
     )
 
 
-class AIOAKLegalPageView(TemplateView):
+class GlobalDesignerHubLegalPageView(TemplateView):
     """
     Shared base view so every legal/policy page exposes the same company data.
     """
 
-    company_name = "AIOAK"
+    company_name = "GlobalDesignerHub"
     effective_date = "December 1, 2025"
     company_location = "Saratoga, CA – USA – 95070"
-    service_brands = ("GlobalDesignerHub", "TailorHub", "other AIOAK services")
+    service_brands = ("GlobalDesignerHub", "TailorHub", "VolumeOne")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         contact_email = (
-            getattr(settings, "AIOAK_CONTACT_EMAIL", "")
+            getattr(settings, "GLOBALDESIGNERHUB_CONTACT_EMAIL", "")
             or getattr(settings, "PRETTYPEARL_CONTACT_EMAIL", "")
             or getattr(settings, "ADMIN_EMAIL", "")
-            or "admin@aioak.net"
+            or "support@globaldesignerhub.com"
         )
         context.update(
             {
@@ -1932,27 +1935,27 @@ class AIOAKLegalPageView(TemplateView):
         return context
 
 
-class PrivacyPolicyView(AIOAKLegalPageView):
+class PrivacyPolicyView(GlobalDesignerHubLegalPageView):
     template_name = "designer_portfolio/privacy_policy.html"
 
 
-class TermsOfServiceView(AIOAKLegalPageView):
+class TermsOfServiceView(GlobalDesignerHubLegalPageView):
     template_name = "designer_portfolio/terms_of_service.html"
 
 
-class RefundPolicyView(AIOAKLegalPageView):
+class RefundPolicyView(GlobalDesignerHubLegalPageView):
     template_name = "designer_portfolio/refund_policy.html"
 
 
-class GrievancePolicyView(AIOAKLegalPageView):
+class GrievancePolicyView(GlobalDesignerHubLegalPageView):
     template_name = "designer_portfolio/grievance_policy.html"
 
 
-class DataRightsPolicyView(AIOAKLegalPageView):
+class DataRightsPolicyView(GlobalDesignerHubLegalPageView):
     template_name = "designer_portfolio/data_rights_policy.html"
 
 
-class AccessibilityStatementView(AIOAKLegalPageView):
+class AccessibilityStatementView(GlobalDesignerHubLegalPageView):
     template_name = "designer_portfolio/accessibility_statement.html"
 
 
@@ -2489,10 +2492,122 @@ class DesignListView(TemplateView):
 
 class DesignDetailView(DetailView):
     template_name = "designer_portfolio/design_detail.html"
-class EventListView(TemplateView):
+
+def _build_event_media(event: Event) -> list[dict[str, str]]:
+    media = []
+    for image in event.images.all():
+        if not image.image:
+            continue
+        media.append(
+            {
+                "type": "image",
+                "url": image.image.url,
+                "name": image.caption or event.title,
+            }
+        )
+    if not media and event.cover:
+        media.append({"type": "image", "url": event.cover.url, "name": event.title})
+    return media
+
+
+class EventListView(ListView):
     template_name = "designer_portfolio/events.html"
+    context_object_name = "events"
+    model = Event
+
+    def get_queryset(self):
+        return Event.objects.prefetch_related("images").all()
+
+
 class EventDetailView(DetailView):
     template_name = "designer_portfolio/event_detail.html"
+    model = Event
+    context_object_name = "event"
+    slug_url_kwarg = "slug"
+
+    def get_queryset(self):
+        return Event.objects.prefetch_related(
+            "images",
+            "attendees",
+            "collaboration_requests",
+        )
+
+    def get_context_data(self, **kwargs):
+        attendee_form = kwargs.pop("attendee_form", None) or EventAttendeeForm()
+        collaboration_form = kwargs.pop("collaboration_form", None) or EventCollaborationForm()
+
+        context = super().get_context_data(**kwargs)
+        event = context["event"]
+        attendee_count = event.attendees.count()
+        collaboration_count = event.collaboration_requests.count()
+        seats_remaining = None
+        if event.attendee_capacity:
+            seats_remaining = max(event.attendee_capacity - attendee_count, 0)
+
+        context.update(
+            {
+                "media": _build_event_media(event),
+                "attendee_form": attendee_form,
+                "collaboration_form": collaboration_form,
+                "attendee_count": attendee_count,
+                "collaboration_count": collaboration_count,
+                "seats_remaining": seats_remaining,
+                "recent_attendees": event.attendees.order_by("-created_at")[:6],
+                "recent_collaborations": event.collaboration_requests.order_by("-created_at")[:6],
+                "is_newyork_event": event.slug in {"newyork-fashion-show", "new-york-fashion-show"},
+            }
+        )
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_type = (request.POST.get("form_type") or "").strip()
+
+        if form_type == "attendee":
+            attendee_form = EventAttendeeForm(request.POST)
+            if attendee_form.is_valid():
+                attendee = attendee_form.save(commit=False)
+                attendee.event = self.object
+                try:
+                    attendee.save()
+                except IntegrityError:
+                    messages.info(
+                        request,
+                        "You're already registered for this event. We'll keep you on the list.",
+                    )
+                else:
+                    location_label = self.object.location or "the show"
+                    messages.success(
+                        request,
+                        f"RSVP received. We'll see you at {location_label}.",
+                    )
+                    return redirect("event_detail", slug=self.object.slug)
+            context = self.get_context_data(attendee_form=attendee_form)
+            return self.render_to_response(context)
+
+        if form_type == "collaboration":
+            collaboration_form = EventCollaborationForm(request.POST)
+            if collaboration_form.is_valid():
+                collaboration = collaboration_form.save(commit=False)
+                collaboration.event = self.object
+                try:
+                    collaboration.save()
+                except IntegrityError:
+                    messages.info(
+                        request,
+                        "We already have a collaboration request for this email.",
+                    )
+                else:
+                    messages.success(
+                        request,
+                        "Thanks for reaching out. We'll review your collaboration request shortly.",
+                    )
+                    return redirect("event_detail", slug=self.object.slug)
+            context = self.get_context_data(collaboration_form=collaboration_form)
+            return self.render_to_response(context)
+
+        messages.error(request, "Please choose a form to submit.")
+        return redirect("event_detail", slug=self.object.slug)
 class DesignerDashboardView(LoginRequiredMixin, TemplateView):
     template_name = "designer_portfolio/designer_dashboard.html"
 
@@ -2734,9 +2849,9 @@ class DesignViewSet(viewsets.ViewSet):
     def list(self, request):
         return Response([])
 
-class EventViewSet(viewsets.ViewSet):
-    def list(self, request):
-        return Response([])
+class EventViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Event.objects.prefetch_related("images").all()
+    serializer_class = EventSerializer
 
 # ---- API: Designer Registration ----
 class DesignerRegistrationView(APIView):
@@ -4081,7 +4196,7 @@ To register as a designer:
 1. Click "Start Free Trial" or "Sign Up" in the navigation
 2. Fill out your profile information
 3. Add your portfolio link (optional but recommended)
-4. Select an Adobe package if you'd like subscription access
+4. Choose a subscription plan when you're ready (optional)
 5. Complete verification
 
 **What you get:**
@@ -4341,7 +4456,7 @@ Ready to connect with fellow designers?"""
 • GitHub - Version control
 
 **GlobalDesignerHub offers:**
-Adobe Creative Suite packages ($4.99-$29.99/month) with account.adobe.com access for registered users!
+Flexible subscriptions that unlock premium templates, community perks, and support.
 
 Which tools are you interested in learning more about?"""
         },
@@ -4381,7 +4496,7 @@ Which tools are you interested in learning more about?"""
 **GlobalDesignerHub subscriptions:**
 • Basic plans: $4.99-$14.99/month
 • Pro plans: $19.99-$29.99/month
-• Includes Adobe access
+• Includes premium templates and collaboration tools
 
 Need help pricing a specific project type?"""
         }

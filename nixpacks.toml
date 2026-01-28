@@ -1,2 +1,5 @@
+[variables]
+  NIXPACKS_PATH = "/nix/var/nix/profiles/default"
+
 [start]
-  cmd = "python -m pip install --no-cache-dir psycopg2-binary==2.9.9 && python manage.py migrate && (python manage.py restore_designer_users || true) && python manage.py collectstatic --noinput && gunicorn gdh.wsgi:application --bind 0.0.0.0:8021 --workers ${WORKERS:-3}"
+  cmd = "python manage.py wait_for_db && python manage.py migrate --noinput && (if [ -n \"${RESTORE_DB_INPUT:-}\" ]; then python manage.py restore_db --noinput --flush --ignore-nonexistent --input \"${RESTORE_DB_INPUT}\"; else case \"${AUTO_RESTORE_DB:-}\" in 1|true|TRUE|yes|YES|on|ON) python manage.py restore_db --noinput --flush --ignore-nonexistent ;; esac; fi) && (python manage.py restore_designer_users || true) && python manage.py collectstatic --noinput && gunicorn gdh.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers ${WORKERS:-3}"

@@ -71,7 +71,7 @@ python manage.py loaddata designer_portfolio/fixtures/brand.json
 
 ## Environment Configuration
 
-- **Local development**: Requires PostgreSQL; see `.env.local` for default credentials
+- **Local development**: Requires PostgreSQL; copy `.env.example` to `.env.local` and fill in your local credentials
 - **Production**: Set `DATABASE_URL` or the `DB_*` variables for your PostgreSQL cluster
 - **Caching**: Redis in production (`REDIS_URL`), local memory cache in development
 - **Security**: Set `SECRET_KEY`, `DEBUG=False` for production

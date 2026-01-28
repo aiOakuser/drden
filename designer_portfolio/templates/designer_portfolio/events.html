@@ -17,12 +17,12 @@
       <div class="event-slide active">
         <img
           src="{% static 'images/events/popup/4.png' %}"
-          alt="Fashion Week 2025"
+          alt="New York Fashion Week 2026"
           onerror="this.onerror=null;this.src='{% static 'images/placehold.png' %}';"
         />
         <div class="slide-overlay">
-          <h3>Fashion Week 2025</h3>
-          <p>The most anticipated fashion event of the year</p>
+          <h3>New York Fashion Week 2026</h3>
+          <p>Fall/Winter 2026 runway calendar - Feb 11-16 in NYC</p>
         </div>
       </div>
 
@@ -78,6 +78,32 @@
   </div>
 </section>
 
+<section class="media-highlights" aria-label="Event highlights">
+  <div class="container">
+    <div class="media-highlights__header">
+      <p class="media-highlights__eyebrow">Event visuals</p>
+      <h2 class="section-title">Campaign highlights</h2>
+      <p class="media-highlights__intro">
+        Visual snapshots from recent projects featured alongside upcoming events.
+      </p>
+    </div>
+    <div class="media-highlights__grid">
+      <figure class="media-highlight-card">
+        <img
+          src="{% static 'images/highlights/pherix-monoceros.svg' %}"
+          alt="PHERIX monoceros label for Autumn/Winter '26 in New York"
+        />
+        <div class="media-highlight-card__body">
+          <h3 class="media-highlight-card__title">PHERIX "monoceros"</h3>
+          <p class="media-highlight-card__caption">
+            Label detail from the Autumn/Winter '26 collection for the New York showcase.
+          </p>
+        </div>
+      </figure>
+    </div>
+  </div>
+</section>
+
 <!-- Featured Events List -->
 <section class="featured-events-list">
   <div class="container">
@@ -110,8 +136,14 @@
           </p>
 
           <div class="event-meta">
-            <span class="event-location">📍 Fashion District</span>
-            <span class="event-time">🕒 7:00 PM</span>
+            <span class="event-location">📍 {{ event.location|default:"Fashion District" }}</span>
+            {% if event.venue %}
+              <span class="event-time">🏛 {{ event.venue }}</span>
+            {% elif event.end_date %}
+              <span class="event-time">📆 Multi-day showcase</span>
+            {% else %}
+              <span class="event-time">🕒 Time TBA</span>
+            {% endif %}
           </div>
 
           <a href="{% url 'event_detail' event.slug %}" class="btn btn-primary"
@@ -121,25 +153,89 @@
       </article>
       {% endfor %} {% else %}
       <!-- Static event cards when no events exist -->
-      <article class="event-card">
+      <article class="event-card event-card-featured">
         <div class="event-image">
           <img
             src="{% static 'images/events/popup/8.png' %}"
-            alt="Fashion Week 2025"
+            alt="New York Fashion Week 2026"
             onerror="this.onerror=null;this.src='{% static 'images/placehold.png' %}';"
           />
           <div class="event-category">Fashion Week</div>
         </div>
         <div class="event-info">
-          <div class="event-date-badge">Mar 15-20, 2025</div>
-          <h3 class="event-title">Fashion Week 2025</h3>
+          <div class="event-date-badge">Feb 11-16, 2026</div>
+          <h3 class="event-title">
+            New York Fashion Week (NYFW) - Fall/Winter 2026
+          </h3>
           <p class="event-description">
-            Join us for the most anticipated fashion event of the year featuring
-            emerging and established designers from around the world.
+            NYFW returns to New York City for the Fall/Winter 2026 season with over
+            60 runway shows and presentations spotlighting the latest American
+            collections.
           </p>
           <div class="event-meta">
-            <span class="event-location">📍 Fashion District</span>
-            <span class="event-time">🕒 All Day</span>
+            <span class="event-location">📍 New York City</span>
+            <span class="event-time">🕒 Feb 11-16</span>
+          </div>
+          <a href="#" class="btn btn-primary">View Details</a>
+        </div>
+      </article>
+
+      <article class="event-card">
+        <div class="event-image">
+          <video
+            controls
+            preload="metadata"
+            playsinline
+            poster="{% static 'images/events/popup/9.png' %}"
+          >
+            <source src="{% static 'videos/nyfw-feb-14-2026.mp4' %}" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+          <div class="event-category">Video Clip</div>
+        </div>
+        <div class="event-info">
+          <div class="event-date-badge">Feb 14, 2026</div>
+          <h3 class="event-title">NYFW February 14 Runway Highlights</h3>
+          <div class="event-description">
+            <p>
+              New York Fashion Week (NYFW) for the Fall/Winter 2026 season will take
+              place from Wednesday, February 11, through Monday, February 16, 2026,
+              featuring over 60 runway shows and presentations. The official schedule
+              includes major brands like Tory Burch, Michael Kors, Khaite, and Proenza
+              Schouler, with events centering on the latest American collections.
+            </p>
+            <p><strong>Key highlights and details for NYFW February 2026 include:</strong></p>
+            <ul>
+              <li><strong>Dates:</strong> February 11-16, 2026.</li>
+              <li>
+                <strong>Major Shows:</strong> Proenza Schouler (Feb 11), Tory Burch
+                (Feb 11), Michael Kors (Feb 12), Sergio Hudson (Feb 13), Khaite
+                (Feb 14), and LaQuan Smith (Feb 14).
+              </li>
+              <li>
+                <strong>New/Returning Designers:</strong> Area (new), along with
+                returning brands such as Kallmeyer, Altuzarra, Fforme, Public School,
+                Zankov, and Aknvas.
+              </li>
+              <li>
+                <strong>Location/Tickets:</strong> While many shows are private,
+                official public tickets can be found for select events, such as those
+                at Sony Hall through Runway 7 Fashion.
+              </li>
+              <li>
+                <strong>Schedule & Information:</strong> The Council of Fashion
+                Designers of America (CFDA) manages the official schedule.
+              </li>
+            </ul>
+            <p>
+              The preliminary schedule indicates a strong, eclectic lineup with a
+              mix of established luxury houses and contemporary designers showcasing
+              in NYC.
+            </p>
+          </div>
+          <div class="event-meta">
+            <span class="event-location">📍 New York City</span>
+            <span class="event-time">🕒 Feb 14</span>
           </div>
           <a href="#" class="btn btn-primary">View Details</a>
         </div>
@@ -490,15 +586,27 @@
     overflow: hidden;
   }
 
-  .event-image img {
+  .event-image img,
+  .event-image video {
     width: 100%;
     height: 100%;
     object-fit: cover;
     transition: transform 0.3s ease;
+    display: block;
   }
 
-  .event-card:hover .event-image img {
+  .event-image video {
+    background: #0e0e0f;
+  }
+
+  .event-card:hover .event-image img,
+  .event-card:hover .event-image video {
     transform: scale(1.1);
+  }
+
+  .event-card-featured {
+    border: 2px solid rgba(var(--color-accent-rgb), 0.35);
+    box-shadow: 0 18px 40px rgba(var(--color-accent-rgb), 0.16);
   }
 
   .event-category {
@@ -552,6 +660,23 @@
     color: var(--color-text-muted);
     line-height: 1.6;
     margin-bottom: 20px;
+  }
+
+  .event-description p {
+    margin: 0 0 12px;
+  }
+
+  .event-description p:last-child {
+    margin-bottom: 0;
+  }
+
+  .event-description ul {
+    margin: 0 0 12px;
+    padding-left: 20px;
+  }
+
+  .event-description li + li {
+    margin-top: 6px;
   }
 
   .event-meta {

@@ -20,6 +20,8 @@ In development (DEBUG=True), if no email credentials are provided, emails will p
 ```env
 EMAIL_HOST_USER=your.email@gmail.com
 EMAIL_HOST_PASSWORD=your-16-char-app-password
+# Optional alias if your host expects it or warns when unset:
+GMAIL_APP_PASSWORD=your-16-char-app-password
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_USE_TLS=True

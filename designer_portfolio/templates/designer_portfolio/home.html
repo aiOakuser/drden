@@ -66,12 +66,12 @@
 <!-- Hero Section -->
 <section class="hero-section">
   <div class="hero-content">
-    <h1 class="hero-title">AIOak Designer Collaboration</h1>
+    <h1 class="hero-title">Designer Collaboration</h1>
     <p class="hero-subtitle">
       Feel free to upload your designs, collaborate in real time, and explore every feature with a free trial that lasts until you're satisfied.
     </p>
     <div class="hero-cta">
-      <a href="{% url 'signup' %}" class="btn btn-accent" aria-label="Start free trial with AIOak designer collaboration">Start free trial</a>
+      <a href="{% url 'signup' %}" class="btn btn-accent" aria-label="Start free trial with designer collaboration">Start free trial</a>
       <a href="{% url 'designers_list' %}" class="btn btn-primary"
         >Explore Designers</a
       >
@@ -79,6 +79,32 @@
         >View Collections</a
       >
     </div>
+    </div>
+  </section>
+
+  <section class="media-highlights" aria-label="Homepage highlights">
+    <div class="container">
+      <div class="media-highlights__header">
+        <p class="media-highlights__eyebrow">Highlights</p>
+        <h2 class="section-title">Latest studio moments</h2>
+      <p class="media-highlights__intro">
+        Fresh visuals added to keep the community up to date with recent sessions and releases.
+      </p>
+      </div>
+      <div class="media-highlights__grid">
+        <figure class="media-highlight-card">
+          <img
+            src="{% static 'images/highlights/pherix-monoceros.svg' %}"
+            alt="PHERIX monoceros label for Autumn/Winter '26 in New York"
+          />
+          <div class="media-highlight-card__body">
+            <h3 class="media-highlight-card__title">PHERIX "monoceros"</h3>
+            <p class="media-highlight-card__caption">
+              Label detail for the Autumn/Winter '26 release spotlighting New York.
+            </p>
+          </div>
+        </figure>
+      </div>
     </div>
   </section>
 
@@ -307,16 +333,16 @@
           <div class="event-image">
             <img
               src="{% static 'images/events/popup/1.png' %}"
-              alt="Fashion Week 2025"
+              alt="New York Fashion Week 2026"
               onerror="this.onerror=null;this.src='{% static 'images/placehold.png' %}';"
             />
           </div>
           <div class="event-info">
-            <h3>Fashion Week 2025</h3>
-            <p class="event-date">March 15-20, 2025</p>
+            <h3>New York Fashion Week (NYFW)</h3>
+            <p class="event-date">Feb 11-16, 2026</p>
             <p class="event-description">
-              Join us for the most anticipated fashion event of the year
-              featuring emerging designers.
+              Fall/Winter 2026 runway calendar with over 60 shows and
+              presentations across New York City.
             </p>
           </div>
         </div>

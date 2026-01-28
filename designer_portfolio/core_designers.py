@@ -35,7 +35,7 @@ def _designer_seed_entries() -> list[Dict[str, Any]]:
     return [
         {
             "username": "caukin",
-            "portfolio_website": "https://caukin.aioak.co",
+            "portfolio_website": "https://caukin.globaldesignerhub.com",
             "region_area": "West Coast",
             "country": "United States",
             "state_province": "California",
@@ -45,7 +45,7 @@ def _designer_seed_entries() -> list[Dict[str, Any]]:
         },
         {
             "username": "jturner",
-            "portfolio_website": "https://jturner.aioak.co",
+            "portfolio_website": "https://jturner.globaldesignerhub.com",
             "region_area": "West Coast",
             "country": "United States",
             "state_province": "California",
@@ -53,10 +53,10 @@ def _designer_seed_entries() -> list[Dict[str, Any]]:
             "city": "Los Angeles",
             "location": "Los Angeles, CA, USA",
         },
-        {"username": "rossmason", "portfolio_website": "https://rossmason.aioak.co"},
+        {"username": "rossmason", "portfolio_website": "https://rossmason.globaldesignerhub.com"},
         {
             "username": "Over-Stimulated",
-            "portfolio_website": "https://stimulated.aioak.co",
+            "portfolio_website": "https://stimulated.globaldesignerhub.com",
             "region_area": "West Coast",
             "country": "United States",
             "state_province": "California",
@@ -66,7 +66,7 @@ def _designer_seed_entries() -> list[Dict[str, Any]]:
         },
         {
             "username": "m1director",
-            "portfolio_website": "https://m1director.aioak.co",
+            "portfolio_website": "https://m1director.globaldesignerhub.com",
             "region_area": "West Coast",
             "country": "United States",
             "state_province": "California",
@@ -79,11 +79,11 @@ def _designer_seed_entries() -> list[Dict[str, Any]]:
             # Prefer environment variable; if empty, leaves contact hidden until set
             "contact_email": os.getenv("PRETTYPEARL_CONTACT_EMAIL", "").strip(),
         },
-        {"username": "myrym", "portfolio_website": "https://myrym.aioak.co"},
-        {"username": "ateliernova", "portfolio_website": "https://ateliernova.aioak.co"},
-        {"username": "solstice", "portfolio_website": "https://solstice.aioak.co"},
-        {"username": "modohaus", "portfolio_website": "https://modohaus.aioak.co"},
-        {"username": "lumenknit", "portfolio_website": "https://lumenknit.aioak.co"},
+        {"username": "myrym", "portfolio_website": "https://myrym.globaldesignerhub.com"},
+        {"username": "ateliernova", "portfolio_website": "https://ateliernova.globaldesignerhub.com"},
+        {"username": "solstice", "portfolio_website": "https://solstice.globaldesignerhub.com"},
+        {"username": "modohaus", "portfolio_website": "https://modohaus.globaldesignerhub.com"},
+        {"username": "lumenknit", "portfolio_website": "https://lumenknit.globaldesignerhub.com"},
     ]
 
 
