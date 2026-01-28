@@ -4196,7 +4196,7 @@ To register as a designer:
 1. Click "Start Free Trial" or "Sign Up" in the navigation
 2. Fill out your profile information
 3. Add your portfolio link (optional but recommended)
-4. Select an Adobe package if you'd like subscription access
+4. Choose a subscription plan when you're ready (optional)
 5. Complete verification
 
 **What you get:**
@@ -4456,7 +4456,7 @@ Ready to connect with fellow designers?"""
 • GitHub - Version control
 
 **GlobalDesignerHub offers:**
-Adobe Creative Suite packages ($4.99-$29.99/month) with account.adobe.com access for registered users!
+Flexible subscriptions that unlock premium templates, community perks, and support.
 
 Which tools are you interested in learning more about?"""
         },
@@ -4496,7 +4496,7 @@ Which tools are you interested in learning more about?"""
 **GlobalDesignerHub subscriptions:**
 • Basic plans: $4.99-$14.99/month
 • Pro plans: $19.99-$29.99/month
-• Includes Adobe access
+• Includes premium templates and collaboration tools
 
 Need help pricing a specific project type?"""
         }
