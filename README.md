@@ -1,6 +1,15 @@
 GlobalDesignerHub.com is a secure, tech-forward application designed for fashion designers to effortlessly upload and manage their design portfolios with detailed, clean, and organized tech pack information.
 The platform offers a user-friendly interface and a robust authentication system, allowing users (including staff admins) to sign in securely via Google, LinkedIn, or Instagram OAuth flows or with traditional credentials. Built with both usability and security in mind, GlobalDesignerHub.com streamlines the process of presenting, storing, and sharing professional design documents in the fashion industry.
 
+## Local development (runserver)
+
+The Django dev server **only supports HTTP**, not HTTPS. To avoid `ERR_SSL_PROTOCOL_ERROR` or "Connection Failed":
+
+1. Start the server: `python manage.py runserver` (default port 8000) or `python manage.py runserver 8006`.
+2. **In your browser, open `http://127.0.0.1:8006`** (or `http://127.0.0.1:8000`) — use **`http://`**, not `https://`.
+
+If the address bar shows `https://`, change it to `http://` or type the full URL with `http://` explicitly.
+
 ## Database + deployment notes (Docker/Coolify)
 
 This app is intended to run on **PostgreSQL** in production.

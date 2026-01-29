@@ -9,7 +9,9 @@ set SESSION_COOKIE_SECURE=False
 set CSRF_COOKIE_SECURE=False
 set SOCIAL_AUTH_REDIRECT_IS_HTTPS=False
 
+set PORT=8000
+if not "%~1"=="" set PORT=%~1
 echo Starting Django development server with local settings...
-echo Access your site at: http://127.0.0.1:8000
-echo NOTE: Use HTTP (not HTTPS) to avoid SSL protocol errors!
-python manage.py runserver
+echo Access your site at: http://127.0.0.1:%PORT%
+echo NOTE: Use HTTP (not HTTPS) — type http://127.0.0.1:%PORT% in the browser!
+python manage.py runserver %PORT%

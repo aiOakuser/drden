@@ -257,10 +257,10 @@ CSRF_COOKIE_SECURE = env_bool(
     default=(not DEBUG or SERVER_URL_IS_HTTPS),
 )
 
-# Enforce HTTPS redirects by default in production or when BASE_URL_SERVER is HTTPS
+# Enforce HTTPS redirects in production only. In DEBUG (local runserver) never redirect to HTTPS.
 SECURE_SSL_REDIRECT = env_bool(
     "SECURE_SSL_REDIRECT",
-    default=(not DEBUG or SERVER_URL_IS_HTTPS),
+    default=(not DEBUG),
 )
 
 # --- Suspicious request filtering / throttling ---
@@ -274,7 +274,9 @@ SUSPICIOUS_REQUEST_RATE_WINDOW = int(os.getenv("SUSPICIOUS_REQUEST_RATE_WINDOW",
 if DEBUG:
     CSRF_TRUSTED_ORIGINS += [
         "http://127.0.0.1:8000",
+        "http://127.0.0.1:8006",
         "http://localhost:8000",
+        "http://localhost:8006",
     ]
 
 # --- Apps ---
