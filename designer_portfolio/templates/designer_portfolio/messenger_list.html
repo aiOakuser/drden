@@ -8,7 +8,11 @@
     All communication stays on the platform. Start or continue a conversation with another registered user.
   </p>
 
-  {% if conversations %}
+  {% if messenger_unavailable %}
+  <div style="text-align: center; padding: 32px 24px; background: var(--color-secondary); border-radius: 12px; border: 1px solid var(--color-surface-muted);">
+    <p style="color: var(--color-text); margin-bottom: 12px;">{{ messenger_unavailable_message|default:"Messenger is being set up. Please try again in a few minutes." }}</p>
+  </div>
+  {% elif conversations %}
   <ul class="conversation-list" style="list-style: none; margin: 0; padding: 0;">
     {% for conv in conversations %}
     {% with other=conv._other_user %}

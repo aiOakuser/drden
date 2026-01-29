@@ -44,6 +44,7 @@ This app is intended to run on **PostgreSQL** in production.
 
 ### Other deployment notes
 
+- **Migrations**: after deploying new code, run `python manage.py migrate` on the production database so new features (e.g. **Messenger** at `/messenger/`) work. If `/messenger/` returns 500, the chat tables may be missing — run `migrate` and retry.
 - **Static files**: run `python manage.py collectstatic --noinput` as part of your build/release. Static assets are served via WhiteNoise.
 - **Container cleanup logs**: during rolling updates some platforms auto-remove build containers. If you see `No such container` while cleaning up, it is usually safe. For custom automation, use `./docker_cleanup.sh <container>` to make cleanup idempotent.
 - **Orphan container warnings**: after renaming/removing services, you may see "Found orphan containers". Run your deploy with `--remove-orphans` (or use your platform's cleanup action) to remove the old containers.

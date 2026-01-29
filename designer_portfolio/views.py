@@ -4832,23 +4832,35 @@ def _get_or_create_conversation(user_a, user_b):
 @login_required
 def messenger_list(request):
     """List conversations for the current user."""
-    convs = (
-        ChatConversation.objects.filter(
-            Q(user1=request.user) | Q(user2=request.user)
+    try:
+        convs = (
+            ChatConversation.objects.filter(
+                Q(user1=request.user) | Q(user2=request.user)
+            )
+            .select_related("user1", "user2")
+            .prefetch_related("messages")
+            .order_by("-updated_at")
         )
-        .select_related("user1", "user2")
-        .prefetch_related("messages")
-        .order_by("-updated_at")
-    )
-    # Annotate last message and other user for display
-    for c in convs:
-        c._last_msg = c.messages.order_by("-created_at").first()
-        c._other_user = c.other_user(request.user)
-    return render(
-        request,
-        "designer_portfolio/messenger_list.html",
-        {"conversations": convs},
-    )
+        # Annotate last message and other user for display
+        for c in convs:
+            c._last_msg = c.messages.order_by("-created_at").first()
+            c._other_user = c.other_user(request.user)
+        return render(
+            request,
+            "designer_portfolio/messenger_list.html",
+            {"conversations": convs},
+        )
+    except Exception as e:
+        # If messenger tables are missing (migration not applied), show a friendly message
+        err_str = str(e).lower()
+        if "chatconversation" in err_str or "chat_message" in err_str or "does not exist" in err_str or "no such table" in err_str:
+            logger.warning("Messenger tables may be missing: %s. Run: python manage.py migrate", e)
+            return render(request, "designer_portfolio/messenger_list.html", {
+                "conversations": [],
+                "messenger_unavailable": True,
+                "messenger_unavailable_message": "Messenger is being set up. Please try again in a few minutes.",
+            })
+        raise
 
 
 @login_required

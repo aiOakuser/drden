@@ -270,12 +270,14 @@ SUSPICIOUS_PATH_PATTERNS = _configured_suspicious_patterns or None
 SUSPICIOUS_REQUEST_RATE_LIMIT = int(os.getenv("SUSPICIOUS_REQUEST_RATE_LIMIT", "120"))
 SUSPICIOUS_REQUEST_RATE_WINDOW = int(os.getenv("SUSPICIOUS_REQUEST_RATE_WINDOW", "60"))
 
-# Make local dev origins trusted for CSRF in DEBUG mode
+# Local dev: use http://127.0.0.1:PORT (e.g. 8004) — do not change to https; runserver only supports HTTP.
 if DEBUG:
     CSRF_TRUSTED_ORIGINS += [
         "http://127.0.0.1:8000",
+        "http://127.0.0.1:8004",
         "http://127.0.0.1:8006",
         "http://localhost:8000",
+        "http://localhost:8004",
         "http://localhost:8006",
     ]
 
