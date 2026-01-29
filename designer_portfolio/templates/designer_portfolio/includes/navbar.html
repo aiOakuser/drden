@@ -53,15 +53,21 @@
         {% csrf_token %}
         <button type="submit" class="nav-logout-btn">Logout</button>
       </form>
+      <!-- Mobile: same icons as desktop (Notifications, Messages, Help) -->
+      <div class="header__nav-icons header__nav-icons--mobile">
+        <a href="{% url 'designer_dashboard' %}#notifications" class="header__nav-icon header__nav-icon--bell" aria-label="Notifications"><i class="fa-regular fa-bell"></i><span class="header__nav-icon-dot" aria-hidden="true"></span></a>
+        <a href="{% url 'messenger_list' %}" class="header__nav-icon header__nav-icon--envelope" aria-label="Messages"><i class="fa-regular fa-envelope"></i><span class="header__nav-icon-dot" aria-hidden="true"></span></a>
+        <a href="{% url 'about_site' %}#help" class="header__nav-icon header__nav-icon--help" aria-label="Help"><i class="fa-regular fa-circle-question"></i></a>
+      </div>
       {% else %}
       <a href="{% url 'login' %}">Login</a>
       <a href="{% url 'signup' %}" class="nav-trial-cta" aria-label="Start your free trial until you're satisfied">Start Free Trial</a>
       {% endif %}
     </nav>
 
-    <!-- Nav bar icons: Notifications, Messages, Help (authenticated users) -->
+    <!-- Designer nav bar icons: Notifications, Messages, Help (authenticated users) -->
     {% if user.is_authenticated %}
-    <div class="header__nav-icons">
+    <div class="header__nav-icons" aria-label="Notifications, messages, and help">
       <a href="{% url 'designer_dashboard' %}#notifications" class="header__nav-icon header__nav-icon--bell" aria-label="Notifications">
         <i class="fa-regular fa-bell"></i>
         <span class="header__nav-icon-dot" aria-hidden="true"></span>
@@ -335,12 +341,13 @@
     color: var(--color-accent);
   }
 
-  /* ===== Nav bar icons (bell, envelope, help) ===== */
+  /* ===== Designer nav bar icons (bell, envelope, help) ===== */
   .header__nav-icons {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 16px;
     margin-right: 12px;
+    flex-shrink: 0;
   }
   .header__nav-icon {
     position: relative;
@@ -372,6 +379,10 @@
     pointer-events: none;
   }
   .header__nav-icon--help .header__nav-icon-dot {
+    display: none;
+  }
+  /* Mobile-only icon row (inside nav): hidden on desktop */
+  .header__nav-icons--mobile {
     display: none;
   }
 
@@ -478,6 +489,19 @@
 
     .header__nav-icons {
       display: none;
+    }
+    .header__nav-icons--mobile {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      padding: 16px 0;
+      margin-top: 8px;
+      border-top: 1px solid rgba(var(--color-secondary-rgb), 0.15);
+    }
+    .header__nav-icons--mobile .header__nav-icon {
+      width: 44px;
+      height: 44px;
+      font-size: 20px;
     }
 
     .mobile-menu-toggle {
