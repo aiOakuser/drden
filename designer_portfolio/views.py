@@ -32,6 +32,7 @@ from django.core.validators import URLValidator
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.db import transaction, IntegrityError
+from django.db.utils import OperationalError, ProgrammingError
 from django.db.models import Q, Count, F
 from django.urls import reverse_lazy, reverse, NoReverseMatch
 from django.utils.text import slugify
@@ -4850,8 +4851,15 @@ def messenger_list(request):
             "designer_portfolio/messenger_list.html",
             {"conversations": convs},
         )
+    except (OperationalError, ProgrammingError) as e:
+        # Messenger tables missing (migration not applied on production)
+        logger.warning("Messenger tables may be missing: %s. Run: python manage.py migrate", e)
+        return render(request, "designer_portfolio/messenger_list.html", {
+            "conversations": [],
+            "messenger_unavailable": True,
+            "messenger_unavailable_message": "Messenger is being set up. Please try again in a few minutes.",
+        })
     except Exception as e:
-        # If messenger tables are missing (migration not applied), show a friendly message
         err_str = str(e).lower()
         if "chatconversation" in err_str or "chat_message" in err_str or "does not exist" in err_str or "no such table" in err_str:
             logger.warning("Messenger tables may be missing: %s. Run: python manage.py migrate", e)
@@ -4866,26 +4874,38 @@ def messenger_list(request):
 @login_required
 def messenger_thread(request, conversation_id):
     """Show one conversation and its messages; accept POST to send a new message."""
-    conv = get_object_or_404(
-        ChatConversation.objects.select_related("user1", "user2"),
-        pk=conversation_id,
-    )
+    try:
+        conv = get_object_or_404(
+            ChatConversation.objects.select_related("user1", "user2"),
+            pk=conversation_id,
+        )
+    except (OperationalError, ProgrammingError):
+        messages.info(request, "Messenger is being set up. Please try again in a few minutes.")
+        return redirect("messenger_list")
     if request.user not in (conv.user1, conv.user2):
         raise Http404("Not a participant in this conversation")
 
-    messages_list = list(
-        conv.messages.select_related("sender").order_by("created_at")
-    )
+    try:
+        messages_list = list(
+            conv.messages.select_related("sender").order_by("created_at")
+        )
+    except (OperationalError, ProgrammingError):
+        messages.info(request, "Messenger is being set up. Please try again in a few minutes.")
+        return redirect("messenger_list")
 
     if request.method == "POST":
         body = (request.POST.get("body") or "").strip()
         if body:
-            msg = ChatMessage.objects.create(
-                conversation=conv, sender=request.user, body=body
-            )
-            messages_list.append(msg)
-            messages.success(request, "Message sent.")
-            return redirect("messenger_thread", conversation_id=conv.pk)
+            try:
+                msg = ChatMessage.objects.create(
+                    conversation=conv, sender=request.user, body=body
+                )
+                messages_list.append(msg)
+                messages.success(request, "Message sent.")
+                return redirect("messenger_thread", conversation_id=conv.pk)
+            except (OperationalError, ProgrammingError):
+                messages.info(request, "Messenger is being set up. Please try again in a few minutes.")
+                return redirect("messenger_list")
         messages.error(request, "Message cannot be empty.")
     other = conv.other_user(request.user)
     return render(
@@ -4906,8 +4926,12 @@ def messenger_start(request, user_id):
     if other.pk == request.user.pk:
         messages.error(request, "You cannot message yourself.")
         return redirect("messenger_list")
-    conv, _ = _get_or_create_conversation(request.user, other)
-    return redirect("messenger_thread", conversation_id=conv.pk)
+    try:
+        conv, _ = _get_or_create_conversation(request.user, other)
+        return redirect("messenger_thread", conversation_id=conv.pk)
+    except (OperationalError, ProgrammingError):
+        messages.info(request, "Messenger is being set up. Please try again in a few minutes.")
+        return redirect("messenger_list")
 
 
 # ---------------- Enhanced Forum Views ----------------

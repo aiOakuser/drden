@@ -5,10 +5,23 @@ The platform offers a user-friendly interface and a robust authentication system
 
 The Django dev server **only supports HTTP**, not HTTPS. To avoid `ERR_SSL_PROTOCOL_ERROR` or "Connection Failed":
 
-1. Start the server: `python manage.py runserver` (default port 8000) or `python manage.py runserver 8006`.
-2. **In your browser, open `http://127.0.0.1:8006`** (or `http://127.0.0.1:8000`) — use **`http://`**, not `https://`.
+1. Start the server: `python manage.py runserver 8004` (or 8000, 8006).
+2. **Use HTTP in the browser:** open **`http://localhost:8004`** (or `http://127.0.0.1:8004`) — type **`http://`** explicitly.
 
-If the address bar shows `https://`, change it to `http://` or type the full URL with `http://` explicitly.
+**If Cursor/VS Code opens `https://` (e.g. in Simple Browser):**  
+- **Option A:** In Cursor, press **F5** or use **Run > Start Debugging** and choose **"Django runserver 8004 (open HTTP in browser)"**. That opens **http://** in your system browser (Chrome, Edge, etc.).  
+- **Option B:** Start the server in the terminal, then in a new terminal run **`.\open_http_browser.ps1`** to open http://127.0.0.1:8004 in your default browser.  
+- **Option C:** Manually open your system browser (outside Cursor) and type **`http://127.0.0.1:8004`** in the address bar.
+
+Do not use the embedded Simple Browser if it forces HTTPS; use your normal browser with **http://**.
+
+**If you still get "Connection not secure" or ERR_SSL_PROTOCOL_ERROR even with `http://` in the address bar:**  
+Your browser may have **HSTS** (or similar) cached for 127.0.0.1 and is forcing HTTPS. Clear it:
+
+- **Chrome / Edge:** Open `chrome://net-internals/#hsts`, under "Delete domain security policies" type **127.0.0.1** and click Delete. Then close all tabs for 127.0.0.1 and open **http://127.0.0.1:8004** again.
+- **Firefox:** Open `about:config`, search for `security.cert_pinning.enforcement_level` and set to 0 if needed; or clear site data for 127.0.0.1.
+
+Then restart the Django server and open **http://127.0.0.1:8004** (with **http://**).
 
 ## Database + deployment notes (Docker/Coolify)
 

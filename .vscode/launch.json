@@ -1,0 +1,36 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Django runserver 8004 (open HTTP in browser)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/manage.py",
+      "args": ["runserver", "8004"],
+      "django": true,
+      "justMyCode": false,
+      "env": {
+        "DEBUG": "True",
+        "SECURE_SSL_REDIRECT": "False"
+      },
+      "serverReadyAction": {
+        "pattern": "Starting development server at",
+        "uriFormat": "http://127.0.0.1:8004",
+        "action": "openExternally"
+      }
+    },
+    {
+      "name": "Django runserver 8004 (no browser)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/manage.py",
+      "args": ["runserver", "8004"],
+      "django": true,
+      "justMyCode": false,
+      "env": {
+        "DEBUG": "True",
+        "SECURE_SSL_REDIRECT": "False"
+      }
+    }
+  ]
+}

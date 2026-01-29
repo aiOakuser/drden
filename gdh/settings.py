@@ -90,6 +90,9 @@ _PLACEHOLDER_HOST_VALUES = {"host", "hostname"}
 _PLACEHOLDER_USER_VALUES = {"user", "username"}
 _PLACEHOLDER_PASSWORD_VALUES = {"password", "pass"}
 
+# When using runserver, never redirect to HTTPS (runserver only supports HTTP).
+RUNNING_RUNSERVER = "runserver" in sys.argv
+
 
 def _is_placeholder(value: str | None, placeholders: set[str]) -> bool:
     if value is None:
@@ -257,11 +260,15 @@ CSRF_COOKIE_SECURE = env_bool(
     default=(not DEBUG or SERVER_URL_IS_HTTPS),
 )
 
-# Enforce HTTPS redirects in production only. In DEBUG (local runserver) never redirect to HTTPS.
+# Enforce HTTPS redirects in production only. When running runserver, never redirect to HTTPS.
 SECURE_SSL_REDIRECT = env_bool(
     "SECURE_SSL_REDIRECT",
     default=(not DEBUG),
 )
+if DEBUG:
+    SECURE_SSL_REDIRECT = False
+if RUNNING_RUNSERVER:
+    SECURE_SSL_REDIRECT = False  # runserver only supports HTTP; ignore env and DEBUG
 
 # --- Suspicious request filtering / throttling ---
 SUSPICIOUS_REQUEST_FILTER_ENABLED = env_bool("SUSPICIOUS_REQUEST_FILTER_ENABLED", default=not DEBUG)
@@ -323,6 +330,7 @@ SPECTACULAR_SETTINGS = {
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "designer_portfolio.middleware.ForceHttpForLocalhostMiddleware",
     # WhiteNoise should be directly after SecurityMiddleware so static files
     # are served before any custom redirect/throttle middleware runs.
     "whitenoise.middleware.WhiteNoiseMiddleware",

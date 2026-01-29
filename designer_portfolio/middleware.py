@@ -247,3 +247,26 @@ class CanonicalDomainRedirectMiddleware:
         response = HttpResponsePermanentRedirect(target_url)
         response.status_code = 308
         return response
+
+
+class ForceHttpForLocalhostMiddleware:
+    """
+    When using runserver (127.0.0.1 / localhost), rewrite any redirect to https
+    so it goes to http. Prevents ERR_SSL_PROTOCOL_ERROR when the browser or
+    something upstream forces HTTPS.
+    """
+    def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]):
+        self.get_response = get_response
+
+    def __call__(self, request: HttpRequest) -> HttpResponse:
+        response = self.get_response(request)
+        host = (request.get_host() or "").split(":")[0].lower()
+        if host not in ("127.0.0.1", "localhost"):
+            return response
+        location = response.get("Location")
+        if not location or not response.status_code in (301, 302, 307, 308):
+            return response
+        if location.strip().lower().startswith("https://"):
+            new_location = "http://" + location[8:]
+            response["Location"] = new_location
+        return response
