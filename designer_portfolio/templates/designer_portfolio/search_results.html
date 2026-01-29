@@ -1,23 +1,28 @@
 {% extends "designer_portfolio/base.html" %}
 {% load static %}
-{% block title %}Results for {{ query|default:"search" }} | GlobalDesignerHub{% endblock %}
+{% block title %}{% if query %}Results for {{ query }}{% else %}Filter: Designers, Collections & Events{% endif %} | GlobalDesignerHub{% endblock %}
 {% block content %}
 <section class="search-results" style="max-width: 1100px; margin: 30px auto; padding: 0 16px;">
-  <h1 style="margin-bottom: 8px; color: var(--color-primary); font-size: 24px;">Results for {{ query|default:"(enter a search term)" }}</h1>
-  {% if not query %}
-  <p style="color: var(--color-text-muted); margin-bottom: 24px;">Use the search bar on the home page to find designers, collections, or events.</p>
-  {% else %}
-  <form method="get" action="{% url 'unified_search' %}" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 24px;">
-    <input type="hidden" name="q" value="{{ query }}" />
-    <label for="id_type" style="font-size: 14px; color: var(--color-text-muted);">Category</label>
-    <select name="type" id="id_type" onchange="this.form.submit()" style="padding: 10px 14px; border: 2px solid var(--color-border); border-radius: 8px; font-size: 14px; background: var(--color-secondary); color: var(--color-primary);">
-      <option value="all" {% if type_filter == "all" %}selected{% endif %}>All</option>
-      <option value="designers" {% if type_filter == "designers" %}selected{% endif %}>Designers</option>
-      <option value="collections" {% if type_filter == "collections" %}selected{% endif %}>Collections</option>
-      <option value="events" {% if type_filter == "events" %}selected{% endif %}>Events</option>
-    </select>
+  <h1 class="search-results__title">Filter exclusively: Designers, Collections & Events</h1>
+  <p class="search-results__subtitle">Choose a category—designers, collections, or events (fashion shows, popup events)—then optionally narrow with a keyword.</p>
+
+  <!-- Main filter tabs -->
+  <div class="search-filter-tabs" role="tablist" aria-label="Filter by type: designers, collections, events (fashion shows, popup events)">
+    <a href="{% url 'unified_search' %}?{% if query %}q={{ query|urlencode }}&{% endif %}type=all" class="search-filter-tab {% if type_filter == 'all' %}active{% endif %}" role="tab">All</a>
+    <a href="{% url 'unified_search' %}?{% if query %}q={{ query|urlencode }}&{% endif %}type=designers" class="search-filter-tab {% if type_filter == 'designers' %}active{% endif %}" role="tab">Designers</a>
+    <a href="{% url 'unified_search' %}?{% if query %}q={{ query|urlencode }}&{% endif %}type=collections" class="search-filter-tab {% if type_filter == 'collections' %}active{% endif %}" role="tab">Collections</a>
+    <a href="{% url 'unified_search' %}?{% if query %}q={{ query|urlencode }}&{% endif %}type=events" class="search-filter-tab {% if type_filter == 'events' %}active{% endif %}" role="tab">Events <span class="search-filter-tab__hint">(fashion shows, popups)</span></a>
+  </div>
+
+  <!-- Search bar (optional keyword) -->
+  <form method="get" action="{% url 'unified_search' %}" class="search-results__form">
+    <input type="hidden" name="type" value="{{ type_filter }}" />
+    <label for="search-results-q" class="visually-hidden">Keyword search</label>
+    <input type="search" id="search-results-q" name="q" value="{{ query }}" placeholder="{% if type_filter == 'all' %}Search designers, collections, events (fashion shows, popups)…{% elif type_filter == 'events' %}Search events (fashion shows, popups)…{% else %}Search within {{ type_filter }}…{% endif %}" class="search-results__input" autocomplete="off" />
+    <button type="submit" class="search-results__btn" aria-label="Search"><i class="fas fa-search"></i></button>
   </form>
-  <p style="color: var(--color-text-muted); margin-bottom: 20px;">{{ total_count }} result{{ total_count|pluralize }}</p>
+
+  <p class="search-results__count">{{ total_count }} result{{ total_count|pluralize }}{% if query %} for "{{ query }}"{% endif %}</p>
 
   <div class="search-results-grid">
     {% if type_filter == "all" or type_filter == "designers" %}
@@ -71,7 +76,7 @@
         {% endif %}
         <div style="flex: 1;">
           <h3 style="margin: 0 0 4px; font-size: 18px;">{{ ev.title }}</h3>
-          <p style="margin: 0; font-size: 14px; color: var(--color-text-muted);">{% if ev.event_date %}{{ ev.event_date|date:"M d, Y" }}{% endif %}{% if ev.location %} · {{ ev.location }}{% endif %}</p>
+          <p style="margin: 0; font-size: 14px; color: var(--color-text-muted);">{% if ev.event_date %}{{ ev.event_date|date:"M d, Y" }}{% endif %}{% if ev.location %} · {{ ev.location }}{% endif %}{% if ev.is_popup %} <span class="event-type-badge event-type-badge--popup">Popup</span>{% endif %}</p>
           {% if ev.description %}<p style="margin: 6px 0 0; font-size: 13px; color: var(--color-text);">{{ ev.description|truncatewords:15 }}</p>{% endif %}
         </div>
         <span style="color: var(--color-text-muted);">→</span>
@@ -82,8 +87,29 @@
   </div>
 
   {% if total_count == 0 %}
-  <p style="color: var(--color-text-muted); text-align: center; padding: 40px 20px;">No results for "{{ query }}". Try a different term or category.</p>
-  {% endif %}
+  <p class="search-results__empty">No results{% if query %} for "{{ query }}"{% endif %}. Try a different filter or keyword.</p>
   {% endif %}
 </section>
+<style>
+  .search-results__title { margin: 0 0 8px; color: var(--color-primary); font-size: 1.75rem; font-weight: 700; }
+  .search-results__subtitle { color: var(--color-text-muted); margin-bottom: 20px; font-size: 0.95rem; }
+  .search-filter-tabs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+  .search-filter-tab {
+    display: inline-block; padding: 12px 20px; border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 15px;
+    background: rgba(var(--color-primary-rgb, 30, 30, 30), 0.08); color: var(--color-primary);
+    border: 2px solid transparent; transition: background 0.2s, border-color 0.2s;
+  }
+  .search-filter-tab:hover { background: rgba(var(--color-primary-rgb, 30, 30, 30), 0.15); }
+  .search-filter-tab.active { background: var(--color-primary); color: var(--color-secondary); border-color: var(--color-primary); }
+  .search-filter-tab__hint { font-weight: 500; opacity: 0.9; font-size: 0.9em; }
+  .event-type-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; margin-left: 6px; }
+  .event-type-badge--popup { background: rgba(var(--color-primary-rgb, 30, 30, 30), 0.12); color: var(--color-primary); }
+  .search-results__form { display: flex; align-items: stretch; max-width: 480px; margin-bottom: 16px; border: 1px solid var(--color-border); border-radius: 10px; overflow: hidden; }
+  .search-results__input { flex: 1; padding: 12px 16px; border: none; font-size: 15px; color: var(--color-primary); }
+  .search-results__input:focus { outline: none; }
+  .search-results__btn { padding: 12px 20px; background: #374151; color: #fff; border: none; cursor: pointer; }
+  .search-results__count { color: var(--color-text-muted); margin-bottom: 20px; font-size: 14px; }
+  .search-results__empty { color: var(--color-text-muted); text-align: center; padding: 40px 20px; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+</style>
 {% endblock %}

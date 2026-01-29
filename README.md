@@ -55,6 +55,16 @@ This app is intended to run on **PostgreSQL** in production.
 - Backups are created with `python manage.py backup_db` and stored under `media/backups/`
   (or S3 when `USE_S3_MEDIA=true`).
 
+### 502 Bad Gateway (login / site not loading)
+
+If **https://globaldesignerhub.com/accounts/login/** (or the whole site) shows **502 Bad Gateway** from Cloudflare, the origin server is not responding. Check:
+
+1. **App process** — Is the Django/Gunicorn (or your WSGI server) process running on the host? Restart it if it crashed.
+2. **Health check** — Open **https://globaldesignerhub.com/health/** in a browser. If it returns **"ok"**, the app is up and the 502 may be intermittent or proxy-related. If **/health/** also returns 502, the app is down or not reachable by the proxy.
+3. **Logs** — On the host, check application and proxy (e.g. Nginx/Caddy) logs for errors, tracebacks, or "connection refused".
+4. **Proxy** — Ensure the reverse proxy (Nginx, Caddy, etc.) points to the correct host/port where Django/Gunicorn is listening (e.g. `127.0.0.1:8000`).
+5. **Database** — If the app crashes on startup or first request due to DB (e.g. missing migrations or connection failure), fix DB and restart the app.
+
 ### Other deployment notes
 
 - **Migrations**: after deploying new code, run `python manage.py migrate` on the production database so new features (e.g. **Messenger** at `/messenger/`) work. If `/messenger/` returns 500, the chat tables may be missing — run `migrate` and retry.

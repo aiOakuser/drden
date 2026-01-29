@@ -1,0 +1,115 @@
+{% load static %}
+<section class="navbar-search" aria-label="Filter exclusively: designers, collections, events (fashion shows, popup events)">
+  <div class="navbar-search__inner">
+    <p class="navbar-search__label">Filter exclusively: Designers · Collections · Events (fashion shows, popup events)</p>
+    <div class="navbar-search__filters">
+      <a href="{% url 'unified_search' %}?type=designers" class="navbar-search__pill {% if request.GET.type == 'designers' %}active{% endif %}">Designers</a>
+      <a href="{% url 'unified_search' %}?type=collections" class="navbar-search__pill {% if request.GET.type == 'collections' %}active{% endif %}">Collections</a>
+      <a href="{% url 'unified_search' %}?type=events" class="navbar-search__pill {% if request.GET.type == 'events' %}active{% endif %}">Events</a>
+    </div>
+    <form method="get" action="{% url 'unified_search' %}" class="navbar-search__form" role="search">
+      <input type="hidden" name="type" value="{{ request.GET.type|default:'all' }}" />
+      <label for="navbar-search-input" class="visually-hidden">Search within designers, collections, or events (fashion shows, popup events)</label>
+      <input type="search" id="navbar-search-input" name="q" value="{{ request.GET.q }}" class="navbar-search__input" placeholder="Search designers, collections, events (fashion shows, popups)…" autocomplete="off" />
+      <button type="submit" class="navbar-search__btn" aria-label="Search">
+        <i class="fas fa-search" aria-hidden="true"></i>
+      </button>
+    </form>
+  </div>
+</section>
+<style>
+  .navbar-search {
+    background: var(--color-secondary);
+    border-bottom: 1px solid var(--color-surface-muted);
+    padding: 12px 20px;
+  }
+  .navbar-search__inner {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .navbar-search__label {
+    margin: 0 0 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+  }
+  .navbar-search__filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .navbar-search__pill {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 999px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    background: rgba(var(--color-primary-rgb, 30, 30, 30), 0.08);
+    color: var(--color-primary);
+    border: 1px solid transparent;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .navbar-search__pill:hover {
+    background: rgba(var(--color-primary-rgb, 30, 30, 30), 0.15);
+  }
+  .navbar-search__pill.active {
+    background: var(--color-primary);
+    color: var(--color-secondary);
+    border-color: var(--color-primary);
+  }
+  .navbar-search__form {
+    display: flex;
+    align-items: stretch;
+    background: var(--color-secondary);
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+  .navbar-search__input {
+    flex: 1;
+    padding: 12px 18px;
+    border: none;
+    font-size: 15px;
+    color: var(--color-primary);
+    background: #fff;
+  }
+  .navbar-search__input::placeholder {
+    color: #9ca3af;
+  }
+  .navbar-search__input:focus {
+    outline: none;
+  }
+  .navbar-search__btn {
+    padding: 12px 20px;
+    background: #374151;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .navbar-search__btn:hover {
+    background: #1f2937;
+  }
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    border: 0;
+  }
+  @media (max-width: 768px) {
+    .navbar-search { padding: 10px 16px; }
+    .navbar-search__input { font-size: 14px; padding: 10px 14px; }
+    .navbar-search__input::placeholder { font-size: 14px; }
+    .navbar-search__btn { padding: 10px 16px; }
+  }
+</style>

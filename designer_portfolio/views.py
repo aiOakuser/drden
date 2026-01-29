@@ -19,7 +19,7 @@ from django.views.generic import TemplateView, DetailView, ListView, CreateView,
 from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetConfirmView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import login, authenticate, get_user_model
-from django.http import JsonResponse, Http404, QueryDict
+from django.http import JsonResponse, Http404, QueryDict, HttpResponse
 from django.views.decorators.csrf import requires_csrf_token
 from django.views.decorators.http import require_POST
 from django.conf import settings
@@ -3670,7 +3670,7 @@ def logout_view(request):
     return redirect('home')
 
 def unified_search_view(request):
-    """Unified search across designers, collections, and events. GET: q, type (designers|collections|events|all)."""
+    """Search exclusively for filtering designers, collections, and events (e.g. fashion shows, popup events). GET: q (optional), type (designers|collections|events|all)."""
     q = (request.GET.get("q") or "").strip()
     type_filter = (request.GET.get("type") or "all").lower()
     if type_filter not in ("all", "designers", "collections", "events"):
@@ -3680,50 +3680,47 @@ def unified_search_view(request):
     collections = []
     events = []
     total_count = 0
+    search_term = q
 
-    if not q:
-        # No query: show empty or recent; we show empty with message
-        pass
-    else:
-        search_term = q
-        if type_filter in ("all", "designers"):
-            designers = list(
-                DesignerProfile.objects.filter(user__is_active=True)
-                .filter(
-                    Q(user__username__icontains=search_term)
-                    | Q(user__first_name__icontains=search_term)
-                    | Q(user__last_name__icontains=search_term)
-                    | Q(bio__icontains=search_term)
-                    | Q(specialization__icontains=search_term)
-                    | Q(location__icontains=search_term)
-                    | Q(region_area__icontains=search_term)
-                    | Q(country__icontains=search_term)
-                    | Q(state_province__icontains=search_term)
-                    | Q(county__icontains=search_term)
-                    | Q(city__icontains=search_term)
-                )
-                .select_related("user")[:50]
+    # Filter by type first; with or without keyword search
+    if type_filter in ("all", "designers"):
+        qs = DesignerProfile.objects.filter(user__is_active=True).select_related("user")
+        if search_term:
+            qs = qs.filter(
+                Q(user__username__icontains=search_term)
+                | Q(user__first_name__icontains=search_term)
+                | Q(user__last_name__icontains=search_term)
+                | Q(bio__icontains=search_term)
+                | Q(specialization__icontains=search_term)
+                | Q(location__icontains=search_term)
+                | Q(region_area__icontains=search_term)
+                | Q(country__icontains=search_term)
+                | Q(state_province__icontains=search_term)
+                | Q(county__icontains=search_term)
+                | Q(city__icontains=search_term)
             )
-        if type_filter in ("all", "collections"):
-            collections = list(
-                Collection.objects.filter(published=True)
-                .filter(
-                    Q(name__icontains=search_term)
-                    | Q(description__icontains=search_term)
-                    | Q(season__icontains=search_term)
-                    | Q(designer__icontains=search_term)
-                )[:50]
+        designers = list(qs[:50])
+    if type_filter in ("all", "collections"):
+        qs = Collection.objects.filter(published=True)
+        if search_term:
+            qs = qs.filter(
+                Q(name__icontains=search_term)
+                | Q(description__icontains=search_term)
+                | Q(season__icontains=search_term)
+                | Q(designer__icontains=search_term)
             )
-        if type_filter in ("all", "events"):
-            events = list(
-                Event.objects.filter(
-                    Q(title__icontains=search_term)
-                    | Q(description__icontains=search_term)
-                    | Q(location__icontains=search_term)
-                    | Q(venue__icontains=search_term)
-                )[:50]
+        collections = list(qs[:50])
+    if type_filter in ("all", "events"):
+        qs = Event.objects.all()
+        if search_term:
+            qs = qs.filter(
+                Q(title__icontains=search_term)
+                | Q(description__icontains=search_term)
+                | Q(location__icontains=search_term)
+                | Q(venue__icontains=search_term)
             )
-        total_count = len(designers) + len(collections) + len(events)
+        events = list(qs[:50])
+    total_count = len(designers) + len(collections) + len(events)
 
     return render(
         request,
@@ -3949,6 +3946,11 @@ class DesignersListView(ListView):
             }
         )
         return context
+
+
+def health_check(request):
+    """Minimal health check for load balancers and 502 debugging. No DB, no template."""
+    return HttpResponse("ok", content_type="text/plain", status=200)
 
 
 def _resolve_post_login_redirect(request, candidate: str | None = "") -> str:

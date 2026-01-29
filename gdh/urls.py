@@ -10,9 +10,11 @@ from designer_portfolio.views import (
     DesignerLoginView,
     DesignerPasswordResetView,
     DesignerPasswordResetConfirmView,
+    health_check,
 )  # Import the signup_view and custom login
 
 urlpatterns = [
+    path("health/", health_check, name="health_check"),
     path("admin/", admin.site.urls),
     path("", include("marketing.urls")),
     # Friendly alias: /login or /login/ -> accounts/login/ (preserve query string like ?next=)
