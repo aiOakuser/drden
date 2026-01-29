@@ -86,13 +86,19 @@ python manage.py migrate
 
 ## 6. Create OAuth Applications
 
-### Google OAuth2:
+### Google OAuth2 (Gmail sign-in):
+
+**See [docs/GOOGLE_GMAIL_LOGIN.md](../docs/GOOGLE_GMAIL_LOGIN.md)** for full steps and how to fix **Error 400: redirect_uri_mismatch**.
+
+Summary:
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select existing
-3. Enable Google+ API
-4. Create OAuth 2.0 credentials
-5. Add authorized redirect URIs: `http://localhost:8000/auth/complete/google-oauth2/`
+2. Create/select project, set OAuth consent screen (app name, scopes, test users if Testing)
+3. Create OAuth 2.0 credentials → **Web application**
+4. **Authorized redirect URIs** must match exactly (this app uses `/auth/`):
+   - Production: `https://globaldesignerhub.com/auth/complete/google-oauth2/`
+   - (Optional) `https://www.globaldesignerhub.com/auth/complete/google-oauth2/`
+   - Local: `http://localhost:8000/auth/complete/google-oauth2/`, `http://127.0.0.1:8000/auth/complete/google-oauth2/`
 
 ### LinkedIn OAuth2:
 
@@ -109,11 +115,15 @@ python manage.py migrate
 
 ## 7. Environment Variables
 
-Create a .env file or set environment variables:
+Create a .env file or set environment variables. This project reads Google credentials from either `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` or `SOCIAL_AUTH_GOOGLE_OAUTH2_KEY`/`SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET`:
 
 ```
-GOOGLE_OAUTH2_KEY=your_google_client_id
-GOOGLE_OAUTH2_SECRET=your_google_client_secret
+GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+# Optional aliases:
+# SOCIAL_AUTH_GOOGLE_OAUTH2_KEY=${GOOGLE_CLIENT_ID}
+# SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET=${GOOGLE_CLIENT_SECRET}
+
 LINKEDIN_OAUTH2_KEY=your_linkedin_client_id
 LINKEDIN_OAUTH2_SECRET=your_linkedin_client_secret
 INSTAGRAM_KEY=your_instagram_app_id
