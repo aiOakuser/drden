@@ -1,0 +1,44 @@
+{% extends "designer_portfolio/base.html" %}
+{% load static %}
+{% block title %}Chat with {{ other_user.get_full_name|default:other_user.username }} | GlobalDesignerHub{% endblock %}
+{% block content %}
+<section class="messenger-thread" style="max-width: 720px; margin: 40px auto; padding: 0 16px;">
+  <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+    <a href="{% url 'messenger_list' %}" style="color: var(--color-primary); text-decoration: none; font-size: 14px;">← Messages</a>
+    <span style="color: var(--color-text-muted);">|</span>
+    <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--color-surface); display: flex; align-items: center; justify-content: center; font-weight: 700;">
+      {{ other_user.username|first|upper }}
+    </div>
+    <h1 style="margin: 0; font-size: 20px; color: var(--color-primary);">{{ other_user.get_full_name|default:other_user.username }}</h1>
+  </div>
+
+  {% if messages_list %}
+  <div class="messages-list" style="background: var(--color-secondary); border: 1px solid var(--color-surface-muted); border-radius: 12px; padding: 20px; margin-bottom: 20px; min-height: 200px; max-height: 400px; overflow-y: auto;">
+    {% for msg in messages_list %}
+    <div style="margin-bottom: 16px;">
+      <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px;">
+        <span style="font-weight: 600; font-size: 14px; color: var(--color-primary);">{{ msg.sender.get_full_name|default:msg.sender.username }}</span>
+        <span style="font-size: 12px; color: var(--color-text-muted);">{{ msg.created_at|date:"M j, g:i A" }}</span>
+      </div>
+      <div style="font-size: 15px; color: var(--color-text); white-space: pre-wrap; word-break: break-word;">{{ msg.body }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div style="background: var(--color-secondary); border: 1px solid var(--color-surface-muted); border-radius: 12px; padding: 32px; margin-bottom: 20px; text-align: center; color: var(--color-text-muted);">
+    No messages yet. Say hello below.
+  </div>
+  {% endif %}
+
+  <form method="post" action="" style="display: flex; gap: 12px; align-items: flex-end;">
+    {% csrf_token %}
+    <textarea name="body" rows="2" required placeholder="Type your message…" maxlength="5000"
+              style="flex: 1; padding: 14px; border: 2px solid var(--color-border); border-radius: 10px; font-size: 15px; resize: vertical; min-height: 52px; font-family: inherit;"></textarea>
+    <button type="submit" style="padding: 14px 24px; background: var(--color-primary); color: var(--color-secondary); border: none; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 15px;">Send</button>
+  </form>
+
+  <p style="margin-top: 16px; font-size: 12px; color: var(--color-text-muted);">
+    All communication stays on GlobalDesignerHub. Do not share personal contact details.
+  </p>
+</section>
+{% endblock %}

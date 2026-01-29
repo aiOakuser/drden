@@ -337,6 +337,36 @@ class DesignerAIMessageAdmin(admin.ModelAdmin):
     short_content.short_description = "Content"
 
 
+# ---------------- User Messenger ----------------
+class ChatMessageInline(admin.TabularInline):
+    model = m.ChatMessage
+    extra = 0
+    readonly_fields = ("sender", "body", "created_at", "read_at")
+    can_delete = True
+
+
+@admin.register(m.ChatConversation)
+class ChatConversationAdmin(admin.ModelAdmin):
+    list_display = ("id", "user1", "user2", "updated_at")
+    list_filter = ("updated_at",)
+    search_fields = ("user1__username", "user2__username")
+    readonly_fields = ("created_at", "updated_at")
+    inlines = (ChatMessageInline,)
+
+
+@admin.register(m.ChatMessage)
+class ChatMessageAdmin(admin.ModelAdmin):
+    list_display = ("id", "conversation", "sender", "short_body", "created_at")
+    list_filter = ("created_at",)
+    search_fields = ("body", "sender__username")
+    readonly_fields = ("created_at", "updated_at")
+    raw_id_fields = ("conversation", "sender")
+
+    def short_body(self, obj):
+        return obj.body[:80] + "..." if len(obj.body) > 80 else obj.body
+    short_body.short_description = "Body"
+
+
 @admin.register(m.ProblemReport)
 class ProblemReportAdmin(admin.ModelAdmin):
     list_display = (

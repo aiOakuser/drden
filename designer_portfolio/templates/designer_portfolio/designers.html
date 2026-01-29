@@ -207,7 +207,11 @@
           </div>
 
             <div class="card-actions">
-                {% if contact_email %}
+                {% if user.is_authenticated and user.id != designer.user_id %}
+                <a href="{% url 'messenger_start' user_id=designer.user_id %}" class="btn btn-primary">
+                  <i class="fas fa-comment"></i> Message
+                </a>
+                {% elif contact_email %}
                 <a href="mailto:{{ contact_email }}" class="btn btn-primary">
                 <i class="fas fa-paper-plane"></i> Get In Touch
               </a>

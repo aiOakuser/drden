@@ -8,8 +8,26 @@ designer{% endblock %} {% block content %}
     Designer Login
   </h2>
   <p style="text-align: center; color: var(--color-text-muted); font-size: 14px; margin-top: -10px; margin-bottom: 10px">
-    Sign in with your username or email to access your dashboard.
+    Sign in with your username, email, or Gmail to access your dashboard.
   </p>
+
+  {% if social_login_providers %}
+  {% for provider in social_login_providers %}
+  {% if provider.backend == 'google-oauth2' %}
+  <div class="social-login-section" style="margin-bottom: 20px">
+    <a href="{% url 'social:begin' provider.backend %}{% if next %}?next={{ next|urlencode }}{% endif %}"
+       class="btn-google"
+       style="display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; padding: 14px 20px; background: var(--color-secondary); color: var(--color-primary); border: 2px solid var(--color-border); border-radius: 8px; font-size: 15px; font-weight: 600; text-decoration: none; transition: all 0.2s ease; box-sizing: border-box"
+       title="Sign in with {{ provider.label }}"
+       aria-label="Sign in with Google (Gmail)">
+      <span class="google-icon" style="font-size: 20px; font-weight: 600">G</span>
+      Continue with Google
+    </a>
+  </div>
+  <p style="text-align: center; color: var(--color-text-muted); font-size: 13px; margin: 0 0 16px">— or sign in with username / email —</p>
+  {% endif %}
+  {% endfor %}
+  {% endif %}
 
   {% if form.errors or form.non_field_errors %}
   <div style="color: var(--color-accent); text-align: center; margin-bottom: 20px">
@@ -108,7 +126,7 @@ designer{% endblock %} {% block content %}
   </div>
 
     {% if social_login_providers %}
-    <!-- Social Login -->
+    <!-- Social Login (icons); Google also has prominent button at top -->
     <div class="social-login-section" style="margin-top: 20px; text-align: center">
       <p style="margin-bottom: 15px; color: var(--color-text-muted); font-size: 14px">Or continue with</p>
       <div class="social-login-buttons" style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap">
@@ -165,6 +183,12 @@ designer{% endblock %} {% block content %}
     background: var(--color-primary);
     color: var(--color-secondary);
     border-color: var(--color-primary);
+  }
+
+  a.btn-google:hover {
+    border-color: var(--color-primary);
+    background: rgba(var(--color-primary-rgb), 0.06);
+    box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.15);
   }
 
   .social-login-btn:hover {

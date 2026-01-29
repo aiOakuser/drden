@@ -65,6 +65,8 @@ from .models import (
     WebAuthnCredential,
     DesignerAISession,
     DesignerAIMessage,
+    ChatConversation,
+    ChatMessage,
     DocPage,
     ForumCategory,
     ForumTopic,
@@ -4728,6 +4730,88 @@ def my_conversations(request):
     return render(request, "designer_portfolio/my_conversations.html", {
         "sessions": sessions
     })
+
+
+# ---------------- User-to-User Messenger ----------------
+
+def _get_or_create_conversation(user_a, user_b):
+    """Return (conversation, created) with canonical user1/user2 order (user1.id <= user2.id)."""
+    if user_a.pk == user_b.pk:
+        raise ValueError("Cannot create conversation with self")
+    u1, u2 = (user_a, user_b) if user_a.pk < user_b.pk else (user_b, user_a)
+    conv, created = ChatConversation.objects.get_or_create(
+        user1=u1, user2=u2, defaults={}
+    )
+    return conv, created
+
+
+@login_required
+def messenger_list(request):
+    """List conversations for the current user."""
+    convs = (
+        ChatConversation.objects.filter(
+            Q(user1=request.user) | Q(user2=request.user)
+        )
+        .select_related("user1", "user2")
+        .prefetch_related("messages")
+        .order_by("-updated_at")
+    )
+    # Annotate last message and other user for display
+    for c in convs:
+        c._last_msg = c.messages.order_by("-created_at").first()
+        c._other_user = c.other_user(request.user)
+    return render(
+        request,
+        "designer_portfolio/messenger_list.html",
+        {"conversations": convs},
+    )
+
+
+@login_required
+def messenger_thread(request, conversation_id):
+    """Show one conversation and its messages; accept POST to send a new message."""
+    conv = get_object_or_404(
+        ChatConversation.objects.select_related("user1", "user2"),
+        pk=conversation_id,
+    )
+    if request.user not in (conv.user1, conv.user2):
+        raise Http404("Not a participant in this conversation")
+
+    messages_list = list(
+        conv.messages.select_related("sender").order_by("created_at")
+    )
+
+    if request.method == "POST":
+        body = (request.POST.get("body") or "").strip()
+        if body:
+            msg = ChatMessage.objects.create(
+                conversation=conv, sender=request.user, body=body
+            )
+            messages_list.append(msg)
+            messages.success(request, "Message sent.")
+            return redirect("messenger_thread", conversation_id=conv.pk)
+        messages.error(request, "Message cannot be empty.")
+    other = conv.other_user(request.user)
+    return render(
+        request,
+        "designer_portfolio/messenger_thread.html",
+        {
+            "conversation": conv,
+            "messages_list": messages_list,
+            "other_user": other,
+        },
+    )
+
+
+@login_required
+def messenger_start(request, user_id):
+    """Start or open a conversation with another user. Redirects to thread."""
+    other = get_object_or_404(User, pk=user_id, is_active=True)
+    if other.pk == request.user.pk:
+        messages.error(request, "You cannot message yourself.")
+        return redirect("messenger_list")
+    conv, _ = _get_or_create_conversation(request.user, other)
+    return redirect("messenger_thread", conversation_id=conv.pk)
 
 
 # ---------------- Enhanced Forum Views ----------------

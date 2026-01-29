@@ -42,6 +42,9 @@ from .views import (
     DesignersListView,
     designer_ai_chat,
     my_conversations,
+    messenger_list,
+    messenger_thread,
+    messenger_start,
     PrivacyPolicyView,
     TermsOfServiceView,
     RefundPolicyView,
@@ -140,6 +143,11 @@ urlpatterns = [
     path("api/designers/register/", DesignerRegistrationView.as_view(), name="designer_register_api"),
     path("api/ai/designer-chat/", designer_ai_chat, name="designer_ai_chat"),
     path("designer-ai/history/", my_conversations, name="designer_ai_history"),
+
+    # Messenger (registered users only)
+    path("messenger/", messenger_list, name="messenger_list"),
+    path("messenger/with/<int:user_id>/", messenger_start, name="messenger_start"),
+    path("messenger/<int:conversation_id>/", messenger_thread, name="messenger_thread"),
 
     # Admin actions
     path("admin/pending-designers/", PendingDesignersView.as_view(), name="pending_designers"),

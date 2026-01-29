@@ -678,6 +678,55 @@ class DesignerAIMessage(TimeStampedModel):
         return f"{self.role}: {self.content[:50]}..."
 
 
+# ==================== User-to-User Messenger ====================
+
+class ChatConversation(TimeStampedModel):
+    """One-to-one conversation between two registered users."""
+    user1 = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="chat_conversations_as_user1"
+    )
+    user2 = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="chat_conversations_as_user2"
+    )
+
+    class Meta:
+        ordering = ["-updated_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user1", "user2"],
+                name="designer_portfolio_chatconversation_unique_pair",
+            ),
+        ]
+
+    def __str__(self):
+        return f"Chat {self.user1.username} & {self.user2.username}"
+
+    def other_user(self, user):
+        """Return the participant who is not the given user."""
+        return self.user2 if user == self.user1 else self.user1
+
+    def last_message(self):
+        return self.messages.order_by("-created_at").first()
+
+
+class ChatMessage(TimeStampedModel):
+    """Single message in a user-to-user conversation."""
+    conversation = models.ForeignKey(
+        ChatConversation, on_delete=models.CASCADE, related_name="messages"
+    )
+    sender = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="chat_messages_sent"
+    )
+    body = models.TextField()
+    read_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return f"{self.sender.username}: {self.body[:50]}..."
+
+
 class DocPage(TimeStampedModel):
     """Documentation pages for RAG retrieval."""
     title = models.CharField(max_length=255)
