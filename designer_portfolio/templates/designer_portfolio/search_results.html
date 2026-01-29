@@ -1,0 +1,89 @@
+{% extends "designer_portfolio/base.html" %}
+{% load static %}
+{% block title %}Results for {{ query|default:"search" }} | GlobalDesignerHub{% endblock %}
+{% block content %}
+<section class="search-results" style="max-width: 1100px; margin: 30px auto; padding: 0 16px;">
+  <h1 style="margin-bottom: 8px; color: var(--color-primary); font-size: 24px;">Results for {{ query|default:"(enter a search term)" }}</h1>
+  {% if not query %}
+  <p style="color: var(--color-text-muted); margin-bottom: 24px;">Use the search bar on the home page to find designers, collections, or events.</p>
+  {% else %}
+  <form method="get" action="{% url 'unified_search' %}" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 24px;">
+    <input type="hidden" name="q" value="{{ query }}" />
+    <label for="id_type" style="font-size: 14px; color: var(--color-text-muted);">Category</label>
+    <select name="type" id="id_type" onchange="this.form.submit()" style="padding: 10px 14px; border: 2px solid var(--color-border); border-radius: 8px; font-size: 14px; background: var(--color-secondary); color: var(--color-primary);">
+      <option value="all" {% if type_filter == "all" %}selected{% endif %}>All</option>
+      <option value="designers" {% if type_filter == "designers" %}selected{% endif %}>Designers</option>
+      <option value="collections" {% if type_filter == "collections" %}selected{% endif %}>Collections</option>
+      <option value="events" {% if type_filter == "events" %}selected{% endif %}>Events</option>
+    </select>
+  </form>
+  <p style="color: var(--color-text-muted); margin-bottom: 20px;">{{ total_count }} result{{ total_count|pluralize }}</p>
+
+  <div class="search-results-grid">
+    {% if type_filter == "all" or type_filter == "designers" %}
+    {% for d in designers %}
+    <article class="result-card" style="background: var(--color-secondary); border: 1px solid var(--color-surface-muted); border-radius: 12px; overflow: hidden; margin-bottom: 16px;">
+      <a href="{% url 'designer_public_detail' user_id=d.user_id %}" style="display: flex; align-items: center; gap: 16px; padding: 16px; text-decoration: none; color: var(--color-primary);">
+        {% if d.profile_image %}
+        <img src="{{ d.profile_image.url }}" alt="" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover;" />
+        {% else %}
+        <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--color-surface); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 20px;">{{ d.user.username|first|upper }}</div>
+        {% endif %}
+        <div style="flex: 1;">
+          <h3 style="margin: 0 0 4px; font-size: 18px;">{{ d.user.get_full_name|default:d.user.username }}</h3>
+          <p style="margin: 0; font-size: 14px; color: var(--color-text-muted);">{{ d.specialization|default:"Fashion Designer" }}</p>
+          {% if d.bio %}<p style="margin: 6px 0 0; font-size: 13px; color: var(--color-text);">{{ d.bio|truncatewords:15 }}</p>{% endif %}
+        </div>
+        <span style="color: var(--color-text-muted);">→</span>
+      </a>
+    </article>
+    {% endfor %}
+    {% endif %}
+
+    {% if type_filter == "all" or type_filter == "collections" %}
+    {% for col in collections %}
+    <article class="result-card" style="background: var(--color-secondary); border: 1px solid var(--color-surface-muted); border-radius: 12px; overflow: hidden; margin-bottom: 16px;">
+      <a href="{% url 'collection_detail' slug=col.slug %}" style="display: flex; align-items: center; gap: 16px; padding: 16px; text-decoration: none; color: var(--color-primary);">
+        {% if col.cover_image %}
+        <img src="{{ col.cover_image.url }}" alt="" style="width: 64px; height: 64px; object-fit: cover; border-radius: 8px;" />
+        {% else %}
+        <div style="width: 64px; height: 64px; background: var(--color-surface); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--color-text-muted);">Collection</div>
+        {% endif %}
+        <div style="flex: 1;">
+          <h3 style="margin: 0 0 4px; font-size: 18px;">{{ col.name }}</h3>
+          <p style="margin: 0; font-size: 14px; color: var(--color-text-muted);">{% if col.year %}{{ col.year }}{% endif %}{% if col.season %} · {{ col.season }}{% endif %}</p>
+          {% if col.description %}<p style="margin: 6px 0 0; font-size: 13px; color: var(--color-text);">{{ col.description|truncatewords:15 }}</p>{% endif %}
+        </div>
+        <span style="color: var(--color-text-muted);">→</span>
+      </a>
+    </article>
+    {% endfor %}
+    {% endif %}
+
+    {% if type_filter == "all" or type_filter == "events" %}
+    {% for ev in events %}
+    <article class="result-card" style="background: var(--color-secondary); border: 1px solid var(--color-surface-muted); border-radius: 12px; overflow: hidden; margin-bottom: 16px;">
+      <a href="{% url 'event_detail' slug=ev.slug %}" style="display: flex; align-items: center; gap: 16px; padding: 16px; text-decoration: none; color: var(--color-primary);">
+        {% if ev.cover %}
+        <img src="{{ ev.cover.url }}" alt="" style="width: 64px; height: 64px; object-fit: cover; border-radius: 8px;" />
+        {% else %}
+        <div style="width: 64px; height: 64px; background: var(--color-surface); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--color-text-muted);">Event</div>
+        {% endif %}
+        <div style="flex: 1;">
+          <h3 style="margin: 0 0 4px; font-size: 18px;">{{ ev.title }}</h3>
+          <p style="margin: 0; font-size: 14px; color: var(--color-text-muted);">{% if ev.event_date %}{{ ev.event_date|date:"M d, Y" }}{% endif %}{% if ev.location %} · {{ ev.location }}{% endif %}</p>
+          {% if ev.description %}<p style="margin: 6px 0 0; font-size: 13px; color: var(--color-text);">{{ ev.description|truncatewords:15 }}</p>{% endif %}
+        </div>
+        <span style="color: var(--color-text-muted);">→</span>
+      </a>
+    </article>
+    {% endfor %}
+    {% endif %}
+  </div>
+
+  {% if total_count == 0 %}
+  <p style="color: var(--color-text-muted); text-align: center; padding: 40px 20px;">No results for "{{ query }}". Try a different term or category.</p>
+  {% endif %}
+  {% endif %}
+</section>
+{% endblock %}

@@ -55,6 +55,11 @@
       </div>
     </div>
 
+    <!-- Auth modal (login/signup) for anonymous users - opened by Continue / Ask a question -->
+    {% if not user.is_authenticated %}
+    {% include "designer_portfolio/includes/auth_modal.html" %}
+    {% endif %}
+
     <!-- Designer AI Chat Widget (Tailwind Version) -->
     {% include "designer_portfolio/includes/designer_ai_chat_tailwind.html" %}
 

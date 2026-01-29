@@ -1,7 +1,22 @@
+from django.conf import settings
 from django.db.models import Q
 from django.http import HttpRequest
 
 from .models import Design, DesignerProfile
+
+
+def social_login_providers(request: HttpRequest) -> dict:
+    """Expose enabled social login providers for auth modal and login page."""
+    provider_catalog = [
+        ("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", "SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET", "google-oauth2", "Google", "google", "G"),
+    ]
+    providers = []
+    for key_attr, secret_attr, backend_name, label, css_class, icon in provider_catalog:
+        key = getattr(settings, key_attr, "") or ""
+        secret = getattr(settings, secret_attr, "") or ""
+        if key and secret:
+            providers.append({"backend": backend_name, "label": label, "css_class": css_class, "icon": icon})
+    return {"social_login_providers": providers}
 
 
 def dashboard_counts(request: HttpRequest) -> dict:

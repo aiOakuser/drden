@@ -146,7 +146,7 @@
           <div class="card-content">
           <div class="designer-header">
             <h3 class="designer-name">
-              {{ designer.user.get_full_name|default:designer.user.username }}
+              <a href="{% url 'designer_public_detail' user_id=designer.user_id %}" style="color: inherit; text-decoration: none;">{{ designer.user.get_full_name|default:designer.user.username }}</a>
             </h3>
             {% if designer.available_for_collaborations %}
             <span class="availability-badge available">
@@ -207,6 +207,9 @@
           </div>
 
             <div class="card-actions">
+                <a href="{% url 'designer_public_detail' user_id=designer.user_id %}" class="btn btn-secondary">
+                  <i class="fas fa-user"></i> View profile
+                </a>
                 {% if user.is_authenticated and user.id != designer.user_id %}
                 <a href="{% url 'messenger_start' user_id=designer.user_id %}" class="btn btn-primary">
                   <i class="fas fa-comment"></i> Message

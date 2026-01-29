@@ -37,6 +37,8 @@ text_filters %} {% block content %}
   </div>
 </main>
 
+{% include "designer_portfolio/includes/detail_actions.html" with detail_type="collection" next_url=request.get_full_path %}
+
 <!-- POPUP -->
 <div id="popup" class="popup">
   <button

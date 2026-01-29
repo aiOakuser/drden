@@ -3668,6 +3668,90 @@ def logout_view(request):
     logout(request)
     return redirect('home')
 
+def unified_search_view(request):
+    """Unified search across designers, collections, and events. GET: q, type (designers|collections|events|all)."""
+    q = (request.GET.get("q") or "").strip()
+    type_filter = (request.GET.get("type") or "all").lower()
+    if type_filter not in ("all", "designers", "collections", "events"):
+        type_filter = "all"
+
+    designers = []
+    collections = []
+    events = []
+    total_count = 0
+
+    if not q:
+        # No query: show empty or recent; we show empty with message
+        pass
+    else:
+        search_term = q
+        if type_filter in ("all", "designers"):
+            designers = list(
+                DesignerProfile.objects.filter(user__is_active=True)
+                .filter(
+                    Q(user__username__icontains=search_term)
+                    | Q(user__first_name__icontains=search_term)
+                    | Q(user__last_name__icontains=search_term)
+                    | Q(bio__icontains=search_term)
+                    | Q(specialization__icontains=search_term)
+                    | Q(location__icontains=search_term)
+                    | Q(region_area__icontains=search_term)
+                    | Q(country__icontains=search_term)
+                    | Q(state_province__icontains=search_term)
+                    | Q(county__icontains=search_term)
+                    | Q(city__icontains=search_term)
+                )
+                .select_related("user")[:50]
+            )
+        if type_filter in ("all", "collections"):
+            collections = list(
+                Collection.objects.filter(published=True)
+                .filter(
+                    Q(name__icontains=search_term)
+                    | Q(description__icontains=search_term)
+                    | Q(season__icontains=search_term)
+                    | Q(designer__icontains=search_term)
+                )[:50]
+            )
+        if type_filter in ("all", "events"):
+            events = list(
+                Event.objects.filter(
+                    Q(title__icontains=search_term)
+                    | Q(description__icontains=search_term)
+                    | Q(location__icontains=search_term)
+                    | Q(venue__icontains=search_term)
+                )[:50]
+            )
+        total_count = len(designers) + len(collections) + len(events)
+
+    return render(
+        request,
+        "designer_portfolio/search_results.html",
+        {
+            "query": q,
+            "type_filter": type_filter,
+            "designers": designers,
+            "collections": collections,
+            "events": events,
+            "total_count": total_count,
+        },
+    )
+
+
+def designer_public_detail_view(request, user_id):
+    """Public designer profile; shows Continue and Ask a question (auth modal for anonymous)."""
+    user_obj = get_object_or_404(User, pk=user_id, is_active=True)
+    try:
+        profile = DesignerProfile.objects.select_related("user").get(user=user_obj)
+    except DesignerProfile.DoesNotExist:
+        raise Http404("Designer profile not found")
+    return render(
+        request,
+        "designer_portfolio/designer_public_detail.html",
+        {"designer": profile, "profile_user": user_obj},
+    )
+
+
 class DesignersListView(ListView):
     model = DesignerProfile
     template_name = "designer_portfolio/designers.html"

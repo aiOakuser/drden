@@ -40,6 +40,8 @@ from .views import (
     VolumeOneShowcaseView,
     DesignerRegistrationView,
     DesignersListView,
+    unified_search_view,
+    designer_public_detail_view,
     designer_ai_chat,
     my_conversations,
     messenger_list,
@@ -78,8 +80,11 @@ urlpatterns = [
     path("collections/", CollectionsPageView.as_view(), name="collections"),
     path("collections/<slug:slug>/", CollectionDetailView.as_view(), name="collection_detail"),
     
+    # Search (unified designers, collections, events)
+    path("search/", unified_search_view, name="unified_search"),
     # Designers
     path("designers/", DesignersListView.as_view(), name="designers_list"),
+    path("designers/<int:user_id>/", designer_public_detail_view, name="designer_public_detail"),
     
     path("designs/upload/", upload_design, name="upload_design"),  # 👈 Move this ABOVE
     path("designs/", DesignListView.as_view(), name="design_list"),

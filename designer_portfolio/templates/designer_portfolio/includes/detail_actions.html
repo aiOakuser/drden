@@ -1,0 +1,29 @@
+{% comment %}
+  Use: {% include "designer_portfolio/includes/detail_actions.html" with next_url=request.get_full_path %}
+  For designer detail pass: detail_type="designer" detail_user_id=profile_user.id
+  For collection pass: detail_type="collection" detail_slug=collection.slug
+  For event pass: detail_type="event" detail_slug=event.slug
+{% endcomment %}
+<div class="detail-actions" style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--color-surface-muted);">
+  {% if user.is_authenticated %}
+  <a href="{% url 'designer_dashboard' %}" class="btn-detail-continue" style="display: inline-flex; align-items: center; gap: 10px; padding: 14px 24px; background: var(--color-primary); color: var(--color-secondary); border: none; border-radius: 8px; font-weight: 600; font-size: 15px; text-decoration: none; cursor: pointer;">
+    Continue →
+  </a>
+  {% if detail_type == "designer" and detail_user_id and user.id != detail_user_id %}
+  <a href="{% url 'messenger_start' user_id=detail_user_id %}" class="btn-detail-ask" style="display: inline-flex; align-items: center; gap: 10px; padding: 14px 24px; background: var(--color-secondary); color: var(--color-primary); border: 2px solid var(--color-border); border-radius: 8px; font-weight: 600; font-size: 15px; text-decoration: none;">
+    <i class="fas fa-comment" aria-hidden="true"></i> Ask a question →
+  </a>
+  {% elif detail_type == "collection" or detail_type == "event" %}
+  <a href="{% url 'contact' %}?page={{ request.get_full_path|urlencode }}" class="btn-detail-ask" style="display: inline-flex; align-items: center; gap: 10px; padding: 14px 24px; background: var(--color-secondary); color: var(--color-primary); border: 2px solid var(--color-border); border-radius: 8px; font-weight: 600; font-size: 15px; text-decoration: none;">
+    <i class="fas fa-comment" aria-hidden="true"></i> Ask a question →
+  </a>
+  {% endif %}
+  {% else %}
+  <button type="button" class="js-open-auth-modal btn-detail-continue" data-next="{{ next_url|default:request.get_full_path }}" style="display: inline-flex; align-items: center; gap: 10px; padding: 14px 24px; background: var(--color-primary); color: var(--color-secondary); border: none; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer;">
+    Continue →
+  </button>
+  <button type="button" class="js-open-auth-modal btn-detail-ask" data-next="{{ next_url|default:request.get_full_path }}" style="display: inline-flex; align-items: center; gap: 10px; padding: 14px 24px; background: var(--color-secondary); color: var(--color-primary); border: 2px solid var(--color-border); border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer;">
+    <i class="fas fa-comment" aria-hidden="true"></i> Ask a question →
+  </button>
+  {% endif %}
+</div>

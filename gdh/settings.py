@@ -399,6 +399,7 @@ TEMPLATES = [
                 "designer_portfolio.context_processors.dashboard_counts",
                 "designer_portfolio.context_processors.active_portfolio_template",
                 "designer_portfolio.context_processors.utm_context",  # ✅ expose UTM/session attribution
+                "designer_portfolio.context_processors.social_login_providers",
                 "social_django.context_processors.backends",
                 "social_django.context_processors.login_redirect",
             ],
