@@ -5,6 +5,22 @@ from django.http import HttpRequest
 from .models import Design, DesignerProfile
 
 
+def messenger_inbox_count(request: HttpRequest) -> dict:
+    """Expose conversation count for navbar 'Inbox (N)' when user is authenticated."""
+    user = getattr(request, "user", None)
+    if user is None or not user.is_authenticated:
+        return {"messenger_inbox_count": None}
+    try:
+        from .models import ChatConversation
+
+        count = ChatConversation.objects.filter(
+            Q(user1=user) | Q(user2=user)
+        ).count()
+        return {"messenger_inbox_count": count}
+    except Exception:
+        return {"messenger_inbox_count": None}
+
+
 def social_login_providers(request: HttpRequest) -> dict:
     """Expose enabled social login providers for auth modal and login page."""
     provider_catalog = [

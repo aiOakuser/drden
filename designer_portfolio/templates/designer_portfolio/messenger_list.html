@@ -3,33 +3,57 @@
 {% block title %}Messages | GlobalDesignerHub{% endblock %}
 {% block content %}
 <section class="messenger-list" style="max-width: 800px; margin: 40px auto; padding: 0 16px;">
-  <div class="messenger-list__header" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px;">
-    <h1 style="margin: 0; color: var(--color-primary); font-size: 24px;">All messages</h1>
+  <h1 class="messenger-list__title" style="margin: 0 0 8px; font-size: 1.5rem; font-weight: 700; color: var(--color-primary);">Messages</h1>
+  <p class="messenger-list__intro" style="margin: 0 0 24px; font-size: 15px; color: var(--color-text-muted);">
+    Collaborate with new designers, find a designer, or chat with a designer—all on the platform.
+  </p>
+
+  <!-- Primary actions: Find / Chat / Collaborate -->
+  <div class="messenger-list__actions" style="margin-bottom: 28px;">
+    <h2 class="messenger-list__actions-title" style="margin: 0 0 14px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-muted);">What do you want to do?</h2>
+    <div class="messenger-list__ctas" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+      <a href="{% url 'unified_search' %}?type=designers" class="messenger-cta-card" style="display: block; padding: 20px; background: linear-gradient(135deg, rgba(var(--color-primary-rgb, 30, 30, 30), 0.06) 0%, rgba(var(--color-primary-rgb, 30, 30, 30), 0.02) 100%); border: 1px solid var(--color-border); border-radius: 12px; text-decoration: none; color: var(--color-primary); transition: box-shadow 0.2s ease, border-color 0.2s ease;">
+        <span class="messenger-cta-card__icon" style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 10px; background: var(--color-primary); color: var(--color-secondary); font-size: 18px; margin-bottom: 12px;"><i class="fas fa-search"></i></span>
+        <strong style="display: block; font-size: 15px; margin-bottom: 4px;">Find a designer</strong>
+        <span style="font-size: 13px; color: var(--color-text-muted);">Search designers and start a conversation.</span>
+      </a>
+      <a href="{% url 'designers_list' %}" class="messenger-cta-card" style="display: block; padding: 20px; background: linear-gradient(135deg, rgba(var(--color-primary-rgb, 30, 30, 30), 0.06) 0%, rgba(var(--color-primary-rgb, 30, 30, 30), 0.02) 100%); border: 1px solid var(--color-border); border-radius: 12px; text-decoration: none; color: var(--color-primary); transition: box-shadow 0.2s ease, border-color 0.2s ease;">
+        <span class="messenger-cta-card__icon" style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 10px; background: var(--color-primary); color: var(--color-secondary); font-size: 18px; margin-bottom: 12px;"><i class="fas fa-comments"></i></span>
+        <strong style="display: block; font-size: 15px; margin-bottom: 4px;">Chat with a designer</strong>
+        <span style="font-size: 13px; color: var(--color-text-muted);">Browse designers and send a message from their profile.</span>
+      </a>
+      <a href="{% url 'designers_list' %}" class="messenger-cta-card" style="display: block; padding: 20px; background: linear-gradient(135deg, rgba(var(--color-primary-rgb, 30, 30, 30), 0.06) 0%, rgba(var(--color-primary-rgb, 30, 30, 30), 0.02) 100%); border: 1px solid var(--color-border); border-radius: 12px; text-decoration: none; color: var(--color-primary); transition: box-shadow 0.2s ease, border-color 0.2s ease;">
+        <span class="messenger-cta-card__icon" style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 10px; background: var(--color-primary); color: var(--color-secondary); font-size: 18px; margin-bottom: 12px;"><i class="fas fa-handshake"></i></span>
+        <strong style="display: block; font-size: 15px; margin-bottom: 4px;">Collaborate with new designers</strong>
+        <span style="font-size: 13px; color: var(--color-text-muted);">Explore the designer directory and start a collaboration.</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Inbox filter and search -->
+  <div class="messenger-list__header" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px;">
+    <div class="messenger-list__header-left" style="display: flex; align-items: center; gap: 12px;">
+      <div class="messenger-list__dropdown-wrap" style="position: relative;">
+        <button type="button" class="messenger-list__dropdown-trigger" id="messenger-filter-trigger" aria-haspopup="listbox" aria-expanded="false" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--color-secondary); border: 1px solid var(--color-border); border-radius: 8px; color: var(--color-primary); font-size: 15px; font-weight: 700; cursor: pointer;">
+          All messages <i class="fas fa-chevron-down" style="font-size: 11px; opacity: 0.8;"></i>
+        </button>
+        <div class="messenger-list__dropdown-menu" id="messenger-filter-menu" role="listbox" aria-hidden="true" style="position: absolute; top: 100%; left: 0; margin-top: 6px; min-width: 240px; padding: 8px 0; background: var(--color-secondary); border: 1px solid var(--color-border); border-radius: 10px; box-shadow: 0 10px 24px rgba(0,0,0,0.12); z-index: 50; display: none;">
+          <a href="{% url 'messenger_list' %}" class="messenger-list__dropdown-item" role="option" style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; color: var(--color-primary); text-decoration: none; font-size: 14px; font-weight: 600;"><i class="fa-regular fa-envelope"></i> Inbox — All messages</a>
+          <div style="height: 1px; margin: 4px 12px; background: var(--color-border);"></div>
+          <span style="display: block; padding: 8px 16px 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-muted);">Quick actions</span>
+          <a href="{% url 'unified_search' %}?type=designers" class="messenger-list__dropdown-item" role="option" style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; color: var(--color-primary); text-decoration: none; font-size: 14px;"><i class="fas fa-search"></i> Find a designer</a>
+          <a href="{% url 'designers_list' %}" class="messenger-list__dropdown-item" role="option" style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; color: var(--color-primary); text-decoration: none; font-size: 14px;"><i class="fas fa-comments"></i> Chat with a designer</a>
+          <a href="{% url 'designers_list' %}" class="messenger-list__dropdown-item" role="option" style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; color: var(--color-primary); text-decoration: none; font-size: 14px;"><i class="fas fa-handshake"></i> Collaborate with new designers</a>
+        </div>
+      </div>
+    </div>
     <a href="{% url 'unified_search' %}?type=designers" class="messenger-list__search-link" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; color: var(--color-primary); text-decoration: none; font-size: 14px; font-weight: 600;">
       <i class="fas fa-search" aria-hidden="true"></i> Find a designer
     </a>
   </div>
 
-  <div class="messenger-list__ctas" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px;">
-    <a href="{% url 'unified_search' %}?type=designers" class="messenger-cta-card" style="display: block; padding: 20px; background: linear-gradient(135deg, rgba(var(--color-primary-rgb, 30, 30, 30), 0.06) 0%, rgba(var(--color-primary-rgb, 30, 30, 30), 0.02) 100%); border: 1px solid var(--color-border); border-radius: 12px; text-decoration: none; color: var(--color-primary); transition: box-shadow 0.2s ease, border-color 0.2s ease;">
-      <span class="messenger-cta-card__icon" style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 10px; background: var(--color-primary); color: var(--color-secondary); font-size: 18px; margin-bottom: 12px;"><i class="fas fa-search"></i></span>
-      <strong style="display: block; font-size: 15px; margin-bottom: 4px;">Find a designer</strong>
-      <span style="font-size: 13px; color: var(--color-text-muted);">Browse designers and start a conversation.</span>
-    </a>
-    <a href="{% url 'designers_list' %}" class="messenger-cta-card" style="display: block; padding: 20px; background: linear-gradient(135deg, rgba(var(--color-primary-rgb, 30, 30, 30), 0.06) 0%, rgba(var(--color-primary-rgb, 30, 30, 30), 0.02) 100%); border: 1px solid var(--color-border); border-radius: 12px; text-decoration: none; color: var(--color-primary); transition: box-shadow 0.2s ease, border-color 0.2s ease;">
-      <span class="messenger-cta-card__icon" style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 10px; background: var(--color-primary); color: var(--color-secondary); font-size: 18px; margin-bottom: 12px;"><i class="fas fa-handshake"></i></span>
-      <strong style="display: block; font-size: 15px; margin-bottom: 4px;">Collaborate with new designers</strong>
-      <span style="font-size: 13px; color: var(--color-text-muted);">Connect with designers and explore collaborations.</span>
-    </a>
-    <a href="{% url 'designers_list' %}" class="messenger-cta-card" style="display: block; padding: 20px; background: linear-gradient(135deg, rgba(var(--color-primary-rgb, 30, 30, 30), 0.06) 0%, rgba(var(--color-primary-rgb, 30, 30, 30), 0.02) 100%); border: 1px solid var(--color-border); border-radius: 12px; text-decoration: none; color: var(--color-primary); transition: box-shadow 0.2s ease, border-color 0.2s ease;">
-      <span class="messenger-cta-card__icon" style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 10px; background: var(--color-primary); color: var(--color-secondary); font-size: 18px; margin-bottom: 12px;"><i class="fas fa-comments"></i></span>
-      <strong style="display: block; font-size: 15px; margin-bottom: 4px;">Chat with a designer</strong>
-      <span style="font-size: 13px; color: var(--color-text-muted);">Pick a designer and send a message from their profile.</span>
-    </a>
-  </div>
-
-  <p style="color: var(--color-text-muted); margin-bottom: 24px; font-size: 14px;">
-    All communication stays on the platform. Start or continue a conversation with another registered user.
+  <p style="color: var(--color-text-muted); margin-bottom: 20px; font-size: 14px;">
+    All communication stays on the platform. Below are your conversations.
   </p>
 
   {% if messenger_unavailable %}
@@ -68,7 +92,7 @@
   <div style="text-align: center; padding: 48px 24px; background: var(--color-secondary); border-radius: 12px; border: 1px solid var(--color-surface-muted);">
     <p style="color: var(--color-text-muted); margin-bottom: 16px;">You have no conversations yet.</p>
     <p style="font-size: 14px; color: var(--color-text-muted); margin-bottom: 16px;">
-      <a href="{% url 'unified_search' %}?type=designers" style="color: var(--color-primary); font-weight: 600;">Find a designer</a> or <a href="{% url 'designers_list' %}" style="color: var(--color-primary); font-weight: 600;">browse designers</a> and start a conversation from their profile.
+      <a href="{% url 'unified_search' %}?type=designers" style="color: var(--color-primary); font-weight: 600;">Find a designer</a>, <a href="{% url 'designers_list' %}" style="color: var(--color-primary); font-weight: 600;">chat with a designer</a>, or <a href="{% url 'designers_list' %}" style="color: var(--color-primary); font-weight: 600;">collaborate with new designers</a>—use the links above to get started.
     </p>
   </div>
   {% endif %}

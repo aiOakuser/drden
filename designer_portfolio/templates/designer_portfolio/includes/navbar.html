@@ -43,9 +43,12 @@
           Messages <i class="fas fa-chevron-down" style="font-size: 10px; margin-left: 4px; opacity: 0.9;"></i>
         </a>
         <div class="nav-dropdown__menu" role="menu" aria-labelledby="nav-messages-trigger">
-          <a href="{% url 'messenger_list' %}" role="menuitem"><i class="fa-regular fa-envelope" style="margin-right: 8px;"></i> Inbox</a>
+          <a href="{% url 'messenger_list' %}" role="menuitem"><i class="fa-regular fa-envelope" style="margin-right: 8px;"></i> Inbox{% if messenger_inbox_count is not None %} ({{ messenger_inbox_count }}){% endif %}</a>
+          <div class="nav-dropdown__divider" role="presentation"></div>
+          <span class="nav-dropdown__label" style="display: block; padding: 6px 12px 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-muted);">Quick actions</span>
           <a href="{% url 'unified_search' %}?type=designers" role="menuitem"><i class="fas fa-search" style="margin-right: 8px;"></i> Find a designer</a>
           <a href="{% url 'designers_list' %}" role="menuitem"><i class="fas fa-comments" style="margin-right: 8px;"></i> Chat with a designer</a>
+          <a href="{% url 'designers_list' %}" role="menuitem"><i class="fas fa-handshake" style="margin-right: 8px;"></i> Collaborate with new designers</a>
         </div>
       </div>
       <a href="{% url 'designer_dashboard' %}">Dashboard</a>
@@ -302,6 +305,11 @@
   .nav-dropdown__menu a:hover {
     background: rgba(var(--color-primary-rgb, 30, 30, 30), 0.06);
     color: var(--color-accent) !important;
+  }
+  .nav-dropdown__divider {
+    height: 1px;
+    margin: 6px 12px;
+    background: var(--color-border);
   }
 
   /* Free Trial CTA in nav */
