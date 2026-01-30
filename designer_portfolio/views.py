@@ -2567,6 +2567,12 @@ class EventDetailView(DetailView):
         form_type = (request.POST.get("form_type") or "").strip()
 
         if form_type == "attendee":
+            if not request.user.is_authenticated:
+                messages.error(
+                    request,
+                    "Please sign in to RSVP. Only registered GlobalDesignerHub users can register for shows.",
+                )
+                return redirect("event_detail", slug=self.object.slug)
             attendee_form = EventAttendeeForm(request.POST)
             if attendee_form.is_valid():
                 attendee = attendee_form.save(commit=False)
