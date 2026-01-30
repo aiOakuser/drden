@@ -71,7 +71,7 @@ img {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 50%; /* Reduced from 90% to 50% */
+  width: 100%;
   margin: 0 auto;
   padding: 14px 24px;
 }
