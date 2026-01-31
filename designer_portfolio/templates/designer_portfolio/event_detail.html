@@ -129,6 +129,7 @@
     {% if seats_remaining == 0 %}
       <p class="form-warning">We are at capacity. RSVPs will be added to the waitlist.</p>
     {% endif %}
+    {% if user.is_authenticated %}
     <form method="post" class="event-form">
       {% csrf_token %}
       <input type="hidden" name="form_type" value="attendee" />
@@ -169,6 +170,25 @@
       </div>
       <button type="submit" class="btn btn-primary">RSVP now</button>
     </form>
+    {% else %}
+      <p class="form-warning">
+        Only registered GlobalDesignerHub members can RSVP for shows.
+      </p>
+      <a
+        href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}"
+        class="btn btn-primary js-open-auth-modal"
+        data-next="{{ request.get_full_path }}"
+      >
+        Sign in to RSVP
+      </a>
+      <p class="form-helper">
+        New to GlobalDesignerHub?
+        <a href="{% url 'signup' %}?next={{ request.get_full_path|urlencode }}">
+          Create an account
+        </a>
+        to reserve your seat.
+      </p>
+    {% endif %}
   </div>
 </section>
 
@@ -401,6 +421,22 @@
     background: rgba(255, 193, 7, 0.12);
     border-radius: 8px;
     color: #8a6d1d;
+  }
+
+  .form-helper {
+    margin-top: 12px;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
+
+  .form-helper a {
+    color: var(--color-primary);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .form-helper a:hover {
+    text-decoration: underline;
   }
 
   .event-attendees {
