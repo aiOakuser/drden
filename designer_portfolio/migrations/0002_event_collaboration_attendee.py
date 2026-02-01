@@ -9,10 +9,11 @@ def seed_newyork_event(apps, schema_editor):
     Event = apps.get_model("designer_portfolio", "Event")
     slug = "newyork-fashion-show"
     defaults = {
-        "title": "Newyork Fashion Show",
+        "title": "New York Fashion Week",
         "description": (
-            "A Newyork runway showcase highlighting emerging labels and creative partners. "
-            "Submit collaboration requests to join the backstage team or RSVP to attend the show."
+            "A New York Fashion Week runway showcase highlighting emerging labels and creative partners. "
+            "VolumeOne attendees are 12 designers. Submit collaboration requests to join the backstage team or RSVP "
+            "to attend the show."
         ),
         "event_date": date(2026, 2, 11),
         "end_date": date(2026, 2, 16),
