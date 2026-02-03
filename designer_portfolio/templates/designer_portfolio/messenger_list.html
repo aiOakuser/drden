@@ -30,6 +30,57 @@
     </div>
   </div>
 
+  {% if not messenger_unavailable %}
+  <div class="messenger-list__start" style="margin-bottom: 28px; padding: 20px; background: var(--color-secondary); border: 1px solid var(--color-surface-muted); border-radius: 12px;">
+    <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;">
+      <div>
+        <h2 style="margin: 0 0 6px; font-size: 1rem; font-weight: 700; color: var(--color-primary);">{{ designer_results_title }}</h2>
+        <p style="margin: 0; font-size: 13px; color: var(--color-text-muted);">Search by designer name, username, or specialty to start a new conversation.</p>
+      </div>
+      <form method="get" action="{% url 'messenger_list' %}" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <label for="messenger-designer-search" class="visually-hidden">Search designers</label>
+        <input type="search" id="messenger-designer-search" name="q" value="{{ designer_search_query }}" placeholder="Search designers" autocomplete="off"
+               style="min-width: 220px; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 14px; color: var(--color-primary); background: var(--color-surface);" />
+        <button type="submit" style="padding: 10px 16px; border: none; border-radius: 8px; background: var(--color-primary); color: var(--color-secondary); font-weight: 600; cursor: pointer;">Search</button>
+      </form>
+    </div>
+
+    <div class="messenger-list__designer-grid" style="margin-top: 16px;">
+      {% if designer_results %}
+      <div class="messenger-list__designer-cards">
+        {% for designer in designer_results %}
+        <div class="messenger-designer-card">
+          <div class="messenger-designer-card__info">
+            {% if designer.profile_image %}
+            <img src="{{ designer.profile_image.url }}" alt="{{ designer.user.get_full_name|default:designer.user.username }}" class="messenger-designer-card__avatar" />
+            {% else %}
+            <div class="messenger-designer-card__avatar">
+              {{ designer.user.username|first|upper }}
+            </div>
+            {% endif %}
+            <div>
+              <div class="messenger-designer-card__name">{{ designer.user.get_full_name|default:designer.user.username }}</div>
+              <div class="messenger-designer-card__meta">{{ designer.specialization|default:"Fashion Designer" }}</div>
+              {% if designer.user_id in existing_conversation_user_ids %}
+              <span class="messenger-designer-card__badge">Existing chat</span>
+              {% endif %}
+            </div>
+          </div>
+          <a href="{% url 'messenger_start' user_id=designer.user_id %}" class="messenger-designer-card__action">
+            {% if designer.user_id in existing_conversation_user_ids %}Continue{% else %}Message{% endif %}
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+      {% elif designer_search_query %}
+      <p style="margin: 12px 0 0; font-size: 13px; color: var(--color-text-muted);">No designers found for "{{ designer_search_query }}". Try a different name or specialty.</p>
+      {% else %}
+      <p style="margin: 12px 0 0; font-size: 13px; color: var(--color-text-muted);">No designer suggestions yet. Use the search above to find someone to chat with.</p>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
   <!-- Inbox filter and search -->
   <div class="messenger-list__header" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px;">
     <div class="messenger-list__header-left" style="display: flex; align-items: center; gap: 12px;">
@@ -99,6 +150,15 @@
 </section>
 <style>
   .messenger-cta-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.08); border-color: var(--color-primary) !important; }
+  .messenger-list__designer-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+  .messenger-designer-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; border-radius: 10px; border: 1px solid var(--color-surface-muted); background: var(--color-surface); }
+  .messenger-designer-card__info { display: flex; align-items: center; gap: 10px; }
+  .messenger-designer-card__avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--color-secondary); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--color-primary); object-fit: cover; }
+  .messenger-designer-card__name { font-weight: 600; font-size: 14px; color: var(--color-primary); }
+  .messenger-designer-card__meta { font-size: 12px; color: var(--color-text-muted); }
+  .messenger-designer-card__badge { display: inline-flex; margin-top: 4px; padding: 2px 8px; border-radius: 999px; font-size: 11px; background: rgba(var(--color-primary-rgb, 30, 30, 30), 0.08); color: var(--color-primary); }
+  .messenger-designer-card__action { padding: 8px 12px; border-radius: 999px; border: 1px solid var(--color-border); background: var(--color-secondary); color: var(--color-primary); text-decoration: none; font-size: 12px; font-weight: 600; }
+  .messenger-designer-card__action:hover { border-color: var(--color-primary); }
   @media (max-width: 600px) { .messenger-list__ctas { grid-template-columns: 1fr; } }
 </style>
 {% endblock %}
