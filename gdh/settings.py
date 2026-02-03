@@ -234,6 +234,10 @@ def _default_forum_url() -> str:
 
 COMMUNITY_FORUM_URL = _default_forum_url()
 
+# Mobile app distribution links (optional)
+IOS_APP_STORE_URL = os.getenv("IOS_APP_STORE_URL", "").strip()
+IOS_TESTFLIGHT_URL = os.getenv("IOS_TESTFLIGHT_URL", "").strip()
+
 CANONICAL_DOMAIN_REDIRECT_ENABLED = env_bool(
     "CANONICAL_DOMAIN_REDIRECT_ENABLED",
     default=bool(CANONICAL_HOST) and not DEBUG,

@@ -1,0 +1,515 @@
+{% extends "designer_portfolio/base.html" %}
+{% load static %}
+
+{% block title %}iPhone App Download | GlobalDesignerHub{% endblock %}
+
+{% block content %}
+<section class="app-download-hero">
+  <div class="app-download__container app-download-hero__grid">
+    <div class="app-download-hero__content">
+      <p class="app-download-hero__eyebrow">Mobile app</p>
+      <h1 class="app-download-hero__title">Download the GlobalDesignerHub iPhone app</h1>
+      <p class="app-download-hero__subtitle">
+        Stay connected to your portfolios, conversations, and studio calendar from anywhere.
+      </p>
+      <ul class="app-download-hero__list">
+        {% for point in app_hero_points %}
+        <li>
+          <i class="fa-solid fa-check" aria-hidden="true"></i>
+          <span>{{ point }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      <div class="app-download-hero__actions">
+        <a
+          href="{{ primary_download.url }}"
+          class="app-download__button app-download__button--primary"
+          {% if primary_download.target %}target="{{ primary_download.target }}"{% endif %}
+          {% if primary_download.rel %}rel="{{ primary_download.rel }}"{% endif %}
+        >
+          <i class="{{ primary_download.icon }}" aria-hidden="true"></i>
+          {{ primary_download.label }}
+        </a>
+        <a
+          href="{{ secondary_download.url }}"
+          class="app-download__button app-download__button--secondary"
+          {% if secondary_download.target %}target="{{ secondary_download.target }}"{% endif %}
+          {% if secondary_download.rel %}rel="{{ secondary_download.rel }}"{% endif %}
+        >
+          <i class="{{ secondary_download.icon }}" aria-hidden="true"></i>
+          {{ secondary_download.label }}
+        </a>
+      </div>
+      <p class="app-download-hero__footnote">Requires iOS 16 or later. Wi-Fi recommended for first download.</p>
+    </div>
+    <div class="app-download-hero__device" aria-hidden="true">
+      <div class="device-mock">
+        <div class="device-mock__notch"></div>
+        <div class="device-mock__screen">
+          <div class="device-card device-card--hero">
+            <span class="device-card__eyebrow">GlobalDesignerHub</span>
+            <h3 class="device-card__title">Collections</h3>
+            <p class="device-card__text">Review tech packs, lookbooks, and approvals from your phone.</p>
+          </div>
+          <div class="device-card">
+            <h4 class="device-card__title">New message</h4>
+            <p class="device-card__text">Mila shared updated line sheets for the February drop.</p>
+          </div>
+          <div class="device-card device-card--compact">
+            <span class="device-card__label">Upcoming event</span>
+            <strong>LA Studio Meetup - Apr 5</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="app-download-features">
+  <div class="app-download__container">
+    <div class="app-download__section-header">
+      <p class="app-download__eyebrow">Built for iPhone</p>
+      <h2 class="app-download__title">Everything you need on the go</h2>
+      <p class="app-download__subtitle">
+        Move faster with mobile-first tools that mirror your desktop workspace.
+      </p>
+    </div>
+    <div class="app-download__feature-grid">
+      {% for card in app_feature_cards %}
+      <article class="app-download__feature-card">
+        <div class="app-download__feature-icon" aria-hidden="true">
+          <i class="{{ card.icon }}"></i>
+        </div>
+        <h3>{{ card.title }}</h3>
+        <p>{{ card.description }}</p>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="app-download-steps">
+  <div class="app-download__container">
+    <div class="app-download__section-header">
+      <p class="app-download__eyebrow">Get started</p>
+      <h2 class="app-download__title">Download in three steps</h2>
+    </div>
+    <ol class="app-download__steps">
+      {% for step in app_download_steps %}
+      <li class="app-download__step">
+        <span class="app-download__step-number">{{ forloop.counter }}</span>
+        <div class="app-download__step-body">
+          <h3>{{ step.title }}</h3>
+          <p>{{ step.description }}</p>
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+  </div>
+</section>
+
+<section class="app-download-cta">
+  <div class="app-download__container">
+    <div class="app-download-cta__card">
+      <div>
+        <p class="app-download__eyebrow">Ready to move faster</p>
+        <h2 class="app-download__title">Work from anywhere with the iPhone app</h2>
+        <p class="app-download__subtitle">
+          Use the same secure workspace you trust on desktop, now in your pocket.
+        </p>
+      </div>
+      <div class="app-download-cta__actions">
+        <a
+          href="{{ primary_download.url }}"
+          class="app-download__button app-download__button--primary"
+          {% if primary_download.target %}target="{{ primary_download.target }}"{% endif %}
+          {% if primary_download.rel %}rel="{{ primary_download.rel }}"{% endif %}
+        >
+          <i class="{{ primary_download.icon }}" aria-hidden="true"></i>
+          {{ primary_download.label }}
+        </a>
+        <a
+          href="{{ secondary_download.url }}"
+          class="app-download__button app-download__button--secondary"
+          {% if secondary_download.target %}target="{{ secondary_download.target }}"{% endif %}
+          {% if secondary_download.rel %}rel="{{ secondary_download.rel }}"{% endif %}
+        >
+          <i class="{{ secondary_download.icon }}" aria-hidden="true"></i>
+          {{ secondary_download.label }}
+        </a>
+      </div>
+      <p class="app-download-cta__note">
+        Need rollout help? Email <a href="mailto:{{ support_email }}">{{ support_email }}</a>.
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .app-download__container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  .app-download-hero {
+    padding: 90px 0;
+    background: linear-gradient(135deg, var(--color-primary) 0%, rgba(var(--color-primary-rgb), 0.92) 100%);
+    color: var(--color-secondary);
+  }
+
+  .app-download-hero__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 48px;
+    align-items: center;
+  }
+
+  .app-download-hero__eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-size: 0.8rem;
+    color: var(--color-accent);
+    margin-bottom: 12px;
+    font-weight: 700;
+  }
+
+  .app-download-hero__title {
+    font-size: clamp(2.2rem, 4vw, 3.5rem);
+    margin: 0 0 18px;
+    font-weight: 800;
+  }
+
+  .app-download-hero__subtitle {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    margin: 0 0 20px;
+    color: rgba(var(--color-secondary-rgb), 0.85);
+  }
+
+  .app-download-hero__list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 28px;
+    display: grid;
+    gap: 12px;
+  }
+
+  .app-download-hero__list li {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .app-download-hero__list i {
+    color: var(--color-accent);
+    margin-top: 4px;
+  }
+
+  .app-download-hero__actions,
+  .app-download-cta__actions {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .app-download__button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    border-radius: 999px;
+    font-weight: 700;
+    text-decoration: none;
+    border: 1px solid transparent;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .app-download__button i {
+    font-size: 1.1rem;
+  }
+
+  .app-download__button--primary {
+    background: var(--color-accent);
+    color: var(--color-primary);
+    box-shadow: 0 12px 30px rgba(var(--color-accent-rgb), 0.35);
+  }
+
+  .app-download__button--primary:hover {
+    transform: translateY(-2px);
+  }
+
+  .app-download__button--secondary {
+    background: transparent;
+    color: var(--color-secondary);
+    border-color: rgba(var(--color-secondary-rgb), 0.4);
+  }
+
+  .app-download__button--secondary:hover {
+    transform: translateY(-2px);
+  }
+
+  .app-download-hero__footnote {
+    margin-top: 18px;
+    color: rgba(var(--color-secondary-rgb), 0.7);
+    font-size: 0.9rem;
+  }
+
+  .device-mock {
+    position: relative;
+    width: min(340px, 90vw);
+    height: 620px;
+    margin: 0 auto;
+    padding: 14px;
+    border-radius: 46px;
+    background: #111111;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
+  }
+
+  .device-mock__notch {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 26px;
+    border-radius: 0 0 18px 18px;
+    background: #111111;
+    z-index: 2;
+  }
+
+  .device-mock__screen {
+    height: 100%;
+    border-radius: 36px;
+    background: linear-gradient(165deg, rgba(var(--color-secondary-rgb), 0.98), rgba(var(--color-accent-rgb), 0.2));
+    padding: 40px 22px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    color: var(--color-primary);
+  }
+
+  .device-card {
+    background: rgba(var(--color-secondary-rgb), 0.9);
+    border-radius: 18px;
+    padding: 16px 18px;
+    box-shadow: 0 10px 20px rgba(var(--color-primary-rgb), 0.15);
+  }
+
+  .device-card--hero {
+    background: #ffffff;
+  }
+
+  .device-card--compact {
+    text-align: left;
+  }
+
+  .device-card__eyebrow {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-text-muted);
+    font-weight: 700;
+  }
+
+  .device-card__title {
+    margin: 8px 0;
+    font-size: 1.1rem;
+  }
+
+  .device-card__text {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+  }
+
+  .device-card__label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+    margin-bottom: 6px;
+    font-weight: 700;
+  }
+
+  .app-download-features {
+    padding: 80px 0;
+    background: var(--color-secondary);
+  }
+
+  .app-download__section-header {
+    text-align: center;
+    max-width: 760px;
+    margin: 0 auto 50px;
+  }
+
+  .app-download__title {
+    margin: 0 0 12px;
+    font-size: clamp(1.9rem, 3vw, 2.6rem);
+    color: var(--color-primary);
+    font-weight: 800;
+  }
+
+  .app-download__subtitle {
+    margin: 0;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+  }
+
+  .app-download__feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 24px;
+  }
+
+  .app-download__feature-card {
+    background: var(--color-surface);
+    border-radius: 22px;
+    padding: 26px;
+    border: 1px solid rgba(var(--color-primary-rgb), 0.08);
+    box-shadow: 0 16px 30px rgba(var(--color-primary-rgb), 0.08);
+    display: grid;
+    gap: 12px;
+  }
+
+  .app-download__feature-card h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: var(--color-primary);
+  }
+
+  .app-download__feature-card p {
+    margin: 0;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+  }
+
+  .app-download__feature-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(var(--color-primary-rgb), 0.08);
+    color: var(--color-primary);
+    font-size: 1.2rem;
+  }
+
+  .app-download-steps {
+    padding: 80px 0;
+    background: var(--color-surface-muted);
+  }
+
+  .app-download__steps {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 18px;
+  }
+
+  .app-download__step {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    background: var(--color-secondary);
+    border-radius: 18px;
+    padding: 20px 22px;
+    border: 1px solid rgba(var(--color-primary-rgb), 0.06);
+  }
+
+  .app-download__step-number {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    color: var(--color-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+  }
+
+  .app-download__step-body h3 {
+    margin: 0 0 6px;
+    font-size: 1.1rem;
+    color: var(--color-primary);
+  }
+
+  .app-download__step-body p {
+    margin: 0;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+  }
+
+  .app-download-cta {
+    padding: 80px 0;
+    background: var(--color-primary);
+    color: var(--color-secondary);
+  }
+
+  .app-download-cta__card {
+    border-radius: 26px;
+    padding: 34px;
+    background: rgba(var(--color-secondary-rgb), 0.06);
+    border: 1px solid rgba(var(--color-secondary-rgb), 0.18);
+    display: grid;
+    gap: 24px;
+  }
+
+  .app-download-cta__note {
+    margin: 0;
+    color: rgba(var(--color-secondary-rgb), 0.75);
+  }
+
+  .app-download-cta__note a {
+    color: var(--color-accent);
+    text-decoration: underline;
+  }
+
+  .app-download-cta .app-download__subtitle,
+  .app-download-cta .app-download__title {
+    color: var(--color-secondary);
+  }
+
+  .app-download-cta .app-download__button--secondary {
+    color: var(--color-secondary);
+    border-color: rgba(var(--color-secondary-rgb), 0.4);
+  }
+
+  @media (max-width: 768px) {
+    .app-download-hero {
+      padding: 70px 0;
+    }
+
+    .device-mock {
+      height: 520px;
+    }
+
+    .app-download-hero__actions,
+    .app-download-cta__actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .app-download__button {
+      justify-content: center;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .device-mock {
+      height: 480px;
+    }
+
+    .app-download-cta__card {
+      padding: 26px;
+    }
+  }
+</style>
+{% endblock %}
