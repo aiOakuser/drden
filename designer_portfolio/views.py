@@ -33,7 +33,7 @@ from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.db import transaction, IntegrityError
 from django.db.utils import OperationalError, ProgrammingError
-from django.db.models import Q, Count, F
+from django.db.models import Q, Count, F, Prefetch
 from django.urls import reverse_lazy, reverse, NoReverseMatch
 from django.utils.text import slugify
 from django.core.paginator import Paginator
@@ -4827,6 +4827,31 @@ def my_conversations(request):
 
 # ---------------- User-to-User Messenger ----------------
 
+def _user_has_designer_profile(user):
+    if user is None or not getattr(user, "is_authenticated", False):
+        return False
+    return DesignerProfile.objects.filter(user=user).exists()
+
+
+def _designer_search_results(query, exclude_user_ids, limit):
+    qs = (
+        DesignerProfile.objects.filter(user__is_active=True)
+        .exclude(user_id__in=exclude_user_ids)
+        .select_related("user")
+    )
+    if query:
+        qs = qs.filter(
+            Q(user__username__icontains=query)
+            | Q(user__first_name__icontains=query)
+            | Q(user__last_name__icontains=query)
+            | Q(specialization__icontains=query)
+            | Q(location__icontains=query)
+            | Q(city__icontains=query)
+            | Q(country__icontains=query)
+        )
+    return list(qs.order_by("-created_at")[:limit])
+
+
 def _get_or_create_conversation(user_a, user_b):
     """Return (conversation, created) with canonical user1/user2 order (user1.id <= user2.id)."""
     if user_a.pk == user_b.pk:
@@ -4841,47 +4866,84 @@ def _get_or_create_conversation(user_a, user_b):
 @login_required
 def messenger_list(request):
     """List conversations for the current user."""
+    if not _user_has_designer_profile(request.user):
+        messages.info(request, "Messenger is available to registered designers. Please complete your profile.")
+        return redirect("designer_about_me")
+
+    messenger_unavailable = False
+    messenger_unavailable_message = ""
+    convs = []
     try:
-        convs = (
+        message_prefetch = Prefetch(
+            "messages",
+            queryset=ChatMessage.objects.select_related("sender").order_by("-created_at"),
+            to_attr="prefetched_messages",
+        )
+        convs = list(
             ChatConversation.objects.filter(
                 Q(user1=request.user) | Q(user2=request.user)
             )
             .select_related("user1", "user2")
-            .prefetch_related("messages")
+            .prefetch_related(message_prefetch)
             .order_by("-updated_at")
         )
         # Annotate last message and other user for display
+        existing_partner_ids = []
         for c in convs:
-            c._last_msg = c.messages.order_by("-created_at").first()
+            prefetched = getattr(c, "prefetched_messages", [])
+            c._last_msg = prefetched[0] if prefetched else None
             c._other_user = c.other_user(request.user)
-        return render(
-            request,
-            "designer_portfolio/messenger_list.html",
-            {"conversations": convs},
-        )
+            existing_partner_ids.append(c._other_user.id)
     except (OperationalError, ProgrammingError) as e:
         # Messenger tables missing (migration not applied on production)
         logger.warning("Messenger tables may be missing: %s. Run: python manage.py migrate", e)
-        return render(request, "designer_portfolio/messenger_list.html", {
-            "conversations": [],
-            "messenger_unavailable": True,
-            "messenger_unavailable_message": "Messenger is being set up. Please try again in a few minutes.",
-        })
+        messenger_unavailable = True
+        messenger_unavailable_message = "Messenger is being set up. Please try again in a few minutes."
+        existing_partner_ids = []
     except Exception as e:
         err_str = str(e).lower()
         if "chatconversation" in err_str or "chat_message" in err_str or "does not exist" in err_str or "no such table" in err_str:
             logger.warning("Messenger tables may be missing: %s. Run: python manage.py migrate", e)
-            return render(request, "designer_portfolio/messenger_list.html", {
-                "conversations": [],
-                "messenger_unavailable": True,
-                "messenger_unavailable_message": "Messenger is being set up. Please try again in a few minutes.",
-            })
-        raise
+            messenger_unavailable = True
+            messenger_unavailable_message = "Messenger is being set up. Please try again in a few minutes."
+            existing_partner_ids = []
+        else:
+            raise
+
+    search_query = (request.GET.get("q") or "").strip()
+    if search_query:
+        designer_results_title = "Search results"
+        designer_results = _designer_search_results(
+            search_query, {request.user.id}, limit=12
+        )
+    else:
+        designer_results_title = "Suggested designers"
+        designer_results = _designer_search_results(
+            "", {request.user.id}, limit=6
+        )
+
+    return render(
+        request,
+        "designer_portfolio/messenger_list.html",
+        {
+            "conversations": convs,
+            "messenger_unavailable": messenger_unavailable,
+            "messenger_unavailable_message": messenger_unavailable_message,
+            "designer_search_query": search_query,
+            "designer_results_title": designer_results_title,
+            "designer_results": designer_results,
+            "existing_conversation_user_ids": existing_partner_ids,
+        },
+    )
 
 
 @login_required
 def messenger_thread(request, conversation_id):
     """Show one conversation and its messages; accept POST to send a new message."""
+    if not _user_has_designer_profile(request.user):
+        messages.info(request, "Messenger is available to registered designers. Please complete your profile.")
+        return redirect("designer_about_me")
+
     try:
         conv = get_object_or_404(
             ChatConversation.objects.select_related("user1", "user2"),
@@ -4901,6 +4963,8 @@ def messenger_thread(request, conversation_id):
         messages.info(request, "Messenger is being set up. Please try again in a few minutes.")
         return redirect("messenger_list")
 
+    conv.messages.exclude(sender=request.user).filter(read_at__isnull=True).update(read_at=timezone.now())
+
     if request.method == "POST":
         body = (request.POST.get("body") or "").strip()
         if body:
@@ -4908,6 +4972,7 @@ def messenger_thread(request, conversation_id):
                 msg = ChatMessage.objects.create(
                     conversation=conv, sender=request.user, body=body
                 )
+                ChatConversation.objects.filter(pk=conv.pk).update(updated_at=timezone.now())
                 messages_list.append(msg)
                 messages.success(request, "Message sent.")
                 return redirect("messenger_thread", conversation_id=conv.pk)
@@ -4930,9 +4995,16 @@ def messenger_thread(request, conversation_id):
 @login_required
 def messenger_start(request, user_id):
     """Start or open a conversation with another user. Redirects to thread."""
+    if not _user_has_designer_profile(request.user):
+        messages.info(request, "Messenger is available to registered designers. Please complete your profile.")
+        return redirect("designer_about_me")
+
     other = get_object_or_404(User, pk=user_id, is_active=True)
     if other.pk == request.user.pk:
         messages.error(request, "You cannot message yourself.")
+        return redirect("messenger_list")
+    if not DesignerProfile.objects.filter(user=other).exists():
+        messages.error(request, "This designer is not available for messaging yet.")
         return redirect("messenger_list")
     try:
         conv, _ = _get_or_create_conversation(request.user, other)
