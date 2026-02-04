@@ -22,6 +22,7 @@ from .views import (
     reinstate_designer,
     AboutView,
     AboutSiteView,
+    IPhoneAppDownloadView,
     contact_view,
     docs_index,
     docs_detail,
@@ -95,6 +96,7 @@ urlpatterns = [
     
     path("about/", AboutView.as_view(), name="about"),
     path("about-site/", AboutSiteView.as_view(), name="about_site"),
+    path("iphone-app/", IPhoneAppDownloadView.as_view(), name="iphone_app"),
     path("contact/", contact_view, name="contact"),
     
     # Community Forum

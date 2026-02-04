@@ -1861,6 +1861,95 @@ class AboutView(TemplateView):
 class AboutSiteView(TemplateView):
     template_name = "designer_portfolio/about_site.html"
 
+class IPhoneAppDownloadView(TemplateView):
+    template_name = "designer_portfolio/iphone_app_download.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        app_store_url = getattr(settings, "IOS_APP_STORE_URL", "").strip()
+        testflight_url = getattr(settings, "IOS_TESTFLIGHT_URL", "").strip()
+        support_email = _get_public_contact_email()
+
+        def _link(label: str, url: str, icon: str, new_tab: bool = False) -> dict:
+            payload = {"label": label, "url": url, "icon": icon}
+            if new_tab:
+                payload["target"] = "_blank"
+                payload["rel"] = "noopener"
+            return payload
+
+        if app_store_url:
+            primary_download = _link(
+                "Download on the App Store",
+                app_store_url,
+                "fa-brands fa-apple",
+                new_tab=True,
+            )
+            secondary_download = (
+                _link("Join TestFlight", testflight_url, "fa-solid fa-rocket", new_tab=True)
+                if testflight_url
+                else _link("Email me the link", f"mailto:{support_email}", "fa-regular fa-envelope")
+            )
+        elif testflight_url:
+            primary_download = _link("Join TestFlight", testflight_url, "fa-solid fa-rocket", new_tab=True)
+            secondary_download = _link("Email me the link", f"mailto:{support_email}", "fa-regular fa-envelope")
+        else:
+            primary_download = _link(
+                "Request the iPhone app",
+                reverse("contact"),
+                "fa-regular fa-paper-plane",
+            )
+            secondary_download = _link("Email support", f"mailto:{support_email}", "fa-regular fa-envelope")
+
+        context.update(
+            {
+                "support_email": support_email,
+                "primary_download": primary_download,
+                "secondary_download": secondary_download,
+                "app_hero_points": [
+                    "Review tech packs and approve updates on the go.",
+                    "Message designers with secure threads and shared files.",
+                    "Stay on schedule with collection and event alerts.",
+                ],
+                "app_feature_cards": [
+                    {
+                        "title": "Portfolio access",
+                        "description": "Open lookbooks, tech packs, and collections from your iPhone.",
+                        "icon": "fa-solid fa-layer-group",
+                    },
+                    {
+                        "title": "Mobile uploads",
+                        "description": "Capture studio progress shots and attach them to active projects.",
+                        "icon": "fa-solid fa-camera-retro",
+                    },
+                    {
+                        "title": "Instant messaging",
+                        "description": "Keep conversations moving with in-app chat and notifications.",
+                        "icon": "fa-regular fa-comments",
+                    },
+                    {
+                        "title": "Event reminders",
+                        "description": "Track fashion week schedules and community meetups in one place.",
+                        "icon": "fa-regular fa-calendar-days",
+                    },
+                ],
+                "app_download_steps": [
+                    {
+                        "title": "Download the app",
+                        "description": "Install from the App Store or TestFlight using the button above.",
+                    },
+                    {
+                        "title": "Sign in securely",
+                        "description": "Use your existing GlobalDesignerHub account or create one in minutes.",
+                    },
+                    {
+                        "title": "Enable alerts",
+                        "description": "Get real-time updates for approvals, messages, and events.",
+                    },
+                ],
+            }
+        )
+        return context
+
 def contact_view(request):
     contact_email = _get_public_contact_email()
     if request.method == "POST":
