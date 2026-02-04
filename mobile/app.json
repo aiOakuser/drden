@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "GlobalDesignerHub",
+    "slug": "globaldesignerhub",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#0E0E0F"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.globaldesignerhub.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0E0E0F"
+      },
+      "package": "com.globaldesignerhub.app"
+    }
+  }
+}
