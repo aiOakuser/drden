@@ -1,14 +1,14 @@
 {% extends "designer_portfolio/base.html" %}
 {% load static %}
 
-{% block title %}iPhone App Download | GlobalDesignerHub{% endblock %}
+{% block title %}iPhone App Download | {{ app_name }}{% endblock %}
 
 {% block content %}
 <section class="app-download-hero">
   <div class="app-download__container app-download-hero__grid">
     <div class="app-download-hero__content">
       <p class="app-download-hero__eyebrow">Mobile app</p>
-      <h1 class="app-download-hero__title">Download the GlobalDesignerHub iPhone app</h1>
+      <h1 class="app-download-hero__title">Download the {{ app_name }} iPhone app</h1>
       <p class="app-download-hero__subtitle">
         Stay connected to your portfolios, conversations, and studio calendar from anywhere.
       </p>
@@ -47,7 +47,7 @@
         <div class="device-mock__notch"></div>
         <div class="device-mock__screen">
           <div class="device-card device-card--hero">
-            <span class="device-card__eyebrow">GlobalDesignerHub</span>
+            <span class="device-card__eyebrow">{{ app_name }}</span>
             <h3 class="device-card__title">Collections</h3>
             <p class="device-card__text">Review tech packs, lookbooks, and approvals from your phone.</p>
           </div>
@@ -113,7 +113,7 @@
     <div class="app-download-cta__card">
       <div>
         <p class="app-download__eyebrow">Ready to move faster</p>
-        <h2 class="app-download__title">Work from anywhere with the iPhone app</h2>
+        <h2 class="app-download__title">Work from anywhere with the {{ app_name }} iPhone app</h2>
         <p class="app-download__subtitle">
           Use the same secure workspace you trust on desktop, now in your pocket.
         </p>
