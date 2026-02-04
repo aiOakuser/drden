@@ -1869,6 +1869,7 @@ class IPhoneAppDownloadView(TemplateView):
         app_store_url = getattr(settings, "IOS_APP_STORE_URL", "").strip()
         testflight_url = getattr(settings, "IOS_TESTFLIGHT_URL", "").strip()
         support_email = _get_public_contact_email()
+        app_name = getattr(settings, "IOS_APP_NAME", "GlobalDesignerHub").strip() or "GlobalDesignerHub"
 
         def _link(label: str, url: str, icon: str, new_tab: bool = False) -> dict:
             payload = {"label": label, "url": url, "icon": icon}
@@ -1902,6 +1903,7 @@ class IPhoneAppDownloadView(TemplateView):
 
         context.update(
             {
+                "app_name": app_name,
                 "support_email": support_email,
                 "primary_download": primary_download,
                 "secondary_download": secondary_download,
@@ -1935,11 +1937,11 @@ class IPhoneAppDownloadView(TemplateView):
                 "app_download_steps": [
                     {
                         "title": "Download the app",
-                        "description": "Install from the App Store or TestFlight using the button above.",
+                        "description": f"Install {app_name} from the App Store or TestFlight using the button above.",
                     },
                     {
                         "title": "Sign in securely",
-                        "description": "Use your existing GlobalDesignerHub account or create one in minutes.",
+                        "description": f"Use your existing {app_name} account or create one in minutes.",
                     },
                     {
                         "title": "Enable alerts",

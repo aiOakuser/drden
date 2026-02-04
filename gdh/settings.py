@@ -234,6 +234,12 @@ def _default_forum_url() -> str:
 
 COMMUNITY_FORUM_URL = _default_forum_url()
 
+def _default_ios_app_name() -> str:
+    value = os.getenv("IOS_APP_NAME", "GlobalDesignerHub").strip()
+    return value or "GlobalDesignerHub"
+
+IOS_APP_NAME = _default_ios_app_name()
+
 # Mobile app distribution links (optional)
 IOS_APP_STORE_URL = os.getenv("IOS_APP_STORE_URL", "").strip()
 IOS_TESTFLIGHT_URL = os.getenv("IOS_TESTFLIGHT_URL", "").strip()
