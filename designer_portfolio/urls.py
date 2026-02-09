@@ -1,7 +1,8 @@
 from django.urls import path, include
 from django.views.generic.base import RedirectView
 from rest_framework.routers import DefaultRouter
-from . import views  # ✅ add this if you plan to call views.generate_techpack
+from . import views
+from . import mobile_api
 
 from .views import (
     HomePageView,
@@ -145,6 +146,18 @@ urlpatterns = [
 
     # API
     path("api/", include(router.urls)),
+    # Mobile app API (GlobalDesignerHub iPhone)
+    path("api/mobile/auth/login/", mobile_api.MobileLoginView.as_view(), name="mobile_login"),
+    path("api/mobile/me/", mobile_api.MobileMeView.as_view(), name="mobile_me"),
+    path("api/mobile/designers/", mobile_api.MobileDesignerList.as_view(), name="mobile_designers"),
+    path("api/mobile/designers/<int:user_id>/", mobile_api.MobileDesignerDetail.as_view(), name="mobile_designer_detail"),
+    path("api/mobile/collections/", mobile_api.MobileCollectionList.as_view(), name="mobile_collections"),
+    path("api/mobile/collections/<slug:slug>/", mobile_api.MobileCollectionDetail.as_view(), name="mobile_collection_detail"),
+    path("api/mobile/designs/", mobile_api.MobileDesignList.as_view(), name="mobile_designs"),
+    path("api/mobile/designs/<slug:slug>/", mobile_api.MobileDesignDetail.as_view(), name="mobile_design_detail"),
+    path("api/mobile/me/designs/", mobile_api.MobileMyDesignsList.as_view(), name="mobile_my_designs"),
+    path("api/mobile/events/", mobile_api.MobileEventList.as_view(), name="mobile_events"),
+    path("api/mobile/events/<slug:slug>/", mobile_api.MobileEventDetail.as_view(), name="mobile_event_detail"),
     path("api/project-templates/", views.project_templates_api, name="project_templates_api"),
     path("api/projects/", views.create_project_api, name="project_create_api"),
     path("api/designers/register/", DesignerRegistrationView.as_view(), name="designer_register_api"),
