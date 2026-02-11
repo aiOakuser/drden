@@ -4189,22 +4189,9 @@ def csrf_failure(request, reason=""):
 
 def _get_designer_ai_system_prompt() -> str:
     """Returns the system prompt for Designer AI."""
-    return """You are "GlobalDesignerHub Designer AI", an assistant for designers using GlobalDesignerHub (GDH).
+    from .ai.chat_assistant import get_system_prompt
 
-Your scope:
-- Answer questions about design portfolios (fashion, graphic, UX/UI, interior, illustration, etc.).
-- Help with portfolio structure, case studies, project descriptions, and image/video presentation.
-- Help users understand and use GlobalDesignerHub features: creating profiles, uploading designs, collections, collaboration, privacy, and sharing.
-- Help with light website issues related to GDH (image sizes, formats, performance tips), but do NOT give server admin or low-level dev instructions unless clearly asked by a developer.
-- Always prefer solutions that use GDH features (collections, tags, categories, collaboration tools).
-
-When a question is NOT about design, portfolios, or GDH, politely say you are focused only on designer + GlobalDesignerHub topics and redirect them.
-
-Whenever relevant:
-- Link to the correct GDH documentation page using format: (/docs/designers/getting-started) or (/docs/api/overview)
-- If the question is about integrations, show the relevant API or integration docs links.
-
-Tone: friendly, professional, and supportive of creative people. Avoid strong opinions; give options and best practices."""
+    return get_system_prompt()
 
 
 def _build_infrastructure_response() -> str:
@@ -4766,15 +4753,16 @@ def designer_ai_chat(request):
                 session_id=str(uuid.uuid4()),
                 language=language
             )
-        
-        # Save user message
-        DesignerAIMessage.objects.create(
-            session=session,
-            role="user",
-            content=user_message,
+
+        # Get conversation history BEFORE saving current message (most recent 10, chronological order)
+        history_qs = (
+            DesignerAIMessage.objects.filter(session=session)
+            .exclude(role="system")
+            .order_by("-created_at")[:10]
         )
-        
-        # Build system prompt
+        history_messages = list(reversed(history_qs))
+
+        # Build system prompt for designer platform
         system_prompt = _get_designer_ai_system_prompt()
         
         # Add context about current page
@@ -4805,7 +4793,7 @@ def designer_ai_chat(request):
         
         # Build messages with history
         messages = [{"role": "system", "content": system_prompt}]
-        
+
         # Add RAG context if found
         if rag_docs:
             rag_context = "\n\n--- Documentation Context ---\n\n"
@@ -4814,13 +4802,12 @@ def designer_ai_chat(request):
                 for doc in rag_docs
             )
             messages.append({"role": "system", "content": rag_context})
-        
-        # Add conversation history (last 10 messages)
-        history = DesignerAIMessage.objects.filter(session=session).exclude(role="system").order_by("created_at")[:10]
-        for msg in history:
+
+        # Add conversation history (chronological)
+        for msg in history_messages:
             if msg.role in ["user", "assistant"]:
                 messages.append({"role": msg.role, "content": msg.content})
-        
+
         # Add current user message
         messages.append({"role": "user", "content": user_message})
         
@@ -4833,39 +4820,34 @@ def designer_ai_chat(request):
         if use_openai:
             try:
                 import openai
-                # Support both old and new OpenAI SDK
-                try:
-                    # New SDK (v1.0+)
-                    client = openai.OpenAI(api_key=openai_api_key)
-                    response = client.chat.completions.create(
-                        model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
-                        messages=messages,
-                        temperature=0.7,
-                        max_tokens=1000
-                    )
-                    ai_response = response.choices[0].message.content
-                except AttributeError:
-                    # Old SDK fallback
-                    openai.api_key = openai_api_key
-                    response = openai.ChatCompletion.create(
-                        model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
-                        messages=messages,
-                        temperature=0.7,
-                        max_tokens=1000
-                    )
-                    ai_response = response.choices[0].message["content"]
-                
+
+                client = openai.OpenAI(api_key=openai_api_key)
+                response = client.chat.completions.create(
+                    model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+                    messages=messages,
+                    temperature=0.7,
+                    max_tokens=1000
+                )
+                ai_response = response.choices[0].message.content
+                logger.info("Designer AI: OpenAI response received for session %s", session.session_id)
+
             except ImportError:
-                if settings.DEBUG:
-                    print("OpenAI library not installed")
+                logger.warning("Designer AI: openai library not installed. Run: pip install openai")
             except Exception as e:
-                if settings.DEBUG:
-                    print(f"OpenAI error: {e}")
+                logger.exception("Designer AI OpenAI error: %s", e)
         
         # Fallback to rule-based responses if OpenAI failed
         if not ai_response:
+            logger.info("Designer AI: Using fallback response (OpenAI not available or failed)")
             ai_response = _get_ai_response_fallback(user_message, context_page)
-        
+
+        # Save user message (for history on next request)
+        DesignerAIMessage.objects.create(
+            session=session,
+            role="user",
+            content=user_message,
+        )
+
         # Save assistant response
         DesignerAIMessage.objects.create(
             session=session,

@@ -4,10 +4,11 @@ This guide explains how to set up and use the GlobalDesignerHub Designer AI chat
 
 ## Overview
 
-Designer AI is a chat assistant built into GlobalDesignerHub that helps designers with:
+Designer AI is a chat assistant built into GlobalDesignerHub for the designer platform. It helps with:
 - Portfolio structure and layouts
+- Profile bios, proposal emails, pricing guidance
 - Using GlobalDesignerHub features
-- Image sizes and formats
+- Image sizes, formats, and media guidelines
 - API and integration questions
 
 ## Features
@@ -49,7 +50,7 @@ The system will automatically use OpenAI if the API key is configured, otherwise
 
 1. Click the "Ask Designer AI" bubble in the bottom-right corner
 2. Type your question about design, portfolios, or GlobalDesignerHub
-3. Get instant help with links to documentation
+3. Get instant help with links to documentation when relevant
 
 ### For Developers
 
@@ -64,7 +65,8 @@ POST /api/ai/designer-chat/
 {
   "message": "How do I upload images?",
   "context_page": "/dashboard/designs/",
-  "current_url": "https://globaldesignerhub.com/dashboard/designs/"
+  "current_url": "https://globaldesignerhub.com/dashboard/designs/",
+  "language": "en"
 }
 ```
 
@@ -90,7 +92,7 @@ Edit `_get_designer_ai_responses()` in `designer_portfolio/views.py` to customiz
 
 #### Customizing System Prompt
 
-Edit `_get_designer_ai_system_prompt()` in `designer_portfolio/views.py` to customize the AI's behavior.
+Edit `designer_portfolio/ai/chat_assistant.py` to customize the Designer AI system prompt (`DESIGNER_SYSTEM_PROMPT`).
 
 ## Documentation Structure
 
