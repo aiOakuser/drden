@@ -4050,6 +4050,33 @@ def health_check(request):
     return HttpResponse("ok", content_type="text/plain", status=200)
 
 
+def designer_ai_config_check(request):
+    """
+    Verify Designer AI / OpenAI config is loaded. Does NOT expose the API key.
+    Use this to confirm OPENAI_API_KEY is available to the running process.
+    """
+    key = os.getenv("OPENAI_API_KEY")
+    configured = bool(key and key.strip())
+    model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+
+    try:
+        has_openai = __import__("openai")
+    except ImportError:
+        has_openai = None
+
+    return JsonResponse({
+        "openai_configured": configured,
+        "openai_library_installed": has_openai is not None,
+        "model": model,
+        "status": "ok" if (configured and has_openai) else "degraded",
+        "message": (
+            "Designer AI is ready (OpenAI + key loaded)."
+            if configured and has_openai
+            else "Designer AI will use fallback responses. Set OPENAI_API_KEY and run: pip install openai"
+        ),
+    })
+
+
 def _resolve_post_login_redirect(request, candidate: str | None = "") -> str:
     """Return a safe redirect target after authentication flows."""
 

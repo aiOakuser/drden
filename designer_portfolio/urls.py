@@ -45,6 +45,7 @@ from .views import (
     unified_search_view,
     designer_public_detail_view,
     designer_ai_chat,
+    designer_ai_config_check,
     my_conversations,
     messenger_list,
     messenger_thread,
@@ -162,6 +163,7 @@ urlpatterns = [
     path("api/projects/", views.create_project_api, name="project_create_api"),
     path("api/designers/register/", DesignerRegistrationView.as_view(), name="designer_register_api"),
     path("api/ai/designer-chat/", designer_ai_chat, name="designer_ai_chat"),
+    path("api/ai/config-check/", designer_ai_config_check, name="designer_ai_config_check"),
     path("designer-ai/history/", my_conversations, name="designer_ai_history"),
 
     # Messenger (registered users only)
