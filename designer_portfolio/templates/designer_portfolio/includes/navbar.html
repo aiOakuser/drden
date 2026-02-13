@@ -38,6 +38,7 @@
         <a href="{% url 'forum_index' %}">Community Forum</a>
       <a href="{% url 'about_site' %}">About Site</a>
       <a href="{% url 'iphone_app' %}">iPhone App</a>
+      <a href="{% url 'student_page' %}">Student</a>
       {% if user.is_authenticated %}
       <div class="nav-dropdown">
         <a href="{% url 'messenger_list' %}" class="nav-dropdown__trigger" aria-haspopup="true" aria-expanded="false" id="nav-messages-trigger">
