@@ -486,6 +486,24 @@ class ContactViewTests(TestCase):
     CSRF_COOKIE_SECURE=False,
     STORAGES=TEST_STORAGE_BACKENDS,
 )
+class StudentPageViewTests(TestCase):
+    def test_student_page_renders(self):
+        response = self.client.get(reverse("student_page"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Build your design career before graduation")
+
+    def test_student_page_supports_url_without_trailing_slash(self):
+        response = self.client.get("/student")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "GlobalDesignerHub Student")
+
+
+@override_settings(
+    SECURE_SSL_REDIRECT=False,
+    SESSION_COOKIE_SECURE=False,
+    CSRF_COOKIE_SECURE=False,
+    STORAGES=TEST_STORAGE_BACKENDS,
+)
 class TemplateLoaderTests(TestCase):
     def setUp(self) -> None:
         Template.objects.all().delete()

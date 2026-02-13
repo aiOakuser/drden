@@ -1,4 +1,4 @@
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.views.generic.base import RedirectView
 from rest_framework.routers import DefaultRouter
 from . import views
@@ -21,6 +21,7 @@ from .views import (
     approve_designer,
     reject_designer,
     reinstate_designer,
+    StudentPageView,
     AboutView,
     AboutSiteView,
     IPhoneAppDownloadView,
@@ -95,6 +96,7 @@ urlpatterns = [
     path("events/", EventListView.as_view(), name="event_list"),
     path("events/<slug:slug>/", EventDetailView.as_view(), name="event_detail"),
     
+    re_path(r"^student/?$", StudentPageView.as_view(), name="student_page"),
     path("about/", AboutView.as_view(), name="about"),
     path("about-site/", AboutSiteView.as_view(), name="about_site"),
     path("iphone-app/", IPhoneAppDownloadView.as_view(), name="iphone_app"),

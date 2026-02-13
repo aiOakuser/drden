@@ -1,0 +1,247 @@
+{% extends "designer_portfolio/base.html" %}
+
+{% block title %}Student Designers | GlobalDesignerHub{% endblock %}
+
+{% block content %}
+<section class="student-hero">
+  <div class="student-container">
+    <p class="student-eyebrow">GlobalDesignerHub Student</p>
+    <h1>Build your design career before graduation</h1>
+    <p class="student-lead">
+      GlobalDesignerHub helps students publish polished portfolios, learn current studio workflows,
+      and connect with mentors and collaborators in one place.
+    </p>
+    <div class="student-hero__actions">
+      <a href="{{ student_primary_cta }}" class="btn btn-accent">Start free trial</a>
+      <a href="{{ student_secondary_cta }}" class="btn btn-outline">Explore designers</a>
+    </div>
+  </div>
+</section>
+
+<section class="student-section">
+  <div class="student-container">
+    <div class="student-section__header">
+      <p class="student-eyebrow">Student tracks</p>
+      <h2>Learn by shipping real portfolio work</h2>
+    </div>
+    <div class="student-grid">
+      {% for track in student_focus_tracks %}
+      <article class="student-card">
+        <h3>{{ track.title }}</h3>
+        <p>{{ track.description }}</p>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="student-section student-section--muted">
+  <div class="student-container">
+    <div class="student-section__header">
+      <p class="student-eyebrow">Resources</p>
+      <h2>Everything you need to get started now</h2>
+    </div>
+    <div class="student-grid">
+      {% for resource in student_resource_cards %}
+      <article class="student-card student-card--resource">
+        <div class="student-card__icon" aria-hidden="true"><i class="{{ resource.icon }}"></i></div>
+        <h3>{{ resource.title }}</h3>
+        <p>{{ resource.description }}</p>
+        <a href="{{ resource.cta_href }}" class="student-card__cta">{{ resource.cta_label }} <span aria-hidden="true">-></span></a>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="student-section">
+  <div class="student-container">
+    <div class="student-section__header">
+      <p class="student-eyebrow">Launch checklist</p>
+      <h2>Your first week on GlobalDesignerHub</h2>
+    </div>
+    <ol class="student-checklist">
+      {% for item in student_launch_checklist %}
+      <li>
+        <h3>{{ item.title }}</h3>
+        <p>{{ item.description }}</p>
+      </li>
+      {% endfor %}
+    </ol>
+  </div>
+</section>
+
+<section class="student-cta">
+  <div class="student-container">
+    <h2>Ready to launch your student portfolio?</h2>
+    <p>Start free, then keep building with events, community support, and Designer AI guidance.</p>
+    <div class="student-hero__actions">
+      <a href="{{ student_primary_cta }}" class="btn btn-accent">Create student account</a>
+      <a href="{% url 'event_list' %}" class="btn btn-primary">View events</a>
+      <a href="{% url 'community_redirect' %}" class="btn btn-outline">Visit community</a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .student-container {
+    width: min(1100px, calc(100% - 32px));
+    margin: 0 auto;
+  }
+
+  .student-eyebrow {
+    margin: 0 0 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-accent);
+  }
+
+  .student-hero {
+    background: linear-gradient(135deg, var(--color-primary), rgba(var(--color-primary-rgb), 0.92));
+    color: var(--color-secondary);
+    padding: 76px 0;
+  }
+
+  .student-hero h1 {
+    margin: 0;
+    font-size: clamp(2rem, 5vw, 3.3rem);
+    line-height: 1.1;
+  }
+
+  .student-lead {
+    margin: 16px 0 0;
+    max-width: 760px;
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: rgba(var(--color-secondary-rgb), 0.94);
+  }
+
+  .student-hero__actions {
+    margin-top: 28px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .student-section {
+    padding: 68px 0;
+    background: var(--color-secondary);
+  }
+
+  .student-section--muted {
+    background: var(--color-surface);
+  }
+
+  .student-section__header h2,
+  .student-cta h2 {
+    margin: 0;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    color: var(--color-primary);
+  }
+
+  .student-grid {
+    margin-top: 30px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px;
+  }
+
+  .student-card {
+    background: var(--color-secondary);
+    border: 1px solid rgba(var(--color-primary-rgb), 0.08);
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: 0 10px 24px rgba(var(--color-primary-rgb), 0.06);
+  }
+
+  .student-card h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    color: var(--color-primary);
+  }
+
+  .student-card p {
+    margin: 10px 0 0;
+    color: var(--color-text);
+    line-height: 1.6;
+  }
+
+  .student-card--resource .student-card__icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(var(--color-primary-rgb), 0.08);
+    color: var(--color-primary);
+    margin-bottom: 14px;
+    font-size: 1.1rem;
+  }
+
+  .student-card__cta {
+    margin-top: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--color-primary);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .student-card__cta:hover {
+    color: var(--color-accent);
+  }
+
+  .student-checklist {
+    margin: 30px 0 0;
+    padding-left: 20px;
+    display: grid;
+    gap: 18px;
+  }
+
+  .student-checklist h3 {
+    margin: 0;
+    color: var(--color-primary);
+    font-size: 1.05rem;
+  }
+
+  .student-checklist p {
+    margin: 8px 0 0;
+    color: var(--color-text);
+    line-height: 1.6;
+  }
+
+  .student-cta {
+    padding: 72px 0;
+    background: var(--color-primary);
+    color: var(--color-secondary);
+    text-align: center;
+  }
+
+  .student-cta h2 {
+    color: var(--color-secondary);
+  }
+
+  .student-cta p {
+    margin: 14px auto 0;
+    max-width: 760px;
+    line-height: 1.7;
+    color: rgba(var(--color-secondary-rgb), 0.92);
+  }
+
+  .student-cta .student-hero__actions {
+    justify-content: center;
+  }
+
+  @media (max-width: 768px) {
+    .student-hero,
+    .student-section,
+    .student-cta {
+      padding: 52px 0;
+    }
+  }
+</style>
+{% endblock %}
