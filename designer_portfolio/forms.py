@@ -17,6 +17,9 @@ from .models import (
     Template,
     EventAttendee,
     EventCollaboration,
+    StudentPortfolio,
+    StudentPortfolioProject,
+    StudentProjectFeedback,
 )
 from .project_templates import serialize_template_instance
 from .auth_utils import ensure_designer_access
@@ -543,3 +546,125 @@ class ProjectCreateForm(forms.Form):
         if self._template_snapshot is None and self._template_instance is not None:
             self._template_snapshot = serialize_template_instance(self._template_instance)
         return self._template_snapshot or {}
+
+
+class StudentPortfolioForm(forms.ModelForm):
+    class Meta:
+        model = StudentPortfolio
+        fields = [
+            "profile_photo",
+            "bio",
+            "skills",
+            "design_interests",
+            "template_style",
+            "visibility",
+        ]
+        widgets = {
+            "bio": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 4,
+                    "placeholder": "Share your design story and interests",
+                }
+            ),
+            "skills": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Figma, Adobe XD, Blender, Illustrator",
+                }
+            ),
+            "design_interests": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "UI/UX, Branding, Product systems",
+                }
+            ),
+            "template_style": forms.Select(attrs={"class": "form-control"}),
+            "visibility": forms.Select(attrs={"class": "form-control"}),
+        }
+
+    def clean_skills(self):
+        return ", ".join([item.strip() for item in (self.cleaned_data.get("skills") or "").split(",") if item.strip()])
+
+    def clean_design_interests(self):
+        return ", ".join(
+            [item.strip() for item in (self.cleaned_data.get("design_interests") or "").split(",") if item.strip()]
+        )
+
+
+class StudentPortfolioProjectForm(forms.ModelForm):
+    class Meta:
+        model = StudentPortfolioProject
+        fields = [
+            "title",
+            "description",
+            "category",
+            "tools_used",
+            "project_role",
+            "process_steps",
+            "cover_image",
+            "process_video",
+            "project_pdf",
+            "featured",
+        ]
+        widgets = {
+            "title": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Project title",
+                }
+            ),
+            "description": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 4,
+                    "placeholder": "Describe the objective, constraints, and outcome.",
+                }
+            ),
+            "category": forms.Select(attrs={"class": "form-control"}),
+            "tools_used": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Figma, Photoshop, Principle",
+                }
+            ),
+            "project_role": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Lead Designer, UX Researcher, Visual Designer",
+                }
+            ),
+            "process_steps": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 4,
+                    "placeholder": "Sketches\nWireframes\nHigh-fidelity mockups\nPrototype",
+                }
+            ),
+            "featured": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        }
+
+    def clean_tools_used(self):
+        return ", ".join([item.strip() for item in (self.cleaned_data.get("tools_used") or "").split(",") if item.strip()])
+
+
+class StudentProjectFeedbackForm(forms.ModelForm):
+    class Meta:
+        model = StudentProjectFeedback
+        fields = ["reviewer_role", "comment"]
+        widgets = {
+            "reviewer_role": forms.Select(attrs={"class": "form-control"}),
+            "comment": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 3,
+                    "placeholder": "Share specific and constructive feedback.",
+                }
+            ),
+        }
+
+    def clean_comment(self):
+        comment = (self.cleaned_data.get("comment") or "").strip()
+        if len(comment) < 10:
+            raise forms.ValidationError("Please write at least 10 characters of feedback.")
+        return comment
