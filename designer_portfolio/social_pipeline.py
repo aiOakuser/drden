@@ -158,6 +158,34 @@ def sync_user_details(strategy, backend=None, user=None, details=None, response=
         profile.save(update_fields=profile_updates)
 
 
+def credit_referral_on_social_signup(strategy, backend=None, user=None, is_new=False, *args, **kwargs):
+    """Credit referrer when a new user signs up via OAuth (Google, LinkedIn, etc.)."""
+    if not user or not is_new:
+        return
+
+    request = getattr(strategy, "request", None)
+    if not request:
+        return
+
+    ref_code = request.session.pop("referral_code", None)
+    ref_source = request.session.pop("referral_source", None)
+    if not ref_code:
+        return
+
+    try:
+        from .services.referrals import credit_referral_on_signup
+
+        credit_referral_on_signup(
+            user=user,
+            referral_code=ref_code,
+            source=ref_source,
+            ip=request.META.get("REMOTE_ADDR"),
+            ua=request.META.get("HTTP_USER_AGENT"),
+        )
+    except Exception:
+        pass
+
+
 def send_welcome_notification(strategy, backend=None, user=None, is_new=False, *args, **kwargs):
     """Fire the same registration email workflow for new social-auth users."""
     if not user or not is_new:

@@ -135,6 +135,76 @@ def notify_user_password_reset_completion(user, *, request=None):
     )
 
 
+def _coalesce_designer_email(designer_profile) -> str:
+    """Return the best email for a designer (profile contact or user email)."""
+    email = (getattr(designer_profile, "contact_email", "") or "").strip()
+    if email:
+        return email
+    user = getattr(designer_profile, "user", None)
+    if user:
+        return (getattr(user, "email", "") or "").strip()
+    return ""
+
+
+def notify_designer_new_dress_order(order, *, request=None):
+    """Email the designer when a new dress order is submitted through GlobalDesignerHub."""
+
+    recipient = _coalesce_designer_email(order.designer)
+    if not recipient:
+        return
+
+    designer_name = (
+        getattr(order.designer.user, "get_full_name", lambda: "")()
+        or getattr(order.designer.user, "username", "Designer")
+    )
+    site_name = _site_name()
+
+    dress_line = order.dress_label or order.dress_type or "—"
+    if order.formal_subcategory:
+        dress_line += f" ({order.formal_subcategory.replace('_', ' ').title()})"
+    lines = [
+        f"Hi {designer_name},",
+        "",
+        f"You have received a new dress order through {site_name}.",
+        "",
+        "Order details:",
+        f"  Dress type: {dress_line}",
+        f"  Fabric: {order.fabric_label or order.fabric_type or '—'}",
+    ]
+    if order.wool_type:
+        lines.append(f"  Wool type: {order.wool_type.replace('_', ' ').title()}")
+    if order.fabric_texture:
+        lines.append(f"  Texture: {order.fabric_texture.replace('_', ' ').title()}")
+
+    meas = []
+    if order.shoulder_width is not None:
+        meas.append(f"Shoulder width: {order.shoulder_width} cm")
+    if order.chest is not None:
+        meas.append(f"Chest: {order.chest} cm")
+    if order.sleeve_short is not None:
+        meas.append(f"Short sleeve: {order.sleeve_short} cm")
+    if order.sleeve_wrist is not None:
+        meas.append(f"Wrist length: {order.sleeve_wrist} cm")
+    if meas:
+        lines.extend(["", "Measurements:"] + [f"  {m}" for m in meas])
+
+    if order.customer_phone:
+        lines.extend(["", f"Customer phone: {order.customer_phone}"])
+
+    lines.extend(["", "— GlobalDesignerHub"])
+
+    message = "\n".join(lines)
+    subject = f"[{site_name}] New dress order — {order.dress_label or 'Dress'}"
+
+    send_mail(
+        subject=subject,
+        message=message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[recipient],
+        fail_silently=True,
+    )
+
+
 def notify_problem_report(report, *, request=None):
     """Alert admins whenever a new problem report is submitted."""
 

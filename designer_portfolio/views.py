@@ -45,18 +45,22 @@ from .forms import (
     DesignerPasswordResetForm,
     ReportProblemForm,
     ContactForm,
+    StudentInviteRequestForm,
     ProjectCreateForm,
     EventAttendeeForm,
     EventCollaborationForm,
+    NewOrderAccessForm,
 )
 from .auth_utils import ensure_designer_access
 from .emails import (
     send_registration_notifications,
     notify_user_password_reset_completion,
     notify_problem_report,
+    notify_designer_new_dress_order,
 )
 from .models import (
     DesignerProfile,
+    DressOrder,
     SubscriptionPlan,
     UserSubscription,
     Design,
@@ -1619,6 +1623,21 @@ def signup_view(request):
                         # Ignore invalid URL in restore path; do not block restore
                         pass
 
+                # Credit referral if present (restored-user path)
+                ref_code = request.session.pop("referral_code", None)
+                ref_source = request.session.pop("referral_source", None)
+                try:
+                    from .services.referrals import credit_referral_on_signup
+                    credit_referral_on_signup(
+                        user=inactive_user,
+                        referral_code=ref_code,
+                        source=ref_source,
+                        ip=request.META.get("REMOTE_ADDR"),
+                        ua=request.META.get("HTTP_USER_AGENT"),
+                    )
+                except Exception:
+                    pass
+
                 # Log the user in using identifier they provided (email or username)
                 user_identifier = email_input or desired_username
                 user_auth = authenticate(request, username=user_identifier, password=password1)
@@ -1633,6 +1652,19 @@ def signup_view(request):
         form = DesignerSignUpForm(request.POST)
         if form.is_valid():
             user = form.save()
+            ref_code = request.session.pop("referral_code", None)
+            ref_source = request.session.pop("referral_source", None)
+            try:
+                from .services.referrals import credit_referral_on_signup
+                credit_referral_on_signup(
+                    user=user,
+                    referral_code=ref_code,
+                    source=ref_source,
+                    ip=request.META.get("REMOTE_ADDR"),
+                    ua=request.META.get("HTTP_USER_AGENT"),
+                )
+            except Exception:
+                pass
             transaction.on_commit(
                 lambda: send_registration_notifications(user, request=request, source="ui")
             )
@@ -1933,6 +1965,191 @@ class StudentPageView(TemplateView):
         return context
 
 
+# Dress types for new orders page (viewer-facing)
+DRESS_TYPES = [
+    ("evening", "Evening Dress"),
+    ("cocktail", "Cocktail Dress"),
+    ("day", "Day Dress"),
+    ("maxi", "Maxi Dress"),
+    ("mini", "Mini Dress"),
+    ("midi", "Midi Dress"),
+    ("bridal", "Bridal / Wedding"),
+    ("casual", "Casual"),
+    ("formal", "Formal"),
+    ("party", "Party Wear"),
+]
+
+# Fabric types for new orders page
+FABRIC_TYPES = [
+    ("cotton", "Cotton"),
+    ("silk", "Silk"),
+    ("wool", "Wool"),
+    ("linen", "Linen"),
+    ("polyester", "Polyester"),
+    ("satin", "Satin"),
+    ("velvet", "Velvet"),
+    ("chiffon", "Chiffon"),
+    ("jersey", "Jersey"),
+    ("tweed", "Tweed"),
+]
+
+# Wool types (when Wool fabric is selected)
+WOOL_TYPES = [
+    ("", "— Select wool type —"),
+    ("merino", "Merino"),
+    ("lambswool", "Lambswool"),
+    ("cashmere", "Cashmere"),
+    ("shetland", "Shetland"),
+    ("alpaca", "Alpaca"),
+    ("mohair", "Mohair"),
+]
+
+# Fabric textures
+FABRIC_TEXTURES = [
+    ("smooth", "Smooth"),
+    ("ribbed", "Ribbed"),
+    ("tweed", "Tweed"),
+    ("boucle", "Bouclé"),
+    ("matte", "Matte"),
+    ("glossy", "Glossy"),
+    ("jacquard", "Jacquard"),
+]
+
+# Formal sub-categories (when Formal dress type is selected)
+FORMAL_SUBCATEGORIES = [
+    ("", "— Select sub-category —"),
+    ("suits", "Suits"),
+    ("shirts", "Shirts"),
+    ("coats", "Coats"),
+    ("jackets", "Jackets"),
+    ("blazers", "Blazers"),
+    ("trousers", "Trousers"),
+    ("waistcoats", "Waistcoats"),
+    ("overcoats", "Overcoats"),
+]
+
+
+def neworders_dresses_view(request):
+    """
+    New orders page for dresses — /neworders/dresses/
+    Gate: viewers enter phone number to access designer list and dress types.
+    """
+    session_key = "neworder_dresses_phone"
+    has_access = bool(request.session.get(session_key))
+
+    if request.method == "POST":
+        form = NewOrderAccessForm(request.POST)
+        if form.is_valid():
+            request.session[session_key] = form.cleaned_data["phone"]
+            return redirect("neworders_dresses")
+        # Form invalid: show gate with errors
+        return render(
+            request,
+            "designer_portfolio/neworders_dresses.html",
+            {"form": form, "has_access": False, "designers": [], "dress_types": DRESS_TYPES,
+             "fabric_types": FABRIC_TYPES, "wool_types": WOOL_TYPES, "fabric_textures": FABRIC_TEXTURES,
+             "formal_subcategories": FORMAL_SUBCATEGORIES},
+        )
+
+    if has_access:
+        designers = (
+            DesignerProfile.objects.filter(user__is_active=True)
+            .select_related("user")
+            .order_by("-created_at")[:50]
+        )
+        return render(
+            request,
+            "designer_portfolio/neworders_dresses.html",
+            {
+                "form": None,
+                "has_access": True,
+                "designers": designers,
+                "dress_types": DRESS_TYPES,
+                "fabric_types": FABRIC_TYPES,
+                "wool_types": WOOL_TYPES,
+                "fabric_textures": FABRIC_TEXTURES,
+                "formal_subcategories": FORMAL_SUBCATEGORIES,
+            },
+        )
+
+    return render(
+        request,
+        "designer_portfolio/neworders_dresses.html",
+        {"form": NewOrderAccessForm(), "has_access": False, "designers": [], "dress_types": DRESS_TYPES,
+         "fabric_types": FABRIC_TYPES, "wool_types": WOOL_TYPES, "fabric_textures": FABRIC_TEXTURES,
+         "formal_subcategories": FORMAL_SUBCATEGORIES},
+    )
+
+
+def neworders_dresses_submit_view(request):
+    """
+    Submit a dress order to a designer. Requires session access (phone gate).
+    Sends email notification to the designer.
+    """
+    session_key = "neworder_dresses_phone"
+    if not request.session.get(session_key):
+        messages.error(request, "Please enter your phone number to submit an order.")
+        return redirect("neworders_dresses")
+
+    if request.method != "POST":
+        messages.error(request, "Invalid request.")
+        return redirect("neworders_dresses")
+
+    designer_id = request.POST.get("designer_id")
+    if not designer_id:
+        messages.error(request, "Please select a designer.")
+        return redirect("neworders_dresses")
+
+    try:
+        designer = DesignerProfile.objects.get(
+            user_id=int(designer_id),
+            user__is_active=True,
+        )
+    except (DesignerProfile.DoesNotExist, ValueError, TypeError):
+        messages.error(request, "Invalid designer selected.")
+        return redirect("neworders_dresses")
+
+    def _str(val):
+        return (val or "").strip() if val is not None else ""
+
+    def _decimal(val):
+        if val is None or val == "":
+            return None
+        try:
+            from decimal import Decimal
+            return Decimal(str(val))
+        except Exception:
+            return None
+
+    order = DressOrder.objects.create(
+        designer=designer,
+        customer_phone=request.session.get(session_key, ""),
+        dress_type=_str(request.POST.get("dress_type")),
+        dress_label=_str(request.POST.get("dress_label")),
+        shoulder_width=_decimal(request.POST.get("shoulder_width")),
+        chest=_decimal(request.POST.get("chest")),
+        sleeve_short=_decimal(request.POST.get("sleeve_short")),
+        sleeve_wrist=_decimal(request.POST.get("sleeve_wrist")),
+        fabric_type=_str(request.POST.get("fabric_type")),
+        fabric_label=_str(request.POST.get("fabric_label")),
+        wool_type=_str(request.POST.get("wool_type")),
+        fabric_texture=_str(request.POST.get("fabric_texture")),
+        formal_subcategory=_str(request.POST.get("formal_subcategory")),
+    )
+
+    try:
+        notify_designer_new_dress_order(order, request=request)
+    except Exception:
+        logger.exception("Failed to send dress order email to designer %s", designer_id)
+
+    designer_name = designer.user.get_full_name() or designer.user.username
+    messages.success(
+        request,
+        f"Order sent to {designer_name}. They will receive an email notification and may contact you soon.",
+    )
+    return redirect("neworders_dresses")
+
+
 class AboutView(TemplateView):
     template_name = "designer_portfolio/about.html"
 
@@ -2075,6 +2292,66 @@ def contact_view(request):
             "contact_email": contact_email,
         },
     )
+
+
+def students_landing_view(request):
+    """Landing page for design students — /students. Optionally shown as popup via ?popup=1."""
+    contact_email = _get_public_contact_email()
+    form = StudentInviteRequestForm()
+
+    if request.method == "POST":
+        form = StudentInviteRequestForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            subject = "[GlobalDesignerHub] Student invite request"
+            body = (
+                "New student invite request from globaldesignerhub.com/students\n\n"
+                f"Name: {data['name']}\n"
+                f"Email: {data['email']}\n"
+                f"College/Program: {data.get('college') or '(not provided)'}\n"
+            )
+            email = EmailMessage(
+                subject=subject,
+                body=body,
+                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@globaldesignerhub.com"),
+                to=[contact_email],
+                reply_to=[data["email"]],
+            )
+            try:
+                email.send(fail_silently=False)
+            except BadHeaderError:
+                messages.error(request, "Invalid header detected. Please try again or email us directly.")
+            except Exception:
+                logger.exception("Student invite request email failed")
+                messages.error(
+                    request,
+                    f"We couldn't process your request right now. Email {contact_email} while we investigate.",
+                )
+            else:
+                messages.success(
+                    request,
+                    "Thanks! We've received your details. Our team will set up your portfolio and reach out soon.",
+                )
+                return redirect("students")
+        else:
+            messages.error(request, "Please correct the errors below.")
+
+    return render(
+        request,
+        "designer_portfolio/students.html",
+        {
+            "form": form,
+            "contact_email": contact_email,
+            "show_as_popup": request.GET.get("popup") == "1",
+        },
+    )
+
+
+def invite_view(request, code: str):
+    """Capture referral code in session and redirect to signup. No DB write on click."""
+    request.session["referral_code"] = code.strip().lower()
+    request.session["referral_source"] = request.GET.get("source", "").strip() or None
+    return redirect(reverse("signup"))
 
 
 class GlobalDesignerHubLegalPageView(TemplateView):
@@ -3013,7 +3290,7 @@ class PendingDesignersView(ListView):
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 class BrandViewSet(viewsets.ViewSet):
     def list(self, request):
@@ -3084,6 +3361,20 @@ class DesignerRegistrationView(APIView):
                     except ValidationError:
                         pass
 
+                ref_code = data.get("referral_code") or request.session.pop("referral_code", None)
+                ref_source = data.get("referral_source") or request.session.pop("referral_source", None)
+                try:
+                    from .services.referrals import credit_referral_on_signup
+                    credit_referral_on_signup(
+                        user=inactive_user,
+                        referral_code=(ref_code or "").strip() or None,
+                        source=(ref_source or "").strip() or None,
+                        ip=request.META.get("REMOTE_ADDR"),
+                        ua=request.META.get("HTTP_USER_AGENT"),
+                    )
+                except Exception:
+                    pass
+
                 return Response(
                     {"message": "Account restored. You can now sign in."},
                     status=status.HTTP_200_OK,
@@ -3117,6 +3408,20 @@ class DesignerRegistrationView(APIView):
             user.save()
 
             ensure_designer_access(user)
+            ref_code = data.get("referral_code") or request.session.pop("referral_code", None)
+            ref_source = data.get("referral_source") or request.session.pop("referral_source", None)
+            try:
+                from .services.referrals import credit_referral_on_signup
+                credit_referral_on_signup(
+                    user=user,
+                    referral_code=(ref_code or "").strip() or None,
+                    source=(ref_source or "").strip() or None,
+                    ip=request.META.get("REMOTE_ADDR"),
+                    ua=request.META.get("HTTP_USER_AGENT"),
+                )
+            except Exception:
+                pass
+
             profile = user.designer_profile
             if website_url:
                 try:
@@ -3169,6 +3474,59 @@ class DesignerRegistrationView(APIView):
             {"message": "Registration successful. You can now sign in."},
             status=status.HTTP_201_CREATED,
         )
+
+
+class ReferralSummaryView(APIView):
+    """GET /api/referrals/me/summary - Current user's referral stats and invite link."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from .services.referrals import ensure_referral_profile, next_tier_info
+
+        ensure_referral_profile(request.user)
+        profile = request.user.referral_profile
+        base_url = getattr(settings, "BASE_URL_SERVER", "") or request.build_absolute_uri("/")[:-1]
+        invite_url = f"{base_url}/invite/{profile.referral_code}/"
+
+        tier_info = next_tier_info(profile)
+
+        return Response({
+            "referral_code": profile.referral_code,
+            "invite_url": invite_url,
+            "referral_count": profile.referral_count,
+            "referral_points": profile.referral_points,
+            "current_tier": (
+                {"code": profile.current_tier.code, "name": profile.current_tier.name}
+                if profile.current_tier else None
+            ),
+            "next_tier": tier_info.get("next"),
+            "progress": tier_info.get("progress"),
+        })
+
+
+class ReferralLeaderboardView(APIView):
+    """GET /api/referrals/leaderboard - Top referrers (public or authenticated)."""
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        from .models import UserReferralProfile
+
+        limit = min(int(request.GET.get("limit", 50)), 100)
+        qs = (
+            UserReferralProfile.objects.filter(referral_count__gt=0)
+            .select_related("user", "current_tier")
+            .order_by("-referral_count", "user__date_joined")[:limit]
+        )
+        rows = []
+        for i, rp in enumerate(qs, 1):
+            rows.append({
+                "rank": i,
+                "username": rp.user.username,
+                "display_name": rp.user.get_full_name() or rp.user.username,
+                "referral_count": rp.referral_count,
+                "tier": {"code": rp.current_tier.code, "name": rp.current_tier.name} if rp.current_tier else None,
+            })
+        return Response({"leaderboard": rows})
 
 
 @login_required

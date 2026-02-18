@@ -1,0 +1,538 @@
+{% extends "designer_portfolio/base.html" %}
+{% load static %}
+
+{% block title %}New Orders — Dresses — GlobalDesignerHub{% endblock %}
+
+{% block content %}
+<article class="neworders-dresses">
+  <div class="container" style="max-width: 900px; padding: 2rem 1.5rem;">
+    {% if has_access %}
+    <!-- Content: dress order form + designer list (all on one page) -->
+    <form id="dress-order-form" method="post" action="{% url 'neworders_dresses_submit' %}">
+      {% csrf_token %}
+
+    <header class="neworders-header">
+      <h1 class="neworders-title">New Orders — Dresses</h1>
+      <p class="neworders-subtitle">Select a dress type, enter your measurements, and find designers for your order.</p>
+    </header>
+
+    <!-- Dress type viewer (selectable) -->
+    <section class="neworders-section" aria-labelledby="dress-types-heading">
+      <h2 id="dress-types-heading" class="section-heading">Select dress type</h2>
+      <p class="section-intro">Choose the type of dress you want to order.</p>
+      <div class="dress-types-grid" id="dress-types-grid" role="radiogroup" aria-label="Select dress type">
+        {% for value, label in dress_types %}
+        <button type="button"
+                class="dress-type-card"
+                data-dress-value="{{ value }}"
+                data-dress-label="{{ label }}"
+                aria-checked="false"
+                role="radio"
+                aria-label="Select {{ label }}">
+          <span class="dress-type-icon" aria-hidden="true">👗</span>
+          <span class="dress-type-label">{{ label }}</span>
+        </button>
+        {% endfor %}
+      </div>
+      <input type="hidden" id="selected-dress-type" name="dress_type" value="">
+      <input type="hidden" id="selected-dress-label" name="dress_label" value="">
+      <div class="form-group formal-subcategory-group" id="formal-subcategory-group" style="display: none; margin-top: 1rem;">
+        <label for="id_formal_subcategory">Formal sub-category</label>
+        <select id="id_formal_subcategory" name="formal_subcategory" class="form-control">
+          {% for value, label in formal_subcategories %}
+          <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </section>
+
+    <!-- Measurements form -->
+    <section class="neworders-section measurements-section" aria-labelledby="measurements-heading">
+      <h2 id="measurements-heading" class="section-heading">Your measurements</h2>
+      <p class="section-intro">Enter your measurements so designers can create the perfect fit. All values in cm.</p>
+      <div id="measurements-form" class="measurements-form">
+        <div class="measurements-grid">
+          <div class="form-group">
+            <label for="id_shoulder_width">Shoulder width (cm)</label>
+            <input type="number" id="id_shoulder_width" name="shoulder_width" class="form-control" min="20" max="80" step="0.5" placeholder="e.g. 42">
+          </div>
+          <div class="form-group">
+            <label for="id_chest">Chest (cm)</label>
+            <input type="number" id="id_chest" name="chest" class="form-control" min="60" max="150" step="0.5" placeholder="e.g. 95">
+          </div>
+          <div class="form-group">
+            <label for="id_sleeve_short">Short sleeve length (cm)</label>
+            <input type="number" id="id_sleeve_short" name="sleeve_short" class="form-control" min="10" max="40" step="0.5" placeholder="e.g. 18">
+            <small class="form-help">Shoulder to sleeve hem</small>
+          </div>
+          <div class="form-group">
+            <label for="id_sleeve_wrist">Wrist length (cm)</label>
+            <input type="number" id="id_sleeve_wrist" name="sleeve_wrist" class="form-control" min="40" max="90" step="0.5" placeholder="e.g. 58">
+            <small class="form-help">Shoulder to wrist (full sleeve)</small>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Fabric type selection -->
+    <section class="neworders-section" aria-labelledby="fabric-types-heading">
+      <h2 id="fabric-types-heading" class="section-heading">Select fabric type</h2>
+      <p class="section-intro">Choose the fabric for your dress. Add wool type and texture details below.</p>
+      <div class="fabric-types-grid" id="fabric-types-grid" role="radiogroup" aria-label="Select fabric type">
+        {% for value, label in fabric_types %}
+        <button type="button"
+                class="fabric-type-card dress-type-card"
+                data-fabric-value="{{ value }}"
+                data-fabric-label="{{ label }}"
+                aria-checked="false"
+                role="radio"
+                aria-label="Select {{ label }}">
+          <span class="dress-type-icon" aria-hidden="true">🧵</span>
+          <span class="dress-type-label">{{ label }}</span>
+        </button>
+        {% endfor %}
+      </div>
+      <input type="hidden" id="selected-fabric-type" name="fabric_type" value="">
+      <input type="hidden" id="selected-fabric-label" name="fabric_label" value="">
+
+      <div class="fabric-details" id="fabric-details">
+        <div class="fabric-details-row">
+          <div class="form-group wool-type-group" id="wool-type-group" style="display: none;">
+            <label for="id_wool_type">Wool type</label>
+            <select id="id_wool_type" name="wool_type" class="form-control">
+              {% for value, label in wool_types %}
+              <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="id_fabric_texture">Texture</label>
+            <select id="id_fabric_texture" name="fabric_texture" class="form-control">
+              <option value="">— Select texture —</option>
+              {% for value, label in fabric_textures %}
+              <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Order summary (display-only, for reference when contacting designers) -->
+    <section class="neworders-section order-summary-section" id="order-summary-section" aria-labelledby="order-summary-heading">
+      <h2 id="order-summary-heading" class="section-heading">Your order details</h2>
+      <div class="order-summary-card" id="order-summary-card">
+        <p class="order-summary-empty" id="order-summary-empty">Select a dress type, fabric, and enter measurements to see your order summary.</p>
+        <div class="order-summary-content" id="order-summary-content" style="display: none;"></div>
+        <button type="button" class="btn btn-outline order-copy-btn" id="copy-order-btn" style="display: none;">Copy order details</button>
+      </div>
+    </section>
+
+    <section class="neworders-section" aria-labelledby="designers-heading">
+      <h2 id="designers-heading" class="section-heading">Select designer</h2>
+      <p class="section-intro">Choose a designer to receive your order. They will get an email notification through GlobalDesignerHub.</p>
+      {% if messages %}
+      <div class="order-messages">
+        {% for message in messages %}
+        <p class="message message-{{ message.tags }}">{{ message }}</p>
+        {% endfor %}
+      </div>
+      {% endif %}
+      <div class="designer-select-row">
+        <div class="form-group">
+          <label for="id_designer">Designer</label>
+          <select id="id_designer" name="designer_id" class="form-control" required>
+            <option value="">— Select a designer —</option>
+            {% for designer in designers %}
+            <option value="{{ designer.user_id }}">{{ designer.user.get_full_name|default:designer.user.username }}{% if designer.specialization %} — {{ designer.specialization }}{% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-submit-order">Submit order</button>
+      </div>
+      {% if designers %}
+      <p class="designer-links-hint"><a href="{% url 'designers_list' %}">View all designers</a></p>
+      {% else %}
+      <p class="empty-state">No designers available at the moment.</p>
+      {% endif %}
+    </section>
+    </form>
+    {% else %}
+    <!-- Gate: phone number form -->
+    {% if messages %}
+    <div class="order-messages" style="max-width: 400px; margin: 0 auto 1.5rem;">
+      {% for message in messages %}
+      <p class="message message-{{ message.tags }}">{{ message }}</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+    <header class="neworders-gate-header">
+      <h1 class="neworders-title">New Orders — Dresses</h1>
+      <p class="neworders-subtitle">Enter your phone number to access the designer list and dress types.</p>
+    </header>
+
+    <section class="neworders-gate-form" aria-labelledby="access-form-heading">
+      <h2 id="access-form-heading" class="visually-hidden">Get access</h2>
+      <form method="post" action="{% url 'neworders_dresses' %}" class="phone-access-form">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="form-errors">
+          {% for error in form.non_field_errors %}
+          <p class="error">{{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
+        <div class="form-group">
+          <label for="id_phone">{{ form.phone.label }}</label>
+          {{ form.phone }}
+          {% if form.phone.help_text %}
+          <small class="form-help">{{ form.phone.help_text }}</small>
+          {% endif %}
+          {% if form.phone.errors %}
+          <div class="field-errors">
+            {% for error in form.phone.errors %}
+            <p class="error">{{ error }}</p>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        <button type="submit" class="btn btn-primary neworders-submit">Get access</button>
+      </form>
+    </section>
+    {% endif %}
+  </div>
+</article>
+
+<style>
+.neworders-dresses { background: var(--color-bg, #fafafa); min-height: 60vh; }
+.neworders-header,
+.neworders-gate-header { margin-bottom: 2rem; text-align: center; }
+.neworders-title { font-size: 1.75rem; margin-bottom: 0.5rem; }
+.neworders-subtitle { color: var(--color-text-muted, #666); }
+.neworders-section { margin-bottom: 2.5rem; }
+.section-heading { font-size: 1.25rem; margin-bottom: 0.75rem; }
+.section-intro { color: var(--color-text-muted, #666); margin-bottom: 1.25rem; }
+.dress-types-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+.dress-type-card {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #fff;
+  border: 1px solid var(--color-border, #e5e5e5);
+  border-radius: 8px;
+  font-weight: 500;
+}
+.dress-type-icon { font-size: 1.25rem; }
+.designer-select-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+.designer-select-row .form-group { flex: 1; min-width: 220px; margin-bottom: 0; }
+.designer-select-row .form-control { min-width: 100%; }
+.btn-submit-order {
+  padding: 0.6rem 1.25rem;
+  font-size: 1rem;
+  white-space: nowrap;
+}
+.designer-links-hint { margin: 0.5rem 0 0; font-size: 0.9rem; }
+.designer-links-hint a { color: var(--color-accent, #e85d04); }
+.order-messages { margin-bottom: 1rem; }
+.order-messages .message { margin: 0 0 0.5rem; padding: 0.5rem 0.75rem; border-radius: 6px; }
+.order-messages .message-success { background: #d4edda; color: #155724; }
+.order-messages .message-error { background: #f8d7da; color: #721c24; }
+.designer-card__image { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; }
+.designer-card__placeholder {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--color-border, #e5e5e5);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; color: #999;
+}
+.designer-card__body { flex: 1; }
+.designer-card__name { margin: 0 0 0.25rem; font-size: 1rem; }
+.designer-card__specialization,
+.designer-card__location { margin: 0; font-size: 0.875rem; color: var(--color-text-muted, #666); }
+.empty-state { color: var(--color-text-muted, #666); padding: 2rem; text-align: center; }
+.neworders-gate-form { max-width: 400px; margin: 0 auto; }
+.phone-access-form { background: #fff; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--color-border, #e5e5e5); }
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; margin-bottom: 0.35rem; font-weight: 600; }
+.form-control { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid var(--color-border, #e5e5e5); border-radius: 6px; font-size: 1rem; }
+.form-help { display: block; margin-top: 0.25rem; font-size: 0.8rem; color: var(--color-text-muted, #666); }
+.field-errors, .form-errors { margin-top: 0.35rem; }
+.error { color: #c00; font-size: 0.875rem; margin: 0; }
+.neworders-submit { margin-top: 0.5rem; padding: 0.65rem 1.25rem; cursor: pointer; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+
+/* Dress type selection */
+.dress-type-card {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #fff;
+  border: 2px solid var(--color-border, #e5e5e5);
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+  font-family: inherit;
+  font-size: inherit;
+}
+.dress-type-card:hover {
+  border-color: var(--color-accent, #e85d04);
+  background: rgba(232, 93, 4, 0.04);
+}
+.dress-type-card[aria-checked="true"],
+.dress-type-card.selected {
+  border-color: var(--color-accent, #e85d04);
+  background: rgba(232, 93, 4, 0.12);
+  box-shadow: 0 0 0 1px var(--color-accent, #e85d04);
+}
+
+/* Fabric types (reuse dress-type-card styles) */
+.fabric-types-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.fabric-details {
+  margin-top: 1rem;
+}
+.fabric-details-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+/* Measurements form */
+.measurements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+.measurements-form .form-group { margin-bottom: 0; }
+
+/* Order summary */
+.order-summary-card {
+  background: #fff;
+  border: 1px solid var(--color-border, #e5e5e5);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+.order-summary-empty {
+  color: var(--color-text-muted, #666);
+  margin: 0;
+}
+.order-summary-content {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+.order-summary-content dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 1.5rem;
+}
+.order-summary-content dt {
+  font-weight: 600;
+  color: var(--color-text-muted, #666);
+  margin: 0;
+}
+.order-summary-content dd {
+  margin: 0;
+}
+.order-copy-btn {
+  margin-top: 1rem;
+}
+
+/* Responsive: tablet & mobile web */
+@media (max-width: 768px) {
+  .neworders-dresses .container { padding: 1rem !important; }
+  .dress-types-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.5rem; }
+  .fabric-types-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+  .measurements-grid { grid-template-columns: 1fr; }
+  .fabric-details-row { grid-template-columns: 1fr; }
+  .designer-select-row { flex-direction: column; align-items: stretch; }
+  .designer-select-row .form-group { min-width: 100%; }
+  .btn-submit-order { width: 100%; }
+}
+@media (max-width: 480px) {
+  .neworders-title { font-size: 1.4rem; }
+  .section-heading { font-size: 1.1rem; }
+  .dress-type-card, .fabric-type-card { padding: 0.6rem 0.75rem; font-size: 0.9rem; }
+}
+</style>
+
+<script>
+(function() {
+  const grid = document.getElementById('dress-types-grid');
+  const fabricGrid = document.getElementById('fabric-types-grid');
+  const hiddenValue = document.getElementById('selected-dress-type');
+  const hiddenLabel = document.getElementById('selected-dress-label');
+  const fabricValue = document.getElementById('selected-fabric-type');
+  const fabricLabel = document.getElementById('selected-fabric-label');
+  const woolGroup = document.getElementById('wool-type-group');
+  const woolSelect = document.getElementById('id_wool_type');
+  const textureSelect = document.getElementById('id_fabric_texture');
+  const formalSubcategoryGroup = document.getElementById('formal-subcategory-group');
+  const formalSubcategorySelect = document.getElementById('id_formal_subcategory');
+  const summaryEmpty = document.getElementById('order-summary-empty');
+  const summaryContent = document.getElementById('order-summary-content');
+  const copyBtn = document.getElementById('copy-order-btn');
+
+  if (grid) {
+    grid.querySelectorAll('.dress-type-card').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        grid.querySelectorAll('.dress-type-card').forEach(function(b) {
+          b.setAttribute('aria-checked', 'false');
+          b.classList.remove('selected');
+        });
+        btn.setAttribute('aria-checked', 'true');
+        btn.classList.add('selected');
+        hiddenValue.value = btn.dataset.dressValue;
+        hiddenLabel.value = btn.dataset.dressLabel;
+        if (formalSubcategoryGroup) formalSubcategoryGroup.style.display = (btn.dataset.dressValue === 'formal') ? 'block' : 'none';
+        if (formalSubcategorySelect && btn.dataset.dressValue !== 'formal') formalSubcategorySelect.value = '';
+        updateSummary();
+      });
+    });
+  }
+
+  if (fabricGrid) {
+    fabricGrid.querySelectorAll('.fabric-type-card').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        fabricGrid.querySelectorAll('.fabric-type-card').forEach(function(b) {
+          b.setAttribute('aria-checked', 'false');
+          b.classList.remove('selected');
+        });
+        btn.setAttribute('aria-checked', 'true');
+        btn.classList.add('selected');
+        fabricValue.value = btn.dataset.fabricValue;
+        fabricLabel.value = btn.dataset.fabricLabel;
+        if (woolGroup) woolGroup.style.display = (btn.dataset.fabricValue === 'wool') ? 'block' : 'none';
+        if (woolSelect && btn.dataset.fabricValue !== 'wool') woolSelect.value = '';
+        updateSummary();
+      });
+    });
+  }
+
+  if (woolSelect) woolSelect.addEventListener('change', updateSummary);
+  if (textureSelect) textureSelect.addEventListener('change', updateSummary);
+  if (formalSubcategorySelect) formalSubcategorySelect.addEventListener('change', updateSummary);
+
+  function getMeasurementFields() {
+    return {
+      shoulder_width: document.getElementById('id_shoulder_width'),
+      chest: document.getElementById('id_chest'),
+      sleeve_short: document.getElementById('id_sleeve_short'),
+      sleeve_wrist: document.getElementById('id_sleeve_wrist')
+    };
+  }
+
+  function getFormalSubcategoryPart() {
+    if (!formalSubcategorySelect || !formalSubcategorySelect.value) return null;
+    var opt = formalSubcategorySelect.options[formalSubcategorySelect.selectedIndex];
+    if (opt && opt.text && opt.text.indexOf('—') < 0) return 'Formal sub-category: ' + opt.text;
+    return null;
+  }
+
+  function getFabricParts() {
+    const parts = [];
+    var formalPart = getFormalSubcategoryPart();
+    if (formalPart) parts.push(formalPart);
+    if (fabricLabel && fabricLabel.value) parts.push('Fabric: ' + fabricLabel.value);
+    if (fabricLabel && fabricLabel.value === 'Wool' && woolSelect && woolSelect.value) {
+      var opt = woolSelect.options[woolSelect.selectedIndex];
+      if (opt && opt.text && opt.text.indexOf('—') < 0)
+        parts.push('Wool type: ' + opt.text);
+    }
+    if (textureSelect && textureSelect.value) {
+      var opt = textureSelect.options[textureSelect.selectedIndex];
+      if (opt && opt.text) parts.push('Texture: ' + opt.text);
+    }
+    return parts;
+  }
+
+  function updateSummary() {
+    const dressLabel = hiddenLabel ? hiddenLabel.value : '';
+    const fields = getMeasurementFields();
+    const parts = [];
+    if (dressLabel) parts.push('Dress type: ' + dressLabel);
+    parts.push.apply(parts, getFabricParts());
+    if (fields.shoulder_width && fields.shoulder_width.value)
+      parts.push('Shoulder width: ' + fields.shoulder_width.value + ' cm');
+    if (fields.chest && fields.chest.value)
+      parts.push('Chest: ' + fields.chest.value + ' cm');
+    if (fields.sleeve_short && fields.sleeve_short.value)
+      parts.push('Short sleeve length: ' + fields.sleeve_short.value + ' cm');
+    if (fields.sleeve_wrist && fields.sleeve_wrist.value)
+      parts.push('Wrist length: ' + fields.sleeve_wrist.value + ' cm');
+
+    if (summaryEmpty && summaryContent && copyBtn) {
+      if (parts.length === 0) {
+        summaryEmpty.style.display = 'block';
+        summaryContent.style.display = 'none';
+        copyBtn.style.display = 'none';
+      } else {
+        summaryEmpty.style.display = 'none';
+        summaryContent.style.display = 'block';
+        summaryContent.innerHTML = '<dl>' + parts.map(function(p) {
+          var idx = p.indexOf(': ');
+          var label = idx >= 0 ? p.slice(0, idx) : p;
+          var val = idx >= 0 ? p.slice(idx + 2) : '';
+          return '<dt>' + label + '</dt><dd>' + val + '</dd>';
+        }).join('') + '</dl>';
+        copyBtn.style.display = 'inline-block';
+      }
+    }
+  }
+
+  var fields = getMeasurementFields();
+  Object.keys(fields).forEach(function(k) {
+    if (fields[k]) {
+      fields[k].addEventListener('input', updateSummary);
+      fields[k].addEventListener('change', updateSummary);
+    }
+  });
+
+  if (copyBtn) {
+    copyBtn.addEventListener('click', function() {
+      const dressLabel = hiddenLabel ? hiddenLabel.value : '';
+      const f = getMeasurementFields();
+      const fabricParts = getFabricParts();
+      const lines = [];
+      if (dressLabel) lines.push('Dress type: ' + dressLabel);
+      lines.push.apply(lines, fabricParts);
+      if (f.shoulder_width && f.shoulder_width.value)
+        lines.push('Shoulder width: ' + f.shoulder_width.value + ' cm');
+      if (f.chest && f.chest.value)
+        lines.push('Chest: ' + f.chest.value + ' cm');
+      if (f.sleeve_short && f.sleeve_short.value)
+        lines.push('Short sleeve length: ' + f.sleeve_short.value + ' cm');
+      if (f.sleeve_wrist && f.sleeve_wrist.value)
+        lines.push('Wrist length: ' + f.sleeve_wrist.value + ' cm');
+
+      const text = lines.join('\n');
+      if (text && navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function() {
+          copyBtn.textContent = 'Copied!';
+          setTimeout(function() { copyBtn.textContent = 'Copy order details'; }, 2000);
+        });
+      }
+    });
+  }
+})();
+</script>
+{% endblock %}

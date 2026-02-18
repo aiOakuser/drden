@@ -82,6 +82,15 @@
         </ul>
         <p class="text-xs text-gray-500 dark:text-gray-500 italic">Try: "How do I create my portfolio?"</p>
       </div>
+      {% if referral_invite_url %}
+      <div id="chat-referral-block" class="mt-4 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+        <p class="text-xs font-semibold text-purple-800 dark:text-purple-200 mb-2">Invite friends, earn tiers</p>
+        <div class="flex gap-2">
+          <input type="text" id="chat-referral-link" value="{{ referral_invite_url }}" readonly class="flex-1 px-2 py-1.5 text-xs bg-white dark:bg-gray-800 rounded border border-purple-200 dark:border-purple-700 text-gray-800 dark:text-gray-200" />
+          <button type="button" id="chat-referral-copy" class="px-3 py-1.5 text-xs font-medium bg-purple-600 hover:bg-purple-700 text-white rounded transition-colors whitespace-nowrap">Copy</button>
+        </div>
+      </div>
+      {% endif %}
     </div>
 
     <!-- Typing Indicator -->
@@ -297,6 +306,20 @@
       form.querySelector('button[type="submit"]').disabled = false;
       input.focus();
     }
+  }
+
+  // Referral copy button
+  const copyBtn = document.getElementById('chat-referral-copy');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', function() {
+      const input = document.getElementById('chat-referral-link');
+      if (input) {
+        navigator.clipboard.writeText(input.value);
+        const orig = copyBtn.textContent;
+        copyBtn.textContent = 'Copied!';
+        setTimeout(function() { copyBtn.textContent = orig; }, 1500);
+      }
+    });
   }
 
   // Event Listeners

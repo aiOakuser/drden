@@ -431,6 +431,16 @@ class DesignerProfile(models.Model):
     # Contact preferences
     available_for_collaborations = models.BooleanField(default=True)
     contact_email = models.EmailField(blank=True, help_text="Public contact email (optional)")
+
+    # Referral (synced from UserReferralProfile for backwards compatibility)
+    referred_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="referred_profiles",
+        help_text="User who referred this designer via invite link",
+    )
     
     # Portfolio template selection (applies default for all designers)
     PORTFOLIO_TEMPLATES = [
@@ -640,6 +650,88 @@ class UserSubscription(models.Model):
         if self.is_trial_active:
             return (self.trial_end_date - timezone.now()).days
         return 0
+
+
+# ==================== Referral System ====================
+
+class ReferralTier(models.Model):
+    """Config table for referral tiers (starter, influencer, ambassador, legend)."""
+    code = models.SlugField(unique=True)
+    name = models.CharField(max_length=80)
+    min_referrals = models.PositiveIntegerField()
+    sort_order = models.PositiveIntegerField(default=0)
+    benefits = models.JSONField(default=dict, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["sort_order", "min_referrals"]
+
+    def __str__(self):
+        return f"{self.name} ({self.min_referrals}+)"
+
+
+class UserReferralProfile(models.Model):
+    """Per-user referral profile: code, counters, tier. Created on first access."""
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="referral_profile"
+    )
+    referral_code = models.CharField(max_length=32, unique=True, db_index=True)
+
+    referred_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="referrals_made",
+        help_text="User who referred this user via invite link",
+    )
+    referral_joined_at = models.DateTimeField(null=True, blank=True)
+
+    referral_count = models.PositiveIntegerField(
+        default=0,
+        help_text="Denormalized count for fast leaderboard",
+    )
+    referral_points = models.PositiveIntegerField(default=0)
+
+    current_tier = models.ForeignKey(
+        ReferralTier,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="users",
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "User Referral Profile"
+        verbose_name_plural = "User Referral Profiles"
+
+    def __str__(self):
+        return f"{self.user} ({self.referral_code})"
+
+
+class ReferralEvent(models.Model):
+    """Audit trail: one event per referred user. Prevents double crediting."""
+    referrer = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="referral_events"
+    )
+    referred_user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="referral_event"
+    )
+    referral_code = models.CharField(max_length=32)
+    source = models.CharField(max_length=32, null=True, blank=True)
+    ip_hash = models.CharField(max_length=128, null=True, blank=True)
+    user_agent_hash = models.CharField(max_length=128, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["referrer", "-created_at"], name="refev_referrer_created_idx"),
+            models.Index(fields=["-created_at"], name="refev_created_idx"),
+        ]
+
+    def __str__(self):
+        return f"{self.referrer} -> {self.referred_user} ({self.referral_code})"
 
 
 # ==================== Designer AI Chat ====================
@@ -1298,3 +1390,38 @@ class StudentProjectBookmark(TimeStampedModel):
 
     def __str__(self):
         return f"{self.user.username} bookmarked {self.project.title}"
+
+
+class DressOrder(TimeStampedModel):
+    """Dress order from the new orders page — sent to a designer with email notification."""
+
+    designer = models.ForeignKey(
+        DesignerProfile,
+        on_delete=models.CASCADE,
+        related_name="dress_orders",
+    )
+    # Orderer contact (from gate)
+    customer_phone = models.CharField(max_length=20, blank=True)
+
+    # Dress type
+    dress_type = models.CharField(max_length=40, blank=True)
+    dress_label = models.CharField(max_length=100, blank=True)
+    formal_subcategory = models.CharField(max_length=60, blank=True, help_text="Sub-category when Formal: suits, shirts, coats, jackets, etc.")
+
+    # Measurements (cm)
+    shoulder_width = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    chest = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    sleeve_short = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    sleeve_wrist = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+
+    # Fabric
+    fabric_type = models.CharField(max_length=40, blank=True)
+    fabric_label = models.CharField(max_length=100, blank=True)
+    wool_type = models.CharField(max_length=40, blank=True)
+    fabric_texture = models.CharField(max_length=60, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Dress order for {self.designer.user.get_username()} — {self.dress_label or 'Dress'} ({self.created_at.date()})"

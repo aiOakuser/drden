@@ -1,0 +1,578 @@
+{% extends "designer_portfolio/base.html" %}
+{% load static %}
+
+{% block title %}For Students — Build Your Portfolio. Get Noticed. Get Hired. — GlobalDesignerHub{% endblock %}
+
+{% block content %}
+<article class="students-landing">
+  <!-- Hero -->
+  <section class="students-hero">
+    <div class="students-hero__inner container">
+      <p class="students-eyebrow">For design students</p>
+      <h1 class="students-hero__title">Build Your Portfolio. Get Noticed. Get Hired.</h1>
+      <p class="students-hero__subtitle">A smarter portfolio for design students</p>
+      <p class="students-hero__tagline">
+        Most portfolios show images.<br />
+        <strong>Yours will explain your thinking.</strong>
+      </p>
+      <p class="students-hero__value">
+        GlobalDesignerHub turns your projects into an <strong>AI-powered portfolio website</strong> where
+        recruiters can ask questions about your work — just like an interview.
+      </p>
+      <a href="#request-invite" class="students-cta students-cta--primary">Get My Free Portfolio</a>
+    </div>
+  </section>
+
+  <!-- Why students love it -->
+  <section class="students-section students-section--alt" aria-labelledby="why-students">
+    <div class="container">
+      <h2 id="why-students" class="students-section__title">Why students love it</h2>
+      <div class="students-features">
+        <article class="students-feature">
+          <span class="students-feature__icon" aria-hidden="true">🎓</span>
+          <h3 class="students-feature__title">Perfect for placements</h3>
+          <p>No more sending Google Drive folders or PDFs.</p>
+        </article>
+        <article class="students-feature">
+          <span class="students-feature__icon" aria-hidden="true">🤖</span>
+          <h3 class="students-feature__title">Your portfolio answers questions</h3>
+          <p>Recruiters can ask:</p>
+          <ul>
+            <li>What inspired this design?</li>
+            <li>Which tools were used?</li>
+            <li>What problem were you solving?</li>
+          </ul>
+        </article>
+        <article class="students-feature">
+          <span class="students-feature__icon" aria-hidden="true">🌍</span>
+          <h3 class="students-feature__title">Personal website instantly</h3>
+          <p>You get your own live link to share everywhere.</p>
+        </article>
+        <article class="students-feature">
+          <span class="students-feature__icon" aria-hidden="true">📱</span>
+          <h3 class="students-feature__title">Works on phone & laptop</h3>
+          <p>Send once — usable everywhere.</p>
+        </article>
+        <article class="students-feature">
+          <span class="students-feature__icon" aria-hidden="true">⚡</span>
+          <h3 class="students-feature__title">Takes only 10 minutes</h3>
+          <p>No coding. No templates. No stress.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- What you get -->
+  <section class="students-section" aria-labelledby="what-you-get">
+    <div class="container">
+      <h2 id="what-you-get" class="students-section__title">What you get <span class="students-badge">Free for early students</span></h2>
+      <ul class="students-checklist">
+        <li>Personal portfolio website</li>
+        <li>AI assistant trained on your projects</li>
+        <li>Shareable recruiter link</li>
+        <li>Featured student badge</li>
+        <li>Placement-ready presentation page</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="students-section students-section--alt" aria-labelledby="how-it-works">
+    <div class="container">
+      <h2 id="how-it-works" class="students-section__title">How it works</h2>
+      <div class="students-steps">
+        <article class="students-step">
+          <span class="students-step__num">1</span>
+          <h3 class="students-step__title">Upload</h3>
+          <p>Upload 6–10 project images</p>
+        </article>
+        <article class="students-step">
+          <span class="students-step__num">2</span>
+          <h3 class="students-step__title">Describe</h3>
+          <p>Add short notes about your idea</p>
+        </article>
+        <article class="students-step">
+          <span class="students-step__num">3</span>
+          <h3 class="students-step__title">Done</h3>
+          <p>We generate your live portfolio instantly</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Perfect for -->
+  <section class="students-section" aria-labelledby="perfect-for">
+    <div class="container">
+      <h2 id="perfect-for" class="students-section__title">Perfect for</h2>
+      <div class="students-chips">
+        <span class="students-chip">Fashion design students</span>
+        <span class="students-chip">Interior design students</span>
+        <span class="students-chip">UI/UX students</span>
+        <span class="students-chip">Graphic designers</span>
+        <span class="students-chip">Architecture students</span>
+        <span class="students-chip">Photography students</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why recruiters prefer this -->
+  <section class="students-section students-section--accent" aria-labelledby="recruiters">
+    <div class="container">
+      <h2 id="recruiters" class="students-section__title students-section__title--light">Why recruiters prefer this</h2>
+      <p class="students-recruiter-intro">Instead of opening 100 portfolios, they can just ask:</p>
+      <blockquote class="students-quote">"Show me designers who worked with sustainable materials"</blockquote>
+      <p class="students-recruiter-outro">Your work becomes searchable.</p>
+    </div>
+  </section>
+
+  <!-- Early Student Offer + Request Invite -->
+  <section class="students-section students-cta-section" id="request-invite" aria-labelledby="request-invite-title">
+    <div class="container">
+      <p class="students-eyebrow">Early Student Offer</p>
+      <h2 id="request-invite-title" class="students-section__title">Request Your Invite</h2>
+      <p class="students-offer-text">
+        We're inviting a limited number of founding students.<br />
+        You get <strong>lifetime free premium access</strong>.
+      </p>
+      <p class="students-form-intro">Submit your details and we'll set up your portfolio.</p>
+
+      {% if messages %}
+      <div class="students-messages">
+        {% for message in messages %}
+        <p class="students-message students-message--{{ message.tags }}">{{ message }}</p>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <form method="post" action="{% url 'students' %}" class="students-invite-form">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="students-form-group">
+          {% if field.errors %}
+          <ul class="students-form-errors">
+            {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+          </ul>
+          {% endif %}
+          {{ field }}
+        </div>
+        {% endfor %}
+        <button type="submit" class="students-cta students-cta--primary students-cta--full">Get My Free Portfolio</button>
+      </form>
+
+      <p class="students-contact-note">
+        Prefer email? <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>
+      </p>
+    </div>
+  </section>
+</article>
+
+<style>
+  .students-landing {
+    font-family: var(--font-body);
+    color: var(--color-primary);
+  }
+
+  .students-hero {
+    background: linear-gradient(135deg, var(--color-primary) 0%, rgba(var(--color-primary-rgb), 0.95) 100%);
+    color: var(--color-secondary);
+    padding: 64px 24px 80px;
+    text-align: center;
+  }
+
+  .students-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle at 20% 50%, rgba(var(--color-accent-rgb), 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(var(--color-secondary-rgb), 0.05) 0%, transparent 40%);
+  }
+
+  .students-hero__inner {
+    position: relative;
+    z-index: 1;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .students-eyebrow {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin: 0 0 16px;
+    opacity: 0.9;
+    font-weight: 600;
+  }
+
+  .students-hero__title {
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 800;
+    margin: 0 0 12px;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  .students-hero__subtitle {
+    font-size: 1.2rem;
+    margin: 0 0 20px;
+    opacity: 0.95;
+  }
+
+  .students-hero__tagline {
+    font-size: 1.25rem;
+    margin: 0 0 24px;
+    line-height: 1.5;
+  }
+
+  .students-hero__tagline strong {
+    color: var(--color-accent);
+  }
+
+  .students-hero__value {
+    font-size: 1rem;
+    line-height: 1.7;
+    margin: 0 0 32px;
+    opacity: 0.9;
+  }
+
+  .students-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1rem;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .students-cta:hover {
+    transform: translateY(-2px);
+  }
+
+  .students-cta--primary {
+    background: var(--color-accent);
+    color: var(--color-primary);
+    border: none;
+  }
+
+  .students-cta--primary:hover {
+    box-shadow: 0 8px 24px rgba(var(--color-accent-rgb), 0.4);
+  }
+
+  .students-cta--full {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .students-section {
+    padding: 56px 24px;
+    background: var(--color-surface);
+  }
+
+  .students-section--alt {
+    background: var(--color-secondary);
+  }
+
+  .students-section--accent {
+    background: linear-gradient(135deg, var(--color-primary) 0%, rgba(var(--color-primary-rgb), 0.92) 100%);
+    color: var(--color-secondary);
+  }
+
+  .students-section__title {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 800;
+    text-align: center;
+    margin: 0 0 40px;
+    color: var(--color-primary);
+  }
+
+  .students-section__title--light {
+    color: var(--color-secondary);
+  }
+
+  .students-badge {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 4px 12px;
+    background: rgba(var(--color-accent-rgb), 0.25);
+    color: var(--color-primary);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    vertical-align: middle;
+  }
+
+  .students-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 28px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .students-feature {
+    background: var(--color-secondary);
+    border-radius: 16px;
+    padding: 28px;
+    border: 1px solid var(--color-border);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+
+  .students-section--alt .students-feature {
+    background: var(--color-surface);
+  }
+
+  .students-feature:hover {
+    box-shadow: 0 12px 32px rgba(var(--color-primary-rgb), 0.08);
+    border-color: rgba(var(--color-primary-rgb), 0.15);
+  }
+
+  .students-feature__icon {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .students-feature__title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0 0 10px;
+    color: var(--color-primary);
+  }
+
+  .students-feature p,
+  .students-feature ul {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--color-text);
+  }
+
+  .students-feature ul {
+    padding-left: 20px;
+    margin-top: 8px;
+  }
+
+  .students-feature li {
+    margin-bottom: 4px;
+  }
+
+  .students-checklist {
+    list-style: none;
+    padding: 0;
+    margin: 0 auto;
+    max-width: 480px;
+  }
+
+  .students-checklist li {
+    position: relative;
+    padding: 12px 0 12px 40px;
+    font-size: 1.05rem;
+    line-height: 1.5;
+  }
+
+  .students-checklist li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: var(--color-accent);
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+
+  .students-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  @media (max-width: 700px) {
+    .students-steps {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .students-step {
+    text-align: center;
+    padding: 32px 20px;
+    background: var(--color-secondary);
+    border-radius: 16px;
+    border: 1px solid var(--color-border);
+  }
+
+  .students-section--alt .students-step {
+    background: var(--color-surface);
+  }
+
+  .students-step__num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: var(--color-primary);
+    color: var(--color-secondary);
+    border-radius: 50%;
+    font-weight: 800;
+    font-size: 1.25rem;
+    margin-bottom: 16px;
+  }
+
+  .students-step__title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0 0 8px;
+    color: var(--color-primary);
+  }
+
+  .students-step p {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--color-text);
+  }
+
+  .students-chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .students-chip {
+    padding: 10px 20px;
+    background: rgba(var(--color-primary-rgb), 0.08);
+    color: var(--color-primary);
+    border-radius: 999px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border: 1px solid rgba(var(--color-primary-rgb), 0.12);
+  }
+
+  .students-recruiter-intro {
+    text-align: center;
+    margin: 0 0 16px;
+    font-size: 1.1rem;
+    opacity: 0.95;
+  }
+
+  .students-quote {
+    text-align: center;
+    font-size: 1.35rem;
+    font-weight: 600;
+    margin: 0 auto 16px;
+    padding: 24px 32px;
+    background: rgba(var(--color-secondary-rgb), 0.15);
+    border-radius: 12px;
+    max-width: 480px;
+  }
+
+  .students-recruiter-outro {
+    text-align: center;
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .students-cta-section {
+    background: linear-gradient(180deg, var(--color-surface) 0%, var(--color-secondary) 100%);
+  }
+
+  .students-offer-text {
+    text-align: center;
+    font-size: 1.15rem;
+    margin: 0 0 12px;
+    line-height: 1.6;
+  }
+
+  .students-form-intro {
+    text-align: center;
+    color: var(--color-text-muted);
+    margin: 0 0 28px;
+  }
+
+  .students-invite-form {
+    max-width: 400px;
+    margin: 0 auto 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .students-form-group input {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid var(--color-border);
+    border-radius: 10px;
+    font-size: 1rem;
+    font-family: var(--font-body);
+    color: var(--color-primary);
+    box-sizing: border-box;
+  }
+
+  .students-form-group input:focus {
+    border-color: var(--color-primary);
+    outline: none;
+  }
+
+  .students-form-group input::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  .students-form-errors {
+    list-style: none;
+    margin: 0 0 6px;
+    padding: 0;
+    color: var(--color-accent);
+    font-size: 0.85rem;
+  }
+
+  .students-invite-form button {
+    cursor: pointer;
+    border: none;
+  }
+
+  .students-messages {
+    max-width: 400px;
+    margin: 0 auto 20px;
+  }
+
+  .students-message {
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+  }
+
+  .students-message--success {
+    background: rgba(34, 197, 94, 0.15);
+    color: #166534;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+  }
+
+  .students-message--error {
+    background: rgba(239, 68, 68, 0.1);
+    color: #b91c1c;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+  }
+
+  .students-contact-note {
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+  }
+
+  .students-contact-note a {
+    color: var(--color-primary);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .students-contact-note a:hover {
+    text-decoration: underline;
+  }
+</style>
+{% endblock %}

@@ -1,6 +1,6 @@
 """
 Mobile API for GlobalDesignerHub iPhone app.
-Provides JSON endpoints for designers, collections, designs, events, and auth.
+Provides JSON endpoints for designers, collections, designs, events, auth, and new orders.
 """
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
@@ -12,7 +12,15 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 
-from .models import DesignerProfile, Collection, Look, Design, Event
+from .models import DesignerProfile, Collection, Look, Design, Event, DressOrder
+from .views import (
+    DRESS_TYPES,
+    FABRIC_TYPES,
+    WOOL_TYPES,
+    FABRIC_TEXTURES,
+    FORMAL_SUBCATEGORIES,
+)
+from .emails import notify_designer_new_dress_order
 from .serializers import DesignSerializer, EventSerializer
 
 
@@ -255,3 +263,91 @@ class MobileEventDetail(RetrieveAPIView):
     queryset = Event.objects.prefetch_related("images")
     lookup_url_kwarg = "slug"
     lookup_field = "slug"
+
+
+# --- New Orders (Dresses) ---
+class MobileNewOrdersOptionsView(APIView):
+    """Return dress types, fabric types, wool types, textures, formal subcategories for new orders form."""
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def get(self, request):
+        return Response({
+            "dress_types": [{"value": v, "label": l} for v, l in DRESS_TYPES],
+            "fabric_types": [{"value": v, "label": l} for v, l in FABRIC_TYPES],
+            "wool_types": [{"value": v, "label": l} for v, l in WOOL_TYPES],
+            "fabric_textures": [{"value": v, "label": l} for v, l in FABRIC_TEXTURES],
+            "formal_subcategories": [{"value": v, "label": l} for v, l in FORMAL_SUBCATEGORIES],
+        })
+
+
+class MobileNewOrdersSubmitView(APIView):
+    """Submit a dress order. Mobile passes phone in body (no session)."""
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        data = getattr(request, "data", {}) or {}
+        designer_id = data.get("designer_id")
+        phone = (data.get("phone") or "").strip()
+        digits = "".join(c for c in phone if c.isdigit())
+        if len(digits) < 7:
+            return Response(
+                {"error": "Valid phone number required (at least 7 digits)"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not designer_id:
+            return Response(
+                {"error": "Please select a designer"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            designer = DesignerProfile.objects.get(
+                user_id=int(designer_id),
+                user__is_active=True,
+            )
+        except (DesignerProfile.DoesNotExist, ValueError, TypeError):
+            return Response(
+                {"error": "Invalid designer selected"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        def _str(val):
+            return (val or "").strip() if val is not None else ""
+
+        def _decimal(val):
+            if val is None or val == "":
+                return None
+            try:
+                from decimal import Decimal
+                return Decimal(str(val))
+            except Exception:
+                return None
+
+        order = DressOrder.objects.create(
+            designer=designer,
+            customer_phone=phone,
+            dress_type=_str(data.get("dress_type")),
+            dress_label=_str(data.get("dress_label")),
+            shoulder_width=_decimal(data.get("shoulder_width")),
+            chest=_decimal(data.get("chest")),
+            sleeve_short=_decimal(data.get("sleeve_short")),
+            sleeve_wrist=_decimal(data.get("sleeve_wrist")),
+            fabric_type=_str(data.get("fabric_type")),
+            fabric_label=_str(data.get("fabric_label")),
+            wool_type=_str(data.get("wool_type")),
+            fabric_texture=_str(data.get("fabric_texture")),
+            formal_subcategory=_str(data.get("formal_subcategory")),
+        )
+
+        try:
+            notify_designer_new_dress_order(order, request=request)
+        except Exception:
+            import logging
+            logging.getLogger(__name__).exception("Failed to send dress order email")
+
+        designer_name = designer.user.get_full_name() or designer.user.username
+        return Response({
+            "success": True,
+            "message": f"Order sent to {designer_name}. They will receive an email notification.",
+        })

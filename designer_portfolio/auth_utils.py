@@ -70,5 +70,11 @@ def ensure_designer_access(user) -> Dict[str, bool]:
     if fields_to_update:
         subscription.save(update_fields=fields_to_update)
 
+    try:
+        from .services.referrals import ensure_referral_profile
+        ensure_referral_profile(user)
+    except Exception:
+        pass  # Don't block login if referral system fails
+
     return {"profile_created": created_profile, "subscription_created": created_subscription}
 

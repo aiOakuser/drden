@@ -93,7 +93,6 @@ _PLACEHOLDER_PASSWORD_VALUES = {"password", "pass"}
 # When using runserver, never redirect to HTTPS (runserver only supports HTTP).
 RUNNING_RUNSERVER = "runserver" in sys.argv
 
-
 def _is_placeholder(value: str | None, placeholders: set[str]) -> bool:
     if value is None:
         return False
@@ -428,6 +427,7 @@ TEMPLATES = [
                 "designer_portfolio.context_processors.utm_context",  # ✅ expose UTM/session attribution
                 "designer_portfolio.context_processors.social_login_providers",
                 "designer_portfolio.context_processors.messenger_inbox_count",
+                "designer_portfolio.context_processors.referral_context",
                 "social_django.context_processors.backends",
                 "social_django.context_processors.login_redirect",
             ],
@@ -667,6 +667,7 @@ SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.social_auth.associate_user",
     "social_core.pipeline.social_auth.load_extra_data",
     "designer_portfolio.social_pipeline.sync_user_details",
+    "designer_portfolio.social_pipeline.credit_referral_on_social_signup",
     "designer_portfolio.social_pipeline.send_welcome_notification",
 )
 

@@ -52,6 +52,9 @@ export default function LoginScreen() {
       <TouchableOpacity onPress={() => nav.navigate("Signup")}>
         <Text style={styles.link}>Create an account</Text>
       </TouchableOpacity>
+      <TouchableOpacity onPress={() => nav.navigate("NewOrders")} style={styles.linkButton}>
+        <Text style={styles.link}>Place order (no account needed)</Text>
+      </TouchableOpacity>
     </KeyboardAvoidingView>
   );
 }
@@ -79,4 +82,5 @@ const styles = StyleSheet.create({
   },
   buttonText: { color: "#0E0E0F", fontWeight: "600", fontSize: 16 },
   link: { color: "#D8B57A", textAlign: "center", fontSize: 14 },
+  linkButton: { marginTop: 12 },
 });

@@ -85,6 +85,25 @@ def active_portfolio_template(request: HttpRequest) -> dict:
     }
 
 
+def referral_context(request: HttpRequest) -> dict:
+    """Expose referral invite URL for authenticated designers (used in chat widget)."""
+    user = getattr(request, "user", None)
+    if user is None or not user.is_authenticated:
+        return {"referral_invite_url": None, "referral_code": None}
+
+    try:
+        from .services.referrals import ensure_referral_profile
+
+        profile = ensure_referral_profile(user)
+        base_url = getattr(settings, "BASE_URL_SERVER", "").strip()
+        if not base_url:
+            base_url = request.build_absolute_uri("/").rstrip("/")
+        invite_url = f"{base_url}/invite/{profile.referral_code}/"
+        return {"referral_invite_url": invite_url, "referral_code": profile.referral_code}
+    except Exception:
+        return {"referral_invite_url": None, "referral_code": None}
+
+
 def utm_context(request: HttpRequest) -> dict:
     """Expose stored UTM and attribution values to templates.
 

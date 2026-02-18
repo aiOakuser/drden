@@ -22,6 +22,8 @@ from .views import (
     reject_designer,
     reinstate_designer,
     StudentPageView,
+    neworders_dresses_view,
+    neworders_dresses_submit_view,
     AboutView,
     AboutSiteView,
     IPhoneAppDownloadView,
@@ -107,6 +109,8 @@ urlpatterns = [
     path("events/<slug:slug>/", EventDetailView.as_view(), name="event_detail"),
     
     re_path(r"^student/?$", StudentPageView.as_view(), name="student_page"),
+    path("neworders/dresses/", neworders_dresses_view, name="neworders_dresses"),
+    path("neworders/dresses/submit/", neworders_dresses_submit_view, name="neworders_dresses_submit"),
     path("student/portfolio/", student_portfolio_dashboard, name="student_portfolio_dashboard"),
     path(
         "student/portfolio/projects/reorder/",
@@ -142,7 +146,9 @@ urlpatterns = [
     path("about-site/", AboutSiteView.as_view(), name="about_site"),
     path("iphone-app/", IPhoneAppDownloadView.as_view(), name="iphone_app"),
     path("contact/", contact_view, name="contact"),
-    
+    path("students/", views.students_landing_view, name="students"),
+    path("invite/<str:code>/", views.invite_view, name="invite"),
+
     # Community Forum
     path("community/", RedirectView.as_view(pattern_name="forum_index", permanent=False), name="community_redirect"),
     path("community/forum/", ForumIndexView.as_view(), name="forum_index"),
@@ -201,9 +207,13 @@ urlpatterns = [
     path("api/mobile/me/designs/", mobile_api.MobileMyDesignsList.as_view(), name="mobile_my_designs"),
     path("api/mobile/events/", mobile_api.MobileEventList.as_view(), name="mobile_events"),
     path("api/mobile/events/<slug:slug>/", mobile_api.MobileEventDetail.as_view(), name="mobile_event_detail"),
+    path("api/mobile/neworders/options/", mobile_api.MobileNewOrdersOptionsView.as_view(), name="mobile_neworders_options"),
+    path("api/mobile/neworders/submit/", mobile_api.MobileNewOrdersSubmitView.as_view(), name="mobile_neworders_submit"),
     path("api/project-templates/", views.project_templates_api, name="project_templates_api"),
     path("api/projects/", views.create_project_api, name="project_create_api"),
     path("api/designers/register/", DesignerRegistrationView.as_view(), name="designer_register_api"),
+    path("api/referrals/me/summary/", views.ReferralSummaryView.as_view(), name="referral_summary"),
+    path("api/referrals/leaderboard/", views.ReferralLeaderboardView.as_view(), name="referral_leaderboard"),
     path("api/ai/designer-chat/", designer_ai_chat, name="designer_ai_chat"),
     path("api/ai/config-check/", designer_ai_config_check, name="designer_ai_config_check"),
     path("designer-ai/history/", my_conversations, name="designer_ai_history"),

@@ -256,6 +256,17 @@ class EventCollaborationAdmin(admin.ModelAdmin):
     readonly_fields = ("created_at", "updated_at")
 
 
+# ---------------- Dress Order ----------------
+@admin.register(m.DressOrder)
+class DressOrderAdmin(admin.ModelAdmin):
+    list_display = ("id", "designer", "dress_label", "formal_subcategory", "fabric_label", "customer_phone", "created_at")
+    list_filter = ("created_at", "dress_type", "fabric_type")
+    search_fields = ("customer_phone", "dress_label", "fabric_label", "designer__user__username")
+    readonly_fields = ("created_at", "updated_at")
+    raw_id_fields = ("designer",)
+    ordering = ("-created_at",)
+
+
 # ---------------- Designer Profile ----------------
 @admin.register(m.DesignerProfile)
 class DesignerProfileAdmin(admin.ModelAdmin):
@@ -381,6 +392,29 @@ class StudentProjectBookmarkAdmin(admin.ModelAdmin):
     list_display = ("user", "project", "created_at")
     list_filter = ("created_at",)
     search_fields = ("user__username", "project__title")
+
+
+# ---------------- Referral System ----------------
+@admin.register(m.ReferralTier)
+class ReferralTierAdmin(admin.ModelAdmin):
+    list_display = ("code", "name", "min_referrals", "sort_order", "is_active")
+    list_editable = ("min_referrals", "sort_order", "is_active")
+
+
+@admin.register(m.UserReferralProfile)
+class UserReferralProfileAdmin(admin.ModelAdmin):
+    list_display = ("user", "referral_code", "referral_count", "current_tier", "referred_by", "updated_at")
+    list_filter = ("current_tier",)
+    search_fields = ("user__username", "referral_code")
+    readonly_fields = ("referral_code", "referral_count", "referral_joined_at", "updated_at")
+
+
+@admin.register(m.ReferralEvent)
+class ReferralEventAdmin(admin.ModelAdmin):
+    list_display = ("referrer", "referred_user", "referral_code", "source", "created_at")
+    list_filter = ("source", "created_at")
+    search_fields = ("referrer__username", "referred_user__username", "referral_code")
+    readonly_fields = ("created_at",)
 
 
 # ---------------- Designer AI ----------------

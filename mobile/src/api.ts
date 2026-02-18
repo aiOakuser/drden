@@ -102,3 +102,52 @@ export function imageUrl(path: string | null | undefined): string | null {
   if (path.startsWith("http")) return path;
   return `${API_BASE_URL}${path}`;
 }
+
+// New Orders (Dresses)
+export interface NewOrderOptions {
+  dress_types: { value: string; label: string }[];
+  fabric_types: { value: string; label: string }[];
+  wool_types: { value: string; label: string }[];
+  fabric_textures: { value: string; label: string }[];
+  formal_subcategories: { value: string; label: string }[];
+}
+
+export async function fetchNewOrderOptions(): Promise<NewOrderOptions> {
+  return request<NewOrderOptions>("/api/mobile/neworders/options/");
+}
+
+export async function submitDressOrder(data: {
+  phone: string;
+  designer_id: number;
+  dress_type?: string;
+  dress_label?: string;
+  formal_subcategory?: string;
+  shoulder_width?: string | number;
+  chest?: string | number;
+  sleeve_short?: string | number;
+  sleeve_wrist?: string | number;
+  fabric_type?: string;
+  fabric_label?: string;
+  wool_type?: string;
+  fabric_texture?: string;
+}): Promise<{ success: boolean; message: string }> {
+  const body: Record<string, unknown> = {
+    phone: data.phone,
+    designer_id: data.designer_id,
+    dress_type: data.dress_type || "",
+    dress_label: data.dress_label || "",
+    formal_subcategory: data.formal_subcategory || "",
+    shoulder_width: data.shoulder_width ?? "",
+    chest: data.chest ?? "",
+    sleeve_short: data.sleeve_short ?? "",
+    sleeve_wrist: data.sleeve_wrist ?? "",
+    fabric_type: data.fabric_type || "",
+    fabric_label: data.fabric_label || "",
+    wool_type: data.wool_type || "",
+    fabric_texture: data.fabric_texture || "",
+  };
+  return request<{ success: boolean; message: string }>("/api/mobile/neworders/submit/", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}

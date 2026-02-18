@@ -395,6 +395,29 @@ class ReportProblemForm(forms.ModelForm):
         return subject
 
 
+class StudentInviteRequestForm(forms.Form):
+    """Simple form for student early-access invite requests on /students."""
+
+    name = forms.CharField(max_length=120, label="Name")
+    email = forms.EmailField(label="Email address")
+    college = forms.CharField(max_length=200, required=False, label="College or program (optional)")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["name"].widget.attrs.update({
+            "placeholder": "Your name",
+            "autocomplete": "name",
+        })
+        self.fields["email"].widget.attrs.update({
+            "placeholder": "Email address",
+            "autocomplete": "email",
+        })
+        self.fields["college"].widget.attrs.update({
+            "placeholder": "e.g. NIFT Delhi, Parsons, RISD",
+            "autocomplete": "organization",
+        })
+
+
 class ContactForm(forms.Form):
     """Simple public contact form used at /contact."""
 
@@ -668,3 +691,30 @@ class StudentProjectFeedbackForm(forms.ModelForm):
         if len(comment) < 10:
             raise forms.ValidationError("Please write at least 10 characters of feedback.")
         return comment
+
+
+class NewOrderAccessForm(forms.Form):
+    """Phone number form to gate access to the new orders (dresses) page."""
+
+    phone = forms.CharField(
+        max_length=20,
+        required=True,
+        label="Phone number",
+        help_text="Enter your phone number to access the designer list.",
+        widget=forms.TextInput(
+            attrs={
+                "placeholder": "e.g. +1 555 123 4567",
+                "class": "form-control",
+                "inputmode": "tel",
+                "autocomplete": "tel",
+            }
+        ),
+    )
+
+    def clean_phone(self):
+        phone = (self.cleaned_data.get("phone") or "").strip()
+        # Allow digits, spaces, +, -, (, )
+        digits_only = "".join(c for c in phone if c.isdigit())
+        if len(digits_only) < 7:
+            raise forms.ValidationError("Please enter a valid phone number (at least 7 digits).")
+        return phone
