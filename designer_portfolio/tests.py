@@ -16,6 +16,11 @@ from .models import (
     Template,
     TemplateStage,
     TemplateProductBlock,
+    StudentPortfolio,
+    StudentPortfolioProject,
+    StudentProjectFeedback,
+    StudentProjectLike,
+    StudentProjectBookmark,
 )
 from .social_pipeline import generate_username, ensure_verified_email, sync_user_details
 from .project_templates import load_project_templates, refresh_project_template_cache
@@ -486,6 +491,24 @@ class ContactViewTests(TestCase):
     CSRF_COOKIE_SECURE=False,
     STORAGES=TEST_STORAGE_BACKENDS,
 )
+class StudentPageViewTests(TestCase):
+    def test_student_page_renders(self):
+        response = self.client.get(reverse("student_page"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Build your design career before graduation")
+
+    def test_student_page_supports_url_without_trailing_slash(self):
+        response = self.client.get("/student")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "GlobalDesignerHub Student")
+
+
+@override_settings(
+    SECURE_SSL_REDIRECT=False,
+    SESSION_COOKIE_SECURE=False,
+    CSRF_COOKIE_SECURE=False,
+    STORAGES=TEST_STORAGE_BACKENDS,
+)
 class TemplateLoaderTests(TestCase):
     def setUp(self) -> None:
         Template.objects.all().delete()
@@ -746,3 +769,184 @@ class VolumeOneViewTests(TestCase):
         self.assertContains(response, "Postgres schema powering VolumeOne")
         self.assertContains(response, "Street Circuit Project Breakdown")
         mock_feed.assert_called_once()
+
+
+@override_settings(
+    SECURE_SSL_REDIRECT=False,
+    SESSION_COOKIE_SECURE=False,
+    CSRF_COOKIE_SECURE=False,
+    STORAGES=TEST_STORAGE_BACKENDS,
+)
+class StudentPortfolioFeatureTests(TestCase):
+    def setUp(self) -> None:
+        self.student = User.objects.create_user(
+            username="student-designer",
+            email="student@example.com",
+            password="StrongPass123!",
+            is_active=True,
+        )
+        self.reviewer = User.objects.create_user(
+            username="studio-reviewer",
+            email="reviewer@example.com",
+            password="StrongPass123!",
+            is_active=True,
+        )
+
+    def test_dashboard_creates_and_updates_student_portfolio(self):
+        self.client.login(username="student-designer", password="StrongPass123!")
+
+        response = self.client.get(reverse("student_portfolio_dashboard"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(StudentPortfolio.objects.filter(user=self.student).exists())
+
+        response = self.client.post(
+            reverse("student_portfolio_dashboard"),
+            {
+                "action": "update_portfolio",
+                "bio": "Focused on product and interface systems.",
+                "skills": "Figma, Illustrator",
+                "design_interests": "UI/UX, Product Design",
+                "template_style": StudentPortfolio.TemplateStyle.MINIMAL,
+                "visibility": StudentPortfolio.Visibility.PUBLIC,
+            },
+            follow=False,
+        )
+        self.assertEqual(response.status_code, 302)
+        portfolio = StudentPortfolio.objects.get(user=self.student)
+        self.assertEqual(portfolio.visibility, StudentPortfolio.Visibility.PUBLIC)
+        self.assertEqual(portfolio.template_style, StudentPortfolio.TemplateStyle.MINIMAL)
+        self.assertEqual(portfolio.skills, "Figma, Illustrator")
+
+    def test_create_project_and_reorder_projects(self):
+        self.client.login(username="student-designer", password="StrongPass123!")
+        self.client.get(reverse("student_portfolio_dashboard"))
+
+        first_payload = {
+            "action": "create_project",
+            "title": "Campus Mobile App",
+            "description": "Improved navigation and onboarding for first-year students.",
+            "category": StudentPortfolioProject.Category.UI_UX,
+            "tools_used": "Figma, Maze",
+            "project_role": "UX Designer",
+            "process_steps": "Sketches\nWireframes\nInteractive prototype",
+        }
+        second_payload = {
+            "action": "create_project",
+            "title": "Event Poster Series",
+            "description": "Visual identity and poster system for design week.",
+            "category": StudentPortfolioProject.Category.GRAPHIC_DESIGN,
+            "tools_used": "Illustrator, Photoshop",
+            "project_role": "Graphic Designer",
+            "process_steps": "Moodboard\nConcepts\nFinal poster set",
+        }
+        self.client.post(reverse("student_portfolio_dashboard"), first_payload, follow=False)
+        self.client.post(reverse("student_portfolio_dashboard"), second_payload, follow=False)
+
+        projects = list(
+            StudentPortfolioProject.objects.filter(portfolio__user=self.student).order_by("display_order")
+        )
+        self.assertEqual(len(projects), 2)
+        self.assertEqual(projects[0].title, "Campus Mobile App")
+        self.assertEqual(projects[1].title, "Event Poster Series")
+
+        response = self.client.post(
+            reverse("student_portfolio_reorder_projects"),
+            data=json.dumps({"project_ids": [projects[1].id, projects[0].id]}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+
+        reordered = list(
+            StudentPortfolioProject.objects.filter(portfolio__user=self.student).order_by("display_order")
+        )
+        self.assertEqual(reordered[0].title, "Event Poster Series")
+        self.assertEqual(reordered[1].title, "Campus Mobile App")
+
+    def test_public_share_link_honors_visibility(self):
+        portfolio = StudentPortfolio.objects.create(user=self.student)
+        StudentPortfolioProject.objects.create(
+            portfolio=portfolio,
+            title="Responsive Design System",
+            description="Tokens and components for internal tools.",
+            category=StudentPortfolioProject.Category.UI_UX,
+            display_order=0,
+        )
+
+        share_url = reverse("student_portfolio_public", args=[portfolio.share_slug])
+        response = self.client.get(share_url, follow=False)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("login"), response["Location"])
+
+        portfolio.visibility = StudentPortfolio.Visibility.PUBLIC
+        portfolio.save(update_fields=["visibility"])
+
+        response = self.client.get(share_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Responsive Design System")
+
+    def test_feedback_like_and_bookmark_flow(self):
+        portfolio = StudentPortfolio.objects.create(
+            user=self.student,
+            visibility=StudentPortfolio.Visibility.PUBLIC,
+        )
+        project = StudentPortfolioProject.objects.create(
+            portfolio=portfolio,
+            title="Brand Toolkit",
+            description="Complete visual toolkit for student startup.",
+            category=StudentPortfolioProject.Category.BRANDING,
+            display_order=0,
+        )
+
+        self.client.login(username="studio-reviewer", password="StrongPass123!")
+        share_path = reverse("student_portfolio_public", args=[portfolio.share_slug])
+
+        feedback_response = self.client.post(
+            reverse("student_portfolio_project_feedback", args=[project.id]),
+            {
+                "reviewer_role": StudentProjectFeedback.ReviewerRole.TEACHER,
+                "comment": "Great visual hierarchy. Consider refining spacing on the icon grid.",
+                "next": share_path,
+            },
+            follow=False,
+        )
+        self.assertEqual(feedback_response.status_code, 302)
+        self.assertEqual(StudentProjectFeedback.objects.count(), 1)
+
+        like_response = self.client.post(
+            reverse("student_portfolio_project_like_toggle", args=[project.id]),
+            {"next": share_path},
+            follow=False,
+        )
+        self.assertEqual(like_response.status_code, 302)
+        self.assertEqual(StudentProjectLike.objects.count(), 1)
+
+        bookmark_response = self.client.post(
+            reverse("student_portfolio_project_bookmark_toggle", args=[project.id]),
+            {"next": share_path},
+            follow=False,
+        )
+        self.assertEqual(bookmark_response.status_code, 302)
+        self.assertEqual(StudentProjectBookmark.objects.count(), 1)
+
+    def test_resume_pdf_download(self):
+        StudentPortfolio.objects.create(
+            user=self.student,
+            bio="Student designer focused on accessibility and product systems.",
+            skills="Figma, UX Writing",
+            design_interests="UI/UX, Product Design",
+            visibility=StudentPortfolio.Visibility.PUBLIC,
+        )
+        StudentPortfolioProject.objects.create(
+            portfolio=self.student.student_portfolio,
+            title="Onboarding Redesign",
+            description="Reduced drop-off rates with simpler onboarding steps.",
+            category=StudentPortfolioProject.Category.UI_UX,
+            display_order=0,
+        )
+
+        self.client.login(username="student-designer", password="StrongPass123!")
+        response = self.client.get(reverse("student_portfolio_resume_pdf"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/pdf")
+        self.assertIn("attachment", response["Content-Disposition"])
+        self.assertTrue(response.content.startswith(b"%PDF"))

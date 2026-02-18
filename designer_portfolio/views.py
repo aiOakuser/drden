@@ -1855,6 +1855,84 @@ class HomePageView(TemplateView):
 
         return context
 
+class StudentPageView(TemplateView):
+    template_name = "designer_portfolio/student.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            {
+                "student_primary_cta": reverse("signup"),
+                "student_secondary_cta": reverse("designers_list"),
+                "student_focus_tracks": [
+                    {
+                        "title": "Portfolio launch plan",
+                        "description": (
+                            "Build a complete portfolio with collections, process documentation, and project-ready "
+                            "presentation pages that can be shared with mentors or recruiters."
+                        ),
+                    },
+                    {
+                        "title": "Mentor-style feedback loop",
+                        "description": (
+                            "Ask Designer AI for critique prompts, prep interview talking points, and shape your "
+                            "next iteration with structured guidance."
+                        ),
+                    },
+                    {
+                        "title": "Career-ready collaboration",
+                        "description": (
+                            "Connect with designers in the directory, explore events, and learn how studios "
+                            "communicate expectations before production starts."
+                        ),
+                    },
+                ],
+                "student_resource_cards": [
+                    {
+                        "title": "Free trial access",
+                        "description": "Create your account, upload work, and explore every feature before committing.",
+                        "icon": "fa-solid fa-graduation-cap",
+                        "cta_label": "Start your free trial",
+                        "cta_href": reverse("signup"),
+                    },
+                    {
+                        "title": "Live designer directory",
+                        "description": "Study real portfolio structures, specialties, and service packages in one place.",
+                        "icon": "fa-solid fa-user-group",
+                        "cta_label": "Browse designers",
+                        "cta_href": reverse("designers_list"),
+                    },
+                    {
+                        "title": "Events + community",
+                        "description": "Follow showcases, AMAs, and discussions to stay plugged into current workflows.",
+                        "icon": "fa-solid fa-comments",
+                        "cta_label": "Join community",
+                        "cta_href": reverse("community_redirect"),
+                    },
+                ],
+                "student_launch_checklist": [
+                    {
+                        "title": "1. Create your account",
+                        "description": "Sign up with email or Google and choose your portfolio direction.",
+                    },
+                    {
+                        "title": "2. Upload your strongest projects",
+                        "description": "Start with one polished collection, then add process and supporting visuals.",
+                    },
+                    {
+                        "title": "3. Refine with Designer AI",
+                        "description": "Use guided prompts to improve structure, captions, and project storytelling.",
+                    },
+                    {
+                        "title": "4. Share and grow",
+                        "description": "Send your portfolio to peers, mentors, and collaborators as you build momentum.",
+                    },
+                ],
+            }
+        )
+        return context
+
+
 class AboutView(TemplateView):
     template_name = "designer_portfolio/about.html"
 

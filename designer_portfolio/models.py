@@ -1130,3 +1130,171 @@ class ProjectProductSpecField(TimeStampedModel):
 
     def __str__(self):
         return f"{self.product_spec} • {self.label}"
+
+
+# ---------------- Student Portfolio ----------------
+class StudentPortfolio(TimeStampedModel):
+    class Visibility(models.TextChoices):
+        PUBLIC = ("public", "Public (for recruiters)")
+        PRIVATE = ("private", "Private (classroom review only)")
+
+    class TemplateStyle(models.TextChoices):
+        CLEAN = ("clean", "Clean")
+        MODERN = ("modern", "Modern")
+        MINIMAL = ("minimal", "Minimal")
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="student_portfolio")
+    profile_photo = models.ImageField(upload_to="students/profiles/", blank=True, null=True)
+    bio = models.TextField(blank=True, default="")
+    skills = models.CharField(max_length=500, blank=True, help_text="Comma-separated skills")
+    design_interests = models.CharField(max_length=500, blank=True, help_text="Comma-separated interests")
+    template_style = models.CharField(
+        max_length=20,
+        choices=TemplateStyle.choices,
+        default=TemplateStyle.MODERN,
+    )
+    visibility = models.CharField(
+        max_length=20,
+        choices=Visibility.choices,
+        default=Visibility.PRIVATE,
+        db_index=True,
+    )
+    share_slug = models.SlugField(max_length=180, unique=True, blank=True)
+
+    class Meta:
+        ordering = ["-updated_at"]
+
+    def __str__(self):
+        return f"Student portfolio for {self.user.username}"
+
+    def save(self, *args, **kwargs):
+        if not self.share_slug:
+            base_slug = slugify(f"{self.user.username}-portfolio")
+            slug = base_slug
+            suffix = 1
+            while StudentPortfolio.objects.filter(share_slug=slug).exclude(pk=self.pk).exists():
+                suffix += 1
+                slug = f"{base_slug}-{suffix}"
+            self.share_slug = slug
+        super().save(*args, **kwargs)
+
+    @property
+    def skills_list(self) -> list[str]:
+        return [item.strip() for item in self.skills.split(",") if item.strip()]
+
+    @property
+    def interests_list(self) -> list[str]:
+        return [item.strip() for item in self.design_interests.split(",") if item.strip()]
+
+
+class StudentPortfolioProject(TimeStampedModel):
+    class Category(models.TextChoices):
+        UI_UX = ("ui-ux", "UI/UX")
+        GRAPHIC_DESIGN = ("graphic-design", "Graphic Design")
+        ANIMATION = ("animation", "Animation")
+        PRODUCT_DESIGN = ("product-design", "Product Design")
+        BRANDING = ("branding", "Branding")
+        ILLUSTRATION = ("illustration", "Illustration")
+        OTHER = ("other", "Other")
+
+    portfolio = models.ForeignKey(
+        StudentPortfolio,
+        on_delete=models.CASCADE,
+        related_name="projects",
+    )
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    category = models.CharField(max_length=40, choices=Category.choices, default=Category.UI_UX, db_index=True)
+    tools_used = models.CharField(max_length=255, blank=True, help_text="Comma-separated tools")
+    project_role = models.CharField(max_length=120, blank=True)
+    process_steps = models.TextField(
+        blank=True,
+        help_text="One process step per line, for example: Sketch -> Wireframe -> Final design",
+    )
+    cover_image = models.ImageField(upload_to="students/projects/images/", blank=True, null=True)
+    process_video = models.FileField(upload_to="students/projects/videos/", blank=True, null=True)
+    project_pdf = models.FileField(upload_to="students/projects/pdfs/", blank=True, null=True)
+    featured = models.BooleanField(default=False, db_index=True)
+    display_order = models.PositiveIntegerField(default=0, db_index=True)
+
+    class Meta:
+        ordering = ["display_order", "-created_at", "id"]
+
+    def __str__(self):
+        return f"{self.title} ({self.portfolio.user.username})"
+
+    @property
+    def tools_list(self) -> list[str]:
+        return [item.strip() for item in self.tools_used.split(",") if item.strip()]
+
+    @property
+    def process_steps_list(self) -> list[str]:
+        return [item.strip() for item in (self.process_steps or "").splitlines() if item.strip()]
+
+
+class StudentProjectFeedback(TimeStampedModel):
+    class ReviewerRole(models.TextChoices):
+        TEACHER = ("teacher", "Teacher")
+        PEER = ("peer", "Peer")
+
+    project = models.ForeignKey(
+        StudentPortfolioProject,
+        on_delete=models.CASCADE,
+        related_name="feedback_entries",
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="student_project_feedback",
+    )
+    reviewer_role = models.CharField(max_length=20, choices=ReviewerRole.choices, default=ReviewerRole.PEER)
+    comment = models.TextField()
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        reviewer = self.author.username if self.author else "Anonymous"
+        return f"{reviewer} feedback on {self.project.title}"
+
+
+class StudentProjectLike(TimeStampedModel):
+    project = models.ForeignKey(
+        StudentPortfolioProject,
+        on_delete=models.CASCADE,
+        related_name="likes",
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="student_project_likes",
+    )
+
+    class Meta:
+        unique_together = [("project", "user")]
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.user.username} liked {self.project.title}"
+
+
+class StudentProjectBookmark(TimeStampedModel):
+    project = models.ForeignKey(
+        StudentPortfolioProject,
+        on_delete=models.CASCADE,
+        related_name="bookmarks",
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="student_project_bookmarks",
+    )
+
+    class Meta:
+        unique_together = [("project", "user")]
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.user.username} bookmarked {self.project.title}"

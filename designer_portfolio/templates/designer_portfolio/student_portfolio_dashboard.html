@@ -1,0 +1,352 @@
+{% extends "designer_portfolio/base.html" %}
+
+{% block title %}Student Portfolio Workspace | GlobalDesignerHub{% endblock %}
+
+{% block content %}
+<section class="student-workspace">
+  <div class="student-workspace__container">
+    <header class="student-workspace__header">
+      <div>
+        <p class="student-workspace__eyebrow">Student Design Portfolio</p>
+        <h1>Portfolio workspace</h1>
+        <p>Create your profile, upload projects, and publish a shareable portfolio link.</p>
+      </div>
+      <div class="student-workspace__actions">
+        <a class="btn btn-primary" href="{{ share_url }}" target="_blank" rel="noopener">Preview portfolio</a>
+        <button type="button" class="btn btn-outline" id="copyShareLinkButton">Copy share link</button>
+        <a class="btn btn-accent" href="{% url 'student_portfolio_resume_pdf' %}">Download resume PDF</a>
+      </div>
+      <div class="student-workspace__share">
+        <strong>Share URL:</strong>
+        <code id="shareLinkValue">{{ share_url }}</code>
+      </div>
+    </header>
+
+    {% if messages %}
+      <ul class="student-workspace__messages">
+        {% for message in messages %}
+          <li class="message message-{{ message.tags|default:'info' }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    <div class="student-workspace__grid">
+      <article class="student-card">
+        <h2>1) Build your profile</h2>
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="update_portfolio" />
+
+          <label for="{{ portfolio_form.profile_photo.id_for_label }}">Profile photo</label>
+          {{ portfolio_form.profile_photo }}
+          {% if portfolio_form.profile_photo.errors %}
+            <div class="field-error">{{ portfolio_form.profile_photo.errors|join:", " }}</div>
+          {% endif %}
+
+          <label for="{{ portfolio_form.bio.id_for_label }}">Bio</label>
+          {{ portfolio_form.bio }}
+          {% if portfolio_form.bio.errors %}
+            <div class="field-error">{{ portfolio_form.bio.errors|join:", " }}</div>
+          {% endif %}
+
+          <label for="{{ portfolio_form.skills.id_for_label }}">Skills</label>
+          {{ portfolio_form.skills }}
+          {% if portfolio_form.skills.errors %}
+            <div class="field-error">{{ portfolio_form.skills.errors|join:", " }}</div>
+          {% endif %}
+
+          <label for="{{ portfolio_form.design_interests.id_for_label }}">Design interests</label>
+          {{ portfolio_form.design_interests }}
+          {% if portfolio_form.design_interests.errors %}
+            <div class="field-error">{{ portfolio_form.design_interests.errors|join:", " }}</div>
+          {% endif %}
+
+          <div class="student-card__row">
+            <div>
+              <label for="{{ portfolio_form.template_style.id_for_label }}">Template style</label>
+              {{ portfolio_form.template_style }}
+            </div>
+            <div>
+              <label for="{{ portfolio_form.visibility.id_for_label }}">Privacy mode</label>
+              {{ portfolio_form.visibility }}
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Save profile</button>
+        </form>
+      </article>
+
+      <article class="student-card">
+        <h2>2) Upload a project</h2>
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="create_project" />
+
+          <label for="{{ project_form.title.id_for_label }}">Project title</label>
+          {{ project_form.title }}
+          {% if project_form.title.errors %}
+            <div class="field-error">{{ project_form.title.errors|join:", " }}</div>
+          {% endif %}
+
+          <label for="{{ project_form.description.id_for_label }}">Description</label>
+          {{ project_form.description }}
+          {% if project_form.description.errors %}
+            <div class="field-error">{{ project_form.description.errors|join:", " }}</div>
+          {% endif %}
+
+          <div class="student-card__row">
+            <div>
+              <label for="{{ project_form.category.id_for_label }}">Category</label>
+              {{ project_form.category }}
+            </div>
+            <div>
+              <label for="{{ project_form.project_role.id_for_label }}">Project role</label>
+              {{ project_form.project_role }}
+            </div>
+          </div>
+
+          <label for="{{ project_form.tools_used.id_for_label }}">Tools used</label>
+          {{ project_form.tools_used }}
+
+          <label for="{{ project_form.process_steps.id_for_label }}">Process steps (one per line)</label>
+          {{ project_form.process_steps }}
+
+          <label for="{{ project_form.cover_image.id_for_label }}">Project image</label>
+          {{ project_form.cover_image }}
+
+          <label for="{{ project_form.process_video.id_for_label }}">Project video</label>
+          {{ project_form.process_video }}
+
+          <label for="{{ project_form.project_pdf.id_for_label }}">Project PDF</label>
+          {{ project_form.project_pdf }}
+
+          <div class="checkbox-row">
+            {{ project_form.featured }}
+            <label for="{{ project_form.featured.id_for_label }}">Mark as featured</label>
+          </div>
+
+          <button type="submit" class="btn btn-accent">Add project</button>
+        </form>
+      </article>
+    </div>
+
+    <section class="student-projects">
+      <div class="student-projects__header">
+        <h2>3) Organize and highlight projects</h2>
+        <p>Drag cards to reorder, then feature your strongest work.</p>
+      </div>
+      {% if projects %}
+        <div class="student-projects__list" id="projectCards">
+          {% for project in projects %}
+            <article class="project-card" draggable="true" data-project-id="{{ project.id }}">
+              <div class="project-card__top">
+                <span class="drag-handle" title="Drag to reorder">::</span>
+                <div>
+                  <h3>{{ project.title }}</h3>
+                  <p class="project-meta">{{ project.get_category_display }} · {{ project.project_role|default:"Role not set" }}</p>
+                </div>
+                {% if project.featured %}
+                  <span class="featured-pill">Featured</span>
+                {% endif %}
+              </div>
+
+              {% if project.cover_image %}
+                <img class="project-cover" src="{{ project.cover_image.url }}" alt="{{ project.title }}" />
+              {% endif %}
+
+              <p>{{ project.description|truncatechars:220 }}</p>
+
+              {% if project.tools_list %}
+                <div class="chip-row">
+                  {% for tool in project.tools_list %}
+                    <span class="chip">{{ tool }}</span>
+                  {% endfor %}
+                </div>
+              {% endif %}
+
+              <div class="project-card__stats">
+                <span>{{ project.feedback_count }} feedback</span>
+                <span>{{ project.like_count }} likes</span>
+                <span>{{ project.bookmark_count }} bookmarks</span>
+              </div>
+
+              <div class="project-card__actions">
+                <form method="post">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="toggle_featured" />
+                  <input type="hidden" name="project_id" value="{{ project.id }}" />
+                  <button type="submit" class="btn btn-outline">
+                    {% if project.featured %}Remove featured{% else %}Feature project{% endif %}
+                  </button>
+                </form>
+                <form method="post" onsubmit="return confirm('Delete this project?');">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="delete_project" />
+                  <input type="hidden" name="project_id" value="{{ project.id }}" />
+                  <button type="submit" class="btn btn-outline danger">Delete</button>
+                </form>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="empty-state">No projects yet. Add your first student project to get started.</p>
+      {% endif %}
+    </section>
+  </div>
+</section>
+
+<style>
+  .student-workspace { padding: 42px 0 70px; background: var(--color-surface); }
+  .student-workspace__container { width: min(1180px, calc(100% - 36px)); margin: 0 auto; }
+  .student-workspace__header { background: var(--color-secondary); border-radius: 16px; padding: 24px; box-shadow: 0 8px 24px rgba(var(--color-primary-rgb), 0.08); }
+  .student-workspace__eyebrow { margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.78rem; color: var(--color-accent); font-weight: 700; }
+  .student-workspace__header h1 { margin: 0; color: var(--color-primary); }
+  .student-workspace__header p { margin: 8px 0 0; color: var(--color-text-muted); max-width: 760px; }
+  .student-workspace__actions { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .student-workspace__share { margin-top: 14px; color: var(--color-text); font-size: 0.95rem; }
+  .student-workspace__share code { display: inline-block; margin-top: 4px; padding: 8px 10px; border-radius: 8px; background: var(--color-surface); border: 1px solid var(--color-border); font-size: 0.84rem; word-break: break-all; }
+  .student-workspace__messages { margin: 16px 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+  .message { border-radius: 8px; padding: 10px 12px; font-size: 0.92rem; }
+  .message-success { background: #e8f7ec; color: #176331; }
+  .message-error { background: #fdebec; color: #8f1f2b; }
+  .message-info { background: #edf4ff; color: #1c4f95; }
+  .student-workspace__grid { margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+  .student-card { background: var(--color-secondary); border-radius: 14px; padding: 20px; box-shadow: 0 6px 20px rgba(var(--color-primary-rgb), 0.08); }
+  .student-card h2 { margin: 0 0 12px; color: var(--color-primary); font-size: 1.24rem; }
+  .student-card label { display: block; margin: 12px 0 6px; color: var(--color-text); font-weight: 600; font-size: 0.9rem; }
+  .student-card input[type="text"],
+  .student-card textarea,
+  .student-card select,
+  .student-card input[type="file"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-secondary);
+  }
+  .student-card textarea { resize: vertical; }
+  .student-card__row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; margin: 14px 0; }
+  .checkbox-row label { margin: 0; }
+  .field-error { margin-top: 4px; color: #8f1f2b; font-size: 0.82rem; }
+  .student-projects { margin-top: 22px; background: var(--color-secondary); border-radius: 14px; padding: 20px; box-shadow: 0 6px 20px rgba(var(--color-primary-rgb), 0.08); }
+  .student-projects__header h2 { margin: 0; color: var(--color-primary); }
+  .student-projects__header p { margin: 8px 0 0; color: var(--color-text-muted); }
+  .student-projects__list { margin-top: 16px; display: grid; gap: 12px; }
+  .project-card { border: 1px solid rgba(var(--color-primary-rgb), 0.12); border-radius: 12px; padding: 14px; background: var(--color-secondary); }
+  .project-card.dragging { opacity: 0.45; }
+  .project-card__top { display: flex; gap: 10px; align-items: center; }
+  .project-card__top h3 { margin: 0; color: var(--color-primary); font-size: 1.08rem; }
+  .project-meta { margin: 4px 0 0; color: var(--color-text-muted); font-size: 0.88rem; }
+  .drag-handle { color: var(--color-text-muted); cursor: grab; font-size: 1.2rem; line-height: 1; }
+  .featured-pill { margin-left: auto; font-size: 0.76rem; font-weight: 700; background: rgba(var(--color-accent-rgb), 0.22); color: var(--color-accent); padding: 5px 9px; border-radius: 999px; }
+  .project-cover { width: 100%; max-height: 220px; object-fit: cover; border-radius: 10px; margin-top: 10px; }
+  .chip-row { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 999px; padding: 4px 8px; font-size: 0.76rem; color: var(--color-text); }
+  .project-card__stats { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 10px; color: var(--color-text-muted); font-size: 0.82rem; }
+  .project-card__actions { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn.btn-outline.danger { border-color: #c93f4f; color: #c93f4f; }
+  .empty-state { margin: 16px 0 0; color: var(--color-text-muted); }
+  @media (max-width: 720px) { .student-card__row { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+  (function () {
+    const copyButton = document.getElementById("copyShareLinkButton");
+    const shareLinkValue = document.getElementById("shareLinkValue");
+    if (copyButton && shareLinkValue) {
+      copyButton.addEventListener("click", async () => {
+        const text = shareLinkValue.textContent.trim();
+        try {
+          await navigator.clipboard.writeText(text);
+          copyButton.textContent = "Copied";
+          window.setTimeout(() => {
+            copyButton.textContent = "Copy share link";
+          }, 1400);
+        } catch (error) {
+          copyButton.textContent = "Copy failed";
+          window.setTimeout(() => {
+            copyButton.textContent = "Copy share link";
+          }, 1400);
+        }
+      });
+    }
+
+    const list = document.getElementById("projectCards");
+    if (!list) return;
+
+    let draggingCard = null;
+    const cards = () => Array.from(list.querySelectorAll(".project-card"));
+    const getProjectIds = () => cards().map((card) => Number(card.dataset.projectId));
+
+    function getDragAfterElement(container, y) {
+      const draggableElements = [...container.querySelectorAll(".project-card:not(.dragging)")];
+      let closest = { offset: Number.NEGATIVE_INFINITY, element: null };
+      for (const child of draggableElements) {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+          closest = { offset, element: child };
+        }
+      }
+      return closest.element;
+    }
+
+    function getCookie(name) {
+      const cookies = document.cookie ? document.cookie.split(";") : [];
+      for (const rawCookie of cookies) {
+        const cookie = rawCookie.trim();
+        if (cookie.startsWith(name + "=")) {
+          return decodeURIComponent(cookie.slice(name.length + 1));
+        }
+      }
+      return "";
+    }
+
+    async function persistOrder() {
+      const payload = { project_ids: getProjectIds() };
+      const response = await fetch("{% url 'student_portfolio_reorder_projects' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCookie("csrftoken"),
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to save order");
+      }
+    }
+
+    list.addEventListener("dragstart", (event) => {
+      const target = event.target.closest(".project-card");
+      if (!target) return;
+      draggingCard = target;
+      target.classList.add("dragging");
+    });
+
+    list.addEventListener("dragend", async () => {
+      if (!draggingCard) return;
+      draggingCard.classList.remove("dragging");
+      draggingCard = null;
+      try {
+        await persistOrder();
+      } catch (error) {
+        window.location.reload();
+      }
+    });
+
+    list.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      if (!draggingCard) return;
+      const afterElement = getDragAfterElement(list, event.clientY);
+      if (afterElement == null) {
+        list.appendChild(draggingCard);
+      } else {
+        list.insertBefore(draggingCard, afterElement);
+      }
+    });
+  })();
+</script>
+{% endblock %}

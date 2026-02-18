@@ -312,6 +312,77 @@ class DesignerProfileAdmin(admin.ModelAdmin):
         return obj.location_display or "—"
 
 
+# ---------------- Student Portfolio ----------------
+class StudentPortfolioProjectInline(admin.TabularInline):
+    model = m.StudentPortfolioProject
+    extra = 0
+    fields = (
+        "title",
+        "category",
+        "featured",
+        "display_order",
+        "created_at",
+    )
+    readonly_fields = ("created_at",)
+    show_change_link = True
+
+
+@admin.register(m.StudentPortfolio)
+class StudentPortfolioAdmin(admin.ModelAdmin):
+    list_display = (
+        "user",
+        "visibility",
+        "template_style",
+        "project_count",
+        "updated_at",
+    )
+    list_filter = ("visibility", "template_style", "updated_at")
+    search_fields = ("user__username", "user__email", "skills", "design_interests")
+    readonly_fields = ("created_at", "updated_at", "share_slug")
+    inlines = [StudentPortfolioProjectInline]
+
+    def project_count(self, obj):
+        return obj.projects.count()
+    project_count.short_description = "Projects"
+
+
+@admin.register(m.StudentPortfolioProject)
+class StudentPortfolioProjectAdmin(admin.ModelAdmin):
+    list_display = (
+        "title",
+        "portfolio",
+        "category",
+        "featured",
+        "display_order",
+        "created_at",
+    )
+    list_filter = ("category", "featured", "created_at")
+    search_fields = ("title", "portfolio__user__username", "tools_used", "project_role")
+    readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(m.StudentProjectFeedback)
+class StudentProjectFeedbackAdmin(admin.ModelAdmin):
+    list_display = ("project", "author", "reviewer_role", "created_at")
+    list_filter = ("reviewer_role", "created_at")
+    search_fields = ("project__title", "author__username", "comment")
+    readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(m.StudentProjectLike)
+class StudentProjectLikeAdmin(admin.ModelAdmin):
+    list_display = ("user", "project", "created_at")
+    list_filter = ("created_at",)
+    search_fields = ("user__username", "project__title")
+
+
+@admin.register(m.StudentProjectBookmark)
+class StudentProjectBookmarkAdmin(admin.ModelAdmin):
+    list_display = ("user", "project", "created_at")
+    list_filter = ("created_at",)
+    search_fields = ("user__username", "project__title")
+
+
 # ---------------- Designer AI ----------------
 @admin.register(m.DesignerAISession)
 class DesignerAISessionAdmin(admin.ModelAdmin):

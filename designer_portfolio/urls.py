@@ -1,4 +1,4 @@
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.views.generic.base import RedirectView
 from rest_framework.routers import DefaultRouter
 from . import views
@@ -21,6 +21,7 @@ from .views import (
     approve_designer,
     reject_designer,
     reinstate_designer,
+    StudentPageView,
     AboutView,
     AboutSiteView,
     IPhoneAppDownloadView,
@@ -68,6 +69,15 @@ from .views import (
     forum_post_like,
     forum_post_toggle_solution,
 )
+from .student_portfolio_views import (
+    student_portfolio_dashboard,
+    student_portfolio_reorder_projects,
+    student_portfolio_public_view,
+    student_portfolio_project_feedback,
+    student_portfolio_project_like_toggle,
+    student_portfolio_project_bookmark_toggle,
+    student_portfolio_resume_pdf,
+)
 
 router = DefaultRouter()
 router.register(r"brands", BrandViewSet, basename="brand")
@@ -96,6 +106,38 @@ urlpatterns = [
     path("events/", EventListView.as_view(), name="event_list"),
     path("events/<slug:slug>/", EventDetailView.as_view(), name="event_detail"),
     
+    re_path(r"^student/?$", StudentPageView.as_view(), name="student_page"),
+    path("student/portfolio/", student_portfolio_dashboard, name="student_portfolio_dashboard"),
+    path(
+        "student/portfolio/projects/reorder/",
+        student_portfolio_reorder_projects,
+        name="student_portfolio_reorder_projects",
+    ),
+    path(
+        "student/portfolio/project/<int:project_id>/feedback/",
+        student_portfolio_project_feedback,
+        name="student_portfolio_project_feedback",
+    ),
+    path(
+        "student/portfolio/project/<int:project_id>/like/",
+        student_portfolio_project_like_toggle,
+        name="student_portfolio_project_like_toggle",
+    ),
+    path(
+        "student/portfolio/project/<int:project_id>/bookmark/",
+        student_portfolio_project_bookmark_toggle,
+        name="student_portfolio_project_bookmark_toggle",
+    ),
+    path(
+        "student/portfolio/share/<slug:share_slug>/",
+        student_portfolio_public_view,
+        name="student_portfolio_public",
+    ),
+    path(
+        "student/portfolio/resume.pdf",
+        student_portfolio_resume_pdf,
+        name="student_portfolio_resume_pdf",
+    ),
     path("about/", AboutView.as_view(), name="about"),
     path("about-site/", AboutSiteView.as_view(), name="about_site"),
     path("iphone-app/", IPhoneAppDownloadView.as_view(), name="iphone_app"),

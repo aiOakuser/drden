@@ -1,0 +1,307 @@
+{% extends "designer_portfolio/base.html" %}
+
+{% block title %}{{ portfolio.user.username }} · Student Portfolio{% endblock %}
+
+{% block content %}
+<section class="student-public">
+  <div class="student-public__container">
+    <header class="student-public__hero">
+      <div class="student-public__profile">
+        {% if portfolio.profile_photo %}
+          <img src="{{ portfolio.profile_photo.url }}" alt="{{ portfolio.user.username }}" class="student-public__avatar" />
+        {% else %}
+          <div class="student-public__avatar student-public__avatar--placeholder">{{ portfolio.user.username|first|upper }}</div>
+        {% endif %}
+        <div>
+          <p class="student-public__eyebrow">
+            {% if classroom_review_mode %}
+              Classroom review mode
+            {% else %}
+              Public student portfolio
+            {% endif %}
+          </p>
+          <h1>{{ portfolio.user.get_full_name|default:portfolio.user.username }}</h1>
+          {% if portfolio.bio %}
+            <p class="student-public__bio">{{ portfolio.bio }}</p>
+          {% endif %}
+        </div>
+      </div>
+      <div class="student-public__meta">
+        <div>
+          <strong>Template</strong>
+          <p>{{ portfolio.get_template_style_display }}</p>
+        </div>
+        <div>
+          <strong>Visibility</strong>
+          <p>{{ portfolio.get_visibility_display }}</p>
+        </div>
+        <div>
+          <strong>Share URL</strong>
+          <p><a href="{{ share_url }}">{{ share_url }}</a></p>
+        </div>
+        {% if is_owner %}
+          <a href="{% url 'student_portfolio_dashboard' %}" class="btn btn-primary">Edit portfolio</a>
+        {% endif %}
+      </div>
+    </header>
+
+    {% if portfolio.skills_list %}
+      <section class="student-public__chips">
+        <h2>Skills</h2>
+        <div class="chip-row">
+          {% for skill in portfolio.skills_list %}
+            <span class="chip">{{ skill }}</span>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    {% if portfolio.interests_list %}
+      <section class="student-public__chips">
+        <h2>Design interests</h2>
+        <div class="chip-row">
+          {% for interest in portfolio.interests_list %}
+            <span class="chip">{{ interest }}</span>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    {% if messages %}
+      <ul class="student-public__messages">
+        {% for message in messages %}
+          <li class="message message-{{ message.tags|default:'info' }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    {% if projects_by_category %}
+      {% for category_name, category_projects in projects_by_category.items %}
+        <section class="student-public__category">
+          <div class="student-public__category-header">
+            <h2>{{ category_name }}</h2>
+            <p>{{ category_projects|length }} project{{ category_projects|length|pluralize }}</p>
+          </div>
+
+          <div class="student-public__project-grid">
+            {% for project in category_projects %}
+              <article class="public-project-card">
+                <div class="public-project-card__head">
+                  <h3>{{ project.title }}</h3>
+                  {% if project.featured %}
+                    <span class="featured-pill">Featured</span>
+                  {% endif %}
+                </div>
+                <p class="public-project-meta">
+                  {{ project.project_role|default:"Role not set" }}
+                </p>
+
+                {% if project.cover_image %}
+                  <img src="{{ project.cover_image.url }}" alt="{{ project.title }}" class="public-project-cover" />
+                {% endif %}
+
+                <p>{{ project.description|linebreaksbr }}</p>
+
+                {% if project.tools_list %}
+                  <div class="chip-row">
+                    {% for tool in project.tools_list %}
+                      <span class="chip">{{ tool }}</span>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+
+                {% if project.process_steps_list %}
+                  <div class="process-steps">
+                    <strong>Process</strong>
+                    <ol>
+                      {% for step in project.process_steps_list %}
+                        <li>{{ step }}</li>
+                      {% endfor %}
+                    </ol>
+                  </div>
+                {% endif %}
+
+                <div class="asset-links">
+                  {% if project.process_video %}
+                    <a href="{{ project.process_video.url }}" target="_blank" rel="noopener">Watch process video</a>
+                  {% endif %}
+                  {% if project.project_pdf %}
+                    <a href="{{ project.project_pdf.url }}" target="_blank" rel="noopener">Open project PDF</a>
+                  {% endif %}
+                </div>
+
+                <div class="public-project-card__stats">
+                  <span>{{ project.like_count }} like{{ project.like_count|pluralize }}</span>
+                  <span>{{ project.bookmark_count }} bookmark{{ project.bookmark_count|pluralize }}</span>
+                  <span>{{ project.feedback_entries.count }} feedback</span>
+                </div>
+
+                {% if user.is_authenticated %}
+                  <div class="public-project-card__actions">
+                    <form method="post" action="{% url 'student_portfolio_project_like_toggle' project.id %}">
+                      {% csrf_token %}
+                      <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                      <button type="submit" class="btn btn-outline">
+                        {% if project.id in liked_project_ids %}Unlike{% else %}Like{% endif %}
+                      </button>
+                    </form>
+                    <form method="post" action="{% url 'student_portfolio_project_bookmark_toggle' project.id %}">
+                      {% csrf_token %}
+                      <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                      <button type="submit" class="btn btn-outline">
+                        {% if project.id in bookmarked_project_ids %}Remove bookmark{% else %}Bookmark{% endif %}
+                      </button>
+                    </form>
+                  </div>
+                {% else %}
+                  <p class="login-note">
+                    <a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}">Sign in</a>
+                    to like, bookmark, or leave feedback.
+                  </p>
+                {% endif %}
+
+                <section class="feedback-section">
+                  <h4>Feedback</h4>
+                  {% if project.feedback_entries.all %}
+                    <ul class="feedback-list">
+                      {% for feedback in project.feedback_entries.all %}
+                        <li>
+                          <strong>
+                            {% if feedback.author %}
+                              {{ feedback.author.get_full_name|default:feedback.author.username }}
+                            {% else %}
+                              Reviewer
+                            {% endif %}
+                          </strong>
+                          <span class="feedback-role">{{ feedback.get_reviewer_role_display }}</span>
+                          <p>{{ feedback.comment }}</p>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  {% else %}
+                    <p class="muted">No feedback yet.</p>
+                  {% endif %}
+
+                  {% if user.is_authenticated %}
+                    <form method="post" action="{% url 'student_portfolio_project_feedback' project.id %}">
+                      {% csrf_token %}
+                      <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                      <label>
+                        Reviewer role
+                        <select name="reviewer_role" class="form-control">
+                          <option value="peer">Peer</option>
+                          <option value="teacher">Teacher</option>
+                        </select>
+                      </label>
+                      <label>
+                        Comment
+                        <textarea name="comment" rows="3" class="form-control" required></textarea>
+                      </label>
+                      <button type="submit" class="btn btn-primary">Post feedback</button>
+                    </form>
+                  {% endif %}
+                </section>
+              </article>
+            {% endfor %}
+          </div>
+        </section>
+      {% endfor %}
+    {% else %}
+      <p class="empty-state">No projects have been uploaded yet.</p>
+    {% endif %}
+  </div>
+</section>
+
+<style>
+  .student-public { padding: 40px 0 72px; background: var(--color-surface); }
+  .student-public__container { width: min(1160px, calc(100% - 36px)); margin: 0 auto; }
+  .student-public__hero {
+    background: var(--color-secondary);
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: 0 8px 24px rgba(var(--color-primary-rgb), 0.08);
+    display: grid;
+    gap: 16px;
+    grid-template-columns: 2fr 1fr;
+  }
+  .student-public__profile { display: flex; gap: 16px; align-items: flex-start; }
+  .student-public__avatar {
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--color-surface);
+    border: 2px solid rgba(var(--color-primary-rgb), 0.08);
+  }
+  .student-public__avatar--placeholder {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: var(--color-primary);
+    font-weight: 700;
+  }
+  .student-public__eyebrow {
+    margin: 0 0 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.78rem;
+    color: var(--color-accent);
+    font-weight: 700;
+  }
+  .student-public__profile h1 { margin: 0; color: var(--color-primary); }
+  .student-public__bio { margin: 10px 0 0; color: var(--color-text-muted); line-height: 1.6; }
+  .student-public__meta { border-left: 1px solid rgba(var(--color-primary-rgb), 0.08); padding-left: 16px; }
+  .student-public__meta strong { display: block; color: var(--color-primary); font-size: 0.86rem; }
+  .student-public__meta p { margin: 4px 0 12px; color: var(--color-text-muted); font-size: 0.92rem; word-break: break-word; }
+  .student-public__chips {
+    margin-top: 18px;
+    background: var(--color-secondary);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 6px 18px rgba(var(--color-primary-rgb), 0.08);
+  }
+  .student-public__chips h2 { margin: 0 0 10px; color: var(--color-primary); font-size: 1.05rem; }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chip { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 999px; padding: 4px 9px; font-size: 0.8rem; }
+  .student-public__messages { list-style: none; margin: 14px 0; padding: 0; display: grid; gap: 8px; }
+  .message { border-radius: 8px; padding: 10px 12px; font-size: 0.92rem; }
+  .message-success { background: #e8f7ec; color: #176331; }
+  .message-error { background: #fdebec; color: #8f1f2b; }
+  .message-info { background: #edf4ff; color: #1c4f95; }
+  .student-public__category { margin-top: 20px; background: var(--color-secondary); border-radius: 14px; padding: 18px; box-shadow: 0 6px 18px rgba(var(--color-primary-rgb), 0.08); }
+  .student-public__category-header { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .student-public__category-header h2 { margin: 0; color: var(--color-primary); }
+  .student-public__category-header p { margin: 0; color: var(--color-text-muted); }
+  .student-public__project-grid { margin-top: 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
+  .public-project-card { border: 1px solid rgba(var(--color-primary-rgb), 0.1); border-radius: 12px; padding: 14px; }
+  .public-project-card__head { display: flex; align-items: center; gap: 8px; }
+  .public-project-card__head h3 { margin: 0; color: var(--color-primary); }
+  .featured-pill { margin-left: auto; font-size: 0.72rem; font-weight: 700; background: rgba(var(--color-accent-rgb), 0.22); color: var(--color-accent); padding: 4px 8px; border-radius: 999px; }
+  .public-project-meta { margin: 4px 0 10px; color: var(--color-text-muted); font-size: 0.9rem; }
+  .public-project-cover { width: 100%; max-height: 210px; object-fit: cover; border-radius: 9px; margin-bottom: 10px; }
+  .process-steps { margin-top: 10px; }
+  .process-steps strong { color: var(--color-primary); }
+  .process-steps ol { margin: 8px 0 0 18px; padding: 0; }
+  .asset-links { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .asset-links a { color: var(--color-primary); font-size: 0.88rem; text-decoration: none; font-weight: 600; }
+  .public-project-card__stats { margin-top: 10px; display: flex; gap: 12px; flex-wrap: wrap; color: var(--color-text-muted); font-size: 0.82rem; }
+  .public-project-card__actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .login-note { margin-top: 10px; color: var(--color-text-muted); font-size: 0.9rem; }
+  .feedback-section { margin-top: 14px; border-top: 1px solid rgba(var(--color-primary-rgb), 0.1); padding-top: 12px; }
+  .feedback-section h4 { margin: 0 0 8px; color: var(--color-primary); }
+  .feedback-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .feedback-list li { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: 10px; }
+  .feedback-list p { margin: 6px 0 0; color: var(--color-text); }
+  .feedback-role { margin-left: 6px; color: var(--color-text-muted); font-size: 0.82rem; }
+  .feedback-section form { margin-top: 10px; display: grid; gap: 8px; }
+  .feedback-section label { display: grid; gap: 5px; color: var(--color-text); font-size: 0.88rem; }
+  .feedback-section textarea,
+  .feedback-section select { width: 100%; padding: 9px 10px; border-radius: 8px; border: 1px solid var(--color-border); }
+  .muted, .empty-state { color: var(--color-text-muted); }
+  @media (max-width: 860px) {
+    .student-public__hero { grid-template-columns: 1fr; }
+    .student-public__meta { border-left: none; border-top: 1px solid rgba(var(--color-primary-rgb), 0.08); padding-top: 12px; padding-left: 0; }
+  }
+</style>
+{% endblock %}
