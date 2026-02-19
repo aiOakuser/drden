@@ -28,7 +28,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.cache import cache
 from django.core.mail import EmailMessage, BadHeaderError
 from django.core.exceptions import ValidationError
-from django.core.validators import URLValidator
+from django.core.validators import URLValidator, validate_email
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.db import transaction, IntegrityError
@@ -57,6 +57,7 @@ from .emails import (
     notify_user_password_reset_completion,
     notify_problem_report,
     notify_designer_new_dress_order,
+    notify_viewer_dress_order_confirmation,
 )
 from .models import (
     DesignerProfile,
@@ -2084,7 +2085,7 @@ def neworders_dresses_view(request):
 def neworders_dresses_submit_view(request):
     """
     Submit a dress order to a designer. Requires session access (phone gate).
-    Sends email notification to the designer.
+    Sends email notification to the designer and confirmation to the viewer.
     """
     session_key = "neworder_dresses_phone"
     if not request.session.get(session_key):
@@ -2121,6 +2122,17 @@ def neworders_dresses_submit_view(request):
         except Exception:
             return None
 
+    customer_email = _str(request.POST.get("customer_email"))
+    if customer_email:
+        try:
+            validate_email(customer_email)
+        except ValidationError:
+            messages.error(
+                request,
+                "Please enter a valid email address to receive order confirmation.",
+            )
+            return redirect("neworders_dresses")
+
     order = DressOrder.objects.create(
         designer=designer,
         customer_phone=request.session.get(session_key, ""),
@@ -2137,15 +2149,29 @@ def neworders_dresses_submit_view(request):
         formal_subcategory=_str(request.POST.get("formal_subcategory")),
     )
 
+    viewer_confirmation_sent = False
     try:
         notify_designer_new_dress_order(order, request=request)
     except Exception:
         logger.exception("Failed to send dress order email to designer %s", designer_id)
+    try:
+        viewer_confirmation_sent = notify_viewer_dress_order_confirmation(
+            order,
+            viewer_email=customer_email,
+            request=request,
+        )
+    except Exception:
+        logger.exception("Failed to send dress order confirmation to viewer")
 
     designer_name = designer.user.get_full_name() or designer.user.username
+    success_message = (
+        f"Order sent to {designer_name}. They will receive an email notification and may contact you soon."
+    )
+    if viewer_confirmation_sent:
+        success_message += " A confirmation email has also been sent to you."
     messages.success(
         request,
-        f"Order sent to {designer_name}. They will receive an email notification and may contact you soon.",
+        success_message,
     )
     return redirect("neworders_dresses")
 

@@ -118,6 +118,7 @@ export async function fetchNewOrderOptions(): Promise<NewOrderOptions> {
 
 export async function submitDressOrder(data: {
   phone: string;
+  customer_email?: string;
   designer_id: number;
   dress_type?: string;
   dress_label?: string;
@@ -133,6 +134,7 @@ export async function submitDressOrder(data: {
 }): Promise<{ success: boolean; message: string }> {
   const body: Record<string, unknown> = {
     phone: data.phone,
+    customer_email: data.customer_email || "",
     designer_id: data.designer_id,
     dress_type: data.dress_type || "",
     dress_label: data.dress_label || "",
@@ -146,7 +148,7 @@ export async function submitDressOrder(data: {
     wool_type: data.wool_type || "",
     fabric_texture: data.fabric_texture || "",
   };
-  return request<{ success: boolean; message: string }>("/api/mobile/neworders/submit/", {
+  return request<{ success: boolean; message: string; viewer_confirmation_sent?: boolean }>("/api/mobile/neworders/submit/", {
     method: "POST",
     body: JSON.stringify(body),
   });
