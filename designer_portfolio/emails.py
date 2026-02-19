@@ -135,22 +135,27 @@ def notify_user_password_reset_completion(user, *, request=None):
     )
 
 
-def _coalesce_designer_email(designer_profile) -> str:
-    """Return the best email for a designer (profile contact or user email)."""
-    email = (getattr(designer_profile, "contact_email", "") or "").strip()
-    if email:
-        return email
+def _collect_designer_emails(designer_profile) -> list[str]:
+    """Return unique designer recipient emails (contact + user account)."""
+
+    recipients: list[str] = []
+    contact_email = (getattr(designer_profile, "contact_email", "") or "").strip()
+    if contact_email:
+        recipients.append(contact_email)
+
     user = getattr(designer_profile, "user", None)
-    if user:
-        return (getattr(user, "email", "") or "").strip()
-    return ""
+    user_email = (getattr(user, "email", "") or "").strip() if user else ""
+    if user_email and user_email not in recipients:
+        recipients.append(user_email)
+
+    return recipients
 
 
 def notify_designer_new_dress_order(order, *, request=None):
     """Email the designer when a new dress order is submitted through GlobalDesignerHub."""
 
-    recipient = _coalesce_designer_email(order.designer)
-    if not recipient:
+    recipients = _collect_designer_emails(order.designer)
+    if not recipients:
         return
 
     designer_name = (
@@ -200,9 +205,74 @@ def notify_designer_new_dress_order(order, *, request=None):
         subject=subject,
         message=message,
         from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=recipients,
+        fail_silently=True,
+    )
+
+
+def notify_viewer_dress_order_confirmation(order, *, viewer_email: str = "", request=None) -> bool:
+    """Email order confirmation details to the submitting viewer/customer."""
+
+    recipient = (viewer_email or "").strip()
+    if not recipient and request is not None:
+        user = getattr(request, "user", None)
+        if user is not None and getattr(user, "is_authenticated", False):
+            recipient = _coalesce_user_email(user)
+
+    if not recipient:
+        return False
+
+    designer_name = (
+        getattr(order.designer.user, "get_full_name", lambda: "")()
+        or getattr(order.designer.user, "username", "Designer")
+    )
+    site_name = _site_name()
+
+    dress_line = order.dress_label or order.dress_type or "—"
+    if order.formal_subcategory:
+        dress_line += f" ({order.formal_subcategory.replace('_', ' ').title()})"
+    lines = [
+        "Hi,",
+        "",
+        f"Your order has been sent to {designer_name} on {site_name}.",
+        "",
+        "Order details:",
+        f"  Dress type: {dress_line}",
+        f"  Fabric: {order.fabric_label or order.fabric_type or '—'}",
+    ]
+
+    if order.wool_type:
+        lines.append(f"  Wool type: {order.wool_type.replace('_', ' ').title()}")
+    if order.fabric_texture:
+        lines.append(f"  Texture: {order.fabric_texture.replace('_', ' ').title()}")
+
+    meas = []
+    if order.shoulder_width is not None:
+        meas.append(f"Shoulder width: {order.shoulder_width} cm")
+    if order.chest is not None:
+        meas.append(f"Chest: {order.chest} cm")
+    if order.sleeve_short is not None:
+        meas.append(f"Short sleeve: {order.sleeve_short} cm")
+    if order.sleeve_wrist is not None:
+        meas.append(f"Wrist length: {order.sleeve_wrist} cm")
+    if meas:
+        lines.extend(["", "Measurements:"] + [f"  {m}" for m in meas])
+
+    if order.customer_phone:
+        lines.extend(["", f"Phone: {order.customer_phone}"])
+
+    lines.extend(["", "We will notify the designer right away.", "", "— GlobalDesignerHub"])
+    message = "\n".join(lines)
+    subject = f"[{site_name}] Order confirmation — {order.dress_label or 'Dress'}"
+
+    send_mail(
+        subject=subject,
+        message=message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[recipient],
         fail_silently=True,
     )
+    return True
 
 
 def notify_problem_report(report, *, request=None):

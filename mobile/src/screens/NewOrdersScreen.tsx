@@ -28,6 +28,7 @@ export default function NewOrdersScreen() {
   const [designers, setDesigners] = useState<any[]>([]);
 
   const [phone, setPhone] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
   const [dressType, setDressType] = useState<Option | null>(null);
   const [formalSubcategory, setFormalSubcategory] = useState<Option | null>(null);
   const [shoulderWidth, setShoulderWidth] = useState("");
@@ -69,8 +70,13 @@ export default function NewOrdersScreen() {
 
   const submit = async () => {
     const phoneDigits = (phone || "").replace(/\D/g, "");
+    const emailValue = (customerEmail || "").trim();
     if (phoneDigits.length < 7) {
       Alert.alert("Phone required", "Enter a valid phone number (at least 7 digits)");
+      return;
+    }
+    if (emailValue && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
+      Alert.alert("Invalid email", "Enter a valid email address to receive order confirmation");
       return;
     }
     if (!designer?.user_id) {
@@ -81,6 +87,7 @@ export default function NewOrdersScreen() {
     try {
       const res = await submitDressOrder({
         phone,
+        customer_email: emailValue,
         designer_id: designer.user_id,
         dress_type: dressType?.value || "",
         dress_label: dressType?.label || "",
@@ -95,6 +102,7 @@ export default function NewOrdersScreen() {
         fabric_texture: texture?.value || "",
       });
       Alert.alert("Order sent", res.message);
+      setCustomerEmail("");
       setDressType(null);
       setFormalSubcategory(null);
       setShoulderWidth("");
@@ -124,7 +132,7 @@ export default function NewOrdersScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>New Orders — Dresses</Text>
-      <Text style={styles.subtitle}>Select dress type, measurements, fabric & designer. Order is sent via email.</Text>
+      <Text style={styles.subtitle}>Select dress type, measurements, fabric, and designer. Add your email to receive order confirmation.</Text>
 
       {/* Phone */}
       <Text style={styles.label}>Phone number *</Text>
@@ -135,6 +143,17 @@ export default function NewOrdersScreen() {
         value={phone}
         onChangeText={setPhone}
         keyboardType="phone-pad"
+      />
+      <Text style={styles.label}>Email for confirmation</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="you@example.com"
+        placeholderTextColor="#666"
+        value={customerEmail}
+        onChangeText={setCustomerEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoCorrect={false}
       />
 
       {/* Dress type */}

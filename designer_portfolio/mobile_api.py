@@ -2,9 +2,13 @@
 Mobile API for GlobalDesignerHub iPhone app.
 Provides JSON endpoints for designers, collections, designs, events, auth, and new orders.
 """
+import logging
+
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django.contrib.auth import authenticate
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from rest_framework import serializers, status
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -20,8 +24,10 @@ from .views import (
     FABRIC_TEXTURES,
     FORMAL_SUBCATEGORIES,
 )
-from .emails import notify_designer_new_dress_order
+from .emails import notify_designer_new_dress_order, notify_viewer_dress_order_confirmation
 from .serializers import DesignSerializer, EventSerializer
+
+logger = logging.getLogger(__name__)
 
 
 # --- Mobile serializers (absolute image URLs) ---
@@ -290,12 +296,21 @@ class MobileNewOrdersSubmitView(APIView):
         data = getattr(request, "data", {}) or {}
         designer_id = data.get("designer_id")
         phone = (data.get("phone") or "").strip()
+        customer_email = ((data.get("customer_email") or data.get("email")) or "").strip()
         digits = "".join(c for c in phone if c.isdigit())
         if len(digits) < 7:
             return Response(
                 {"error": "Valid phone number required (at least 7 digits)"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        if customer_email:
+            try:
+                validate_email(customer_email)
+            except ValidationError:
+                return Response(
+                    {"error": "Please enter a valid email address to receive order confirmation"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         if not designer_id:
             return Response(
                 {"error": "Please select a designer"},
@@ -340,14 +355,26 @@ class MobileNewOrdersSubmitView(APIView):
             formal_subcategory=_str(data.get("formal_subcategory")),
         )
 
+        viewer_confirmation_sent = False
         try:
             notify_designer_new_dress_order(order, request=request)
         except Exception:
-            import logging
-            logging.getLogger(__name__).exception("Failed to send dress order email")
+            logger.exception("Failed to send dress order email to designer")
+        try:
+            viewer_confirmation_sent = notify_viewer_dress_order_confirmation(
+                order,
+                viewer_email=customer_email,
+                request=request,
+            )
+        except Exception:
+            logger.exception("Failed to send dress order confirmation to viewer")
 
         designer_name = designer.user.get_full_name() or designer.user.username
+        message = f"Order sent to {designer_name}. They will receive an email notification."
+        if viewer_confirmation_sent:
+            message += " A confirmation email was also sent to you."
         return Response({
             "success": True,
-            "message": f"Order sent to {designer_name}. They will receive an email notification.",
+            "message": message,
+            "viewer_confirmation_sent": viewer_confirmation_sent,
         })

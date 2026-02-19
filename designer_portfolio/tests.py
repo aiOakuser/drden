@@ -10,6 +10,7 @@ from social_core.exceptions import AuthForbidden
 
 from .models import (
     DesignerProfile,
+    DressOrder,
     UserSubscription,
     ProblemReport,
     Project,
@@ -950,3 +951,105 @@ class StudentPortfolioFeatureTests(TestCase):
         self.assertEqual(response["Content-Type"], "application/pdf")
         self.assertIn("attachment", response["Content-Disposition"])
         self.assertTrue(response.content.startswith(b"%PDF"))
+
+
+@override_settings(
+    SECURE_SSL_REDIRECT=False,
+    SESSION_COOKIE_SECURE=False,
+    CSRF_COOKIE_SECURE=False,
+    STORAGES=TEST_STORAGE_BACKENDS,
+    EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+    DEFAULT_FROM_EMAIL="no-reply@example.com",
+)
+class DressOrderConfirmationEmailTests(TestCase):
+    def setUp(self) -> None:
+        self.designer_user = User.objects.create_user(
+            username="designer-orders",
+            email="designer-orders@example.com",
+            password="StrongPass123!",
+            is_active=True,
+        )
+        self.designer_profile = DesignerProfile.objects.create(
+            user=self.designer_user,
+            contact_email="designer-contact@example.com",
+            specialization="Occasionwear",
+            location="Paris, France",
+        )
+
+    def _unlock_neworder_session(self):
+        session = self.client.session
+        session["neworder_dresses_phone"] = "+1 555 123 4567"
+        session.save()
+
+    def test_web_submit_sends_designer_and_viewer_emails(self):
+        mail.outbox.clear()
+        self._unlock_neworder_session()
+
+        response = self.client.post(
+            reverse("neworders_dresses_submit"),
+            {
+                "designer_id": str(self.designer_user.id),
+                "dress_type": "casual",
+                "dress_label": "Casual Dress",
+                "customer_email": "viewer@example.com",
+            },
+            follow=False,
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers.get("Location"), reverse("neworders_dresses"))
+        self.assertEqual(DressOrder.objects.count(), 1)
+        self.assertEqual(len(mail.outbox), 2)
+
+        designer_email = next(
+            (message for message in mail.outbox if "New dress order" in (message.subject or "")),
+            None,
+        )
+        viewer_email = next(
+            (message for message in mail.outbox if "Order confirmation" in (message.subject or "")),
+            None,
+        )
+        self.assertIsNotNone(designer_email, "Expected a designer order notification email")
+        self.assertIsNotNone(viewer_email, "Expected a viewer confirmation email")
+        self.assertIn("designer-contact@example.com", designer_email.to)
+        self.assertIn("designer-orders@example.com", designer_email.to)
+        self.assertEqual(viewer_email.to, ["viewer@example.com"])
+
+    def test_mobile_submit_sends_designer_and_viewer_emails(self):
+        mail.outbox.clear()
+
+        response = self.client.post(
+            reverse("mobile_neworders_submit"),
+            data=json.dumps(
+                {
+                    "phone": "+1 555 765 4321",
+                    "customer_email": "mobile-viewer@example.com",
+                    "designer_id": self.designer_user.id,
+                    "dress_type": "formal",
+                    "dress_label": "Formal Dress",
+                    "formal_subcategory": "suits",
+                }
+            ),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload.get("success"))
+        self.assertTrue(payload.get("viewer_confirmation_sent"))
+        self.assertEqual(DressOrder.objects.count(), 1)
+        self.assertEqual(len(mail.outbox), 2)
+
+        designer_email = next(
+            (message for message in mail.outbox if "New dress order" in (message.subject or "")),
+            None,
+        )
+        viewer_email = next(
+            (message for message in mail.outbox if "Order confirmation" in (message.subject or "")),
+            None,
+        )
+        self.assertIsNotNone(designer_email, "Expected a designer order notification email")
+        self.assertIsNotNone(viewer_email, "Expected a viewer confirmation email")
+        self.assertIn("designer-contact@example.com", designer_email.to)
+        self.assertIn("designer-orders@example.com", designer_email.to)
+        self.assertEqual(viewer_email.to, ["mobile-viewer@example.com"])
