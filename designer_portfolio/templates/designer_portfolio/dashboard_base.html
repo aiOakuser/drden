@@ -57,6 +57,16 @@
         </li>
         <li class="nav-item">
           <a
+            href="{% url 'designer_orders_list' %}"
+            class="nav-link {% if current_section == 'orders' %}active{% endif %}"
+          >
+            <i class="icon">📦</i>
+            <span>Orders</span>
+            {% if new_orders_count %}<span class="count">{{ new_orders_count }}</span>{% endif %}
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
             href="{% url 'project_create' %}"
             class="nav-link {% if current_section == 'projects' %}active{% endif %}"
           >

@@ -52,6 +52,7 @@ from .forms import (
     NewOrderAccessForm,
 )
 from .auth_utils import ensure_designer_access
+from .messenger_utils import user_can_use_messenger, message_contains_prohibited_content
 from .emails import (
     send_registration_notifications,
     notify_user_password_reset_completion,
@@ -62,6 +63,7 @@ from .emails import (
 from .models import (
     DesignerProfile,
     DressOrder,
+    DressOrderUpdate,
     SubscriptionPlan,
     UserSubscription,
     Design,
@@ -2136,6 +2138,8 @@ def neworders_dresses_submit_view(request):
     order = DressOrder.objects.create(
         designer=designer,
         customer_phone=request.session.get(session_key, ""),
+        customer_email=customer_email or "",
+        status="new",
         dress_type=_str(request.POST.get("dress_type")),
         dress_label=_str(request.POST.get("dress_label")),
         shoulder_width=_decimal(request.POST.get("shoulder_width")),
@@ -2174,6 +2178,128 @@ def neworders_dresses_submit_view(request):
         success_message,
     )
     return redirect("neworders_dresses")
+
+
+# ---------------- Designer Orders (Dress Orders) ----------------
+@login_required
+def designer_orders_list(request):
+    """Designer sees their orders, filtered by status (default: new)."""
+    profile = get_object_or_404(DesignerProfile, user=request.user)
+    status_filter = (request.GET.get("status") or "new").strip()
+    valid_statuses = [s[0] for s in DressOrder.STATUS_CHOICES]
+    if status_filter not in valid_statuses:
+        status_filter = "new"
+
+    orders = (
+        DressOrder.objects.filter(designer=profile)
+        .select_related("design")
+        .prefetch_related("updates")
+        .filter(status=status_filter)
+        .order_by("-created_at")
+    )
+    new_count = DressOrder.objects.filter(designer=profile, status="new").count()
+    in_progress_count = DressOrder.objects.filter(designer=profile, status="in_progress").count()
+
+    return render(
+        request,
+        "designer_portfolio/designer_orders_list.html",
+        {
+            "current_section": "orders",
+            "orders": orders,
+            "status_filter": status_filter,
+            "new_count": new_count,
+            "in_progress_count": in_progress_count,
+            "new_orders_count": new_count,
+        },
+    )
+
+
+@login_required
+def designer_order_detail(request, order_id):
+    """Designer sees order detail, can update status, add notes, attach design, add techpack."""
+    profile = get_object_or_404(DesignerProfile, user=request.user)
+    order = get_object_or_404(DressOrder, pk=order_id, designer=profile)
+    order_updates = list(order.updates.order_by("created_at"))
+    designer_designs = Design.objects.filter(designer=request.user).order_by("-created_at")
+
+    if request.method == "POST":
+        action = (request.POST.get("action") or "").strip()
+        if action == "update_status":
+            new_status = (request.POST.get("status") or "").strip()
+            if new_status in dict(DressOrder.STATUS_CHOICES):
+                order.status = new_status
+                order.save(update_fields=["status"])
+                notes = (request.POST.get("notes") or "").strip()
+                if notes or new_status:
+                    DressOrderUpdate.objects.create(
+                        order=order,
+                        status=new_status,
+                        notes=notes,
+                    )
+                messages.success(request, f"Order status updated to {dict(DressOrder.STATUS_CHOICES).get(new_status, new_status)}.")
+                return redirect("designer_order_detail", order_id=order.pk)
+        elif action == "add_update":
+            notes = (request.POST.get("notes") or "").strip()
+            techpack_notes = (request.POST.get("techpack_notes") or "").strip()
+            techpack_pdf = request.FILES.get("techpack_pdf")
+            status_val = (request.POST.get("status") or "").strip() or order.status
+            if notes or techpack_notes or techpack_pdf:
+                update = DressOrderUpdate.objects.create(
+                    order=order,
+                    status=status_val,
+                    notes=notes,
+                    techpack_notes=techpack_notes,
+                    techpack_pdf=techpack_pdf,
+                )
+                if status_val and status_val != order.status:
+                    order.status = status_val
+                    order.save(update_fields=["status"])
+                messages.success(request, "Update added.")
+                return redirect("designer_order_detail", order_id=order.pk)
+            messages.error(request, "Please add notes or techpack information.")
+        elif action == "attach_design":
+            design_id = request.POST.get("design_id")
+            if design_id:
+                try:
+                    design = Design.objects.get(pk=int(design_id), designer=request.user)
+                    order.design = design
+                    order.save(update_fields=["design"])
+                    messages.success(request, f'Design "{design.title}" attached to this order.')
+                    return redirect("designer_order_detail", order_id=order.pk)
+                except (Design.DoesNotExist, ValueError, TypeError):
+                    messages.error(request, "Invalid design selected.")
+            else:
+                order.design = None
+                order.save(update_fields=["design"])
+                messages.success(request, "Design detached from order.")
+                return redirect("designer_order_detail", order_id=order.pk)
+
+    new_orders_count = DressOrder.objects.filter(designer=profile, status="new").count()
+    return render(
+        request,
+        "designer_portfolio/designer_order_detail.html",
+        {
+            "current_section": "orders",
+            "order": order,
+            "order_updates": order_updates,
+            "designer_designs": designer_designs,
+            "new_orders_count": new_orders_count,
+            "status_choices": DressOrder.STATUS_CHOICES,
+        },
+    )
+
+
+def viewer_order_detail(request, token):
+    """Viewer sees their order (and linked design) via access token. No login required."""
+    order = get_object_or_404(
+        DressOrder.objects.prefetch_related("updates").select_related("design"),
+        access_token=token,
+    )
+    return render(
+        request,
+        "designer_portfolio/viewer_order_detail.html",
+        {"order": order},
+    )
 
 
 class AboutView(TemplateView):
@@ -2966,7 +3092,51 @@ class DesignListView(TemplateView):
     template_name = "designer_portfolio/designs.html"
 
 class DesignDetailView(DetailView):
+    model = Design
     template_name = "designer_portfolio/design_detail.html"
+    context_object_name = "collection"  # Template expects collection/media structure
+    slug_url_kwarg = "slug"
+
+    def get_queryset(self):
+        return Design.objects.prefetch_related("images")
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        design = self.object
+        # If design is linked to an order, only designer and order viewer can see it
+        if design.dress_orders.exists():
+            can_view = False
+            if request.user.is_authenticated and design.designer_id == request.user.pk:
+                can_view = True
+            token = (request.GET.get("token") or "").strip()
+            if token and design.dress_orders.filter(access_token=token).exists():
+                can_view = True
+            if not can_view:
+                raise Http404("Design not found")
+        elif not design.published:
+            # Unpublished design not linked to order: only designer can see
+            if not request.user.is_authenticated or design.designer_id != request.user.pk:
+                raise Http404("Design not found")
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        design = self.object
+        # Build collection-like structure for template (title, year, text, media)
+        from django.templatetags.static import static
+        media = []
+        for img in design.images.order_by("order"):
+            if img.image:
+                media.append({"type": "image", "url": img.image.url, "name": img.caption or design.title})
+        if not media and design.cover_image:
+            media.append({"type": "image", "url": design.cover_image.url, "name": design.title})
+        context["collection"] = {
+            "title": design.title,
+            "year": design.year,
+            "text": [design.description] if design.description else [],
+        }
+        context["media"] = media
+        return context
 
 def _build_event_media(event: Event) -> list[dict[str, str]]:
     media = []
@@ -5395,12 +5565,14 @@ def _user_has_designer_profile(user):
     return DesignerProfile.objects.filter(user=user).exists()
 
 
-def _designer_search_results(query, exclude_user_ids, limit):
+def _designer_search_results(query, exclude_user_ids, limit, exclude_frozen=True):
     qs = (
         DesignerProfile.objects.filter(user__is_active=True)
         .exclude(user_id__in=exclude_user_ids)
         .select_related("user")
     )
+    if exclude_frozen:
+        qs = qs.exclude(user__subscription__status="frozen")
     if query:
         qs = qs.filter(
             Q(user__username__icontains=query)
@@ -5428,9 +5600,10 @@ def _get_or_create_conversation(user_a, user_b):
 @login_required
 def messenger_list(request):
     """List conversations for the current user."""
-    if not _user_has_designer_profile(request.user):
-        messages.info(request, "Messenger is available to registered designers. Please complete your profile.")
-        return redirect("designer_about_me")
+    can_use, reason, redirect_view = user_can_use_messenger(request.user)
+    if not can_use:
+        messages.info(request, reason)
+        return redirect(redirect_view or "designer_about_me")
 
     messenger_unavailable = False
     messenger_unavailable_message = ""
@@ -5502,9 +5675,10 @@ def messenger_list(request):
 @login_required
 def messenger_thread(request, conversation_id):
     """Show one conversation and its messages; accept POST to send a new message."""
-    if not _user_has_designer_profile(request.user):
-        messages.info(request, "Messenger is available to registered designers. Please complete your profile.")
-        return redirect("designer_about_me")
+    can_use, reason, redirect_view = user_can_use_messenger(request.user)
+    if not can_use:
+        messages.info(request, reason)
+        return redirect(redirect_view or "designer_about_me")
 
     try:
         conv = get_object_or_404(
@@ -5530,18 +5704,36 @@ def messenger_thread(request, conversation_id):
     if request.method == "POST":
         body = (request.POST.get("body") or "").strip()
         if body:
-            try:
-                msg = ChatMessage.objects.create(
-                    conversation=conv, sender=request.user, body=body
-                )
-                ChatConversation.objects.filter(pk=conv.pk).update(updated_at=timezone.now())
-                messages_list.append(msg)
-                messages.success(request, "Message sent.")
-                return redirect("messenger_thread", conversation_id=conv.pk)
-            except (OperationalError, ProgrammingError):
-                messages.info(request, "Messenger is being set up. Please try again in a few minutes.")
-                return redirect("messenger_list")
-        messages.error(request, "Message cannot be empty.")
+            prohibited, err_msg = message_contains_prohibited_content(body)
+            if prohibited:
+                messages.error(request, err_msg)
+                # Freeze account for attempting to share contact info / external links
+                try:
+                    sub = request.user.subscription
+                    if sub.status != "frozen":
+                        sub.status = "frozen"
+                        sub.save(update_fields=["status", "updated_at"])
+                        messages.error(
+                            request,
+                            "Your account has been frozen due to this policy violation. "
+                            "Please contact support if you believe this is an error.",
+                        )
+                except (UserSubscription.DoesNotExist, AttributeError):
+                    pass
+            else:
+                try:
+                    msg = ChatMessage.objects.create(
+                        conversation=conv, sender=request.user, body=body
+                    )
+                    ChatConversation.objects.filter(pk=conv.pk).update(updated_at=timezone.now())
+                    messages_list.append(msg)
+                    messages.success(request, "Message sent.")
+                    return redirect("messenger_thread", conversation_id=conv.pk)
+                except (OperationalError, ProgrammingError):
+                    messages.info(request, "Messenger is being set up. Please try again in a few minutes.")
+                    return redirect("messenger_list")
+        else:
+            messages.error(request, "Message cannot be empty.")
     other = conv.other_user(request.user)
     return render(
         request,
@@ -5557,9 +5749,10 @@ def messenger_thread(request, conversation_id):
 @login_required
 def messenger_start(request, user_id):
     """Start or open a conversation with another user. Redirects to thread."""
-    if not _user_has_designer_profile(request.user):
-        messages.info(request, "Messenger is available to registered designers. Please complete your profile.")
-        return redirect("designer_about_me")
+    can_use, reason, redirect_view = user_can_use_messenger(request.user)
+    if not can_use:
+        messages.info(request, reason)
+        return redirect(redirect_view or "designer_about_me")
 
     other = get_object_or_404(User, pk=user_id, is_active=True)
     if other.pk == request.user.pk:
@@ -5568,6 +5761,12 @@ def messenger_start(request, user_id):
     if not DesignerProfile.objects.filter(user=other).exists():
         messages.error(request, "This designer is not available for messaging yet.")
         return redirect("messenger_list")
+    try:
+        if getattr(other.subscription, "status", None) == "frozen":
+            messages.error(request, "This designer is not available for messaging.")
+            return redirect("messenger_list")
+    except (UserSubscription.DoesNotExist, AttributeError):
+        pass
     try:
         conv, _ = _get_or_create_conversation(request.user, other)
         return redirect("messenger_thread", conversation_id=conv.pk)

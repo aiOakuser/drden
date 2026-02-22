@@ -2,7 +2,7 @@ from django.conf import settings
 from django.db.models import Q
 from django.http import HttpRequest
 
-from .models import Design, DesignerProfile
+from .models import Design, DesignerProfile, DressOrder
 
 
 def messenger_inbox_count(request: HttpRequest) -> dict:
@@ -46,6 +46,7 @@ def dashboard_counts(request: HttpRequest) -> dict:
             "total_designs": 0,
             "designs_with_techpack_count": 0,
             "published_designs_count": 0,
+            "new_orders_count": 0,
         }
 
     user_designs = Design.objects.filter(designer=user)
@@ -54,10 +55,18 @@ def dashboard_counts(request: HttpRequest) -> dict:
         Q(techpack_pdf__isnull=False) | Q(techpack_excel__isnull=False)
     )
 
+    new_orders_count = 0
+    try:
+        profile = DesignerProfile.objects.get(user=user)
+        new_orders_count = DressOrder.objects.filter(designer=profile, status="new").count()
+    except DesignerProfile.DoesNotExist:
+        pass
+
     return {
         "total_designs": user_designs.count(),
         "designs_with_techpack_count": designs_with_techpack.count(),
         "published_designs_count": user_designs.filter(published=True).count(),
+        "new_orders_count": new_orders_count,
     }
 
 

@@ -591,6 +591,7 @@ class UserSubscription(models.Model):
     STATUS_CHOICES = [
         ('free_trial', 'Free Trial'),
         ('active', 'Active'),
+        ('frozen', 'Frozen'),  # Policy violation (e.g., contact sharing); blocks messenger
         ('canceled', 'Canceled'),
         ('expired', 'Expired'),
         ('past_due', 'Past Due'),
@@ -650,6 +651,25 @@ class UserSubscription(models.Model):
         if self.is_trial_active:
             return (self.trial_end_date - timezone.now()).days
         return 0
+
+    @property
+    def is_frozen(self):
+        """True if account is frozen due to policy violation (e.g., contact sharing)."""
+        return self.status == 'frozen'
+
+    def can_use_designer_messenger(self):
+        """
+        Designer-to-designer messenger requires $4.99/month or higher subscription.
+        Frozen accounts cannot use messenger.
+        """
+        from django.utils import timezone
+        if self.status == 'frozen':
+            return False
+        if self.status == 'active' and self.plan and self.subscription_end_date and self.subscription_end_date > timezone.now():
+            # Must have monthly ($4.99) or higher plan
+            min_price = 4.99
+            return float(self.plan.price) >= min_price
+        return False
 
 
 # ==================== Referral System ====================
@@ -1395,6 +1415,13 @@ class StudentProjectBookmark(TimeStampedModel):
 class DressOrder(TimeStampedModel):
     """Dress order from the new orders page — sent to a designer with email notification."""
 
+    STATUS_CHOICES = [
+        ("new", "New"),
+        ("in_progress", "In progress"),
+        ("completed", "Completed"),
+        ("canceled", "Canceled"),
+    ]
+
     designer = models.ForeignKey(
         DesignerProfile,
         on_delete=models.CASCADE,
@@ -1402,6 +1429,23 @@ class DressOrder(TimeStampedModel):
     )
     # Orderer contact (from gate)
     customer_phone = models.CharField(max_length=20, blank=True)
+    customer_email = models.EmailField(blank=True, help_text="Viewer email for order confirmation and design access")
+
+    # Status
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="new")
+
+    # Optional link to design (when designer attaches a design to this order)
+    design = models.ForeignKey(
+        Design,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="dress_orders",
+        help_text="Design linked to this order; only designer and order viewer can see it",
+    )
+
+    # Token for viewer to access order and linked design without logging in
+    access_token = models.CharField(max_length=64, blank=True, unique=True, db_index=True)
 
     # Dress type
     dress_type = models.CharField(max_length=40, blank=True)
@@ -1425,3 +1469,39 @@ class DressOrder(TimeStampedModel):
 
     def __str__(self):
         return f"Dress order for {self.designer.user.get_username()} — {self.dress_label or 'Dress'} ({self.created_at.date()})"
+
+    def save(self, *args, **kwargs):
+        if not self.access_token:
+            import secrets
+            self.access_token = secrets.token_urlsafe(32)
+        super().save(*args, **kwargs)
+
+
+class DressOrderUpdate(TimeStampedModel):
+    """Designer update on a dress order: status change, notes, techpack info."""
+
+    order = models.ForeignKey(
+        DressOrder,
+        on_delete=models.CASCADE,
+        related_name="updates",
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=DressOrder.STATUS_CHOICES,
+        blank=True,
+        help_text="Status at time of this update (optional)",
+    )
+    notes = models.TextField(blank=True, help_text="Designer notes (e.g. taking order, working on it)")
+    techpack_notes = models.TextField(blank=True, help_text="Techpack information about the order")
+    techpack_pdf = models.FileField(
+        upload_to="orders/techpacks/",
+        blank=True,
+        null=True,
+        help_text="Techpack PDF for this order",
+    )
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return f"Update on order #{self.order_id} — {self.created_at.date()}"

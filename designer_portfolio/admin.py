@@ -257,14 +257,28 @@ class EventCollaborationAdmin(admin.ModelAdmin):
 
 
 # ---------------- Dress Order ----------------
+class DressOrderUpdateInline(admin.TabularInline):
+    model = m.DressOrderUpdate
+    extra = 0
+    readonly_fields = ("created_at",)
+
+
 @admin.register(m.DressOrder)
 class DressOrderAdmin(admin.ModelAdmin):
-    list_display = ("id", "designer", "dress_label", "formal_subcategory", "fabric_label", "customer_phone", "created_at")
-    list_filter = ("created_at", "dress_type", "fabric_type")
-    search_fields = ("customer_phone", "dress_label", "fabric_label", "designer__user__username")
-    readonly_fields = ("created_at", "updated_at")
-    raw_id_fields = ("designer",)
+    list_display = ("id", "designer", "dress_label", "formal_subcategory", "status", "fabric_label", "customer_phone", "created_at")
+    list_filter = ("created_at", "status", "dress_type", "fabric_type")
+    search_fields = ("customer_phone", "customer_email", "dress_label", "fabric_label", "designer__user__username")
+    readonly_fields = ("created_at", "updated_at", "access_token")
+    raw_id_fields = ("designer", "design")
+    inlines = (DressOrderUpdateInline,)
     ordering = ("-created_at",)
+
+
+@admin.register(m.DressOrderUpdate)
+class DressOrderUpdateAdmin(admin.ModelAdmin):
+    list_display = ("id", "order", "status", "created_at")
+    list_filter = ("created_at", "status")
+    readonly_fields = ("created_at", "updated_at")
 
 
 # ---------------- Designer Profile ----------------

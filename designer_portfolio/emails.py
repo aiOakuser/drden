@@ -196,6 +196,14 @@ def notify_designer_new_dress_order(order, *, request=None):
     if order.customer_phone:
         lines.extend(["", f"Customer phone: {order.customer_phone}"])
 
+    if request:
+        from django.urls import reverse
+        try:
+            orders_url = request.build_absolute_uri(reverse("designer_orders_list"))
+            lines.extend(["", f"View order: {orders_url}"])
+        except Exception:
+            pass
+
     lines.extend(["", "— GlobalDesignerHub"])
 
     message = "\n".join(lines)
@@ -260,6 +268,15 @@ def notify_viewer_dress_order_confirmation(order, *, viewer_email: str = "", req
 
     if order.customer_phone:
         lines.extend(["", f"Phone: {order.customer_phone}"])
+
+    if order.access_token and request:
+        from django.urls import reverse
+        order_url = request.build_absolute_uri(reverse("viewer_order_detail", args=[order.access_token]))
+        lines.extend([
+            "",
+            "Track your order:",
+            f"  {order_url}",
+        ])
 
     lines.extend(["", "We will notify the designer right away.", "", "— GlobalDesignerHub"])
     message = "\n".join(lines)

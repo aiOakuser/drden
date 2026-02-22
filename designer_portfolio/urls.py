@@ -111,6 +111,7 @@ urlpatterns = [
     re_path(r"^student/?$", StudentPageView.as_view(), name="student_page"),
     path("neworders/dresses/", neworders_dresses_view, name="neworders_dresses"),
     path("neworders/dresses/submit/", neworders_dresses_submit_view, name="neworders_dresses_submit"),
+    path("orders/<str:token>/", views.viewer_order_detail, name="viewer_order_detail"),
     path("student/portfolio/", student_portfolio_dashboard, name="student_portfolio_dashboard"),
     path(
         "student/portfolio/projects/reorder/",
@@ -180,6 +181,8 @@ urlpatterns = [
     path("dashboard/designs/<int:design_id>/edit/", designer_design_edit_view, name="designer_design_edit"),
     path("dashboard/designs/<int:design_id>/delete/", designer_design_delete_view, name="designer_design_delete"),
     path("dashboard/designs/<int:design_id>/details/", designer_design_detail_api, name="designer_design_detail_api"),
+    path("dashboard/orders/", views.designer_orders_list, name="designer_orders_list"),
+    path("dashboard/orders/<int:order_id>/", views.designer_order_detail, name="designer_order_detail"),
     path("dashboard/about-me/", designer_about_me_view, name="designer_about_me"),
     path("dashboard/change-password/", designer_change_password_view, name="designer_change_password"),
     path("dashboard/contact/", designer_contact_view, name="designer_contact"),

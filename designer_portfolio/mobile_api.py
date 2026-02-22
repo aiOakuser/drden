@@ -342,6 +342,8 @@ class MobileNewOrdersSubmitView(APIView):
         order = DressOrder.objects.create(
             designer=designer,
             customer_phone=phone,
+            customer_email=customer_email or "",
+            status="new",
             dress_type=_str(data.get("dress_type")),
             dress_label=_str(data.get("dress_label")),
             shoulder_width=_decimal(data.get("shoulder_width")),
