@@ -2,12 +2,11 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Callable, Dict, Iterable, List
+from typing import Callable, Dict, Iterable, List, Set
 
 from django.conf import settings
 from django.core.cache import cache
 from django.http import HttpRequest, HttpResponse, HttpResponsePermanentRedirect
-
 
 logger = logging.getLogger(__name__)
 
@@ -169,6 +168,53 @@ class UTMTrackingMiddleware:
 
         response = self.get_response(request)
         return response
+
+
+def _normalize_domain_for_lookup(host: str) -> str:
+    """Normalize host for custom domain lookup: lowercase, strip port, strip www."""
+    value = (host or "").strip().lower()
+    if not value:
+        return ""
+    if ":" in value:
+        value = value.split(":", 1)[0]
+    if value.startswith("www."):
+        value = value[4:]
+    return value
+
+
+class StudentPortfolioCustomDomainMiddleware:
+    """
+    When request Host matches a StudentPortfolio custom_domain (e.g. chpreddy.com),
+    serve that portfolio as the response. Runs early so custom domains bypass normal routing.
+    """
+
+    def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]):
+        self.get_response = get_response
+        self.enabled = getattr(settings, "STUDENT_PORTFOLIO_CUSTOM_DOMAIN_ENABLED", True)
+
+    def __call__(self, request: HttpRequest) -> HttpResponse:
+        if not self.enabled:
+            return self.get_response(request)
+
+        host = _normalize_domain_for_lookup(request.get_host())
+        if not host:
+            return self.get_response(request)
+
+        try:
+            from .models import StudentPortfolio
+
+            portfolio = StudentPortfolio.objects.select_related("user").filter(
+                custom_domain__iexact=host
+            ).first()
+            if not portfolio:
+                return self.get_response(request)
+        except Exception:
+            return self.get_response(request)
+
+        request.portfolio_from_custom_domain = portfolio
+        from .student_portfolio_views import student_portfolio_public_view
+
+        return student_portfolio_public_view(request, portfolio.share_slug)
 
 
 class CanonicalDomainRedirectMiddleware:

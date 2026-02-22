@@ -1,0 +1,118 @@
+{% extends "designer_portfolio/base.html" %}
+
+{% block title %}Edit project | Student Portfolio{% endblock %}
+
+{% block content %}
+<section class="student-workspace">
+  <div class="student-workspace__container" style="max-width: 640px;">
+    <header class="student-workspace__header">
+      <a href="{% url 'student_portfolio_dashboard' %}" class="back-link">&larr; Back to portfolio</a>
+      <h1>Edit project: {{ project.title }}</h1>
+    </header>
+
+    {% if messages %}
+      <ul class="student-workspace__messages">
+        {% for message in messages %}
+          <li class="message message-{{ message.tags|default:'info' }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    <article class="student-card">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <label for="{{ form.title.id_for_label }}">Project title</label>
+        {{ form.title }}
+        {% if form.title.errors %}<div class="field-error">{{ form.title.errors|join:", " }}</div>{% endif %}
+
+        <label for="{{ form.description.id_for_label }}">Description</label>
+        {{ form.description }}
+        {% if form.description.errors %}<div class="field-error">{{ form.description.errors|join:", " }}</div>{% endif %}
+
+        <div class="student-card__row">
+          <div>
+            <label for="{{ form.category.id_for_label }}">Category</label>
+            {{ form.category }}
+          </div>
+          <div>
+            <label for="{{ form.project_role.id_for_label }}">Project role</label>
+            {{ form.project_role }}
+          </div>
+        </div>
+
+        <label for="{{ form.tools_used.id_for_label }}">Tools used</label>
+        {{ form.tools_used }}
+
+        <label for="{{ form.process_steps.id_for_label }}">Process steps (one per line)</label>
+        {{ form.process_steps }}
+
+        <label for="{{ form.cover_image.id_for_label }}">Cover image</label>
+        {{ form.cover_image }}
+        {% if project.cover_image %}
+          <p class="form-help">Current: <img src="{{ project.cover_image.url }}" alt="" style="max-height: 60px; vertical-align: middle;"> Leave blank to keep.</p>
+        {% endif %}
+
+        <label for="{{ form.process_video.id_for_label }}">Process video</label>
+        {{ form.process_video }}
+
+        <label for="{{ form.project_pdf.id_for_label }}">Project PDF</label>
+        {{ form.project_pdf }}
+
+        <label for="id_gallery_images">Add gallery images (designs, editorials, collection photos)</label>
+        <input type="file" name="gallery_images" id="id_gallery_images" multiple accept="image/*" class="form-control" />
+
+        {% if gallery_images %}
+          <div class="gallery-preview">
+            <strong>Current gallery ({{ gallery_images|length }})</strong>
+            <div class="gallery-preview__list">
+              {% for img in gallery_images %}
+                <div class="gallery-preview__item">
+                  <img src="{{ img.image.url }}" alt="{{ img.caption|default:project.title }}" />
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+
+        <div class="checkbox-row">
+          {{ form.featured }}
+          <label for="{{ form.featured.id_for_label }}">Mark as featured</label>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Save changes</button>
+          <a href="{% url 'student_portfolio_dashboard' %}" class="btn btn-outline">Cancel</a>
+        </div>
+      </form>
+    </article>
+  </div>
+</section>
+
+<style>
+  .student-workspace { padding: 42px 0 70px; background: var(--color-surface); }
+  .student-workspace__container { width: min(1180px, calc(100% - 36px)); margin: 0 auto; }
+  .student-workspace__header { background: var(--color-secondary); border-radius: 16px; padding: 24px; margin-bottom: 20px; }
+  .back-link { color: var(--color-accent); text-decoration: none; display: inline-block; margin-bottom: 8px; }
+  .back-link:hover { text-decoration: underline; }
+  .student-workspace__header h1 { margin: 0; color: var(--color-primary); }
+  .student-workspace__messages { margin: 16px 0; padding: 0; list-style: none; }
+  .message { border-radius: 8px; padding: 10px 12px; font-size: 0.92rem; }
+  .message-success { background: #e8f7ec; color: #176331; }
+  .message-error { background: #fdebec; color: #8f1f2b; }
+  .student-card { background: var(--color-secondary); border-radius: 14px; padding: 20px; box-shadow: 0 6px 20px rgba(var(--color-primary-rgb), 0.08); }
+  .student-card label { display: block; margin: 12px 0 6px; color: var(--color-text); font-weight: 600; font-size: 0.9rem; }
+  .student-card input[type="text"], .student-card textarea, .student-card select, .student-card input[type="file"] {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-secondary);
+  }
+  .student-card__row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; margin: 14px 0; }
+  .checkbox-row label { margin: 0; }
+  .field-error { margin-top: 4px; color: #8f1f2b; font-size: 0.82rem; }
+  .form-help { font-size: 0.88rem; color: var(--color-text-muted); margin: 6px 0 0; }
+  .form-actions { margin-top: 20px; display: flex; gap: 10px; }
+  .gallery-preview { margin: 16px 0; }
+  .gallery-preview__list { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; margin-top: 8px; }
+  .gallery-preview__item img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; }
+</style>
+{% endblock %}

@@ -286,6 +286,12 @@ SUSPICIOUS_PATH_PATTERNS = _configured_suspicious_patterns or None
 SUSPICIOUS_REQUEST_RATE_LIMIT = int(os.getenv("SUSPICIOUS_REQUEST_RATE_LIMIT", "120"))
 SUSPICIOUS_REQUEST_RATE_WINDOW = int(os.getenv("SUSPICIOUS_REQUEST_RATE_WINDOW", "60"))
 
+# Student portfolio custom domains (e.g. chpreddy.com)
+STUDENT_PORTFOLIO_CUSTOM_DOMAIN_ENABLED = env_bool(
+    "STUDENT_PORTFOLIO_CUSTOM_DOMAIN_ENABLED",
+    default=True,
+)
+
 # Local dev: use http://127.0.0.1:PORT (e.g. 8004) — do not change to https; runserver only supports HTTP.
 if DEBUG:
     CSRF_TRUSTED_ORIGINS += [
@@ -317,6 +323,7 @@ INSTALLED_APPS = [
     
     # Local
     "designer_portfolio.apps.DesignerPortfolioConfig",
+    "sitebuilder",
     "marketing",
 ]
 
@@ -348,6 +355,7 @@ MIDDLEWARE = [
     # WhiteNoise should be directly after SecurityMiddleware so static files
     # are served before any custom redirect/throttle middleware runs.
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    "designer_portfolio.middleware.StudentPortfolioCustomDomainMiddleware",
     "designer_portfolio.middleware.CanonicalDomainRedirectMiddleware",
     "designer_portfolio.middleware.SuspiciousRequestThrottleMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -696,3 +704,7 @@ WEBAUTHN_ALLOW_INSECURE_LOCALHOST = env_bool(
     "WEBAUTHN_ALLOW_INSECURE_LOCALHOST",
     default=DEBUG,
 )
+
+# --- OpenAI (Site Builder AI, Designer AI Chat) ---
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")

@@ -73,6 +73,8 @@ from .views import (
 )
 from .student_portfolio_views import (
     student_portfolio_dashboard,
+    student_portfolio_edit_project,
+    student_portfolio_pricing,
     student_portfolio_reorder_projects,
     student_portfolio_public_view,
     student_portfolio_project_feedback,
@@ -113,6 +115,16 @@ urlpatterns = [
     path("neworders/dresses/submit/", neworders_dresses_submit_view, name="neworders_dresses_submit"),
     path("orders/<str:token>/", views.viewer_order_detail, name="viewer_order_detail"),
     path("student/portfolio/", student_portfolio_dashboard, name="student_portfolio_dashboard"),
+    path(
+        "student/portfolio/pricing/",
+        student_portfolio_pricing,
+        name="student_portfolio_pricing",
+    ),
+    path(
+        "student/portfolio/project/<int:project_id>/edit/",
+        student_portfolio_edit_project,
+        name="student_portfolio_edit_project",
+    ),
     path(
         "student/portfolio/projects/reorder/",
         student_portfolio_reorder_projects,
@@ -254,4 +266,7 @@ urlpatterns = [
 
      # ✅ Techpack generator route
     path("generate-techpack/<slug:slug>/", views.generate_techpack, name="generate_techpack"),
+
+    # Site Builder (drag-and-drop, CMS, AI)
+    path("builder/", include("sitebuilder.urls")),
 ]

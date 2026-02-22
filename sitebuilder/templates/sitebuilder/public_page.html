@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% if page.meta_title %}{{ page.meta_title }}{% else %}{{ page.title }} · {{ site.name }}{% endif %}</title>
+  <meta name="description" content="{% if page.meta_description %}{{ page.meta_description }}{% else %}View {{ page.title }} on {{ site.name }}{% endif %}">
+  {% if page.meta_image %}
+  <meta property="og:image" content="{{ page.meta_image.url }}">
+  {% endif %}
+  <meta property="og:title" content="{% if page.meta_title %}{{ page.meta_title }}{% else %}{{ page.title }}{% endif %}">
+  <meta property="og:description" content="{{ page.meta_description|default:page.title }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, sans-serif; }
+    .builder-page-content { min-height: 100vh; }
+  </style>
+  {% if page.css_content %}
+  <style>{{ page.css_content|safe }}</style>
+  {% endif %}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+</head>
+<body>
+  <div class="builder-page-content" data-aos-easing="ease-out-cubic" data-aos-duration="600">
+    {% if page.html_content %}
+    {{ page.html_content|safe }}
+    {% else %}
+    <section style="padding:120px 24px;text-align:center;min-height:60vh;">
+      <h1 style="font-size:2rem;">{{ page.title }}</h1>
+      <p style="color:#666;">This page is being built. Check back soon.</p>
+    </section>
+    {% endif %}
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      if (typeof AOS !== "undefined") AOS.init({ once: true, offset: 50 });
+    });
+  </script>
+</body>
+</html>

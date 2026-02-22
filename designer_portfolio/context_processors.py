@@ -83,10 +83,12 @@ def active_portfolio_template(request: HttpRequest) -> dict:
         try:
             profile: DesignerProfile = DesignerProfile.objects.get(user=user)
             template_key = getattr(profile, "portfolio_template", default_key) or default_key
-        except DesignerProfile.DoesNotExist:
+        except (DesignerProfile.DoesNotExist, AttributeError, Exception):
             template_key = default_key
 
-    # Build css path under static
+    # Ensure template key maps to an existing file (classic, modern, minimal)
+    if template_key not in ("classic", "modern", "minimal"):
+        template_key = default_key
     css_path = f"css/templates/{template_key}.css"
     return {
         "portfolio_template_key": template_key,

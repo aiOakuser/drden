@@ -13,6 +13,7 @@
       </div>
       <div class="student-workspace__actions">
         <a class="btn btn-primary" href="{{ share_url }}" target="_blank" rel="noopener">Preview portfolio</a>
+        <a class="btn btn-outline" href="{% url 'builder_sites_list' %}">Site Builder</a>
         <button type="button" class="btn btn-outline" id="copyShareLinkButton">Copy share link</button>
         <a class="btn btn-accent" href="{% url 'student_portfolio_resume_pdf' %}">Download resume PDF</a>
       </div>
@@ -20,6 +21,13 @@
         <strong>Share URL:</strong>
         <code id="shareLinkValue">{{ share_url }}</code>
       </div>
+      {% if not has_pro %}
+      <div class="student-workspace__upgrade">
+        <a href="{% url 'student_portfolio_pricing' %}" class="upgrade-cta">
+          <i class="fa-solid fa-star"></i> Upgrade to Pro — $19.99/mo · Custom domain free for 2 years
+        </a>
+      </div>
+      {% endif %}
     </header>
 
     {% if messages %}
@@ -28,6 +36,28 @@
           <li class="message message-{{ message.tags|default:'info' }}">{{ message }}</li>
         {% endfor %}
       </ul>
+    {% endif %}
+
+    {% if sample_templates %}
+    <section class="template-picker">
+      <h2 class="template-picker__title"><i class="fa-solid fa-wand-magic-sparkles"></i> Start from a template</h2>
+      <p class="template-picker__desc">Pick a structure like seri.aioak.net — we'll create starter projects and pre-fill suggested skills.</p>
+      <div class="template-picker__grid">
+        {% for tpl in sample_templates %}
+        <article class="template-card">
+          <div class="template-card__icon"><i class="fa-solid {{ tpl.icon }}"></i></div>
+          <h3 class="template-card__name">{{ tpl.name }}</h3>
+          <p class="template-card__desc">{{ tpl.description }}</p>
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="apply_template" />
+            <input type="hidden" name="template_id" value="{{ tpl.id }}" />
+            <button type="submit" class="btn btn-outline">Use this template</button>
+          </form>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
     {% endif %}
 
     <div class="student-workspace__grid">
@@ -74,6 +104,21 @@
 
           <button type="submit" class="btn btn-primary">Save profile</button>
         </form>
+
+        {% if has_pro %}
+        <div class="custom-domain-section">
+          <label for="id_custom_domain">Custom domain (e.g. chpreddy.com)</label>
+          <form method="post" class="custom-domain-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_custom_domain" />
+            <input type="text" name="custom_domain" id="id_custom_domain" value="{{ portfolio.custom_domain|default:'' }}" placeholder="yourname.com" class="form-control" />
+            <button type="submit" class="btn btn-outline">Save domain</button>
+          </form>
+          {% if portfolio.custom_domain %}
+          <p class="form-help">Your portfolio will load at https://{{ portfolio.custom_domain }} — add a CNAME record pointing to globaldesignerhub.com</p>
+          {% endif %}
+        </div>
+        {% endif %}
       </article>
 
       <article class="student-card">
@@ -111,8 +156,12 @@
           <label for="{{ project_form.process_steps.id_for_label }}">Process steps (one per line)</label>
           {{ project_form.process_steps }}
 
-          <label for="{{ project_form.cover_image.id_for_label }}">Project image</label>
+          <label for="{{ project_form.cover_image.id_for_label }}">Cover image</label>
           {{ project_form.cover_image }}
+
+          <label for="id_gallery_images">Gallery images (designs, editorials, collection photos)</label>
+          <input type="file" name="gallery_images" id="id_gallery_images" multiple accept="image/*" class="form-control" />
+          <span class="form-help">Upload multiple images to showcase your designs.</span>
 
           <label for="{{ project_form.process_video.id_for_label }}">Project video</label>
           {{ project_form.process_video }}
@@ -171,12 +220,13 @@
               </div>
 
               <div class="project-card__actions">
+                <a href="{% url 'student_portfolio_edit_project' project.id %}" class="btn btn-outline">Edit</a>
                 <form method="post">
                   {% csrf_token %}
                   <input type="hidden" name="action" value="toggle_featured" />
                   <input type="hidden" name="project_id" value="{{ project.id }}" />
                   <button type="submit" class="btn btn-outline">
-                    {% if project.featured %}Remove featured{% else %}Feature project{% endif %}
+                    {% if project.featured %}Remove featured{% else %}Feature{% endif %}
                   </button>
                 </form>
                 <form method="post" onsubmit="return confirm('Delete this project?');">
@@ -230,6 +280,21 @@
   .checkbox-row { display: flex; align-items: center; gap: 8px; margin: 14px 0; }
   .checkbox-row label { margin: 0; }
   .field-error { margin-top: 4px; color: #8f1f2b; font-size: 0.82rem; }
+  .form-help { font-size: 0.82rem; color: var(--color-text-muted); margin: 4px 0 0; }
+  .template-picker { margin-top: 24px; background: var(--color-secondary); border-radius: 14px; padding: 20px; box-shadow: 0 6px 20px rgba(var(--color-primary-rgb), 0.08); }
+  .template-picker__title { margin: 0 0 8px; color: var(--color-primary); font-size: 1.24rem; }
+  .template-picker__desc { margin: 0 0 16px; color: var(--color-text-muted); font-size: 0.92rem; }
+  .template-picker__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .template-card { border: 1px solid rgba(var(--color-primary-rgb), 0.12); border-radius: 12px; padding: 18px; background: var(--color-surface); }
+  .template-card__icon { width: 44px; height: 44px; border-radius: 10px; background: rgba(var(--color-accent-rgb), 0.18); display: flex; align-items: center; justify-content: center; margin-bottom: 12px; color: var(--color-accent); font-size: 1.2rem; }
+  .template-card__name { margin: 0 0 8px; color: var(--color-primary); font-size: 1.08rem; }
+  .template-card__desc { margin: 0 0 14px; color: var(--color-text-muted); font-size: 0.88rem; line-height: 1.4; }
+  .student-workspace__upgrade { margin-top: 14px; }
+  .upgrade-cta { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; background: rgba(var(--color-accent-rgb), 0.2); color: var(--color-accent); border-radius: 10px; font-weight: 700; font-size: 0.92rem; text-decoration: none; border: 1px solid rgba(var(--color-accent-rgb), 0.4); }
+  .upgrade-cta:hover { background: rgba(var(--color-accent-rgb), 0.3); }
+  .custom-domain-section { margin: 20px 0; padding: 16px; background: var(--color-surface); border-radius: 10px; border: 1px solid var(--color-border); }
+  .custom-domain-form { display: flex; gap: 10px; margin-top: 8px; align-items: center; }
+  .custom-domain-form input[type="text"] { flex: 1; }
   .student-projects { margin-top: 22px; background: var(--color-secondary); border-radius: 14px; padding: 20px; box-shadow: 0 6px 20px rgba(var(--color-primary-rgb), 0.08); }
   .student-projects__header h2 { margin: 0; color: var(--color-primary); }
   .student-projects__header p { margin: 8px 0 0; color: var(--color-text-muted); }

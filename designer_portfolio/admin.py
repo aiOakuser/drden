@@ -338,6 +338,17 @@ class DesignerProfileAdmin(admin.ModelAdmin):
 
 
 # ---------------- Student Portfolio ----------------
+@admin.register(m.StudentPortfolioPlan)
+class StudentPortfolioPlanAdmin(admin.ModelAdmin):
+    list_display = ("name", "display_name", "price", "duration_days", "includes_custom_domain", "is_active")
+
+
+@admin.register(m.StudentPortfolioSubscription)
+class StudentPortfolioSubscriptionAdmin(admin.ModelAdmin):
+    list_display = ("user", "plan", "status", "subscription_start", "subscription_end")
+    list_filter = ("status",)
+
+
 class StudentPortfolioProjectInline(admin.TabularInline):
     model = m.StudentPortfolioProject
     extra = 0
@@ -358,6 +369,7 @@ class StudentPortfolioAdmin(admin.ModelAdmin):
         "user",
         "visibility",
         "template_style",
+        "custom_domain",
         "project_count",
         "updated_at",
     )
@@ -369,6 +381,12 @@ class StudentPortfolioAdmin(admin.ModelAdmin):
     def project_count(self, obj):
         return obj.projects.count()
     project_count.short_description = "Projects"
+
+
+class StudentPortfolioProjectImageInline(admin.TabularInline):
+    model = m.StudentPortfolioProjectImage
+    extra = 1
+    fields = ("image", "caption", "display_order")
 
 
 @admin.register(m.StudentPortfolioProject)
@@ -384,6 +402,7 @@ class StudentPortfolioProjectAdmin(admin.ModelAdmin):
     list_filter = ("category", "featured", "created_at")
     search_fields = ("title", "portfolio__user__username", "tools_used", "project_role")
     readonly_fields = ("created_at", "updated_at")
+    inlines = [StudentPortfolioProjectImageInline]
 
 
 @admin.register(m.StudentProjectFeedback)

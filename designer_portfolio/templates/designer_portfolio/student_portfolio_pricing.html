@@ -1,0 +1,115 @@
+{% extends "designer_portfolio/base.html" %}
+{% load static %}
+
+{% block title %}Student Portfolio Pro — $19.99/mo | GlobalDesignerHub{% endblock %}
+
+{% block content %}
+<article class="sp-pricing">
+  <section class="sp-pricing__hero">
+    <div class="sp-pricing__hero-inner">
+      <p class="sp-pricing__eyebrow">Framer-style portfolios for design students</p>
+      <h1 class="sp-pricing__title">Design your portfolio with free templates</h1>
+      <p class="sp-pricing__subtitle">$19.99/month · First 2 years custom domain free</p>
+      <p class="sp-pricing__tagline">
+        Pick a template. Upload your designs, editorials & collections.<br />
+        Get a professional portfolio at <strong>https://www.yourname.com</strong>
+      </p>
+      <div class="sp-pricing__cta-row">
+        <a href="{% url 'student_portfolio_dashboard' %}" class="sp-pricing__btn sp-pricing__btn--primary">Get started free</a>
+        <a href="{% url 'students' %}" class="sp-pricing__btn sp-pricing__btn--outline">Learn more</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="sp-pricing__plans">
+    <div class="sp-pricing__card">
+      <div class="sp-pricing__card-badge">Pro</div>
+      <h2 class="sp-pricing__card-title">Student Portfolio Pro</h2>
+      <div class="sp-pricing__card-price">
+        {% if plan %}
+        <span class="sp-pricing__currency">$</span>
+        <span class="sp-pricing__amount">{{ plan.price }}</span>
+        <span class="sp-pricing__period">/month</span>
+        {% else %}
+        <span class="sp-pricing__currency">$</span>
+        <span class="sp-pricing__amount">19.99</span>
+        <span class="sp-pricing__period">/month</span>
+        {% endif %}
+      </div>
+      <ul class="sp-pricing__features">
+        <li><i class="fa-solid fa-check"></i> Free professional templates (Fashion, Editorial, Collection)</li>
+        <li><i class="fa-solid fa-check"></i> Custom domain — first 2 years free (e.g. chpreddy.com)</li>
+        <li><i class="fa-solid fa-check"></i> Unlimited projects & gallery images</li>
+        <li><i class="fa-solid fa-check"></i> Shareable portfolio link</li>
+        <li><i class="fa-solid fa-check"></i> Resume PDF export</li>
+        <li><i class="fa-solid fa-check"></i> Peer & teacher feedback</li>
+      </ul>
+      <a href="{% url 'student_portfolio_dashboard' %}" class="sp-pricing__btn sp-pricing__btn--primary sp-pricing__btn--full">
+        Start with free templates
+      </a>
+      <p class="sp-pricing__card-note">Upgrade to Pro when you're ready for your custom domain</p>
+    </div>
+  </section>
+
+  {% if sample_templates %}
+  <section class="sp-pricing__templates">
+    <h2 class="sp-pricing__section-title">Free templates included</h2>
+    <div class="sp-pricing__template-grid">
+      {% for tpl in sample_templates %}
+      <div class="sp-pricing__template-card">
+        <span class="sp-pricing__template-icon"><i class="fa-solid {{ tpl.icon }}"></i></span>
+        <h3>{{ tpl.name }}</h3>
+        <p>{{ tpl.description }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="sp-pricing__domain">
+    <h2 class="sp-pricing__section-title">Your portfolio. Your domain.</h2>
+    <p class="sp-pricing__domain-text">
+      Connect <strong>chpreddy.com</strong>, <strong>johndoe.com</strong>, or any domain you own.<br />
+      First 2 years included with Pro. Point your domain's CNAME to globaldesignerhub.com.
+    </p>
+  </section>
+</article>
+
+<style>
+  .sp-pricing { font-family: var(--font-body); max-width: 900px; margin: 0 auto; padding-bottom: 80px; }
+  .sp-pricing__hero { text-align: center; padding: 64px 24px; background: linear-gradient(135deg, var(--color-primary) 0%, rgba(var(--color-primary-rgb), 0.95) 100%); color: var(--color-secondary); border-radius: 0 0 24px 24px; }
+  .sp-pricing__eyebrow { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 3px; margin: 0 0 16px; opacity: 0.9; }
+  .sp-pricing__title { font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 800; margin: 0 0 12px; line-height: 1.2; }
+  .sp-pricing__subtitle { font-size: 1.25rem; margin: 0 0 16px; font-weight: 600; color: var(--color-accent); }
+  .sp-pricing__tagline { font-size: 1.05rem; line-height: 1.6; margin: 0 0 28px; opacity: 0.95; }
+  .sp-pricing__tagline strong { color: var(--color-accent); }
+  .sp-pricing__cta-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .sp-pricing__btn { padding: 14px 28px; border-radius: 12px; font-weight: 700; text-decoration: none; transition: transform 0.2s, box-shadow 0.2s; display: inline-block; }
+  .sp-pricing__btn--primary { background: var(--color-accent); color: var(--color-primary); border: none; }
+  .sp-pricing__btn--primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(var(--color-accent-rgb), 0.4); }
+  .sp-pricing__btn--outline { background: transparent; color: var(--color-secondary); border: 2px solid rgba(255,255,255,0.5); }
+  .sp-pricing__btn--outline:hover { border-color: #fff; background: rgba(255,255,255,0.1); }
+  .sp-pricing__plans { padding: 48px 24px; }
+  .sp-pricing__card { max-width: 420px; margin: 0 auto; background: var(--color-secondary); border-radius: 20px; padding: 32px; box-shadow: 0 12px 40px rgba(var(--color-primary-rgb), 0.12); border: 2px solid var(--color-border); position: relative; }
+  .sp-pricing__card-badge { position: absolute; top: -12px; right: 24px; background: var(--color-accent); color: var(--color-primary); padding: 6px 16px; border-radius: 999px; font-size: 0.8rem; font-weight: 700; }
+  .sp-pricing__card-title { margin: 0 0 16px; font-size: 1.5rem; color: var(--color-primary); }
+  .sp-pricing__card-price { margin-bottom: 24px; }
+  .sp-pricing__currency { font-size: 1.5rem; }
+  .sp-pricing__amount { font-size: 3rem; font-weight: 800; }
+  .sp-pricing__period { color: var(--color-text-muted); font-size: 1rem; }
+  .sp-pricing__features { list-style: none; padding: 0; margin: 0 0 28px; }
+  .sp-pricing__features li { padding: 10px 0; display: flex; align-items: flex-start; gap: 12px; color: var(--color-text); }
+  .sp-pricing__features li i { color: var(--color-accent); margin-top: 4px; }
+  .sp-pricing__btn--full { width: 100%; text-align: center; }
+  .sp-pricing__card-note { margin: 16px 0 0; font-size: 0.88rem; color: var(--color-text-muted); text-align: center; }
+  .sp-pricing__templates { padding: 48px 24px; }
+  .sp-pricing__section-title { text-align: center; font-size: 1.75rem; margin: 0 0 32px; color: var(--color-primary); }
+  .sp-pricing__template-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+  .sp-pricing__template-card { padding: 24px; background: var(--color-surface); border-radius: 16px; border: 1px solid var(--color-border); }
+  .sp-pricing__template-icon { display: inline-flex; width: 48px; height: 48px; align-items: center; justify-content: center; background: rgba(var(--color-accent-rgb), 0.15); border-radius: 12px; color: var(--color-accent); font-size: 1.25rem; margin-bottom: 12px; }
+  .sp-pricing__template-card h3 { margin: 0 0 8px; color: var(--color-primary); font-size: 1.15rem; }
+  .sp-pricing__template-card p { margin: 0; font-size: 0.92rem; color: var(--color-text-muted); line-height: 1.5; }
+  .sp-pricing__domain { padding: 48px 24px; text-align: center; background: var(--color-surface); border-radius: 20px; margin: 0 24px; }
+  .sp-pricing__domain-text { font-size: 1.05rem; line-height: 1.7; color: var(--color-text); }
+</style>
+{% endblock %}

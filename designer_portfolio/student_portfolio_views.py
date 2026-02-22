@@ -20,11 +20,15 @@ from .forms import (
 )
 from .models import (
     StudentPortfolio,
+    StudentPortfolioPlan,
     StudentPortfolioProject,
+    StudentPortfolioProjectImage,
+    StudentPortfolioSubscription,
     StudentProjectBookmark,
     StudentProjectFeedback,
     StudentProjectLike,
 )
+from .student_portfolio_templates import SAMPLE_TEMPLATES
 
 
 def _get_or_create_portfolio(user) -> StudentPortfolio:
@@ -81,9 +85,50 @@ def student_portfolio_dashboard(request):
                 )
                 project.display_order = (max_order if max_order is not None else -1) + 1
                 project.save()
+                for i, img_file in enumerate(request.FILES.getlist("gallery_images") or []):
+                    StudentPortfolioProjectImage.objects.create(
+                        project=project,
+                        image=img_file,
+                        display_order=i,
+                    )
                 messages.success(request, "Project added to your portfolio.")
                 return redirect("student_portfolio_dashboard")
             messages.error(request, "Please fix the project form errors and try again.")
+
+        elif action == "apply_template":
+            template_id = (request.POST.get("template_id") or "").strip()
+            template = next((t for t in SAMPLE_TEMPLATES if t["id"] == template_id), None)
+            if template:
+                max_order = portfolio.projects.aggregate(max_order=Max("display_order")).get(
+                    "max_order"
+                ) or -1
+                for i, sp in enumerate(template.get("suggested_projects", [])):
+                    max_order += 1
+                    cat = sp.get("category", "other")
+                    if cat not in dict(StudentPortfolioProject.Category.choices):
+                        cat = "other"
+                    StudentPortfolioProject.objects.create(
+                        portfolio=portfolio,
+                        title=sp.get("title", "Untitled Project"),
+                        description=sp.get("description", ""),
+                        category=cat,
+                        project_role=sp.get("project_role", ""),
+                        tools_used=sp.get("tools_used", ""),
+                        process_steps=sp.get("process_steps", ""),
+                        display_order=max_order,
+                    )
+                if template.get("suggested_skills"):
+                    portfolio.skills = template["suggested_skills"]
+                if template.get("suggested_interests"):
+                    portfolio.design_interests = template["suggested_interests"]
+                portfolio.save()
+                messages.success(
+                    request,
+                    f'Template "{template["name"]}" applied. Edit your new projects and add your designs.',
+                )
+            else:
+                messages.error(request, "Invalid template.")
+            return redirect("student_portfolio_dashboard")
 
         elif action == "toggle_featured":
             project_id = request.POST.get("project_id")
@@ -110,6 +155,22 @@ def student_portfolio_dashboard(request):
             messages.success(request, f'Deleted "{project_title}".')
             return redirect("student_portfolio_dashboard")
 
+        elif action == "update_custom_domain":
+            sub = getattr(request.user, "student_portfolio_subscription", None)
+            if sub and sub.is_active:
+                domain = (request.POST.get("custom_domain") or "").strip().lower()
+                if domain and domain.startswith("www."):
+                    domain = domain[4:]
+                portfolio.custom_domain = domain or None
+                portfolio.save()
+                messages.success(
+                    request,
+                    f"Custom domain set to {portfolio.custom_domain or 'none'}. Add a CNAME record pointing to globaldesignerhub.com."
+                )
+            else:
+                messages.error(request, "Upgrade to Pro to use a custom domain.")
+            return redirect("student_portfolio_dashboard")
+
     projects = (
         portfolio.projects.annotate(
             like_count=Count("likes", distinct=True),
@@ -121,6 +182,13 @@ def student_portfolio_dashboard(request):
     public_url = reverse("student_portfolio_public", args=[portfolio.share_slug])
     share_url = request.build_absolute_uri(public_url)
 
+    sub = StudentPortfolioSubscription.objects.filter(user=request.user).first()
+    has_pro = sub and sub.is_active
+    pro_plan = StudentPortfolioPlan.objects.filter(
+        is_active=True,
+        name=StudentPortfolioPlan.PLAN_KEY,
+    ).first() or StudentPortfolioPlan.objects.filter(is_active=True).first()
+
     context = {
         "portfolio": portfolio,
         "portfolio_form": portfolio_form,
@@ -129,6 +197,9 @@ def student_portfolio_dashboard(request):
         "share_url": share_url,
         "public_url": public_url,
         "featured_count": projects.filter(featured=True).count(),
+        "sample_templates": SAMPLE_TEMPLATES,
+        "has_pro": has_pro,
+        "pro_plan": pro_plan,
     }
     return render(
         request,
@@ -182,6 +253,23 @@ def student_portfolio_reorder_projects(request):
     return JsonResponse({"status": "ok"})
 
 
+def student_portfolio_pricing(request):
+    """Framer-style pricing page for student portfolios."""
+    plan = StudentPortfolioPlan.objects.filter(
+        is_active=True,
+        name=StudentPortfolioPlan.PLAN_KEY,
+    ).first() or StudentPortfolioPlan.objects.filter(is_active=True).first()
+    context = {
+        "plan": plan,
+        "sample_templates": SAMPLE_TEMPLATES,
+    }
+    return render(
+        request,
+        "designer_portfolio/student_portfolio_pricing.html",
+        context,
+    )
+
+
 def student_portfolio_public_view(request, share_slug):
     portfolio = get_object_or_404(
         StudentPortfolio.objects.select_related("user"),
@@ -204,7 +292,8 @@ def student_portfolio_public_view(request, share_slug):
             Prefetch(
                 "feedback_entries",
                 queryset=StudentProjectFeedback.objects.select_related("author"),
-            )
+            ),
+            "gallery_images",
         )
         .order_by("display_order", "-created_at")
     )
@@ -244,6 +333,47 @@ def student_portfolio_public_view(request, share_slug):
     return render(
         request,
         "designer_portfolio/student_portfolio_public.html",
+        context,
+    )
+
+
+@login_required
+def student_portfolio_edit_project(request, project_id):
+    portfolio = _get_or_create_portfolio(request.user)
+    project = get_object_or_404(
+        StudentPortfolioProject,
+        pk=project_id,
+        portfolio=portfolio,
+    )
+    form = StudentPortfolioProjectForm(instance=project)
+
+    if request.method == "POST":
+        form = StudentPortfolioProjectForm(
+            request.POST,
+            request.FILES,
+            instance=project,
+        )
+        if form.is_valid():
+            form.save()
+            for i, img_file in enumerate(request.FILES.getlist("gallery_images") or []):
+                StudentPortfolioProjectImage.objects.create(
+                    project=project,
+                    image=img_file,
+                    display_order=project.gallery_images.count() + i,
+                )
+            messages.success(request, f'Project "{project.title}" updated.')
+            return redirect("student_portfolio_dashboard")
+        messages.error(request, "Please fix the form errors and try again.")
+
+    gallery_images = project.gallery_images.order_by("display_order", "id")
+    context = {
+        "project": project,
+        "form": form,
+        "gallery_images": gallery_images,
+    }
+    return render(
+        request,
+        "designer_portfolio/student_portfolio_edit_project.html",
         context,
     )
 

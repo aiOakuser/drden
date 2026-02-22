@@ -54,6 +54,7 @@
           <a href="{% url 'designers_list' %}" role="menuitem"><i class="fas fa-handshake" style="margin-right: 8px;"></i> Collaborate with new designers</a>
         </div>
       </div>
+      <a href="{% url 'builder_sites_list' %}">Site Builder</a>
       <a href="{% url 'designer_dashboard' %}">Dashboard</a>
       <form action="{% url 'logout' %}" method="post" class="nav-logout-form">
         {% csrf_token %}

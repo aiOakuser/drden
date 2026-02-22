@@ -12,14 +12,16 @@
       <h1 class="students-hero__title">Build Your Portfolio. Get Noticed. Get Hired.</h1>
       <p class="students-hero__subtitle">A smarter portfolio for design students</p>
       <p class="students-hero__tagline">
-        Most portfolios show images.<br />
-        <strong>Yours will explain your thinking.</strong>
+        Design your portfolio with <strong>free templates</strong> — Framer-style.<br />
+        Upload designs, editorials & collections. Your domain free for 2 years.
       </p>
       <p class="students-hero__value">
-        GlobalDesignerHub turns your projects into an <strong>AI-powered portfolio website</strong> where
-        recruiters can ask questions about your work — just like an interview.
+        Pick a template. Add your work. Get a professional portfolio at <strong>https://www.yourname.com</strong> — only $19.99/month.
       </p>
-      <a href="#request-invite" class="students-cta students-cta--primary">Get My Free Portfolio</a>
+      <div class="students-hero__ctas">
+        <a href="{% url 'student_portfolio_dashboard' %}" class="students-cta students-cta--primary">Get Started Free</a>
+        <a href="{% url 'student_portfolio_pricing' %}" class="students-cta students-cta--secondary">View Pricing</a>
+      </div>
     </div>
   </section>
 
@@ -65,14 +67,18 @@
   <!-- What you get -->
   <section class="students-section" aria-labelledby="what-you-get">
     <div class="container">
-      <h2 id="what-you-get" class="students-section__title">What you get <span class="students-badge">Free for early students</span></h2>
+      <h2 id="what-you-get" class="students-section__title">What you get</h2>
       <ul class="students-checklist">
-        <li>Personal portfolio website</li>
-        <li>AI assistant trained on your projects</li>
+        <li>Free professional templates (Fashion, Editorial, Collection) — like Framer</li>
+        <li>Custom domain (e.g. chpreddy.com) — first 2 years free with Pro</li>
+        <li>Unlimited projects & gallery images</li>
         <li>Shareable recruiter link</li>
-        <li>Featured student badge</li>
-        <li>Placement-ready presentation page</li>
+        <li>Resume PDF export</li>
+        <li>Peer & teacher feedback</li>
       </ul>
+      <p class="students-pricing-note">
+        <strong>$19.99/month</strong> — free templates, low cost. <a href="{% url 'student_portfolio_pricing' %}">See pricing</a>
+      </p>
     </div>
   </section>
 
@@ -259,6 +265,41 @@
 
   .students-cta--primary:hover {
     box-shadow: 0 8px 24px rgba(var(--color-accent-rgb), 0.4);
+  }
+
+  .students-cta--secondary {
+    background: transparent;
+    color: var(--color-secondary);
+    border: 2px solid rgba(255,255,255,0.5);
+  }
+
+  .students-cta--secondary:hover {
+    border-color: #fff;
+    background: rgba(255,255,255,0.1);
+  }
+
+  .students-hero__ctas {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .students-pricing-note {
+    text-align: center;
+    margin: 24px 0 0;
+    font-size: 1.05rem;
+    color: var(--color-text);
+  }
+
+  .students-pricing-note a {
+    color: var(--color-accent);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .students-pricing-note a:hover {
+    text-decoration: underline;
   }
 
   .students-cta--full {

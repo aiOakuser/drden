@@ -1245,6 +1245,73 @@ class ProjectProductSpecField(TimeStampedModel):
 
 
 # ---------------- Student Portfolio ----------------
+class StudentPortfolioPlan(TimeStampedModel):
+    """Pro plan for student portfolios — $19.99/mo with free templates and 2-year custom domain."""
+
+    PLAN_KEY = "student_pro_monthly"
+    PRICE = 19.99
+    DOMAIN_FREE_YEARS = 2
+
+    name = models.CharField(max_length=80, unique=True)
+    display_name = models.CharField(max_length=120)
+    price = models.DecimalField(max_digits=8, decimal_places=2, default=19.99)
+    duration_days = models.IntegerField(default=30)
+    includes_custom_domain = models.BooleanField(default=True)
+    domain_free_years = models.PositiveIntegerField(default=2)
+    stripe_price_id = models.CharField(max_length=200, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["price"]
+
+    def __str__(self):
+        return f"{self.display_name} — ${self.price}/mo"
+
+
+class StudentPortfolioSubscription(TimeStampedModel):
+    """Tracks Pro subscription for student portfolio (custom domain, templates)."""
+
+    STATUS_CHOICES = [
+        ("active", "Active"),
+        ("canceled", "Canceled"),
+        ("expired", "Expired"),
+        ("past_due", "Past Due"),
+    ]
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="student_portfolio_subscription",
+    )
+    plan = models.ForeignKey(
+        StudentPortfolioPlan,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="subscriptions",
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="active")
+    subscription_start = models.DateTimeField(null=True, blank=True)
+    subscription_end = models.DateTimeField(null=True, blank=True)
+    stripe_subscription_id = models.CharField(max_length=200, blank=True, null=True)
+
+    class Meta:
+        verbose_name = "Student Portfolio Subscription"
+
+    def __str__(self):
+        return f"{self.user.username} — {self.get_status_display()}"
+
+    @property
+    def is_active(self):
+        from django.utils import timezone
+
+        if self.status != "active":
+            return False
+        if self.subscription_end and self.subscription_end < timezone.now():
+            return False
+        return True
+
+
 class StudentPortfolio(TimeStampedModel):
     class Visibility(models.TextChoices):
         PUBLIC = ("public", "Public (for recruiters)")
@@ -1272,6 +1339,18 @@ class StudentPortfolio(TimeStampedModel):
         db_index=True,
     )
     share_slug = models.SlugField(max_length=180, unique=True, blank=True)
+    custom_domain = models.CharField(
+        max_length=253,
+        blank=True,
+        null=True,
+        unique=True,
+        help_text="Custom domain (e.g. chpreddy.com). Requires Student Portfolio Pro.",
+    )
+    domain_free_until = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Custom domain included free until this date (first 2 years for Pro).",
+    )
 
     class Meta:
         ordering = ["-updated_at"]
@@ -1288,6 +1367,11 @@ class StudentPortfolio(TimeStampedModel):
                 suffix += 1
                 slug = f"{base_slug}-{suffix}"
             self.share_slug = slug
+        if self.custom_domain:
+            domain = (self.custom_domain or "").strip().lower()
+            if domain.startswith("www."):
+                domain = domain[4:]
+            self.custom_domain = domain or None
         super().save(*args, **kwargs)
 
     @property
@@ -1301,6 +1385,9 @@ class StudentPortfolio(TimeStampedModel):
 
 class StudentPortfolioProject(TimeStampedModel):
     class Category(models.TextChoices):
+        FASHION_DESIGN = ("fashion-design", "Fashion Design")
+        EDITORIAL = ("editorial", "Editorial & Lookbook")
+        COLLECTION = ("collection", "Collection")
         UI_UX = ("ui-ux", "UI/UX")
         GRAPHIC_DESIGN = ("graphic-design", "Graphic Design")
         ANIMATION = ("animation", "Animation")
@@ -1332,6 +1419,7 @@ class StudentPortfolioProject(TimeStampedModel):
     class Meta:
         ordering = ["display_order", "-created_at", "id"]
 
+
     def __str__(self):
         return f"{self.title} ({self.portfolio.user.username})"
 
@@ -1342,6 +1430,24 @@ class StudentPortfolioProject(TimeStampedModel):
     @property
     def process_steps_list(self) -> list[str]:
         return [item.strip() for item in (self.process_steps or "").splitlines() if item.strip()]
+
+
+class StudentPortfolioProjectImage(TimeStampedModel):
+    """Gallery image for a project — designs, editorials, collection photos."""
+    project = models.ForeignKey(
+        StudentPortfolioProject,
+        on_delete=models.CASCADE,
+        related_name="gallery_images",
+    )
+    image = models.ImageField(upload_to="students/projects/gallery/")
+    caption = models.CharField(max_length=255, blank=True)
+    display_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["display_order", "-created_at", "id"]
+
+    def __str__(self):
+        return f"Image for {self.project.title}"
 
 
 class StudentProjectFeedback(TimeStampedModel):
