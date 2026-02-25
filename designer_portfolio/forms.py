@@ -33,6 +33,7 @@ class DesignerSignUpForm(UserCreationForm):
         required=False,
         label="Portfolio website",
         help_text="Share a website or portfolio link for our private review (optional)",
+        assume_scheme="https",
     )
 
     # Subscription plan selection (by plan "name" string to match template radios)
@@ -54,7 +55,7 @@ class DesignerSignUpForm(UserCreationForm):
     # Terms and conditions
     agree_to_terms = forms.BooleanField(
         required=True,
-        label="I agree to the Terms of Service and Privacy Policy"
+        label="I agree to the Terms of Service, Privacy Policy, and Security Policy"
     )
 
     # Newsletter subscription

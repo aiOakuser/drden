@@ -2,6 +2,17 @@
 
 This guide explains how to set up and use the GlobalDesignerHub Designer AI chat assistant.
 
+## Architecture
+
+**Django-first flow:**
+```
+Browser → POST /api/ai/stream → Django (ai_chat app) → OpenAI API → SSE stream → Browser
+```
+
+- **Streaming**: `/api/ai/stream/` uses SSE for fast UX; text appears progressively
+- **Fallback**: `/api/ai/designer-chat/` returns full JSON response (non-streaming)
+- **Auth & DB**: Django handles auth, session, and message history
+
 ## Overview
 
 Designer AI is a chat assistant built into GlobalDesignerHub for the designer platform. It helps with:
@@ -14,9 +25,10 @@ Designer AI is a chat assistant built into GlobalDesignerHub for the designer pl
 ## Features
 
 1. **Floating Chat Bubble**: Available on all pages (bottom-right corner)
-2. **Contextual Help Bars**: Appear on key pages like portfolio edit/create
-3. **Smart Responses**: Uses OpenAI (optional) or rule-based fallback
-4. **Documentation Links**: Automatically links to relevant docs
+2. **SSE Streaming**: Responses stream in progressively for faster perceived performance
+3. **Contextual Help Bars**: Appear on key pages like portfolio edit/create
+4. **Smart Responses**: Uses OpenAI (optional) or rule-based fallback
+5. **Documentation Links**: Automatically links to relevant docs (RAG)
 
 ## Setup
 
@@ -24,25 +36,28 @@ Designer AI is a chat assistant built into GlobalDesignerHub for the designer pl
 
 The chat works out of the box with rule-based responses. No additional setup needed!
 
-### Optional: OpenAI Integration
+### OpenAI Integration (Streaming + Smart Responses)
 
-For more intelligent, conversational responses:
+For intelligent, streaming responses:
 
-1. **Install OpenAI library:**
+1. **Install OpenAI library** (already in requirements.txt):
    ```bash
    pip install openai
    ```
 
-2. **Add API key to environment:**
+2. **Store OPENAI_API_KEY securely**
+   - **Local dev**: Add to `.env` (copy from `.env.example`). `.env` is in `.gitignore`.
+   - **Production (Coolify/VPS)**: Set `OPENAI_API_KEY` as an environment variable in your service config. Never commit keys to code.
+
    ```bash
-   # In your .env file
+   # .env (local – never commit)
    OPENAI_API_KEY=your-api-key-here
-   OPENAI_MODEL=gpt-4o-mini  # Optional, defaults to gpt-4o-mini
+   OPENAI_MODEL=gpt-4o-mini  # Optional
    ```
 
 3. **Restart your Django server**
 
-The system will automatically use OpenAI if the API key is configured, otherwise it falls back to rule-based responses.
+The system will use OpenAI for streaming when the key is configured; otherwise it falls back to rule-based responses.
 
 ## Usage
 
@@ -54,13 +69,20 @@ The system will automatically use OpenAI if the API key is configured, otherwise
 
 ### For Developers
 
-#### API Endpoint
+#### API Endpoints
 
+**Streaming (recommended for chat UI):**
+```
+POST /api/ai/stream/
+```
+Response: `text/event-stream` with `data: {"delta": "..."}` chunks.
+
+**Non-streaming:**
 ```
 POST /api/ai/designer-chat/
 ```
 
-**Request Body:**
+**Request Body (both):**
 ```json
 {
   "message": "How do I upload images?",

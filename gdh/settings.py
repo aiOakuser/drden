@@ -349,6 +349,7 @@ SPECTACULAR_SETTINGS = {
 
 # --- Middleware ---
 MIDDLEWARE = [
+    "designer_portfolio.middleware.CustomDomainAllowedHostsMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "designer_portfolio.middleware.ForceHttpForLocalhostMiddleware",
@@ -714,6 +715,9 @@ SOCIAL_AUTH_REDIRECT_IS_HTTPS = env_bool(
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY") or os.getenv("GOOGLE_CLIENT_ID", "")
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET") or os.getenv("GOOGLE_CLIENT_SECRET", "")
 
+# When True, only Gmail/Google login is allowed; username/password and passkeys are disabled.
+GOOGLE_LOGIN_MANDATORY = env_bool("GOOGLE_LOGIN_MANDATORY", default=False)
+
 # LinkedIn OAuth (optional)
 SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = os.getenv("SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY") or os.getenv("LINKEDIN_CLIENT_ID", "")
 SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = os.getenv("SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET") or os.getenv("LINKEDIN_CLIENT_SECRET", "")
@@ -747,6 +751,7 @@ SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.user.create_user",
     "social_core.pipeline.social_auth.associate_user",
     "social_core.pipeline.social_auth.load_extra_data",
+    "designer_portfolio.social_pipeline.activate_social_user",
     "designer_portfolio.social_pipeline.sync_user_details",
     "designer_portfolio.social_pipeline.credit_referral_on_social_signup",
     "designer_portfolio.social_pipeline.send_welcome_notification",

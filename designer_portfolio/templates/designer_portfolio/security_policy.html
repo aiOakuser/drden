@@ -1,0 +1,152 @@
+{% extends "designer_portfolio/base.html" %}
+
+{% block content %}
+<section class="legal-page">
+  <div class="legal-container">
+    <p class="legal-eyebrow">Effective {{ effective_date }}</p>
+    <h1>G. {{ company_name }} &mdash; Security Policy &amp; User Responsibilities</h1>
+    <p>
+      This Security Policy defines security practices, acceptable use requirements, and your
+      responsibilities as a registered user of {{ company_name }}. By creating an account and using
+      our services, you agree to comply with these security terms and help protect the platform
+      and community.
+    </p>
+
+    <h2>1. Our Security Practices</h2>
+    <p>{{ company_name }} implements industry-standard measures to protect your data:</p>
+    <ul>
+      <li><strong>Encryption:</strong> Data in transit uses TLS/SSL encryption; sensitive data at rest is encrypted.</li>
+      <li><strong>Access controls:</strong> Role-based access, least-privilege principles, and regular access reviews.</li>
+      <li><strong>Infrastructure:</strong> Secure hosting, monitoring, and intrusion detection.</li>
+      <li><strong>Payment security:</strong> We do not store full card numbers; payments are processed by PCI-compliant gateways.</li>
+      <li><strong>Incident response:</strong> We have procedures to detect, contain, investigate, and remediate security incidents.</li>
+    </ul>
+    <p>No system is 100% secure. We continuously assess and improve our security posture.</p>
+
+    <h2>2. Your Security Responsibilities (Required)</h2>
+    <p>As a registered user, you <strong>must</strong>:</p>
+    <ul>
+      <li><strong>Maintain account security:</strong> Use a strong, unique password and keep your credentials confidential.</li>
+      <li><strong>No account sharing:</strong> Do not share your account, password, or session tokens with others. Each person must have their own account.</li>
+      <li><strong>Secure your device:</strong> Use up-to-date operating systems and browsers; avoid accessing the platform from compromised or public devices when possible.</li>
+      <li><strong>Report suspicious activity:</strong> Immediately notify us if you suspect unauthorized access to your account or any security incident.</li>
+      <li><strong>Protect others:</strong> Do not attempt to access other users’ accounts, harvest credentials, or exploit vulnerabilities.</li>
+    </ul>
+    <p>
+      Failure to uphold these responsibilities may result in account suspension or termination
+      and may expose you to liability.
+    </p>
+
+    <h2>3. Prohibited Security-Related Conduct</h2>
+    <p>You must <strong>not</strong>:</p>
+    <ul>
+      <li>Probe, scan, or test our systems for vulnerabilities without prior written authorization.</li>
+      <li>Attempt to bypass authentication, access controls, or rate limits.</li>
+      <li>Introduce malware, viruses, or malicious code.</li>
+      <li>Use automated tools (bots, scrapers, etc.) to access the platform in ways that violate our Terms of Service.</li>
+      <li>Intercept, collect, or misuse data belonging to other users or {{ company_name }}.</li>
+      <li>Impersonate {{ company_name }}, its staff, or other users to gain unauthorized access or deceive others.</li>
+    </ul>
+    <p>Violations may lead to immediate account termination, legal action, and cooperation with law enforcement.</p>
+
+    <h2>4. Reporting Security Incidents</h2>
+    <p>To report a security concern—including suspected breaches, vulnerabilities, or abuse:</p>
+    <ul>
+      <li>Email <a href="mailto:{{ contact_email }}">{{ contact_email }}</a> with the subject line <strong>“Security Report”</strong>.</li>
+      <li>Include a clear description, steps to reproduce (if applicable), and your contact information.</li>
+      <li>Do not disclose or exploit vulnerabilities publicly before we have had a reasonable opportunity to address them.</li>
+    </ul>
+    <p>
+      We will acknowledge receipt promptly and work to address valid reports. We appreciate
+      responsible disclosure.
+    </p>
+
+    <h2>5. Data Breach Notification</h2>
+    <p>
+      In the event of a data breach affecting your personal information, we will notify affected
+      users and relevant regulators as required by applicable law. Notifications will describe
+      the nature of the incident and steps we are taking in response.
+    </p>
+
+    <h2>6. Changes to This Policy</h2>
+    <p>
+      We may update this Security Policy to reflect new threats, best practices, or regulatory
+      requirements. The “Last updated” date will change when revisions occur. Continued use of
+      our services after updates constitutes acceptance of the revised policy.
+    </p>
+
+    <h2>7. Contact</h2>
+    <p>
+      For security-related questions or reports, contact us at
+      <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>. See also our
+      <a href="{% url 'terms_of_service' %}">Terms of Service</a>,
+      <a href="{% url 'privacy_policy' %}">Privacy Policy</a>, and
+      <a href="{% url 'grievance_policy' %}">Grievance Policy</a>.
+    </p>
+
+    <p class="legal-updated">Last updated on {{ effective_date }}.</p>
+  </div>
+</section>
+
+<style>
+  .legal-page {
+    background: var(--color-surface, #f9f9fb);
+    padding: 60px 20px;
+  }
+
+  .legal-container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: var(--color-secondary, #fff);
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+    padding: 48px;
+    line-height: 1.7;
+    color: var(--color-primary, #0f172a);
+  }
+
+  .legal-eyebrow {
+    font-size: 0.9rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted, #6b7280);
+    margin-bottom: 0.5rem;
+  }
+
+  .legal-container h1 {
+    font-size: clamp(2rem, 3vw, 2.6rem);
+    margin-bottom: 1.5rem;
+  }
+
+  .legal-container h2 {
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 1.4rem;
+  }
+
+  .legal-container p {
+    margin-bottom: 1rem;
+  }
+
+  .legal-container ul {
+    padding-left: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .legal-container ul li {
+    margin-bottom: 0.5rem;
+  }
+
+  .legal-updated {
+    margin-top: 3rem;
+    font-style: italic;
+    color: var(--color-muted, #6b7280);
+  }
+
+  @media (max-width: 640px) {
+    .legal-container {
+      padding: 32px 24px;
+    }
+  }
+</style>
+{% endblock %}

@@ -23,7 +23,7 @@ export default function HomeScreen() {
           <Text style={styles.cardSub}>Shows & pop-up events</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.card} onPress={() => nav.navigate("NewOrders")}>
-          <Text style={styles.cardTitle}>New Orders</Text>
+          <Text style={styles.cardTitle}>Orders</Text>
           <Text style={styles.cardSub}>Order dresses — select type, measurements & designer</Text>
         </TouchableOpacity>
       </View>

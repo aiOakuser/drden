@@ -33,13 +33,20 @@
 
     <!-- Navigation -->
     <nav class="nav">
-      <a href="{% url 'designers_list' %}">Designers</a>
+      <div class="nav-dropdown">
+        <a href="{% url 'designers_list' %}" class="nav-dropdown__trigger" aria-haspopup="true" aria-expanded="false" id="nav-designers-trigger">
+          Designers <i class="fas fa-chevron-down" style="font-size: 10px; margin-left: 4px; opacity: 0.9;"></i>
+        </a>
+        <div class="nav-dropdown__menu" role="menu" aria-labelledby="nav-designers-trigger">
+          <a href="{% url 'designers_list' %}" role="menuitem">Browse Designers</a>
+          <a href="{% url 'student_page' %}" role="menuitem">Student</a>
+        </div>
+      </div>
       <a href="{% url 'event_list' %}">Events</a>
         <a href="{% url 'forum_index' %}">Community Forum</a>
       <a href="{% url 'about_site' %}">About Site</a>
       <a href="{% url 'iphone_app' %}">iPhone App</a>
-      <a href="{% url 'student_page' %}">Student</a>
-      <a href="{% url 'neworders_dresses' %}">New Orders</a>
+      <a href="{% url 'neworders_dresses' %}">Orders</a>
       {% if user.is_authenticated %}
       <div class="nav-dropdown">
         <a href="{% url 'messenger_list' %}" class="nav-dropdown__trigger" aria-haspopup="true" aria-expanded="false" id="nav-messages-trigger">

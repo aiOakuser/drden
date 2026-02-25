@@ -59,6 +59,7 @@ from .views import (
     GrievancePolicyView,
     DataRightsPolicyView,
     AccessibilityStatementView,
+    SecurityPolicyView,
     ReportProblemView,
     ReportProblemThanksView,
     ForumIndexView,
@@ -71,6 +72,7 @@ from .views import (
     forum_post_like,
     forum_post_toggle_solution,
 )
+from ai_chat.views import stream_chat
 from .student_portfolio_views import (
     student_portfolio_dashboard,
     student_portfolio_edit_project,
@@ -180,6 +182,7 @@ urlpatterns = [
     path("policies/grievance-redressal/", GrievancePolicyView.as_view(), name="grievance_policy"),
     path("policies/data-rights/", DataRightsPolicyView.as_view(), name="data_rights_policy"),
     path("policies/accessibility/", AccessibilityStatementView.as_view(), name="accessibility_statement"),
+    path("policies/security/", SecurityPolicyView.as_view(), name="security_policy"),
     path("report-problem/", ReportProblemView.as_view(), name="report_problem"),
     path("report-problem/thanks/", ReportProblemThanksView.as_view(), name="report_problem_thanks"),
     path("docs/<slug:category_slug>/<slug:doc_slug>/", docs_detail, name="docs_detail"),
@@ -231,6 +234,7 @@ urlpatterns = [
     path("api/referrals/leaderboard/", views.ReferralLeaderboardView.as_view(), name="referral_leaderboard"),
     path("api/ai/designer-chat/", designer_ai_chat, name="designer_ai_chat"),
     path("api/ai/config-check/", designer_ai_config_check, name="designer_ai_config_check"),
+    path("api/ai/stream/", stream_chat, name="ai_chat_stream"),
     path("designer-ai/history/", my_conversations, name="designer_ai_history"),
 
     # Messenger (registered users only)

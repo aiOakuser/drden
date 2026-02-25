@@ -106,6 +106,15 @@ def ensure_verified_email(strategy, details=None, backend=None, response=None, *
     raise AuthForbidden(backend, "Google account email must be verified before signing in.")
 
 
+def activate_social_user(strategy, backend=None, user=None, is_new=False, *args, **kwargs):
+    """Ensure users signing in via Google/Gmail can access the dashboard immediately."""
+    if user is None:
+        return
+    if not user.is_active:
+        user.is_active = True
+        user.save(update_fields=["is_active"])
+
+
 def sync_user_details(strategy, backend=None, user=None, details=None, response=None, *args, **kwargs):
     """Keep Django user + designer profile metadata aligned with Google data."""
     if user is None:

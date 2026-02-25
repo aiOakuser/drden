@@ -30,7 +30,7 @@ def builder_site_create(request):
             meta_title=name,
             meta_description=f"Welcome to {name}",
         )
-        return redirect("builder_editor", site_slug=site.slug, page_id=page.id)
+        return redirect("builder_editor_page", site_slug=site.slug, page_id=page.id)
     return redirect("builder_sites_list")
 
 

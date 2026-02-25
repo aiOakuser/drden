@@ -4,6 +4,14 @@ from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
 
 
+class HTTPSURLField(models.URLField):
+    """URLField that assumes https for schemeless URLs (Django 6.0-ready)."""
+
+    def formfield(self, **kwargs):
+        kwargs.setdefault("assume_scheme", "https")
+        return super().formfield(**kwargs)
+
+
 # ---------------- Base Timestamp ----------------
 class TimeStampedModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
@@ -285,7 +293,7 @@ class EventCollaboration(TimeStampedModel):
     email = models.EmailField()
     company = models.CharField(max_length=120, blank=True)
     role = models.CharField(max_length=120, blank=True)
-    portfolio_url = models.URLField(blank=True)
+    portfolio_url = HTTPSURLField(blank=True)
     message = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_NEW)
     is_contacted = models.BooleanField(default=False)
@@ -383,9 +391,9 @@ class DesignerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='designer_profile')
     bio = models.TextField(max_length=1000, blank=True, default="", help_text="Tell us about yourself and your design philosophy")
     profile_image = models.ImageField(upload_to="designers/profiles/", blank=True, null=True)
-    portfolio_website = models.URLField(blank=True, help_text="Your personal website or portfolio")
+    portfolio_website = HTTPSURLField(blank=True, help_text="Your personal website or portfolio")
     instagram_handle = models.CharField(max_length=100, blank=True, help_text="Instagram username (without @)")
-    linkedin_profile = models.URLField(blank=True, help_text="LinkedIn profile URL")
+    linkedin_profile = HTTPSURLField(blank=True, help_text="LinkedIn profile URL")
     
     # Professional details
     years_of_experience = models.PositiveIntegerField(default=0, help_text="Years of design experience")
@@ -629,8 +637,8 @@ class UserSubscription(models.Model):
     acquisition_campaign = models.CharField(max_length=150, blank=True, null=True)
     acquisition_content = models.CharField(max_length=150, blank=True, null=True)
     acquisition_term = models.CharField(max_length=150, blank=True, null=True)
-    acquisition_landing_page = models.URLField(blank=True, null=True)
-    acquisition_initial_referrer = models.URLField(blank=True, null=True)
+    acquisition_landing_page = HTTPSURLField(blank=True, null=True)
+    acquisition_initial_referrer = HTTPSURLField(blank=True, null=True)
     
     def __str__(self):
         return f"{self.user.username} - {self.status}"

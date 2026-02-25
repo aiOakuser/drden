@@ -8,6 +8,46 @@ from django.conf import settings
 from django.core.cache import cache
 from django.http import HttpRequest, HttpResponse, HttpResponsePermanentRedirect
 
+_DOMAIN_ALLOWED_HOSTS_INITIALIZED = False
+
+
+def _ensure_custom_domains_in_allowed_hosts() -> None:
+    """Add student portfolio custom domains to ALLOWED_HOSTS (lazy, on first request)."""
+    global _DOMAIN_ALLOWED_HOSTS_INITIALIZED
+    if _DOMAIN_ALLOWED_HOSTS_INITIALIZED:
+        return
+    if not getattr(settings, "STUDENT_PORTFOLIO_CUSTOM_DOMAIN_ENABLED", True):
+        _DOMAIN_ALLOWED_HOSTS_INITIALIZED = True
+        return
+    try:
+        from .models import StudentPortfolio
+
+        for domain in StudentPortfolio.objects.filter(
+            custom_domain__isnull=False
+        ).exclude(custom_domain="").values_list("custom_domain", flat=True):
+            if domain:
+                for host in (domain, f"www.{domain}"):
+                    if host and host not in settings.ALLOWED_HOSTS:
+                        settings.ALLOWED_HOSTS.append(host)
+    except Exception:
+        pass  # Tables may not exist during migration
+    _DOMAIN_ALLOWED_HOSTS_INITIALIZED = True
+
+
+class CustomDomainAllowedHostsMiddleware:
+    """
+    Lazily populate ALLOWED_HOSTS with student portfolio custom domains on first request.
+    Runs early so Django accepts requests to those hosts before host validation.
+    """
+
+    def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]):
+        self.get_response = get_response
+
+    def __call__(self, request: HttpRequest) -> HttpResponse:
+        _ensure_custom_domains_in_allowed_hosts()
+        return self.get_response(request)
+
+
 logger = logging.getLogger(__name__)
 
 

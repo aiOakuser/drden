@@ -131,7 +131,7 @@ export default function NewOrdersScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>New Orders — Dresses</Text>
+      <Text style={styles.title}>Orders — Dresses</Text>
       <Text style={styles.subtitle}>Select dress type, measurements, fabric, and designer. Add your email to receive order confirmation.</Text>
 
       {/* Phone */}

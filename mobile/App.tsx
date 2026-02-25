@@ -69,7 +69,7 @@ function AppNavigator() {
         <Stack.Screen name="DesignerDetail" component={DesignerDetailScreen} options={{ title: "Designer" }} />
         <Stack.Screen name="CollectionDetail" component={CollectionDetailScreen} options={{ title: "Collection" }} />
         <Stack.Screen name="EventDetail" component={EventDetailScreen} options={{ title: "Event" }} />
-        <Stack.Screen name="NewOrders" component={NewOrdersScreen} options={{ title: "New Orders" }} />
+        <Stack.Screen name="NewOrders" component={NewOrdersScreen} options={{ title: "Orders" }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

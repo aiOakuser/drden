@@ -8,10 +8,7 @@
     <p>
       These Terms govern all services, including {{ service_brands|join:", " }}, our designer tools,
       and any related experiences. By creating an account, submitting a project request, or otherwise
-      using the platform, you agree to these Terms.
-      These Terms govern all {{ company_name }} services, including {{ service_brands|join:", " }}, our
-      designer tools, and any related experiences. By creating an account, submitting a project request,
-      or otherwise using the platform, you agree to these Terms.
+      using the platform, you agree to these Terms. You must read and accept these Terms before registration.
     </p>
 
     <h2>1. Acceptance of Terms</h2>
@@ -33,13 +30,17 @@
     </ul>
     <p>We may update, expand, or discontinue features at any time.</p>
 
-    <h2>3. User Responsibilities</h2>
+    <h2>3. User Responsibilities &amp; Acceptable Use</h2>
+    <p>You agree to use the Services only in compliance with these Terms and all applicable laws. You must:</p>
     <ul>
-      <li>Provide accurate registration, payment, and measurement information.</li>
-      <li>Only upload content you have the rights to share.</li>
-      <li>Do not misuse, disrupt, or reverse engineer the platform.</li>
-      <li>Do not harass, impersonate, or harm other users, designers, or staff.</li>
+      <li>Provide accurate, current, and complete registration, payment, and measurement information. Providing false or misleading information is grounds for termination.</li>
+      <li>Only upload content you own or have explicit rights to share. You represent that you have the necessary rights for all content you submit.</li>
+      <li>Maintain the security of your account credentials and notify us promptly of any unauthorized access.</li>
+      <li>Refrain from misuse, disruption, reverse engineering, scraping, or exploitation of the platform.</li>
+      <li>Refrain from harassing, impersonating, defaming, or harming other users, designers, staff, or third parties.</li>
+      <li>Comply with our <a href="{% url 'security_policy' %}">Security Policy</a>, including prohibited conduct and incident reporting.</li>
     </ul>
+    <p><strong>Prohibited conduct</strong> includes, without limitation: fraud, phishing, spam, malware, unauthorized access, circumventing access controls, violating others’ intellectual property, and any activity that could harm the platform or its users. Violations may result in immediate suspension or termination without refund.</p>
 
     <h2>4. Designer-to-Designer Communication & Platform-Only Policy</h2>
     <p>
@@ -85,23 +86,55 @@
       <li>Copyright infringement or misuse of designer content.</li>
     </ul>
 
-    <h2>8. Limitation of Liability</h2>
+    <h2>8. Intellectual Property &amp; Content</h2>
+    <p>You retain ownership of content you create and upload. By uploading content, you grant {{ company_name }} a non-exclusive, worldwide, royalty-free license to use, display, reproduce, and distribute that content solely to operate and promote the Services. We do not claim ownership of your designs or portfolio materials beyond what is necessary to provide the service.</p>
+    <p>{{ company_name }} owns all rights to the platform, software, branding, and any materials we create. You may not copy, modify, or create derivative works without our written consent.</p>
+
+    <h2>9. Indemnification</h2>
     <p>
-      To the maximum extent permitted by law, {{ company_name }} is not liable for indirect, incidental,
-      or consequential damages, third-party errors, loss of data, or service delays. Our total liability
-      to you will not exceed the amount you paid to us in the preceding twelve months.
+      You agree to indemnify, defend, and hold harmless {{ company_name }}, its affiliates, officers,
+      directors, employees, and agents from and against any claims, damages, losses, costs, or
+      expenses (including reasonable attorneys’ fees) arising from: (a) your use of the Services;
+      (b) your violation of these Terms or any applicable law; (c) your content or conduct;
+      (d) your infringement of third-party rights; or (e) disputes between you and other users.
     </p>
 
-    <h2>9. Governing Law</h2>
+    <h2>10. Limitation of Liability</h2>
+    <p>
+      To the maximum extent permitted by law, {{ company_name }} is not liable for indirect, incidental,
+      consequential, punitive, or special damages, including loss of profits, data, goodwill, or
+      business opportunity, whether arising from breach of contract, tort, or otherwise. Our total
+      liability to you will not exceed the amount you paid to us in the preceding twelve (12) months.
+      Some jurisdictions do not allow certain exclusions; where prohibited, our liability will be
+      limited to the fullest extent permitted by law.
+    </p>
+
+    <h2>11. Disclaimers</h2>
+    <p>
+      The Services are provided “as is” and “as available.” We disclaim all warranties, express or
+      implied, including merchantability, fitness for a particular purpose, and non-infringement.
+      We do not guarantee uninterrupted, error-free, or secure service.
+    </p>
+
+    <h2>12. Governing Law</h2>
     <p>
       These Terms are governed by the laws of the State of California, USA. Disputes will be handled in
       California courts unless consumer protection rules require a different venue.
     </p>
 
-    <h2>10. Contact</h2>
+    <h2>13. Changes to Terms</h2>
+    <p>
+      We may modify these Terms from time to time. We will notify you of material changes via email
+      or an in-app notice. Continued use of the Services after the effective date of changes
+      constitutes acceptance. If you do not agree, you must stop using the Services and may close
+      your account.
+    </p>
+
+    <h2>14. Contact</h2>
     <p>
       Email <a href="mailto:{{ contact_email }}">{{ contact_email }}</a> for questions about these Terms or to
-      report a violation. Please include relevant project or booking details so we can respond quickly.
+      report a violation. Include relevant project or booking details. For security issues, see our
+      <a href="{% url 'security_policy' %}">Security Policy</a>.
     </p>
 
     <p class="legal-updated">Last updated on {{ effective_date }}.</p>

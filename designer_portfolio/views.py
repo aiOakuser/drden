@@ -1578,6 +1578,12 @@ def _find_user_by_identifier(identifier: str):
             return None
 
 def signup_view(request):
+    if getattr(settings, "GOOGLE_LOGIN_MANDATORY", False):
+        messages.info(
+            request,
+            "New accounts are created by signing in with Gmail. Use Continue with Google on the login page.",
+        )
+        return redirect(reverse("login") + "?next=" + request.GET.get("next", "/"))
     if request.method == "POST":
         # Attempt to restore an existing but inactive account based on username/email
         desired_username = (request.POST.get("username") or "").strip()
@@ -2558,6 +2564,10 @@ class DataRightsPolicyView(GlobalDesignerHubLegalPageView):
 
 class AccessibilityStatementView(GlobalDesignerHubLegalPageView):
     template_name = "designer_portfolio/accessibility_statement.html"
+
+
+class SecurityPolicyView(GlobalDesignerHubLegalPageView):
+    template_name = "designer_portfolio/security_policy.html"
 
 
 class ReportProblemView(FormView):
@@ -4736,8 +4746,27 @@ class DesignerLoginView(LoginView):
         secret = getattr(settings, secret_attr, "") or ""
         return bool(key and secret)
 
+    def _google_enabled(self) -> bool:
+        return self._provider_enabled(
+            "SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", "SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET"
+        )
+
+    def post(self, request, *args, **kwargs):
+        """Reject password login when Gmail is mandatory."""
+        if getattr(settings, "GOOGLE_LOGIN_MANDATORY", False):
+            messages.info(
+                request,
+                "Please sign in with your Gmail account to access your dashboard.",
+            )
+            return self.get(request, *args, **kwargs)
+        return super().post(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["google_login_mandatory"] = getattr(
+            settings, "GOOGLE_LOGIN_MANDATORY", False
+        )
+        context["google_login_available"] = self._google_enabled()
         provider_catalog = [
             (
                 "SOCIAL_AUTH_GOOGLE_OAUTH2_KEY",
