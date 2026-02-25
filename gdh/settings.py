@@ -377,6 +377,36 @@ STATIC_URL = "/static/"
 STATICFILES_DIRS = []
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+
+def _normalize_storage_location(value: str | None, fallback: str) -> str:
+    location = (value or fallback).strip().strip("/")
+    return location or fallback.strip("/")
+
+
+def _media_location(env_name: str, suffix: str) -> str:
+    default_location = f"{AWS_S3_MEDIA_LOCATION}/{suffix}"
+    return _normalize_storage_location(os.getenv(env_name, default_location), default_location)
+
+
+AWS_S3_MEDIA_LOCATION = _normalize_storage_location(
+    os.getenv("AWS_S3_MEDIA_LOCATION", "media"),
+    "media",
+)
+AWS_S3_DOMAIN_LOCATIONS = {
+    "designers_accounts": _media_location(
+        "AWS_S3_DESIGNERS_ACCOUNTS_LOCATION",
+        "designers/accounts",
+    ),
+    "viewers_accounts": _media_location(
+        "AWS_S3_VIEWERS_ACCOUNTS_LOCATION",
+        "viewers/accounts",
+    ),
+    "techpacks": _media_location("AWS_S3_TECHPACKS_LOCATION", "techpacks"),
+    "orders": _media_location("AWS_S3_ORDERS_LOCATION", "orders"),
+    "events": _media_location("AWS_S3_EVENTS_LOCATION", "events"),
+    "collections": _media_location("AWS_S3_COLLECTIONS_LOCATION", "collections"),
+}
+
 # Use S3 for media in production to avoid losing uploads on deploys
 USE_S3_MEDIA = env_bool("USE_S3_MEDIA", default=False)
 
@@ -392,24 +422,67 @@ if USE_S3_MEDIA:
     # Django 5 STORAGES API
     STORAGES = {
         "default": {"BACKEND": "gdh.storages.MediaStorage"},
+        "designers_accounts": {"BACKEND": "gdh.storages.DesignersAccountsStorage"},
+        "viewers_accounts": {"BACKEND": "gdh.storages.ViewersAccountsStorage"},
+        "techpacks": {"BACKEND": "gdh.storages.TechpacksStorage"},
+        "orders": {"BACKEND": "gdh.storages.OrdersStorage"},
+        "events": {"BACKEND": "gdh.storages.EventsStorage"},
+        "collections": {"BACKEND": "gdh.storages.CollectionsStorage"},
         # staticfiles backend adjusted below based on DEBUG
         "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
     }
 
     if AWS_S3_CUSTOM_DOMAIN:
-        MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
+        MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_S3_MEDIA_LOCATION}/"
     else:
-        MEDIA_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/media/"
+        MEDIA_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/{AWS_S3_MEDIA_LOCATION}/"
     MEDIA_ROOT = None  # S3 does not use local MEDIA_ROOT
 else:
     # Local filesystem media (development)
+    MEDIA_URL = f"/{AWS_S3_MEDIA_LOCATION}/"
+    MEDIA_ROOT = BASE_DIR / AWS_S3_MEDIA_LOCATION
+
+    def _local_storage_options(alias: str) -> dict[str, str]:
+        relative_path = AWS_S3_DOMAIN_LOCATIONS[alias]
+        media_prefix = f"{AWS_S3_MEDIA_LOCATION}/"
+        if relative_path.startswith(media_prefix):
+            relative_path = relative_path[len(media_prefix) :]
+        if relative_path:
+            return {
+                "location": str(MEDIA_ROOT / Path(relative_path)),
+                "base_url": f"{MEDIA_URL}{relative_path}/",
+            }
+        return {"location": str(MEDIA_ROOT), "base_url": MEDIA_URL}
+
     STORAGES = {
         "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "designers_accounts": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+            "OPTIONS": _local_storage_options("designers_accounts"),
+        },
+        "viewers_accounts": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+            "OPTIONS": _local_storage_options("viewers_accounts"),
+        },
+        "techpacks": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+            "OPTIONS": _local_storage_options("techpacks"),
+        },
+        "orders": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+            "OPTIONS": _local_storage_options("orders"),
+        },
+        "events": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+            "OPTIONS": _local_storage_options("events"),
+        },
+        "collections": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+            "OPTIONS": _local_storage_options("collections"),
+        },
         # staticfiles backend adjusted below based on DEBUG
         "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
     }
-    MEDIA_URL = "/media/"
-    MEDIA_ROOT = BASE_DIR / "media"
 
 # When not using S3, explicitly allow Django to serve /media/ if enabled.
 # Many PaaS setups only serve /static/ (via WhiteNoise) unless /media/ is wired up.

@@ -55,6 +55,29 @@ This app is intended to run on **PostgreSQL** in production.
 - Backups are created with `python manage.py backup_db` and stored under `media/backups/`
   (or S3 when `USE_S3_MEDIA=true`).
 
+### AWS media partitioning (designers, viewers, techpacks, orders, events, collections)
+
+When `USE_S3_MEDIA=true`, Django now registers dedicated storage backends for:
+
+- `designers_accounts`
+- `viewers_accounts`
+- `techpacks`
+- `orders`
+- `events`
+- `collections`
+
+Each location is configurable with environment variables:
+
+- `AWS_S3_MEDIA_LOCATION` (default: `media`)
+- `AWS_S3_DESIGNERS_ACCOUNTS_LOCATION` (default: `media/designers/accounts`)
+- `AWS_S3_VIEWERS_ACCOUNTS_LOCATION` (default: `media/viewers/accounts`)
+- `AWS_S3_TECHPACKS_LOCATION` (default: `media/techpacks`)
+- `AWS_S3_ORDERS_LOCATION` (default: `media/orders`)
+- `AWS_S3_EVENTS_LOCATION` (default: `media/events`)
+- `AWS_S3_COLLECTIONS_LOCATION` (default: `media/collections`)
+
+This keeps uploads logically separated by account/content domain while staying in the same bucket unless you intentionally change the bucket-level AWS settings.
+
 ### 502 Bad Gateway (login / site not loading)
 
 If **https://globaldesignerhub.com/accounts/login/** (or the whole site) shows **502 Bad Gateway** from Cloudflare, the origin server is not responding. Check:
