@@ -52,6 +52,7 @@ from .forms import (
     NewOrderAccessForm,
 )
 from .auth_utils import ensure_designer_access
+from .context_processors import _google_oauth_ready
 from .messenger_utils import user_can_use_messenger, message_contains_prohibited_content
 from .emails import (
     send_registration_notifications,
@@ -4689,6 +4690,19 @@ class DesignersListView(ListView):
 
 def health_check(request):
     """Minimal health check for load balancers and 502 debugging. No DB, no template."""
+    # Debug: show Google OAuth redirect URI when ?google_redirect=1 (DEBUG or GOOGLE_OAUTH_DEBUG=1)
+    oauth_debug = os.getenv("GOOGLE_OAUTH_DEBUG", "").strip().lower() in ("1", "true", "yes")
+    if (getattr(settings, "DEBUG", False) or oauth_debug) and request.GET.get("google_redirect"):
+        base = request.build_absolute_uri("/").rstrip("/")
+        redirect_uri = f"{base}/auth/complete/google-oauth2/"
+        return JsonResponse(
+            {
+                "message": "Add this exact URI to Google Cloud Console → Credentials → Authorized redirect URIs",
+                "redirect_uri": redirect_uri,
+                "host": request.get_host(),
+                "scheme": request.scheme,
+            }
+        )
     return HttpResponse("ok", content_type="text/plain", status=200)
 
 
@@ -4747,9 +4761,7 @@ class DesignerLoginView(LoginView):
         return bool(key and secret)
 
     def _google_enabled(self) -> bool:
-        return self._provider_enabled(
-            "SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", "SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET"
-        )
+        return _google_oauth_ready()
 
     def post(self, request, *args, **kwargs):
         """Reject password login when Gmail is mandatory."""
@@ -4796,7 +4808,7 @@ class DesignerLoginView(LoginView):
 
         providers = []
         for key_attr, secret_attr, backend_name, label, css_class, icon in provider_catalog:
-            if self._provider_enabled(key_attr, secret_attr):
+            if (backend_name == "google-oauth2" and _google_oauth_ready()) or self._provider_enabled(key_attr, secret_attr):
                 providers.append(
                     {
                         "backend": backend_name,

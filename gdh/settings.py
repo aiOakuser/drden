@@ -711,9 +711,17 @@ SOCIAL_AUTH_REDIRECT_IS_HTTPS = env_bool(
     default=(not DEBUG or SERVER_URL_IS_HTTPS),
 )
 
-# Credentials (from env). Prefer explicit SOCIAL_ vars, fallback to GOOGLE_* for convenience
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY") or os.getenv("GOOGLE_CLIENT_ID", "")
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET") or os.getenv("GOOGLE_CLIENT_SECRET", "")
+# Credentials (from env). Prefer explicit SOCIAL_ vars, fallback to GOOGLE_* for convenience.
+# python-dotenv does not expand ${VAR}; if SOCIAL_AUTH_* is literally "${GOOGLE_CLIENT_ID}", use GOOGLE_*.
+def _oauth_val(primary: str, fallback: str) -> str:
+    v = os.getenv(primary) or ""
+    if not v or (v.strip().startswith("${") and v.strip().endswith("}")):
+        return os.getenv(fallback, "") or ""
+    return v
+
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = _oauth_val("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", "GOOGLE_CLIENT_ID")
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = _oauth_val("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET", "GOOGLE_CLIENT_SECRET")
 
 # When True, only Gmail/Google login is allowed; username/password and passkeys are disabled.
 GOOGLE_LOGIN_MANDATORY = env_bool("GOOGLE_LOGIN_MANDATORY", default=False)

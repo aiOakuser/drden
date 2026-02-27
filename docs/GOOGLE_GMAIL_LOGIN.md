@@ -6,9 +6,9 @@ This app uses **Google OAuth2** for “Continue with Google”. The callback is 
 
 ## Fix Error 400: redirect_uri_mismatch
 
-This error means the **Authorized redirect URI** in Google Cloud Console does not match the URL your app uses. For this project the callback path is:
+This error means the **Authorized redirect URI** in Google Cloud Console does not match the URL your app uses. For this project the callback path is **`/auth/complete/google-oauth2/`**.
 
-**`/auth/complete/google-oauth2/`**
+**Tip:** With the server running, visit `http://127.0.0.1:8005/health/?google_redirect=1` (use your actual host/port) to see the exact redirect URI your app sends. Add that URI to Google Console. (Requires `DEBUG=True` or `GOOGLE_OAUTH_DEBUG=1` in `.env`.)
 
 So the full redirect URIs are:
 
@@ -16,8 +16,10 @@ So the full redirect URIs are:
 |-------------|-------------------------|
 | **Production** | `https://globaldesignerhub.com/auth/complete/google-oauth2/` |
 | **Production (www)** | `https://www.globaldesignerhub.com/auth/complete/google-oauth2/` |
-| **Local** | `http://localhost:8000/auth/complete/google-oauth2/` |
-| **Local** | `http://127.0.0.1:8000/auth/complete/google-oauth2/` |
+| **Local (port 8005)** | `http://localhost:8005/auth/complete/google-oauth2/` |
+| **Local (port 8005)** | `http://127.0.0.1:8005/auth/complete/google-oauth2/` |
+| **Local (port 8000)** | `http://localhost:8000/auth/complete/google-oauth2/` |
+| **Local (port 8000)** | `http://127.0.0.1:8000/auth/complete/google-oauth2/` |
 
 Add every URI you use (production + local if you test locally). Scheme (http/https), domain, path, and trailing slash must match exactly.
 
@@ -75,6 +77,12 @@ https://www.globaldesignerhub.com/auth/complete/google-oauth2/
 
 **Local (only if you test “Continue with Google” on your machine):**
 
+The **port must match** your runserver port. If you use `runserver 8005`, add:
+```
+http://localhost:8005/auth/complete/google-oauth2/
+http://127.0.0.1:8005/auth/complete/google-oauth2/
+```
+For port 8000:
 ```
 http://localhost:8000/auth/complete/google-oauth2/
 http://127.0.0.1:8000/auth/complete/google-oauth2/

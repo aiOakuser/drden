@@ -1,3 +1,5 @@
+import os
+
 from django.conf import settings
 from django.db.models import Q
 from django.http import HttpRequest
@@ -21,17 +23,20 @@ def messenger_inbox_count(request: HttpRequest) -> dict:
         return {"messenger_inbox_count": None}
 
 
+def _google_oauth_ready() -> bool:
+    """Check if Google OAuth is configured (from settings or GOOGLE_* env fallback)."""
+    key = getattr(settings, "SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", "") or ""
+    secret = getattr(settings, "SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET", "") or ""
+    if key and secret:
+        return True
+    return bool((os.getenv("GOOGLE_CLIENT_ID") or "").strip() and (os.getenv("GOOGLE_CLIENT_SECRET") or "").strip())
+
+
 def social_login_providers(request: HttpRequest) -> dict:
     """Expose enabled social login providers for auth modal and login page."""
-    provider_catalog = [
-        ("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", "SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET", "google-oauth2", "Google", "google", "G"),
-    ]
     providers = []
-    for key_attr, secret_attr, backend_name, label, css_class, icon in provider_catalog:
-        key = getattr(settings, key_attr, "") or ""
-        secret = getattr(settings, secret_attr, "") or ""
-        if key and secret:
-            providers.append({"backend": backend_name, "label": label, "css_class": css_class, "icon": icon})
+    if _google_oauth_ready():
+        providers.append({"backend": "google-oauth2", "label": "Google", "css_class": "google", "icon": "G"})
     return {"social_login_providers": providers}
 
 
