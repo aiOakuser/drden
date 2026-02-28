@@ -15,6 +15,11 @@ from designer_portfolio.views import (
 
 urlpatterns = [
     path("health/", health_check, name="health_check"),
+    path(
+        "google1d2a084aaf123db7.html",
+        TemplateView.as_view(template_name="google1d2a084aaf123db7.html", content_type="text/plain"),
+        name="google_site_verification",
+    ),
     path("admin/", admin.site.urls),
     path("", include("marketing.urls")),
     # Friendly alias: /login or /login/ -> accounts/login/ (preserve query string like ?next=)
