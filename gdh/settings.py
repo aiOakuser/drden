@@ -165,7 +165,9 @@ else:
     SECURE_SSL_REDIRECT = True
 
 
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
 CSRF_TRUSTED_ORIGINS = [
     "https://globaldesignerhub.com",
     "https://www.globaldesignerhub.com",
@@ -705,6 +707,7 @@ REMEMBER_ME_SESSION_AGE = int(os.getenv("REMEMBER_ME_SESSION_AGE", 60 * 60 * 24 
 
 # --- Social Authentication (Google) ---
 SOCIAL_AUTH_URL_NAMESPACE = "social"
+SOCIAL_AUTH_STRATEGY = "gdh.social_strategy.CanonicalDjangoStrategy"
 # Force HTTPS redirects for social auth in production or when BASE_URL_SERVER is HTTPS
 SOCIAL_AUTH_REDIRECT_IS_HTTPS = env_bool(
     "SOCIAL_AUTH_REDIRECT_IS_HTTPS",
