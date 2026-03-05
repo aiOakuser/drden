@@ -16,6 +16,9 @@
 
   <form method="post" class="signup-form">
     {% csrf_token %}
+    {% if form.non_field_errors %}
+    <div class="error non-field-error">{{ form.non_field_errors }}</div>
+    {% endif %}
 
     <!-- Account Information -->
     <div class="form-section">
@@ -299,6 +302,12 @@
         </div>
       </div>
     </div>
+
+    {% if recaptcha_enabled %}
+    <div class="form-section captcha-section">
+      <div class="g-recaptcha" data-sitekey="{{ recaptcha_site_key }}"></div>
+    </div>
+    {% endif %}
 
     <button type="submit" class="submit-btn">🚀 Start My Free Trial</button>
   </form>
@@ -663,6 +672,15 @@
     margin-top: 5px;
   }
 
+  .non-field-error {
+    margin-bottom: 15px;
+  }
+
+  .captcha-section {
+    display: flex;
+    justify-content: center;
+  }
+
   @media (max-width: 768px) {
     .signup-container {
       margin: 20px;
@@ -708,5 +726,8 @@
     updatePaymentSection();
   });
 </script>
+{% if recaptcha_enabled %}
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+{% endif %}
 
 {% endblock %}

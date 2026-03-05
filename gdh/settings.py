@@ -705,6 +705,11 @@ AUTHENTICATION_BACKENDS = [
 # Custom session age when "Remember Me" is checked (default 30 days)
 REMEMBER_ME_SESSION_AGE = int(os.getenv("REMEMBER_ME_SESSION_AGE", 60 * 60 * 24 * 30))
 
+# Google reCAPTCHA for designer registration.
+# Set both values in env to enable validation.
+RECAPTCHA_SITE_KEY = (env_first("RECAPTCHA_SITE_KEY", "GOOGLE_RECAPTCHA_SITE_KEY") or "").strip()
+RECAPTCHA_SECRET_KEY = (env_first("RECAPTCHA_SECRET_KEY", "GOOGLE_RECAPTCHA_SECRET_KEY") or "").strip()
+
 # --- Social Authentication (Google) ---
 SOCIAL_AUTH_URL_NAMESPACE = "social"
 SOCIAL_AUTH_STRATEGY = "gdh.social_strategy.CanonicalDjangoStrategy"

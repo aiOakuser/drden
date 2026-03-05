@@ -1578,6 +1578,54 @@ def _find_user_by_identifier(identifier: str):
         except UserModel.DoesNotExist:
             return None
 
+
+def _is_recaptcha_enabled() -> bool:
+    site_key = (getattr(settings, "RECAPTCHA_SITE_KEY", "") or "").strip()
+    secret_key = (getattr(settings, "RECAPTCHA_SECRET_KEY", "") or "").strip()
+    return bool(site_key and secret_key)
+
+
+def _signup_template_context(form: DesignerSignUpForm) -> dict:
+    return {
+        "form": form,
+        "recaptcha_enabled": _is_recaptcha_enabled(),
+        "recaptcha_site_key": (getattr(settings, "RECAPTCHA_SITE_KEY", "") or "").strip(),
+    }
+
+
+def _verify_recaptcha_token(token: str, remote_ip: str | None = None) -> tuple[bool, str | None]:
+    if not _is_recaptcha_enabled():
+        return True, None
+
+    if not token:
+        return False, "Please complete the reCAPTCHA challenge."
+
+    payload = urlencode(
+        {
+            "secret": (getattr(settings, "RECAPTCHA_SECRET_KEY", "") or "").strip(),
+            "response": token,
+            "remoteip": remote_ip or "",
+        }
+    ).encode("utf-8")
+    request_obj = urllib.request.Request(
+        "https://www.google.com/recaptcha/api/siteverify",
+        data=payload,
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
+
+    try:
+        with urllib.request.urlopen(request_obj, timeout=10) as response:
+            verification_result = json.loads(response.read().decode("utf-8"))
+    except (HTTPError, URLError, TimeoutError, OSError, json.JSONDecodeError):
+        logger.warning("reCAPTCHA verification request failed.", exc_info=True)
+        return False, "reCAPTCHA verification failed. Please try again."
+
+    if verification_result.get("success"):
+        return True, None
+
+    return False, "reCAPTCHA verification failed. Please try again."
+
+
 def signup_view(request):
     if getattr(settings, "GOOGLE_LOGIN_MANDATORY", False):
         messages.info(
@@ -1592,6 +1640,16 @@ def signup_view(request):
         website_url = (request.POST.get("website_url") or "").strip()
         password1 = request.POST.get("password1") or ""
         password2 = request.POST.get("password2") or ""
+        recaptcha_token = (request.POST.get("g-recaptcha-response") or "").strip()
+
+        recaptcha_ok, recaptcha_error = _verify_recaptcha_token(
+            recaptcha_token, remote_ip=request.META.get("REMOTE_ADDR")
+        )
+        if not recaptcha_ok:
+            form = DesignerSignUpForm(request.POST)
+            form.add_error(None, recaptcha_error)
+            messages.error(request, "Please complete the reCAPTCHA challenge.")
+            return render(request, "registration/signup.html", _signup_template_context(form))
 
         if password1 and password1 == password2:
             inactive_user = (
@@ -1611,7 +1669,7 @@ def signup_view(request):
                     form = DesignerSignUpForm(request.POST)
                     form.add_error("password1", exc)
                     messages.error(request, "Please correct the errors below.")
-                    return render(request, "registration/signup.html", {"form": form})
+                    return render(request, "registration/signup.html", _signup_template_context(form))
 
                 # Restore user account
                 inactive_user.is_active = True
@@ -1690,7 +1748,7 @@ def signup_view(request):
     else:
         form = DesignerSignUpForm()
 
-    return render(request, "registration/signup.html", {"form": form})
+    return render(request, "registration/signup.html", _signup_template_context(form))
 
 # Basic view classes for URL compatibility
 class HomePageView(TemplateView):
@@ -3522,6 +3580,18 @@ class DesignerRegistrationView(APIView):
 
     def post(self, request):
         data = getattr(request, "data", {}) or {}
+        recaptcha_token = (
+            (data.get("g-recaptcha-response") or data.get("recaptcha_token") or "").strip()
+        )
+        recaptcha_ok, recaptcha_error = _verify_recaptcha_token(
+            recaptcha_token, remote_ip=request.META.get("REMOTE_ADDR")
+        )
+        if not recaptcha_ok:
+            return Response(
+                {"errors": {"recaptcha": recaptcha_error}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         username = (data.get("username") or "").strip()
         email = (data.get("email") or "").strip().lower()
         password = data.get("password") or ""
