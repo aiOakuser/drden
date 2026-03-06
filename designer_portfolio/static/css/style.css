@@ -329,6 +329,13 @@ img {
   background: var(--color-primary);
 }
 
+.media-highlight-card video {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  background: var(--color-primary);
+}
+
 .media-highlight-card__body {
   padding: 18px 22px 22px;
   display: flex;

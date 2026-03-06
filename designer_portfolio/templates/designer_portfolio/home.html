@@ -185,14 +185,42 @@
       </div>
       <div class="media-highlights__grid">
         <figure class="media-highlight-card">
-          <img
-            src="{% static 'images/highlights/pherix-monoceros.svg' %}"
-            alt="PHERIX monoceros label for Autumn/Winter '26 in New York"
-          />
+          <video
+            class="media-highlight-video"
+            autoplay
+            muted
+            loop
+            playsinline
+            controls
+            preload="metadata"
+          >
+            <source src="{% static 'videos/nyk-prep.mp4' %}" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
           <div class="media-highlight-card__body">
-            <h3 class="media-highlight-card__title">PHERIX "monoceros"</h3>
+            <h3 class="media-highlight-card__title">NYK Prep Clip</h3>
             <p class="media-highlight-card__caption">
-              Label detail for the Autumn/Winter '26 release spotlighting New York.
+              Behind-the-scenes prep footage from the latest studio session.
+            </p>
+          </div>
+        </figure>
+        <figure class="media-highlight-card">
+          <video
+            class="media-highlight-video"
+            autoplay
+            muted
+            loop
+            playsinline
+            controls
+            preload="metadata"
+          >
+            <source src="{% static 'videos/volumeonefashion_desings.mp4' %}" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+          <div class="media-highlight-card__body">
+            <h3 class="media-highlight-card__title">Volume One Fashion Designs</h3>
+            <p class="media-highlight-card__caption">
+              Runway-ready clip from the latest Volume One fashion design showcase.
             </p>
           </div>
         </figure>
