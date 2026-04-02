@@ -2,20 +2,30 @@
 <section class="about container">
   <h1 class="page-title">About Me</h1>
 
+  <nav class="about-menu" aria-label="About page navigation">
+    <a class="about-menu__item" href="{% url 'collections' %}">Collections</a>
+    <div class="about-menu__item about-menu__dropdown">
+      <button type="button" class="about-menu__trigger" aria-haspopup="true" aria-expanded="false">
+        Senior Collections
+      </button>
+      <div class="about-menu__dropdown-panel" role="menu">
+        <a href="#street-codes-2026" role="menuitem">Street Codes 2026</a>
+      </div>
+    </div>
+    <a class="about-menu__item" href="#about-profile">About Me</a>
+    <button type="button" class="about-menu__item about-menu__resume-btn" id="openResumeModalBtn">
+      Resume
+    </button>
+  </nav>
+
   <div class="about-container">
     <!-- Profile Image -->
-    <div class="profile-pic">
-      {% if about and about.profile_image %}
+    <div class="profile-pic" id="about-profile">
       <img
-        src="{{ about.profile_image.url }}"
+        src="{% static 'images/designername_AboutMe.jpeg' %}"
         alt="Profile picture of {{ brand.name|default:'designer' }}"
+        onerror="this.onerror=null;{% if about and about.profile_image %}this.src='{{ about.profile_image.url|escapejs }}';{% else %}this.src='{% static 'images/profile-placeholder.png' %}';{% endif %}"
       />
-      {% else %}
-      <img
-        src="{% static 'images/profile-placeholder.png' %}"
-        alt="Profile picture"
-      />
-      {% endif %}
     </div>
   <div class="about-section">
   <h1>About designer</h1>
@@ -62,16 +72,27 @@
     </p>
   </div>
 
+  <section class="senior-collection" id="street-codes-2026">
+    <h2 class="section-title">Senior Collections</h2>
+    <h3 class="senior-collection__title">Street Codes 2026</h3>
+    <div class="senior-collection__grid">
+      <img src="{% static 'images/STREET CODES/street-codes-1.jpg' %}" alt="Street Codes 2026 look 1" onerror="this.onerror=null;this.src='{% static 'images/collection/collection5/1.png' %}'" />
+      <img src="{% static 'images/STREET CODES/street-codes-2.jpg' %}" alt="Street Codes 2026 look 2" onerror="this.onerror=null;this.src='{% static 'images/collection/collection5/2.png' %}'" />
+      <img src="{% static 'images/STREET CODES/street-codes-3.jpg' %}" alt="Street Codes 2026 look 3" onerror="this.onerror=null;this.src='{% static 'images/collection/collection5/3.png' %}'" />
+      <img src="{% static 'images/STREET CODES/street-codes-4.jpg' %}" alt="Street Codes 2026 look 4" onerror="this.onerror=null;this.src='{% static 'images/collection/collection5/4.png' %}'" />
+    </div>
+  </section>
+
   <!-- Skills -->
   <h2 class="section-title">Skills & Tools</h2>
   <ul class="skills">
     <li>
-      <strong>Design Tools:</strong> Canva, Adobe Photoshop, Illustrator,
-      Fresco, FashionDraw
+      <strong>Design Tools:</strong> Canva, Adobe Photoshop, Adobe Illustrator,
+      Adobe Fresco, Procreate, CLO 3D, FashionDraw
     </li>
     <li>
       <strong>Technical:</strong> Styling, Sewing (hand & machine), Embroidery,
-      Crocheting, Technical Drawings, Production Planning
+      Crocheting, Technical Drawings, Pattern Making, Tech Packs, Production Planning
     </li>
     <li>
       <strong>Management:</strong> Vendor Communication, Supply Chain
@@ -131,6 +152,29 @@
   </ul>
 </section>
 
+<div class="resume-modal" id="resumeModal" aria-hidden="true">
+  <div class="resume-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="resumeModalTitle">
+    <div class="resume-modal__header">
+      <h2 id="resumeModalTitle">Resume</h2>
+    </div>
+    <div class="resume-modal__body">
+      {% if user.is_authenticated %}
+      <iframe src="{% url 'student_portfolio_resume_pdf' %}#toolbar=1&navpanes=0" title="Resume PDF"></iframe>
+      {% else %}
+      <p>Please sign in to view the resume.</p>
+      {% endif %}
+    </div>
+    <div class="resume-modal__actions">
+      <button type="button" class="resume-btn resume-btn--secondary" id="closeResumeModalBtn">Close</button>
+      {% if user.is_authenticated %}
+      <a class="resume-btn resume-btn--primary" href="{% url 'student_portfolio_resume_pdf' %}" target="_blank" rel="noopener">Download</a>
+      {% else %}
+      <button type="button" class="resume-btn resume-btn--primary" disabled>Download</button>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
 <style>
   .about.container {
     max-width: 900px;
@@ -153,6 +197,155 @@
     align-items: center;
     gap: 20px;
     margin-bottom: 20px;
+  }
+  .about-menu {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .about-menu__item,
+  .about-menu__trigger {
+    text-transform: uppercase;
+    text-decoration: none;
+    border: 1px solid var(--color-border);
+    background: var(--color-secondary);
+    color: var(--color-primary);
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+  }
+  .about-menu__resume-btn {
+    font-family: inherit;
+  }
+  .about-menu__dropdown {
+    position: relative;
+  }
+  .about-menu__dropdown-panel {
+    position: absolute;
+    left: 0;
+    top: calc(100% + 6px);
+    min-width: 190px;
+    background: var(--color-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    box-shadow: 0 10px 20px rgba(var(--color-primary-rgb), 0.12);
+    padding: 8px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: all 0.2s ease;
+    z-index: 10;
+  }
+  .about-menu__dropdown:hover .about-menu__dropdown-panel,
+  .about-menu__dropdown:focus-within .about-menu__dropdown-panel {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+  .about-menu__dropdown-panel a {
+    display: block;
+    padding: 8px 10px;
+    border-radius: 8px;
+    color: var(--color-primary);
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    text-transform: uppercase;
+  }
+  .about-menu__dropdown-panel a:hover {
+    background: var(--color-surface);
+  }
+  .senior-collection__title {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .senior-collection__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .senior-collection__grid img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid var(--color-border);
+  }
+  .resume-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.58);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 16px;
+  }
+  .resume-modal.is-open {
+    display: flex;
+  }
+  .resume-modal__dialog {
+    width: min(900px, 100%);
+    max-height: 90vh;
+    background: var(--color-secondary);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .resume-modal__header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .resume-modal__header h2 {
+    margin: 0;
+    font-size: 16px;
+    text-transform: uppercase;
+  }
+  .resume-modal__body {
+    min-height: 60vh;
+  }
+  .resume-modal__body iframe {
+    width: 100%;
+    height: 60vh;
+    border: none;
+  }
+  .resume-modal__body p {
+    margin: 0;
+    padding: 20px;
+  }
+  .resume-modal__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    border-top: 1px solid var(--color-border);
+    padding: 12px 16px;
+  }
+  .resume-btn {
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    padding: 8px 12px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .resume-btn--primary {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-secondary);
+  }
+  .resume-btn--secondary {
+    background: var(--color-secondary);
+    color: var(--color-primary);
   }
   .profile-pic img {
     width: 180px;
@@ -196,6 +389,12 @@
     .contact {
       text-align: center;
     }
+    .resume-modal__body {
+      min-height: 50vh;
+    }
+    .resume-modal__body iframe {
+      height: 50vh;
+    }
   }
 
   /* Larger screens - scale typography for readability */
@@ -211,4 +410,36 @@
     .section-title { font-size: 16px; }
   }
 </style>
+<script>
+  (function () {
+    const openBtn = document.getElementById("openResumeModalBtn");
+    const closeBtn = document.getElementById("closeResumeModalBtn");
+    const modal = document.getElementById("resumeModal");
+
+    if (!openBtn || !closeBtn || !modal) return;
+
+    const closeModal = function () {
+      modal.classList.remove("is-open");
+      modal.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+    };
+
+    const openModal = function () {
+      modal.classList.add("is-open");
+      modal.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+    };
+
+    openBtn.addEventListener("click", openModal);
+    closeBtn.addEventListener("click", closeModal);
+    modal.addEventListener("click", function (event) {
+      if (event.target === modal) closeModal();
+    });
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && modal.classList.contains("is-open")) {
+        closeModal();
+      }
+    });
+  })();
+</script>
 {% endblock %}
