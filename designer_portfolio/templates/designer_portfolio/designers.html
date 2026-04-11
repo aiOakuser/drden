@@ -34,6 +34,48 @@
   </div>
 </div>
 
+<!-- Google Review Trust Badge -->
+<section class="google-review-banner" aria-label="Google Reviews">
+  <div class="google-review-inner">
+    <div class="google-review-card">
+      <div class="google-review-logo" aria-hidden="true">
+        <span class="google-letter g-blue">G</span><span class="google-letter g-red">o</span><span class="google-letter g-yellow">o</span><span class="google-letter g-blue">g</span><span class="google-letter g-green">l</span><span class="google-letter g-red">e</span>
+      </div>
+      <div class="google-review-rating">
+        <span class="google-rating-number">4.8</span>
+        <div class="google-stars" aria-label="4.8 out of 5 stars">
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star-half-alt"></i>
+        </div>
+      </div>
+      <p class="google-review-subtitle">Based on designer &amp; client reviews</p>
+    </div>
+
+    <div class="google-review-card best-of-card">
+      <div class="best-of-badge" aria-label="Best of 2023 Award">
+        <div class="best-of-badge-inner">
+          <span class="best-of-text">BEST OF</span>
+          <div class="best-of-trophy"><i class="fas fa-trophy"></i></div>
+          <span class="best-of-year">2023</span>
+        </div>
+      </div>
+      <p class="best-of-region">USA</p>
+    </div>
+
+    <div class="google-review-card highlights-card">
+      <h3 class="highlights-title">Why designers trust us</h3>
+      <ul class="highlights-list">
+        <li><i class="fas fa-check-circle"></i> Verified designer profiles</li>
+        <li><i class="fas fa-check-circle"></i> Secure portfolio hosting</li>
+        <li><i class="fas fa-check-circle"></i> Direct client connections</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
 <section class="designers-section">
   <div class="container">
 
@@ -295,6 +337,161 @@
   .hero-note { font-size: 1rem; color: rgba(var(--color-secondary-rgb), 0.85); max-width: 620px; margin: -20px auto 40px; line-height: 1.5; background: rgba(var(--color-primary-rgb), 0.15); padding: 12px 18px; border-radius: 12px; backdrop-filter: blur(4px); }
 .hero-stats { display: flex; justify-content: center; gap: 60px; margin-top: 60px; }
 .stat-number { display: block; font-size: 2.5rem; font-weight: 900; color: var(--color-accent); }
+
+/* ===== Google Review Banner ===== */
+.google-review-banner {
+  background: var(--color-secondary);
+  padding: 40px 20px;
+  border-bottom: 1px solid rgba(var(--color-primary-rgb), 0.08);
+}
+.google-review-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  align-items: stretch;
+}
+.google-review-card {
+  background: var(--color-surface);
+  border-radius: 20px;
+  padding: 32px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(var(--color-primary-rgb), 0.07);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.google-review-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 48px rgba(var(--color-primary-rgb), 0.12);
+}
+.google-review-logo {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -1px;
+  font-family: 'Product Sans', Arial, sans-serif;
+  line-height: 1;
+}
+.google-letter { display: inline-block; }
+.g-blue { color: #4285F4; }
+.g-red { color: #EA4335; }
+.g-yellow { color: #FBBC05; }
+.g-green { color: #34A853; }
+.google-review-rating {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.google-rating-number {
+  font-size: 2.4rem;
+  font-weight: 900;
+  color: var(--color-primary);
+  line-height: 1;
+}
+.google-stars {
+  display: flex;
+  gap: 3px;
+  color: #FBBC05;
+  font-size: 1.2rem;
+}
+.google-review-subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.best-of-card { background: linear-gradient(135deg, var(--color-surface), rgba(var(--color-primary-rgb), 0.04)); }
+.best-of-badge {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2b4c7e 0%, #3a6db5 50%, #2b4c7e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(43, 76, 126, 0.3);
+}
+.best-of-badge::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #d4a84b, #f0d78c, #d4a84b, #b8922e, #d4a84b, #f0d78c, #d4a84b);
+  z-index: -1;
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 6px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 6px));
+}
+.best-of-badge-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: #fff;
+}
+.best-of-text {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.best-of-trophy {
+  font-size: 1.8rem;
+  color: #d4a84b;
+  line-height: 1;
+}
+.best-of-year {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #d4a84b;
+}
+.best-of-region {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #5b21b6;
+  letter-spacing: 1px;
+}
+
+.highlights-card { text-align: left; align-items: flex-start; }
+.highlights-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+.highlights-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.highlights-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.highlights-list li i {
+  color: #34A853;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .google-review-inner { grid-template-columns: 1fr; gap: 16px; }
+  .google-review-card { padding: 24px; }
+}
 
 /* ===== Main Section ===== */
 .designers-section { padding: 80px 0; background: var(--color-surface); }
