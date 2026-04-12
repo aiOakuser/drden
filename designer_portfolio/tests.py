@@ -1053,3 +1053,46 @@ class DressOrderConfirmationEmailTests(TestCase):
         self.assertIn("designer-contact@example.com", designer_email.to)
         self.assertIn("designer-orders@example.com", designer_email.to)
         self.assertEqual(viewer_email.to, ["mobile-viewer@example.com"])
+
+
+@override_settings(
+    SECURE_SSL_REDIRECT=False,
+    SESSION_COOKIE_SECURE=False,
+    CSRF_COOKIE_SECURE=False,
+    STORAGES=TEST_STORAGE_BACKENDS,
+)
+class GoogleReviewViewTests(TestCase):
+    def setUp(self) -> None:
+        self.password = "TestPass123!"
+        self.user = User.objects.create_user(
+            username="reviewer",
+            email="reviewer@example.com",
+            password=self.password,
+            is_active=True,
+        )
+
+    def test_anonymous_user_redirected_to_login(self):
+        response = self.client.get(reverse("google_review"), follow=False)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/accounts/login/", response.headers.get("Location", ""))
+
+    def test_authenticated_user_can_access_review_page(self):
+        self.client.login(username="reviewer", password=self.password)
+        response = self.client.get(reverse("google_review"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Write a Google Review")
+
+    @override_settings(GOOGLE_REVIEW_URL="https://g.page/r/test/review")
+    def test_google_review_url_rendered_when_configured(self):
+        self.client.login(username="reviewer", password=self.password)
+        response = self.client.get(reverse("google_review"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "https://g.page/r/test/review")
+
+    @override_settings(GOOGLE_REVIEW_URL="")
+    def test_fallback_search_shown_when_url_not_configured(self):
+        self.client.login(username="reviewer", password=self.password)
+        response = self.client.get(reverse("google_review"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Search on Google")
+        self.assertContains(response, "google.com/search")

@@ -103,6 +103,15 @@
         </li>
         <li class="nav-item">
           <a
+            href="{% url 'google_review' %}"
+            class="nav-link {% if current_section == 'reviews' %}active{% endif %}"
+          >
+            <i class="icon">⭐</i>
+            <span>Write a Review</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
             href="{% url 'subscription_dashboard' %}"
             class="nav-link {% if current_section == 'subscription' %}active{% endif %}"
           >

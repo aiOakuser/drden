@@ -512,6 +512,7 @@ TEMPLATES = [
                 "designer_portfolio.context_processors.social_login_providers",
                 "designer_portfolio.context_processors.messenger_inbox_count",
                 "designer_portfolio.context_processors.referral_context",
+                "designer_portfolio.context_processors.google_review_url",
                 "social_django.context_processors.backends",
                 "social_django.context_processors.login_redirect",
             ],
@@ -798,6 +799,12 @@ WEBAUTHN_ALLOW_INSECURE_LOCALHOST = env_bool(
     "WEBAUTHN_ALLOW_INSECURE_LOCALHOST",
     default=DEBUG,
 )
+
+# --- Google Reviews ---
+# URL where users can write a Google review for GlobalDesignerHub.
+# Set GOOGLE_REVIEW_URL in .env to your Google Business review link, e.g.
+# https://g.page/r/YOUR_PLACE_ID/review
+GOOGLE_REVIEW_URL = (os.getenv("GOOGLE_REVIEW_URL", "") or "").strip()
 
 # --- OpenAI (Site Builder AI, Designer AI Chat) ---
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")

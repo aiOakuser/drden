@@ -120,6 +120,11 @@ def referral_context(request: HttpRequest) -> dict:
         return {"referral_invite_url": None, "referral_code": None}
 
 
+def google_review_url(request: HttpRequest) -> dict:
+    """Expose the Google review URL so templates can link to it."""
+    return {"google_review_url": getattr(settings, "GOOGLE_REVIEW_URL", "") or ""}
+
+
 def utm_context(request: HttpRequest) -> dict:
     """Expose stored UTM and attribution values to templates.
 
