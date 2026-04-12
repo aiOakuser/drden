@@ -71,6 +71,7 @@ from .views import (
     forum_bookmark_toggle,
     forum_post_like,
     forum_post_toggle_solution,
+    GoogleReviewView,
 )
 from ai_chat.views import stream_chat
 from .student_portfolio_views import (
@@ -205,6 +206,7 @@ urlpatterns = [
     path("dashboard/projects/<int:pk>/", ProjectEditorView.as_view(), name="project_editor"),
     path("volumeone/", VolumeOneShowcaseView.as_view(), name="volume_one_public"),
     path("dashboard/volumeone/", VolumeOneView.as_view(), name="volume_one"),
+    path("dashboard/reviews/", GoogleReviewView.as_view(), name="google_review"),
     # Common misspellings/legacy links -> redirect to dashboard
     path("dashephard/", RedirectView.as_view(pattern_name="designer_dashboard", permanent=False), name="dashephard"),
     path("dashepard/", RedirectView.as_view(pattern_name="designer_dashboard", permanent=False), name="dashepard"),

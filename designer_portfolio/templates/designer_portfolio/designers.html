@@ -52,6 +52,11 @@
         </div>
       </div>
       <p class="google-review-subtitle">Based on designer &amp; client reviews</p>
+      {% if user.is_authenticated %}
+      <a href="{% url 'google_review' %}" class="google-review-write-btn">
+        <i class="fas fa-pen"></i> Write a Review
+      </a>
+      {% endif %}
     </div>
 
     <div class="google-review-card best-of-card">
@@ -404,6 +409,24 @@
   font-size: 0.9rem;
   color: var(--color-text-muted);
   font-weight: 500;
+}
+.google-review-write-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 8px 18px;
+  background: #4285F4;
+  color: #fff;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.google-review-write-btn:hover {
+  background: #3367D6;
+  transform: translateY(-1px);
 }
 
 .best-of-card { background: linear-gradient(135deg, var(--color-surface), rgba(var(--color-primary-rgb), 0.04)); }
