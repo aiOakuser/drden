@@ -7,7 +7,12 @@
 <!-- Search Hero: filter exclusively designers, collections, events (fashion shows, popup events) -->
 <section class="search-hero" aria-label="Filter exclusively: designers, collections, events (fashion shows, popup events)">
   <div class="search-hero__inner container">
-    <h2 class="search-hero__title">We'll take it from here</h2>
+    <p class="search-hero__eyebrow">Global Designer Hub</p>
+    <h2 class="search-hero__title">Find the mind behind the moodboard</h2>
+    <p class="search-hero__lede">
+      Whether you are booking your next collaborator or simply exploring how style is being made right now, start with
+      the people, the collections, and the moments that turn fabric into feeling.
+    </p>
     <p class="search-hero__filter-label">Filter exclusively: Designers · Collections · Events (fashion shows, popup events)</p>
     <div class="search-hero__pills">
       <a href="{% url 'unified_search' %}?type=designers" class="search-hero__pill">Designers</a>
@@ -32,12 +37,27 @@
     text-align: center;
   }
   .search-hero__inner.container { max-width: 720px; margin: 0 auto; }
-  .search-hero__title {
+  .search-hero__eyebrow {
     margin: 0 0 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    opacity: 0.88;
+  }
+  .search-hero__title {
+    margin: 0 0 12px;
     font-family: var(--font-head);
     font-size: clamp(1.75rem, 4vw, 2.5rem);
     font-weight: 600;
     letter-spacing: -0.02em;
+  }
+  .search-hero__lede {
+    margin: 0 auto 18px;
+    max-width: 36em;
+    font-size: clamp(0.95rem, 2.2vw, 1.05rem);
+    line-height: 1.55;
+    opacity: 0.92;
   }
   .search-hero__filter-label {
     margin: 0 0 16px;
@@ -159,9 +179,11 @@
 <!-- Hero Section -->
 <section class="hero-section">
   <div class="hero-content">
-    <h1 class="hero-title">Designer Collaboration</h1>
+    <h1 class="hero-title">Where portfolios become partnerships</h1>
     <p class="hero-subtitle">
-      Feel free to upload your designs, collaborate in real time, and explore every feature with a free trial that lasts until you're satisfied.
+      Upload work, invite feedback, and keep the whole conversation in one studio-grade space—secure messaging,
+      DesignerBot when you want a guide, and a free trial that stays with you until you are genuinely satisfied with
+      what you see.
     </p>
     <div class="hero-cta">
       <a href="{% url 'signup' %}" class="btn btn-accent" aria-label="Start free trial with designer collaboration">Start free trial</a>
@@ -178,10 +200,11 @@
   <section class="media-highlights" aria-label="Homepage highlights">
     <div class="container">
       <div class="media-highlights__header">
-        <p class="media-highlights__eyebrow">Highlights</p>
+        <p class="media-highlights__eyebrow">Inside the hub</p>
         <h2 class="section-title">Latest studio moments</h2>
         <p class="media-highlights__intro">
-          Fresh visuals added to keep the community up to date with recent sessions and releases.
+          A living pulse of what makers are shipping right now—so you can feel the energy of the community before you
+          ever send a first message.
         </p>
       </div>
       <div class="media-highlights__grid">

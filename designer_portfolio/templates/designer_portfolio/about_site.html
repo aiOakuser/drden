@@ -1,24 +1,76 @@
 {% extends "designer_portfolio/base.html" %}
 {% load static %}
 
+{% block title %}Our story · Global Designer Hub{% endblock %}
+
 {% block content %}
 <section class="about-site">
   <div class="about-site__hero">
-    <h1 class="about-site__title">GlobalDesignerHub.com</h1>
+    <p class="about-site__kicker">The story behind the hub</p>
+    <h1 class="about-site__title">Global Designer Hub</h1>
     <p class="about-site__subtitle">
-      The home base for families, founders, and studios to hire designers for everyone or each individual—and
-      for designers to build living, shoppable portfolios.
+      A single place where serious creative work meets real life—families planning a season, founders shipping a
+      line, and studios scaling a roster—all in conversation with designers whose portfolios actually breathe.
     </p>
   </div>
 
   <div class="about-site__content container">
+    <div class="about-site__story">
+      <blockquote class="about-site__pullquote">
+        Great design rarely fails in talent. It fails in translation—between the vision in someone’s head and the
+        files, fittings, and follow-ups that make it real. We built Global Designer Hub to close that gap.
+      </blockquote>
+
+      <div class="about-site__story-columns">
+        <div class="about-site__story-chapter">
+          <h2 class="about-site__story-heading">Why we exist</h2>
+          <p>
+            Fashion and design still live across scattered threads: DMs that disappear, PDFs that age overnight,
+            and portfolios that never quite show how someone <em>thinks</em>. We wanted a home base that respects the
+            craft—lookbooks, tech packs, collections, motion—while keeping every milestone inside one trusted
+            workspace.
+          </p>
+          <p>
+            From the West Coast spotlight to nationwide reach across East Coast and Central regions, the hub is
+            built so distance never dilutes intention. You see the work, you meet the person, you move the project
+            forward without losing the plot.
+          </p>
+        </div>
+        <div class="about-site__story-chapter">
+          <h2 class="about-site__story-heading">If you hire designers</h2>
+          <p>
+            You are not “browsing talent.” You are choosing a creative partner for something that matters—a launch,
+            a wardrobe reset, a household of different tastes under one roof. Global Designer Hub lets you reserve a
+            single creative director for everyone or match each person with their own specialist, with split billing
+            and shared context when you need both structure and flexibility.
+          </p>
+          <p>
+            Search designers, explore living portfolios, and step into events and collections the way you would in a
+            studio visit: curious, informed, and ready to say yes.
+          </p>
+        </div>
+        <div class="about-site__story-chapter">
+          <h2 class="about-site__story-heading">If you are the designer</h2>
+          <p>
+            Your portfolio should feel as intentional as your best piece—not a stale gallery, but a place clients can
+            return to as the work evolves. Host collections, publish a microsite with templates you’re proud of, and
+            let every inquiry land where your story already lives.
+          </p>
+          <p>
+            DesignerBot and in-platform messaging keep collaboration professional and contained: fewer leaks, fewer
+            detours, more room for the work itself. When detail matters, active members can move into secure hosted
+            calls with recordings and summaries so decisions stick.
+          </p>
+        </div>
+      </div>
+    </div>
+
     <div class="about-site__intro">
-      <h2>Hire Anywhere, Showcase Everything</h2>
+      <h2>Hire anywhere. Showcase everything.</h2>
       <p>
-        GlobalDesignerHub.com keeps the West Coast as the default spotlight while covering East Coast and Central
-        regions for nationwide access. Households can reserve a single creative director for the entire family or
-        match each person with their own specialist, and designers can craft full portfolios—collections,
-        lookbooks, and tech packs—while collaborating safely through our in-platform messaging and DesignerBot.
+        Households can coordinate wardrobe-wide briefs or one-off pieces per person. Designers ship collections,
+        lookbooks, and tech packs while clients follow along inside Global Designer Hub—same thread, same standards,
+        same respect for how fashion actually gets made.
       </p>
     </div>
 
@@ -121,19 +173,76 @@
 
 <style>
   .about-site__hero {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-primary));
+    background: linear-gradient(
+      140deg,
+      var(--color-primary) 0%,
+      rgba(var(--color-primary-rgb), 0.92) 42%,
+      rgba(var(--color-accent-rgb), 0.18) 100%
+    );
     color: var(--color-secondary);
-    padding: 60px 20px;
+    padding: 56px 20px 64px;
     text-align: center;
   }
-  .about-site__title {
-    margin: 0 0 10px;
+  .about-site__kicker {
+    margin: 0 0 12px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    letter-spacing: .06em;
+    opacity: 0.85;
+  }
+  .about-site__title {
+    margin: 0 0 16px;
+    font-family: var(--font-head);
+    font-size: clamp(2rem, 5vw, 2.75rem);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    text-transform: none;
   }
   .about-site__subtitle {
-    margin: 0;
-    opacity: .9;
+    margin: 0 auto;
+    max-width: 38rem;
+    font-size: clamp(1rem, 2.4vw, 1.15rem);
+    line-height: 1.65;
+    opacity: 0.94;
+  }
+  .about-site__story {
+    margin: 40px 0 8px;
+  }
+  .about-site__pullquote {
+    margin: 0 0 36px;
+    padding: 24px 28px;
+    border-left: 4px solid var(--color-accent);
+    background: rgba(var(--color-accent-rgb), 0.08);
+    border-radius: 0 12px 12px 0;
+    font-family: var(--font-head);
+    font-size: clamp(1.15rem, 2.5vw, 1.35rem);
+    font-weight: 500;
+    line-height: 1.55;
+    color: var(--color-text-strong);
+  }
+  .about-site__story-columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 28px 32px;
+    margin-bottom: 8px;
+  }
+  .about-site__story-heading {
+    margin: 0 0 12px;
+    font-family: var(--font-head);
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--color-primary);
+  }
+  .about-site__story-chapter p {
+    margin: 0 0 14px;
+    line-height: 1.75;
+    color: var(--color-text);
+  }
+  .about-site__story-chapter p:last-child {
+    margin-bottom: 0;
   }
   .about-site__content.container {
     max-width: 1100px;
@@ -141,8 +250,11 @@
     padding: 0 16px;
   }
   .about-site__intro h2 {
-    font-size: 20px;
-    margin-bottom: 8px;
+    font-family: var(--font-head);
+    font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+    font-weight: 600;
+    margin-bottom: 10px;
+    letter-spacing: -0.02em;
   }
   .about-site__intro p {
     color: var(--color-text);
