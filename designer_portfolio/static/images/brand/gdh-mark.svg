@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-labelledby="gdhMarkTitle">
+  <title id="gdhMarkTitle">Global Designer Hub</title>
+  <defs>
+    <linearGradient id="gdhGrad" x1="12" y1="8" x2="52" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E8C992"/>
+      <stop offset="0.45" stop-color="#D4A574"/>
+      <stop offset="1" stop-color="#C76B4A"/>
+    </linearGradient>
+    <filter id="gdhGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="0.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="#16131F"/>
+  <!-- Hub nodes + orbit: suggests network + globe -->
+  <circle cx="32" cy="32" r="22" stroke="url(#gdhGrad)" stroke-width="1.75" opacity="0.35"/>
+  <path
+    d="M32 10v44M14 32h36M18 18c8 8 20 8 28 0M18 46c8-8 20-8 28 0"
+    stroke="url(#gdhGrad)"
+    stroke-width="1.5"
+    stroke-linecap="round"
+    opacity="0.55"
+  />
+  <circle cx="32" cy="32" r="9" stroke="url(#gdhGrad)" stroke-width="2.25" filter="url(#gdhGlow)"/>
+  <circle cx="32" cy="32" r="3" fill="#F7F4EE"/>
+  <circle cx="46" cy="22" r="3.5" fill="#C76B4A"/>
+  <circle cx="18" cy="42" r="3.5" fill="#D4A574"/>
+</svg>

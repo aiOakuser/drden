@@ -1,18 +1,18 @@
-/* ===== Theme ===== */
+/* ===== Theme — Global Designer Hub brand ===== */
 :root {
-  --font-head: Garamond, "Times New Roman", designerf;
-  --font-body: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial,
-    sans-designerf;
-  --color-primary: #0E0E0F;
-  --color-primary-rgb: 14, 14, 15;
-  --color-secondary: #F6F5F3;
-  --color-secondary-rgb: 246, 245, 243;
-  --color-accent: #D8B57A;
-  --color-accent-rgb: 216, 181, 122;
-  --color-graphite: #2A2A2C;
-  --color-graphite-rgb: 42, 42, 44;
-  --color-highlight: #CFC7BB;
-  --color-highlight-rgb: 207, 199, 187;
+  --font-head: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", Roboto,
+    Arial, sans-serif;
+  --color-primary: #14121a;
+  --color-primary-rgb: 20, 18, 26;
+  --color-secondary: #f7f4ee;
+  --color-secondary-rgb: 247, 244, 238;
+  --color-accent: #c76b4a;
+  --color-accent-rgb: 199, 107, 74;
+  --color-graphite: #2f2c38;
+  --color-graphite-rgb: 47, 44, 56;
+  --color-highlight: #dcd4c8;
+  --color-highlight-rgb: 220, 212, 200;
   --color-text: var(--color-primary);
   --color-text-strong: rgba(var(--color-primary-rgb), 0.95);
   --color-text-muted: rgba(var(--color-graphite-rgb), 0.65);
@@ -81,11 +81,58 @@ img {
   gap: 40px;
 }
 
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+}
 .brand__mark {
-  width: 116px;
-  height: 116px;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
   object-fit: contain;
-  transition: 0.3s ease;
+  transition: transform 0.25s ease, filter 0.25s ease;
+}
+.brand:hover .brand__mark {
+  transform: scale(1.04);
+  filter: brightness(1.06);
+}
+.brand__lockup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  line-height: 1.05;
+  min-width: 0;
+}
+.brand__name {
+  font-family: var(--font-head);
+  font-size: clamp(1.05rem, 2.1vw, 1.35rem);
+  font-weight: 600;
+  font-variation-settings: "SOFT" 40, "WONK" 0.9;
+  letter-spacing: -0.02em;
+  color: var(--color-secondary);
+}
+.brand__tagline {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(var(--color-secondary-rgb), 0.72);
+  white-space: nowrap;
+}
+@media (max-width: 520px) {
+  .brand__tagline {
+    display: none;
+  }
+  .brand__mark {
+    width: 44px;
+    height: 44px;
+  }
 }
 
 /* Nav */
@@ -213,7 +260,7 @@ img {
   background: var(--color-primary);
   color: var(--color-border);
   padding: 20px 24px;
-  font-family: Inter, sans-designerf;
+  font-family: var(--font-body);
   font-size: 14px;
 }
 
