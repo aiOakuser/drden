@@ -155,8 +155,12 @@ PROJECT_TEMPLATE_DEFAULT_SUMMARY = [
 
 
 VOLUMEONE_INSTAGRAM_USERNAME = "runvolumeone"
-VOLUMEONE_INSTAGRAM_PROFILE_URL = "https://www.instagram.com/globaldesignerhub?igsh=NTc4MTIwNjQ2YQ%3D%3D&utm_source=qr"
 VOLUMEONE_INSTAGRAM_APP_ID = "936619743392459"
+
+
+def _gdh_instagram_profile_url() -> str:
+    """Canonical GDH Instagram link (settings.GDH_INSTAGRAM_URL)."""
+    return (getattr(settings, "GDH_INSTAGRAM_URL", None) or "").strip()
 VOLUMEONE_FEED_CACHE_KEY = "designer_portfolio:volumeone-feed"
 VOLUMEONE_FEED_CACHE_TTL = 60 * 30  # 30 minutes
 VOLUMEONE_MAX_SLIDES = 20
@@ -840,7 +844,7 @@ def _timestamp_to_datetime(value) -> datetime | None:
 def _build_permalink(shortcode: str | None) -> str:
     if shortcode:
         return f"https://www.instagram.com/p/{shortcode}/"
-    return VOLUMEONE_INSTAGRAM_PROFILE_URL
+    return _gdh_instagram_profile_url()
 
 
 def _request_instagram_profile(username: str) -> dict:
@@ -3458,7 +3462,7 @@ class VolumeOneShowcaseView(TemplateView):
                 "slides": feed.get("slides", []),
                 "feed_source": feed.get("source", "fallback"),
                 "feed_timestamp": feed.get("fetched_at"),
-                "instagram_profile_url": VOLUMEONE_INSTAGRAM_PROFILE_URL,
+                "instagram_profile_url": _gdh_instagram_profile_url(),
                 "instagram_username": VOLUMEONE_INSTAGRAM_USERNAME,
                 "design_packs": _get_volumeone_design_packs(),
                 "db_schema_tables": VOLUMEONE_DB_SCHEMA,

@@ -245,6 +245,16 @@ IOS_APP_NAME = _default_ios_app_name()
 IOS_APP_STORE_URL = os.getenv("IOS_APP_STORE_URL", "").strip()
 IOS_TESTFLIGHT_URL = os.getenv("IOS_TESTFLIGHT_URL", "").strip()
 
+# Official Global Designer Hub Instagram (navbar, contact, VolumeOne CTA, AI social context).
+def _default_gdh_instagram_url() -> str:
+    value = (os.getenv("GDH_INSTAGRAM_URL") or os.getenv("INSTAGRAM_PROFILE_URL") or "").strip()
+    if value:
+        return value
+    return "https://www.instagram.com/globaldesignerhub?igsh=NTc4MTIwNjQ2YQ%3D%3D&utm_source=qr"
+
+
+GDH_INSTAGRAM_URL = _default_gdh_instagram_url()
+
 CANONICAL_DOMAIN_REDIRECT_ENABLED = env_bool(
     "CANONICAL_DOMAIN_REDIRECT_ENABLED",
     default=bool(CANONICAL_HOST) and not DEBUG,
@@ -513,6 +523,7 @@ TEMPLATES = [
                 "designer_portfolio.context_processors.messenger_inbox_count",
                 "designer_portfolio.context_processors.referral_context",
                 "designer_portfolio.context_processors.google_review_url",
+                "designer_portfolio.context_processors.gdh_instagram_url",
                 "social_django.context_processors.backends",
                 "social_django.context_processors.login_redirect",
             ],

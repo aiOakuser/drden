@@ -92,6 +92,9 @@ def gather_ios_app_promo_context_text() -> str:
         lines.append(f"TestFlight URL (beta): {testflight}\n")
     if base:
         lines.append(f"Marketing / download page on web: {base.rstrip('/')}/iphone-app/\n")
+    ig = (getattr(settings, "GDH_INSTAGRAM_URL", None) or "").strip()
+    if ig:
+        lines.append(f"Official brand Instagram: {ig}\n")
     lines.extend(
         [
             "Hero value props:\n",

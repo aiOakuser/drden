@@ -125,6 +125,11 @@ def google_review_url(request: HttpRequest) -> dict:
     return {"google_review_url": getattr(settings, "GOOGLE_REVIEW_URL", "") or ""}
 
 
+def gdh_instagram_url(request: HttpRequest) -> dict:
+    """Official Global Designer Hub Instagram profile URL (override via GDH_INSTAGRAM_URL)."""
+    return {"gdh_instagram_url": getattr(settings, "GDH_INSTAGRAM_URL", "") or ""}
+
+
 def utm_context(request: HttpRequest) -> dict:
     """Expose stored UTM and attribution values to templates.
 
