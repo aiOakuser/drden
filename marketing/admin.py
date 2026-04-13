@@ -1,6 +1,17 @@
 from django.contrib import admin
 
-from .models import FashionConsultLead
+from .models import FashionConsultLead, SocialContentBundle
+
+
+@admin.register(SocialContentBundle)
+class SocialContentBundleAdmin(admin.ModelAdmin):
+    list_display = ("created_at", "success", "model_used")
+    list_filter = ("success", "model_used")
+    readonly_fields = ("created_at", "updated_at", "source_context", "platforms", "model_used", "success", "error")
+    ordering = ("-created_at",)
+
+    def has_add_permission(self, request):
+        return False
 
 
 @admin.register(FashionConsultLead)

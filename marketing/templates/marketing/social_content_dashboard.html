@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Social content · Global Designer Hub</title>
+  <style>
+    :root {
+      --bg: #14121a;
+      --paper: #f7f4ee;
+      --accent: #c76b4a;
+      --muted: rgba(247, 244, 238, 0.75);
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--paper);
+      line-height: 1.55;
+      padding: 32px 20px 60px;
+    }
+    .wrap { max-width: 900px; margin: 0 auto; }
+    h1 { font-size: 1.5rem; margin: 0 0 8px; letter-spacing: -0.02em; }
+    .sub { color: var(--muted); font-size: 0.95rem; margin-bottom: 24px; }
+    .msg {
+      padding: 12px 14px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      background: rgba(247, 244, 238, 0.08);
+      border: 1px solid rgba(247, 244, 238, 0.12);
+    }
+    form.inline { margin-bottom: 28px; }
+    button.regen {
+      background: var(--accent);
+      color: var(--paper);
+      border: none;
+      padding: 12px 20px;
+      border-radius: 999px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    button.regen:hover { filter: brightness(1.05); }
+    section {
+      margin-bottom: 28px;
+      padding: 18px 20px;
+      border-radius: 12px;
+      background: rgba(247, 244, 238, 0.06);
+      border: 1px solid rgba(247, 244, 238, 0.1);
+    }
+    section h2 {
+      margin: 0 0 12px;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+    }
+    pre, .mono {
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 0.9rem;
+      margin: 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    .tags { color: #e8c992; font-size: 0.88rem; }
+    ul.history { list-style: none; padding: 0; margin: 0; }
+    ul.history li {
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(247, 244, 238, 0.08);
+      font-size: 0.9rem;
+    }
+    a { color: #e8c992; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Social content regeneration</h1>
+    <p class="sub">
+      Drafts are generated from live collections, designer specialties, and events—then saved for review.
+      Nothing is posted automatically; copy into Instagram, LinkedIn, or X.
+    </p>
+    {% if message %}<p class="msg">{{ message }}</p>{% endif %}
+
+    <form class="inline" method="post" action="">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="regenerate" />
+      <button type="submit" class="regen">Regenerate now</button>
+    </form>
+
+    {% if current %}
+      {% if not current.success %}
+        <p class="msg">Last run failed: {{ current.error|default:"Unknown error" }}</p>
+      {% endif %}
+      {% with p=current.platforms %}
+        <section>
+          <h2>Instagram caption</h2>
+          <p class="mono">{{ p.instagram_caption|default:"—" }}</p>
+          <p class="tags">{% if p.instagram_hashtags %}{{ p.instagram_hashtags|join:" " }}{% endif %}</p>
+        </section>
+        <section>
+          <h2>LinkedIn</h2>
+          <p class="mono">{{ p.linkedin_post|default:"—" }}</p>
+        </section>
+        <section>
+          <h2>X (Twitter)</h2>
+          <p class="mono">{{ p.x_post|default:"—" }}</p>
+        </section>
+        <section>
+          <h2>CTA & notes</h2>
+          <p class="mono"><strong>CTA:</strong> {{ p.suggested_cta|default:"—" }}</p>
+          <p class="mono" style="margin-top:10px;"><strong>Notes:</strong> {{ p.notes_for_designer|default:"—" }}</p>
+        </section>
+        {% if current.source_context %}
+        <section>
+          <h2>Source context (fed to model)</h2>
+          <pre>{{ current.source_context }}</pre>
+        </section>
+        {% endif %}
+      {% endwith %}
+    {% else %}
+      <p class="sub">No bundles yet. Run <span class="mono">python manage.py regenerate_social_content</span> or click Regenerate.</p>
+    {% endif %}
+
+    {% if bundles %}
+    <section>
+      <h2>Recent runs</h2>
+      <ul class="history">
+        {% for b in bundles %}
+        <li>
+          #{{ b.pk }} · {{ b.created_at }} ·
+          {% if b.success %}ok{% else %}error{% endif %}
+          · {{ b.model_used }}
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+  </div>
+</body>
+</html>

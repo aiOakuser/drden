@@ -1,8 +1,12 @@
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
 from .forms import FashionConsultLeadForm
 from .models import FashionConsultLead
+from .social_regenerator import gather_site_context_text
+
+User = get_user_model()
 
 
 class FashionConsultLeadFormTests(TestCase):
@@ -68,3 +72,30 @@ class MarketingThankYouViewTests(TestCase):
         response = self.client.get(reverse("marketing:popup_thank_you"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Thank you!")
+
+
+class SocialContentGatherTests(TestCase):
+    def test_gather_site_context_returns_string(self):
+        text = gather_site_context_text()
+        self.assertIn("Global Designer Hub", text)
+
+
+class SocialContentDashboardViewTests(TestCase):
+    def test_anonymous_redirects_to_login(self):
+        url = reverse("marketing:social_content_dashboard")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("login"), response.url)
+
+    def test_staff_can_load_dashboard(self):
+        User.objects.create_user(username="staffer", password="x", is_staff=True)
+        self.client.login(username="staffer", password="x")
+        response = self.client.get(reverse("marketing:social_content_dashboard"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Social content regeneration")
+
+    def test_non_staff_forbidden(self):
+        User.objects.create_user(username="regular", password="x", is_staff=False)
+        self.client.login(username="regular", password="x")
+        response = self.client.get(reverse("marketing:social_content_dashboard"))
+        self.assertEqual(response.status_code, 403)
