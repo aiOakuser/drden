@@ -4,7 +4,7 @@ from django.urls import reverse
 
 from .forms import FashionConsultLeadForm
 from .models import FashionConsultLead
-from .social_regenerator import gather_site_context_text
+from .social_regenerator import gather_ios_app_promo_context_text, gather_site_context_text
 
 User = get_user_model()
 
@@ -77,6 +77,11 @@ class MarketingThankYouViewTests(TestCase):
 class SocialContentGatherTests(TestCase):
     def test_gather_site_context_returns_string(self):
         text = gather_site_context_text()
+        self.assertIn("Global Designer Hub", text)
+
+    def test_gather_ios_app_context_returns_string(self):
+        text = gather_ios_app_promo_context_text()
+        self.assertIn("iPhone", text)
         self.assertIn("Global Designer Hub", text)
 
 

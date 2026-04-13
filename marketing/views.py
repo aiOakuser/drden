@@ -4,6 +4,7 @@ from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 
 from .forms import FashionConsultLeadForm
+from .models import SocialContentBundle
 from .social_regenerator import regenerate_bundle
 
 
@@ -32,24 +33,44 @@ def social_content_dashboard(request):
     if not request.user.is_active or not request.user.is_staff:
         raise PermissionDenied()
 
-    from marketing.models import SocialContentBundle
-
     message = ""
-    if request.method == "POST" and request.POST.get("action") == "regenerate":
-        bundle = regenerate_bundle(save=True)
-        if bundle.success:
-            message = f"Regenerated and saved (bundle #{bundle.pk})."
-        else:
-            message = f"Regeneration failed: {bundle.error[:500]}"
+    if request.method == "POST":
+        action = (request.POST.get("action") or "").strip()
+        if action == "regenerate_hub":
+            bundle = regenerate_bundle(
+                save=True, bundle_kind=SocialContentBundle.Kind.HUB_SOCIAL
+            )
+            if bundle.success:
+                message = f"Hub digest saved (bundle #{bundle.pk})."
+            else:
+                message = f"Regeneration failed: {bundle.error[:500]}"
+        elif action == "regenerate_instagram_app":
+            bundle = regenerate_bundle(
+                save=True, bundle_kind=SocialContentBundle.Kind.INSTAGRAM_APP
+            )
+            if bundle.success:
+                message = f"iPhone app Instagram pack saved (bundle #{bundle.pk}). Copy caption + image prompt below."
+            else:
+                message = f"App promo failed: {bundle.error[:500]}"
 
-    latest = SocialContentBundle.objects.order_by("-created_at")[:12]
-    current = latest[0] if latest else None
+    latest = SocialContentBundle.objects.order_by("-created_at")[:20]
+    current_hub = (
+        SocialContentBundle.objects.filter(bundle_kind=SocialContentBundle.Kind.HUB_SOCIAL)
+        .order_by("-created_at")
+        .first()
+    )
+    current_app = (
+        SocialContentBundle.objects.filter(bundle_kind=SocialContentBundle.Kind.INSTAGRAM_APP)
+        .order_by("-created_at")
+        .first()
+    )
     return render(
         request,
         "marketing/social_content_dashboard.html",
         {
             "bundles": latest,
-            "current": current,
+            "current_hub": current_hub,
+            "current_app": current_app,
             "message": message,
         },
     )

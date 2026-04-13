@@ -3,6 +3,7 @@ Regenerate social post copy from live DB context + OpenAI.
 
 Examples:
   python manage.py regenerate_social_content
+  python manage.py regenerate_social_content --instagram-app
   python manage.py regenerate_social_content --no-save --output social-bundle.json
   python manage.py regenerate_social_content --quiet
 
@@ -14,6 +15,7 @@ import json
 
 from django.core.management.base import BaseCommand, CommandError
 
+from marketing.models import SocialContentBundle
 from marketing.social_regenerator import regenerate_bundle
 
 
@@ -36,13 +38,23 @@ class Command(BaseCommand):
             action="store_true",
             help="Suppress stdout (still logs errors to stderr).",
         )
+        parser.add_argument(
+            "--instagram-app",
+            action="store_true",
+            help="Generate Instagram pack + AI designer image prompt for the designer iPhone app (not hub digest).",
+        )
 
     def handle(self, *args, **options):
         no_save = options["no_save"]
         out_path = options.get("output")
         quiet = options["quiet"]
+        kind = (
+            SocialContentBundle.Kind.INSTAGRAM_APP
+            if options["instagram_app"]
+            else SocialContentBundle.Kind.HUB_SOCIAL
+        )
 
-        bundle = regenerate_bundle(save=not no_save)
+        bundle = regenerate_bundle(save=not no_save, bundle_kind=kind)
 
         payload = {
             "success": bundle.success,

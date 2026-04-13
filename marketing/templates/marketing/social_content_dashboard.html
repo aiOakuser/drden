@@ -19,9 +19,9 @@
       line-height: 1.55;
       padding: 32px 20px 60px;
     }
-    .wrap { max-width: 900px; margin: 0 auto; }
+    .wrap { max-width: 960px; margin: 0 auto; }
     h1 { font-size: 1.5rem; margin: 0 0 8px; letter-spacing: -0.02em; }
-    .sub { color: var(--muted); font-size: 0.95rem; margin-bottom: 24px; }
+    .sub { color: var(--muted); font-size: 0.95rem; margin-bottom: 20px; }
     .msg {
       padding: 12px 14px;
       border-radius: 8px;
@@ -29,7 +29,8 @@
       background: rgba(247, 244, 238, 0.08);
       border: 1px solid rgba(247, 244, 238, 0.12);
     }
-    form.inline { margin-bottom: 28px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 28px; }
+    form.inline { display: inline; }
     button.regen {
       background: var(--accent);
       color: var(--paper);
@@ -40,9 +41,21 @@
       cursor: pointer;
       font-size: 0.95rem;
     }
+    button.regen--secondary {
+      background: transparent;
+      color: var(--paper);
+      border: 1px solid rgba(247, 244, 238, 0.35);
+    }
     button.regen:hover { filter: brightness(1.05); }
+    .panel-title {
+      font-size: 1.05rem;
+      margin: 36px 0 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(247, 244, 238, 0.12);
+      letter-spacing: -0.02em;
+    }
     section {
-      margin-bottom: 28px;
+      margin-bottom: 20px;
       padding: 18px 20px;
       border-radius: 12px;
       background: rgba(247, 244, 238, 0.06);
@@ -63,6 +76,8 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     }
     .tags { color: #e8c992; font-size: 0.88rem; }
+    ol.slides, ul.stories { margin: 0; padding-left: 1.2em; }
+    ol.slides li, ul.stories li { margin-bottom: 8px; }
     ul.history { list-style: none; padding: 0; margin: 0; }
     ul.history li {
       padding: 10px 0;
@@ -76,22 +91,83 @@
   <div class="wrap">
     <h1>Social content regeneration</h1>
     <p class="sub">
-      Drafts are generated from live collections, designer specialties, and events—then saved for review.
-      Nothing is posted automatically; copy into Instagram, LinkedIn, or X.
+      AI drafts for review only—nothing posts to Instagram automatically. Use the <strong>iPhone app pack</strong> for
+      captions, carousel lines, story beats, and a prompt to generate an original “AI designer” visual in your image tool.
     </p>
     {% if message %}<p class="msg">{{ message }}</p>{% endif %}
 
-    <form class="inline" method="post" action="">
-      {% csrf_token %}
-      <input type="hidden" name="action" value="regenerate" />
-      <button type="submit" class="regen">Regenerate now</button>
-    </form>
+    <div class="actions">
+      <form class="inline" method="post" action="">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="regenerate_hub" />
+        <button type="submit" class="regen regen--secondary">Regenerate hub (IG / LinkedIn / X)</button>
+      </form>
+      <form class="inline" method="post" action="">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="regenerate_instagram_app" />
+        <button type="submit" class="regen">Regenerate iPhone app → Instagram</button>
+      </form>
+    </div>
 
-    {% if current %}
-      {% if not current.success %}
-        <p class="msg">Last run failed: {{ current.error|default:"Unknown error" }}</p>
+    <h2 class="panel-title">Designer iPhone app → Instagram</h2>
+    {% if current_app %}
+      {% if not current_app.success %}
+        <p class="msg">Last app promo run failed: {{ current_app.error|default:"Unknown error" }}</p>
       {% endif %}
-      {% with p=current.platforms %}
+      {% with p=current_app.platforms %}
+        <section>
+          <h2>Feed caption</h2>
+          <p class="mono">{{ p.instagram_caption|default:"—" }}</p>
+          <p class="tags">{% if p.instagram_hashtags %}{{ p.instagram_hashtags|join:" " }}{% endif %}</p>
+        </section>
+        <section>
+          <h2>First comment (link / CTA)</h2>
+          <p class="mono">{{ p.first_comment|default:"—" }}</p>
+        </section>
+        <section>
+          <h2>Carousel on-slide copy</h2>
+          <ol class="slides">
+            {% for line in p.instagram_carousel_slides %}
+            <li class="mono">{{ line }}</li>
+            {% empty %}<li class="mono">—</li>{% endfor %}
+          </ol>
+        </section>
+        <section>
+          <h2>Stories overlay beats</h2>
+          <ul class="stories">
+            {% for line in p.instagram_stories_bullets %}
+            <li class="mono">{{ line }}</li>
+            {% empty %}<li class="mono">—</li>{% endfor %}
+          </ul>
+        </section>
+        <section>
+          <h2>AI designer — image prompt (paste into Midjourney / DALL·E / Firefly)</h2>
+          <p class="sub" style="margin-top:0;font-size:0.85rem;">Fictional spokesperson only; generate art, then post with your caption.</p>
+          <pre>{{ p.ai_designer_image_prompt|default:"—" }}</pre>
+        </section>
+        <section>
+          <h2>Social manager notes</h2>
+          <p class="mono">{{ p.notes_for_social_manager|default:"—" }}</p>
+        </section>
+        {% if current_app.source_context %}
+        <section>
+          <h2>Source context</h2>
+          <pre>{{ current_app.source_context }}</pre>
+        </section>
+        {% endif %}
+      {% endwith %}
+    {% else %}
+      <p class="sub">No app promo bundle yet. Click <strong>Regenerate iPhone app → Instagram</strong> or run
+        <span class="mono">python manage.py regenerate_social_content --instagram-app</span>
+      </p>
+    {% endif %}
+
+    <h2 class="panel-title">Hub digest (site + community)</h2>
+    {% if current_hub %}
+      {% if not current_hub.success %}
+        <p class="msg">Last hub run failed: {{ current_hub.error|default:"Unknown error" }}</p>
+      {% endif %}
+      {% with p=current_hub.platforms %}
         <section>
           <h2>Instagram caption</h2>
           <p class="mono">{{ p.instagram_caption|default:"—" }}</p>
@@ -110,15 +186,11 @@
           <p class="mono"><strong>CTA:</strong> {{ p.suggested_cta|default:"—" }}</p>
           <p class="mono" style="margin-top:10px;"><strong>Notes:</strong> {{ p.notes_for_designer|default:"—" }}</p>
         </section>
-        {% if current.source_context %}
-        <section>
-          <h2>Source context (fed to model)</h2>
-          <pre>{{ current.source_context }}</pre>
-        </section>
-        {% endif %}
       {% endwith %}
     {% else %}
-      <p class="sub">No bundles yet. Run <span class="mono">python manage.py regenerate_social_content</span> or click Regenerate.</p>
+      <p class="sub">No hub bundle yet. Click <strong>Regenerate hub</strong> or run
+        <span class="mono">python manage.py regenerate_social_content</span>
+      </p>
     {% endif %}
 
     {% if bundles %}
@@ -127,7 +199,7 @@
       <ul class="history">
         {% for b in bundles %}
         <li>
-          #{{ b.pk }} · {{ b.created_at }} ·
+          #{{ b.pk }} · {{ b.get_bundle_kind_display }} · {{ b.created_at }} ·
           {% if b.success %}ok{% else %}error{% endif %}
           · {{ b.model_used }}
         </li>
