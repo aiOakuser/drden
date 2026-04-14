@@ -250,7 +250,7 @@ def _default_gdh_instagram_url() -> str:
     value = (os.getenv("GDH_INSTAGRAM_URL") or os.getenv("INSTAGRAM_PROFILE_URL") or "").strip()
     if value:
         return value
-    return "https://www.instagram.com/globaldesignerhub?igsh=NTc4MTIwNjQ2YQ%3D%3D&utm_source=qr"
+    return "https://www.instagram.com/globaldesignerhub/"
 
 
 GDH_INSTAGRAM_URL = _default_gdh_instagram_url()
