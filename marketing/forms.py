@@ -1,6 +1,12 @@
 from django import forms
 
-from .models import FashionConsultLead
+from .models import (
+    BrandPartnershipLead,
+    EventRegistration,
+    FashionConsultLead,
+    ForumInterestSignup,
+    MentorshipApplication,
+)
 
 
 class FashionConsultLeadForm(forms.ModelForm):
@@ -27,3 +33,261 @@ class FashionConsultLeadForm(forms.ModelForm):
                 }
             ),
         }
+
+
+_GROWTH_INPUT_ATTRS = {"class": "gdh-input"}
+
+
+class EventRegistrationForm(forms.ModelForm):
+    class Meta:
+        model = EventRegistration
+        fields = ["full_name", "email", "notes"]
+        widgets = {
+            "full_name": forms.TextInput(
+                attrs={**_GROWTH_INPUT_ATTRS, "placeholder": "Your full name"}
+            ),
+            "email": forms.EmailInput(
+                attrs={
+                    **_GROWTH_INPUT_ATTRS,
+                    "placeholder": "you@example.com",
+                    "autocomplete": "email",
+                }
+            ),
+            "notes": forms.Textarea(
+                attrs={
+                    **_GROWTH_INPUT_ATTRS,
+                    "rows": 3,
+                    "placeholder": "Anything you want the host to know? (optional)",
+                }
+            ),
+        }
+
+    def clean_email(self) -> str:
+        return (self.cleaned_data["email"] or "").strip().lower()
+
+    def save(self, *, event, commit: bool = True) -> EventRegistration:
+        """
+        Idempotent RSVP: if this email already has a registration for the
+        event, refresh the in-place row instead of raising on the
+        unique_together constraint.
+        """
+        email = self.cleaned_data["email"]
+        full_name = (self.cleaned_data.get("full_name") or "").strip()
+        notes = (self.cleaned_data.get("notes") or "").strip()
+
+        existing = EventRegistration.objects.filter(event=event, email=email).first()
+        if existing is not None:
+            update_fields: list[str] = ["updated_at"]
+            if full_name and existing.full_name != full_name:
+                existing.full_name = full_name
+                update_fields.append("full_name")
+            if notes and existing.notes != notes:
+                existing.notes = notes
+                update_fields.append("notes")
+            if existing.cancelled_at is not None:
+                existing.cancelled_at = None
+                update_fields.append("cancelled_at")
+            existing.save(update_fields=update_fields)
+            return existing
+
+        registration = EventRegistration(
+            event=event,
+            email=email,
+            full_name=full_name,
+            notes=notes,
+        )
+        if commit:
+            registration.save()
+        return registration
+
+
+class BrandPartnershipLeadForm(forms.ModelForm):
+    class Meta:
+        model = BrandPartnershipLead
+        fields = [
+            "brand_name",
+            "contact_name",
+            "email",
+            "role",
+            "website",
+            "partnership_kind",
+            "audience_reach",
+            "message",
+        ]
+        widgets = {
+            "brand_name": forms.TextInput(
+                attrs={**_GROWTH_INPUT_ATTRS, "placeholder": "Brand name"}
+            ),
+            "contact_name": forms.TextInput(
+                attrs={**_GROWTH_INPUT_ATTRS, "placeholder": "Your full name"}
+            ),
+            "email": forms.EmailInput(
+                attrs={**_GROWTH_INPUT_ATTRS, "placeholder": "you@brand.com"}
+            ),
+            "role": forms.TextInput(
+                attrs={
+                    **_GROWTH_INPUT_ATTRS,
+                    "placeholder": "Your role (e.g. Marketing Lead)",
+                }
+            ),
+            "website": forms.URLInput(
+                attrs={**_GROWTH_INPUT_ATTRS, "placeholder": "https://yourbrand.com"}
+            ),
+            "partnership_kind": forms.Select(attrs={**_GROWTH_INPUT_ATTRS}),
+            "audience_reach": forms.TextInput(
+                attrs={
+                    **_GROWTH_INPUT_ATTRS,
+                    "placeholder": "Audience you'd activate (e.g. '420K IG, 90K newsletter')",
+                }
+            ),
+            "message": forms.Textarea(
+                attrs={
+                    **_GROWTH_INPUT_ATTRS,
+                    "rows": 4,
+                    "placeholder": "What would you like to run with the GDH community?",
+                }
+            ),
+        }
+
+
+class MentorshipApplicationForm(forms.ModelForm):
+    """
+    One form, two roles. The view binds `role` (mentor or mentee) and
+    swaps placeholder copy so applicants see role-specific prompts
+    without giving them a way to pick a role that doesn't match the URL.
+    """
+
+    class Meta:
+        model = MentorshipApplication
+        fields = [
+            "full_name",
+            "email",
+            "headline",
+            "focus_areas",
+            "portfolio_url",
+            "availability",
+            "message",
+        ]
+
+    def __init__(self, *args, role: str = MentorshipApplication.Role.MENTEE, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.role = role
+        is_mentor = role == MentorshipApplication.Role.MENTOR
+
+        self.fields["full_name"].widget = forms.TextInput(
+            attrs={**_GROWTH_INPUT_ATTRS, "placeholder": "Your full name"}
+        )
+        self.fields["email"].widget = forms.EmailInput(
+            attrs={**_GROWTH_INPUT_ATTRS, "placeholder": "you@example.com"}
+        )
+        self.fields["headline"].widget = forms.TextInput(
+            attrs={
+                **_GROWTH_INPUT_ATTRS,
+                "placeholder": (
+                    "Title + company (e.g. Senior Designer · Acme Studio)"
+                    if is_mentor
+                    else "School + year (e.g. Parsons · BFA Senior)"
+                ),
+            }
+        )
+        self.fields["focus_areas"].widget = forms.TextInput(
+            attrs={
+                **_GROWTH_INPUT_ATTRS,
+                "placeholder": "Comma-separated focus areas (tech packs, denim, womenswear…)",
+            }
+        )
+        self.fields["portfolio_url"].widget = forms.URLInput(
+            attrs={
+                **_GROWTH_INPUT_ATTRS,
+                "placeholder": (
+                    "Public portfolio URL (LinkedIn, personal site, GDH portfolio)"
+                ),
+            }
+        )
+        self.fields["availability"].widget = forms.TextInput(
+            attrs={
+                **_GROWTH_INPUT_ATTRS,
+                "placeholder": "Hours / month + time-zone (e.g. '2 hrs/mo · PT')",
+            }
+        )
+        self.fields["message"].widget = forms.Textarea(
+            attrs={
+                **_GROWTH_INPUT_ATTRS,
+                "rows": 4,
+                "placeholder": (
+                    "Tell us why you want to mentor and the kind of mentee you'd love."
+                    if is_mentor
+                    else "What kind of guidance are you looking for? What do you want to learn?"
+                ),
+            }
+        )
+
+    def clean_email(self) -> str:
+        return (self.cleaned_data["email"] or "").strip().lower()
+
+    def save(self, commit: bool = True) -> MentorshipApplication:
+        application = super().save(commit=False)
+        application.role = self.role
+        if commit:
+            application.save()
+        return application
+
+
+class ForumInterestForm(forms.Form):
+    """
+    Plain `Form` (not `ModelForm`) so re-signing up with a known email
+    takes the idempotent update path instead of failing the unique-email
+    validator on `ForumInterestSignup.email`.
+    """
+
+    email = forms.EmailField(
+        widget=forms.EmailInput(
+            attrs={**_GROWTH_INPUT_ATTRS, "placeholder": "you@example.com"}
+        )
+    )
+    full_name = forms.CharField(
+        required=False,
+        max_length=150,
+        widget=forms.TextInput(
+            attrs={**_GROWTH_INPUT_ATTRS, "placeholder": "Your name (optional)"}
+        ),
+    )
+    notes = forms.CharField(
+        required=False,
+        max_length=240,
+        widget=forms.Textarea(
+            attrs={
+                **_GROWTH_INPUT_ATTRS,
+                "rows": 3,
+                "placeholder": (
+                    "What would you want forums to be — rooms, topics, "
+                    "private studios? (optional)"
+                ),
+            }
+        ),
+    )
+
+    def clean_email(self) -> str:
+        return (self.cleaned_data["email"] or "").strip().lower()
+
+    def save(self) -> ForumInterestSignup:
+        email = self.cleaned_data["email"]
+        full_name = (self.cleaned_data.get("full_name") or "").strip()
+        notes = (self.cleaned_data.get("notes") or "").strip()
+
+        existing = ForumInterestSignup.objects.filter(email__iexact=email).first()
+        if existing is not None:
+            update_fields: list[str] = []
+            if full_name and existing.full_name != full_name:
+                existing.full_name = full_name
+                update_fields.append("full_name")
+            if notes and existing.notes != notes:
+                existing.notes = notes
+                update_fields.append("notes")
+            if update_fields:
+                existing.save(update_fields=update_fields)
+            return existing
+
+        return ForumInterestSignup.objects.create(
+            email=email, full_name=full_name, notes=notes
+        )
