@@ -1,0 +1,51 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mentorship — Global Designer Hub</title>
+    <meta name="description" content="Apply to mentor an emerging fashion designer, or apply to be matched with an industry mentor.">
+    {% include "marketing/_growth_styles.html" %}
+</head>
+<body>
+<div class="gdh-container">
+    <p class="gdh-eyebrow">Mentorship</p>
+    <h1 class="gdh-h1">Mentorship that ships work.</h1>
+    <p class="gdh-lead">
+        The GDH mentorship program pairs emerging designers and fashion
+        students with working pros — designers, technical designers,
+        production leads, buyers — for short, focused 1:1 sessions on
+        real portfolio work.
+    </p>
+
+    <div class="gdh-grid" style="margin-top:32px;">
+        <article class="gdh-card">
+            <span class="gdh-pill gdh-pill-accent">For pros</span>
+            <h2 class="gdh-h2" style="font-size:24px; margin-top:10px;">Become a mentor</h2>
+            <p class="gdh-event-summary" style="font-size:15px;">
+                Working in fashion? Spend 1–2 hours a month giving an emerging
+                designer feedback that actually moves them forward. We handle
+                matching, scheduling and the awkward intro.
+            </p>
+            <p style="margin-top:14px;">
+                <a class="gdh-cta" href="{% url 'marketing:mentorship_apply' 'become-a-mentor' %}">Apply to mentor</a>
+            </p>
+        </article>
+
+        <article class="gdh-card">
+            <span class="gdh-pill">For students</span>
+            <h2 class="gdh-h2" style="font-size:24px; margin-top:10px;">Find a mentor</h2>
+            <p class="gdh-event-summary" style="font-size:15px;">
+                Fashion student or self-taught designer building toward your
+                first role? Tell us what you're working on and we'll match
+                you with a mentor whose practice fits.
+            </p>
+            <p style="margin-top:14px;">
+                <a class="gdh-cta" href="{% url 'marketing:mentorship_apply' 'find-a-mentor' %}">Apply for a mentor</a>
+            </p>
+        </article>
+    </div>
+</div>
+</body>
+</html>

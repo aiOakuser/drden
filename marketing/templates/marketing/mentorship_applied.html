@@ -1,0 +1,30 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Application received — Global Designer Hub Mentorship</title>
+    {% include "marketing/_growth_styles.html" %}
+</head>
+<body>
+<div class="gdh-container">
+    <p class="gdh-eyebrow">Application received</p>
+    <h1 class="gdh-h1">
+        {% if is_mentor %}Thanks for offering to mentor.{% else %}Thanks for applying.{% endif %}
+    </h1>
+    <p class="gdh-lead">
+        {% if is_mentor %}
+            We review every mentor application personally. If you're a fit
+            for the next cohort, we'll reach out by email about an intro
+            chat.
+        {% else %}
+            We'll review your application and email you when we've found
+            a mentor whose practice matches what you're working on.
+        {% endif %}
+    </p>
+    <a class="gdh-cta" href="{% url 'marketing:events_list' %}">See upcoming events</a>
+    <a class="gdh-cta gdh-cta-ghost" style="margin-left:6px;" href="{% url 'marketing:mentorship_landing' %}">Back to mentorship</a>
+</div>
+</body>
+</html>
