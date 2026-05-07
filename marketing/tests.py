@@ -1,10 +1,32 @@
+from datetime import timedelta
+from io import StringIO
+
 from django.contrib.auth import get_user_model
+from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
-from .forms import FashionConsultLeadForm
-from .models import FashionConsultLead
-from .social_regenerator import gather_ios_app_promo_context_text, gather_site_context_text
+from .forms import (
+    BrandPartnershipLeadForm,
+    EventRegistrationForm,
+    FashionConsultLeadForm,
+    ForumInterestForm,
+    MentorshipApplicationForm,
+)
+from .models import (
+    BrandPartnershipLead,
+    EmergingTalentFeature,
+    Event,
+    EventRegistration,
+    FashionConsultLead,
+    ForumInterestSignup,
+    MentorshipApplication,
+)
+from .social_regenerator import (
+    gather_ios_app_promo_context_text,
+    gather_site_context_text,
+)
 
 User = get_user_model()
 
@@ -104,3 +126,438 @@ class SocialContentDashboardViewTests(TestCase):
         self.client.login(username="regular", password="x")
         response = self.client.get(reverse("marketing:social_content_dashboard"))
         self.assertEqual(response.status_code, 403)
+
+
+def _make_event(**overrides) -> Event:
+    """Helper: build a default upcoming SCHEDULED event."""
+    starts_at = overrides.pop("starts_at", timezone.now() + timedelta(days=7))
+    defaults = {
+        "title": "Default test event",
+        "slug": "default-test-event",
+        "kind": Event.Kind.WEBINAR,
+        "summary": "A test event.",
+        "starts_at": starts_at,
+        "ends_at": starts_at + timedelta(hours=1),
+        "is_virtual": True,
+        "location": "Zoom",
+        "host_name": "Test host",
+        "status": Event.Status.SCHEDULED,
+    }
+    defaults.update(overrides)
+    return Event.objects.create(**defaults)
+
+
+class EventModelTests(TestCase):
+    def test_is_public_only_for_scheduled_live_ended(self):
+        for status in (Event.Status.SCHEDULED, Event.Status.LIVE, Event.Status.ENDED):
+            event = _make_event(slug=f"e-{status}", status=status)
+            self.assertTrue(event.is_public)
+        for status in (Event.Status.DRAFT, Event.Status.CANCELLED):
+            event = _make_event(slug=f"e-{status}", status=status)
+            self.assertFalse(event.is_public)
+
+    def test_is_full_respects_capacity(self):
+        event = _make_event(slug="cap", capacity=2)
+        self.assertFalse(event.is_full)
+        EventRegistration.objects.create(event=event, email="a@example.com")
+        self.assertFalse(event.is_full)
+        EventRegistration.objects.create(event=event, email="b@example.com")
+        self.assertTrue(event.is_full)
+        self.assertFalse(event.registrations_open)
+
+    def test_registrations_closed_for_non_scheduled_status(self):
+        event = _make_event(slug="ended", status=Event.Status.ENDED)
+        self.assertFalse(event.registrations_open)
+
+
+class EventRegistrationFormTests(TestCase):
+    def test_email_normalized_to_lowercase(self):
+        event = _make_event(slug="lower")
+        form = EventRegistrationForm(
+            data={"full_name": "Test", "email": "  CASE@Example.COM ", "notes": ""}
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+        registration = form.save(event=event)
+        self.assertEqual(registration.email, "case@example.com")
+
+    def test_resubmit_with_same_email_updates_in_place(self):
+        event = _make_event(slug="dup")
+        form_a = EventRegistrationForm(
+            data={"full_name": "Original", "email": "x@example.com", "notes": "a"}
+        )
+        self.assertTrue(form_a.is_valid())
+        first = form_a.save(event=event)
+
+        form_b = EventRegistrationForm(
+            data={"full_name": "Updated", "email": "x@example.com", "notes": "b"}
+        )
+        self.assertTrue(form_b.is_valid())
+        second = form_b.save(event=event)
+        self.assertEqual(first.pk, second.pk)
+        self.assertEqual(EventRegistration.objects.count(), 1)
+        second.refresh_from_db()
+        self.assertEqual(second.full_name, "Updated")
+        self.assertEqual(second.notes, "b")
+
+
+class EventViewTests(TestCase):
+    def setUp(self):
+        self.upcoming = _make_event(slug="upcoming-1", title="Upcoming One")
+        self.past = _make_event(
+            slug="past-1",
+            title="Past One",
+            starts_at=timezone.now() - timedelta(days=10),
+            status=Event.Status.ENDED,
+        )
+        self.draft = _make_event(slug="draft-1", title="Draft One", status=Event.Status.DRAFT)
+
+    def test_list_shows_upcoming_and_past_only(self):
+        response = self.client.get(reverse("marketing:events_list"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Upcoming One")
+        self.assertContains(response, "Past One")
+        self.assertNotContains(response, "Draft One")
+
+    def test_detail_404_for_draft(self):
+        url = reverse("marketing:event_detail", args=[self.draft.slug])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_detail_renders_for_scheduled_event(self):
+        url = reverse("marketing:event_detail", args=[self.upcoming.slug])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Upcoming One")
+        self.assertContains(response, "Reserve my spot")
+
+    def test_post_creates_registration_and_redirects(self):
+        url = reverse("marketing:event_detail", args=[self.upcoming.slug])
+        response = self.client.post(
+            url,
+            {"full_name": "Attendee", "email": "a@example.com", "notes": ""},
+        )
+        self.assertRedirects(
+            response,
+            reverse("marketing:event_registered", args=[self.upcoming.slug]),
+        )
+        self.assertTrue(
+            EventRegistration.objects.filter(
+                event=self.upcoming, email="a@example.com"
+            ).exists()
+        )
+
+    def test_post_to_full_event_does_not_register(self):
+        full_event = _make_event(slug="full", capacity=1)
+        EventRegistration.objects.create(event=full_event, email="x@example.com")
+        url = reverse("marketing:event_detail", args=[full_event.slug])
+        response = self.client.post(
+            url, {"full_name": "Late", "email": "late@example.com", "notes": ""}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "at capacity")
+        self.assertEqual(
+            EventRegistration.objects.filter(event=full_event).count(), 1
+        )
+
+    def test_post_to_ended_event_rejects(self):
+        url = reverse("marketing:event_detail", args=[self.past.slug])
+        response = self.client.post(
+            url, {"full_name": "Ghost", "email": "g@example.com", "notes": ""}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(EventRegistration.objects.count(), 0)
+
+
+class EmergingTalentViewTests(TestCase):
+    def setUp(self):
+        self.published = EmergingTalentFeature.objects.create(
+            title="Capsule by Test",
+            slug="capsule-by-test",
+            display_name="Test Designer",
+            bio_html="<p>Bio.</p>",
+            success_story_html="<p>Success.</p>",
+            is_published=True,
+            published_at=timezone.now(),
+        )
+        self.draft = EmergingTalentFeature.objects.create(
+            title="Draft Feature",
+            slug="draft-feature",
+            display_name="Hidden Designer",
+            is_published=False,
+        )
+
+    def test_list_shows_published_only(self):
+        response = self.client.get(reverse("marketing:emerging_talent_list"))
+        self.assertContains(response, "Capsule by Test")
+        self.assertNotContains(response, "Draft Feature")
+
+    def test_detail_renders_for_published(self):
+        url = reverse("marketing:emerging_talent_detail", args=[self.published.slug])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Test Designer")
+
+    def test_detail_404_for_draft(self):
+        url = reverse("marketing:emerging_talent_detail", args=[self.draft.slug])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_mark_published_stamps_timestamp(self):
+        feature = EmergingTalentFeature.objects.create(
+            title="Pending", slug="pending", display_name="P"
+        )
+        self.assertFalse(feature.is_published)
+        feature.mark_published()
+        feature.refresh_from_db()
+        self.assertTrue(feature.is_published)
+        self.assertIsNotNone(feature.published_at)
+
+
+class BrandPartnershipViewTests(TestCase):
+    def test_get_renders_form(self):
+        response = self.client.get(reverse("marketing:brand_partner"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Pitch a partnership")
+        self.assertIsInstance(response.context["form"], BrandPartnershipLeadForm)
+
+    def test_valid_post_creates_lead(self):
+        response = self.client.post(
+            reverse("marketing:brand_partner"),
+            {
+                "brand_name": "TestBrand",
+                "contact_name": "Test Contact",
+                "email": "biz@brand.com",
+                "role": "Marketing Lead",
+                "website": "https://brand.example.com",
+                "partnership_kind": BrandPartnershipLead.PartnershipKind.COMPETITION,
+                "audience_reach": "100K IG",
+                "message": "Run a denim competition with us.",
+            },
+        )
+        self.assertRedirects(response, reverse("marketing:brand_partner_thanks"))
+        self.assertEqual(BrandPartnershipLead.objects.count(), 1)
+        lead = BrandPartnershipLead.objects.get()
+        self.assertEqual(lead.brand_name, "TestBrand")
+        self.assertEqual(
+            lead.partnership_kind, BrandPartnershipLead.PartnershipKind.COMPETITION
+        )
+
+    def test_invalid_post_creates_no_lead(self):
+        response = self.client.post(reverse("marketing:brand_partner"), {})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(BrandPartnershipLead.objects.count(), 0)
+
+
+class MentorshipFormAndViewTests(TestCase):
+    def test_landing_renders_both_ctas(self):
+        response = self.client.get(reverse("marketing:mentorship_landing"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Apply to mentor")
+        self.assertContains(response, "Apply for a mentor")
+
+    def test_apply_view_unknown_role_404s(self):
+        response = self.client.get(
+            reverse("marketing:mentorship_apply", args=["chaos-agent"])
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_form_save_locks_role_to_url(self):
+        form = MentorshipApplicationForm(
+            data={
+                "full_name": "Mentor M.",
+                "email": "  Mentor@Example.com ",
+                "headline": "Senior · Acme",
+                "focus_areas": "denim, tech packs",
+                "portfolio_url": "https://example.com",
+                "availability": "2 hrs/mo · PT",
+                "message": "Happy to help.",
+            },
+            role=MentorshipApplication.Role.MENTOR,
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+        application = form.save()
+        self.assertEqual(application.role, MentorshipApplication.Role.MENTOR)
+        self.assertEqual(application.email, "mentor@example.com")
+        self.assertEqual(application.status, MentorshipApplication.Status.PENDING)
+
+    def test_post_creates_application_with_role_from_url(self):
+        url = reverse("marketing:mentorship_apply", args=["become-a-mentor"])
+        response = self.client.post(
+            url,
+            {
+                "full_name": "Pro P.",
+                "email": "pro@example.com",
+                "headline": "Tech designer · Studio",
+                "focus_areas": "womenswear",
+                "portfolio_url": "https://example.com",
+                "availability": "2 hrs/mo",
+                "message": "Helpful intent.",
+            },
+        )
+        self.assertRedirects(
+            response,
+            reverse("marketing:mentorship_applied", args=["become-a-mentor"]),
+        )
+        application = MentorshipApplication.objects.get()
+        self.assertEqual(application.role, MentorshipApplication.Role.MENTOR)
+
+    def test_post_for_mentee_path_sets_mentee_role(self):
+        url = reverse("marketing:mentorship_apply", args=["find-a-mentor"])
+        response = self.client.post(
+            url,
+            {
+                "full_name": "Student S.",
+                "email": "s@example.com",
+                "headline": "Parsons BFA Senior",
+                "focus_areas": "menswear",
+                "portfolio_url": "",
+                "availability": "evenings",
+                "message": "Looking for guidance.",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        application = MentorshipApplication.objects.get()
+        self.assertEqual(application.role, MentorshipApplication.Role.MENTEE)
+
+    def test_authenticated_user_is_attached_to_application(self):
+        user = User.objects.create_user(
+            username="alex", password="x", email="alex@example.com"
+        )
+        self.client.login(username="alex", password="x")
+        url = reverse("marketing:mentorship_apply", args=["find-a-mentor"])
+        self.client.post(
+            url,
+            {
+                "full_name": "Alex",
+                "email": "alex@example.com",
+                "headline": "Self-taught",
+                "focus_areas": "tech wear",
+                "portfolio_url": "",
+                "availability": "evenings",
+                "message": "Interested.",
+            },
+        )
+        application = MentorshipApplication.objects.get()
+        self.assertEqual(application.user_id, user.id)
+
+    def test_applied_thanks_unknown_role_404s(self):
+        response = self.client.get(
+            reverse("marketing:mentorship_applied", args=["chaos-agent"])
+        )
+        self.assertEqual(response.status_code, 404)
+
+
+class CommunityForumViewTests(TestCase):
+    def test_get_renders_form(self):
+        response = self.client.get(reverse("marketing:community_forum"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Get early access")
+
+    def test_post_creates_signup(self):
+        response = self.client.post(
+            reverse("marketing:community_forum"),
+            {
+                "email": "Forum@Example.com",
+                "full_name": "Forum F.",
+                "notes": "Want private studios.",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ForumInterestSignup.objects.count(), 1)
+        signup = ForumInterestSignup.objects.get()
+        self.assertEqual(signup.email, "forum@example.com")
+
+    def test_resubmit_does_not_duplicate(self):
+        ForumInterestSignup.objects.create(email="dup@example.com")
+        self.client.post(
+            reverse("marketing:community_forum"),
+            {"email": "dup@example.com", "full_name": "Updated", "notes": ""},
+        )
+        self.assertEqual(ForumInterestSignup.objects.count(), 1)
+        signup = ForumInterestSignup.objects.get()
+        self.assertEqual(signup.full_name, "Updated")
+
+
+class ForumInterestFormTests(TestCase):
+    def test_email_required(self):
+        form = ForumInterestForm(data={})
+        self.assertFalse(form.is_valid())
+        self.assertIn("email", form.errors)
+
+    def test_email_normalized_lowercase(self):
+        form = ForumInterestForm(
+            data={"email": "  Mixed@Case.COM ", "full_name": "", "notes": ""}
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+        signup = form.save()
+        self.assertEqual(signup.email, "mixed@case.com")
+
+
+class CommunityDashboardViewTests(TestCase):
+    def test_anonymous_redirects_to_login(self):
+        response = self.client.get(reverse("marketing:community_dashboard"))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("login"), response.url)
+
+    def test_non_staff_forbidden(self):
+        User.objects.create_user(username="reg-com", password="x", is_staff=False)
+        self.client.login(username="reg-com", password="x")
+        response = self.client.get(reverse("marketing:community_dashboard"))
+        self.assertEqual(response.status_code, 403)
+
+    def test_staff_dashboard_counts(self):
+        _make_event(slug="dash-1", status=Event.Status.SCHEDULED)
+        _make_event(slug="dash-2", status=Event.Status.DRAFT)
+        _make_event(
+            slug="dash-3",
+            status=Event.Status.ENDED,
+            starts_at=timezone.now() - timedelta(days=2),
+        )
+        MentorshipApplication.objects.create(
+            role=MentorshipApplication.Role.MENTOR,
+            full_name="Mentor",
+            email="m@example.com",
+            status=MentorshipApplication.Status.ACTIVE,
+        )
+        MentorshipApplication.objects.create(
+            role=MentorshipApplication.Role.MENTEE,
+            full_name="Mentee",
+            email="me@example.com",
+            status=MentorshipApplication.Status.PENDING,
+        )
+        MentorshipApplication.objects.create(
+            role=MentorshipApplication.Role.MENTOR,
+            full_name="Matched",
+            email="matched@example.com",
+            status=MentorshipApplication.Status.MATCHED,
+        )
+        User.objects.create_user(username="staff-com", password="x", is_staff=True)
+        self.client.login(username="staff-com", password="x")
+        response = self.client.get(reverse("marketing:community_dashboard"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["event_counts"]["upcoming"], 1)
+        self.assertEqual(response.context["event_counts"]["drafts"], 1)
+        self.assertEqual(response.context["event_counts"]["past"], 1)
+        self.assertEqual(response.context["mentorship_counts"]["mentors_active"], 1)
+        self.assertEqual(response.context["mentorship_counts"]["mentees_active"], 1)
+        self.assertEqual(response.context["mentorship_counts"]["matched"], 1)
+
+
+class SeedCommunityStarterContentTests(TestCase):
+    def test_command_creates_starter_content(self):
+        out = StringIO()
+        call_command("seed_community_starter_content", stdout=out)
+        self.assertGreaterEqual(Event.objects.count(), 3)
+        self.assertGreaterEqual(EmergingTalentFeature.objects.count(), 2)
+        for event in Event.objects.all():
+            self.assertEqual(event.status, Event.Status.SCHEDULED)
+        for feature in EmergingTalentFeature.objects.all():
+            self.assertTrue(feature.is_published)
+
+    def test_command_is_idempotent(self):
+        call_command("seed_community_starter_content")
+        first_event_count = Event.objects.count()
+        first_feature_count = EmergingTalentFeature.objects.count()
+        call_command("seed_community_starter_content")
+        self.assertEqual(Event.objects.count(), first_event_count)
+        self.assertEqual(EmergingTalentFeature.objects.count(), first_feature_count)
