@@ -9,6 +9,7 @@ from django.utils import timezone
 
 from .forms import (
     BrandPartnershipLeadForm,
+    EmergingTalentSubmissionForm,
     EventRegistrationForm,
     FashionConsultLeadForm,
     ForumInterestForm,
@@ -17,6 +18,7 @@ from .forms import (
 from .models import (
     BrandPartnershipLead,
     EmergingTalentFeature,
+    EmergingTalentSubmission,
     Event,
     EventRegistration,
     FashionConsultLead,
@@ -541,6 +543,230 @@ class CommunityDashboardViewTests(TestCase):
         self.assertEqual(response.context["mentorship_counts"]["mentors_active"], 1)
         self.assertEqual(response.context["mentorship_counts"]["mentees_active"], 1)
         self.assertEqual(response.context["mentorship_counts"]["matched"], 1)
+
+
+class EmergingTalentSubmissionFormTests(TestCase):
+    def _valid_payload(self, **overrides):
+        data = {
+            "full_name": "Grad Designer",
+            "email": "GRAD@Example.COM",
+            "portfolio_url": "https://example.com/grad",
+            "school": "Parsons · BFA Fashion Design",
+            "grad_year": "2026 final year",
+            "focus_areas": "tailoring, womenswear",
+            "story": "I work in tailored deadstock wools.",
+            "consent_share": "on",
+        }
+        data.update(overrides)
+        return data
+
+    def test_form_requires_consent(self):
+        form = EmergingTalentSubmissionForm(data=self._valid_payload(consent_share=""))
+        self.assertFalse(form.is_valid())
+        self.assertIn("consent_share", form.errors)
+
+    def test_form_requires_core_fields(self):
+        form = EmergingTalentSubmissionForm(data={})
+        self.assertFalse(form.is_valid())
+        for required in ("full_name", "email", "portfolio_url", "consent_share"):
+            self.assertIn(required, form.errors)
+
+    def test_email_normalized_lowercase(self):
+        form = EmergingTalentSubmissionForm(data=self._valid_payload())
+        self.assertTrue(form.is_valid(), form.errors)
+        submission = form.save()
+        self.assertEqual(submission.email, "grad@example.com")
+        self.assertEqual(submission.status, EmergingTalentSubmission.Status.PENDING)
+
+
+class EmergingTalentSubmissionViewTests(TestCase):
+    def test_get_renders_form(self):
+        response = self.client.get(reverse("marketing:emerging_talent_submit"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Get featured")
+        self.assertIsInstance(
+            response.context["form"], EmergingTalentSubmissionForm
+        )
+
+    def test_authenticated_user_prefills_and_attaches(self):
+        user = User.objects.create_user(
+            username="grad", password="x", email="grad-user@example.com"
+        )
+        self.client.login(username="grad", password="x")
+        response = self.client.get(reverse("marketing:emerging_talent_submit"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.context["form"].initial.get("email"), "grad-user@example.com"
+        )
+
+        self.client.post(
+            reverse("marketing:emerging_talent_submit"),
+            {
+                "full_name": "Grad User",
+                "email": "grad-user@example.com",
+                "portfolio_url": "https://example.com",
+                "school": "Parsons",
+                "grad_year": "2026",
+                "focus_areas": "denim",
+                "story": "Story.",
+                "consent_share": "on",
+            },
+        )
+        submission = EmergingTalentSubmission.objects.get()
+        self.assertEqual(submission.user_id, user.id)
+
+    def test_valid_post_persists_and_redirects(self):
+        response = self.client.post(
+            reverse("marketing:emerging_talent_submit"),
+            {
+                "full_name": "Anon Grad",
+                "email": "anon@example.com",
+                "portfolio_url": "https://example.com",
+                "school": "Parsons",
+                "grad_year": "2026",
+                "focus_areas": "tailoring",
+                "story": "About my work.",
+                "consent_share": "on",
+            },
+        )
+        self.assertRedirects(
+            response, reverse("marketing:emerging_talent_submitted")
+        )
+        self.assertEqual(EmergingTalentSubmission.objects.count(), 1)
+        submission = EmergingTalentSubmission.objects.get()
+        self.assertEqual(submission.status, EmergingTalentSubmission.Status.PENDING)
+        self.assertIsNone(submission.user)
+        self.assertIsNone(submission.converted_feature)
+
+    def test_post_without_consent_does_not_persist(self):
+        response = self.client.post(
+            reverse("marketing:emerging_talent_submit"),
+            {
+                "full_name": "No Consent",
+                "email": "noconsent@example.com",
+                "portfolio_url": "https://example.com",
+                "consent_share": "",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(EmergingTalentSubmission.objects.count(), 0)
+
+    def test_thanks_page_loads_and_links_back(self):
+        response = self.client.get(reverse("marketing:emerging_talent_submitted"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse("marketing:grads_landing"))
+
+
+class EmergingTalentSubmissionConvertTests(TestCase):
+    def _build(self, **overrides) -> EmergingTalentSubmission:
+        defaults = dict(
+            full_name="Convert Designer",
+            email="convert@example.com",
+            portfolio_url="https://example.com/portfolio",
+            consent_share=True,
+            story="Sample story.",
+        )
+        defaults.update(overrides)
+        return EmergingTalentSubmission.objects.create(**defaults)
+
+    def test_convert_creates_draft_feature_and_links_back(self):
+        submission = self._build()
+        feature = submission.convert_to_feature()
+        self.assertIsInstance(feature, EmergingTalentFeature)
+        self.assertFalse(feature.is_published)
+        self.assertEqual(feature.display_name, "Convert Designer")
+        self.assertEqual(feature.designer_portfolio_url, "https://example.com/portfolio")
+        submission.refresh_from_db()
+        self.assertEqual(submission.converted_feature_id, feature.id)
+        self.assertEqual(submission.status, EmergingTalentSubmission.Status.APPROVED)
+
+    def test_convert_is_idempotent(self):
+        submission = self._build()
+        feature = submission.convert_to_feature()
+        again = submission.convert_to_feature()
+        self.assertEqual(feature.id, again.id)
+        self.assertEqual(EmergingTalentFeature.objects.count(), 1)
+
+    def test_convert_preserves_user_link(self):
+        user = User.objects.create_user(username="convertuser", password="x")
+        submission = self._build(user=user)
+        feature = submission.convert_to_feature()
+        self.assertEqual(feature.designer_user_id, user.id)
+
+    def test_convert_disambiguates_slug_collisions(self):
+        EmergingTalentFeature.objects.create(
+            title="Pre-existing", slug="convert-designer", display_name="Other"
+        )
+        submission = self._build()
+        feature = submission.convert_to_feature()
+        self.assertNotEqual(feature.slug, "convert-designer")
+        self.assertTrue(feature.slug.startswith("convert-designer-"))
+
+
+class GradsLandingViewTests(TestCase):
+    def test_renders_three_section_structure(self):
+        response = self.client.get(reverse("marketing:grads_landing"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Showcase your work")
+        self.assertContains(response, "Stay ahead of the curve")
+        self.assertContains(response, "Connect and collaborate")
+
+    def test_renders_email_hero_copy(self):
+        response = self.client.get(reverse("marketing:grads_landing"))
+        self.assertContains(response, "Unleash your design potential")
+        self.assertContains(response, "Launch your portfolio now")
+
+    def test_links_to_relevant_funnels(self):
+        response = self.client.get(reverse("marketing:grads_landing"))
+        body = response.content.decode("utf-8")
+        for url in (
+            reverse("marketing:emerging_talent_submit"),
+            reverse("marketing:emerging_talent_list"),
+            reverse("marketing:events_list"),
+            reverse("marketing:community_forum"),
+            reverse("marketing:mentorship_apply", args=["find-a-mentor"]),
+            "/accounts/signup/",
+            "/newsletter/?source=student_hub",
+        ):
+            self.assertIn(url, body, f"Expected {url} on grads landing page")
+
+    def test_surfaces_upcoming_events(self):
+        future_event = _make_event(
+            slug="future-grad-webinar",
+            title="Portfolio teardown for grads",
+            starts_at=timezone.now() + timedelta(days=10),
+        )
+        response = self.client.get(reverse("marketing:grads_landing"))
+        self.assertContains(response, "Portfolio teardown for grads")
+        self.assertContains(response, future_event.get_kind_display())
+
+    def test_does_not_surface_draft_events(self):
+        _make_event(
+            slug="draft-grad-event",
+            title="Hidden Draft Event",
+            status=Event.Status.DRAFT,
+            starts_at=timezone.now() + timedelta(days=10),
+        )
+        response = self.client.get(reverse("marketing:grads_landing"))
+        self.assertNotContains(response, "Hidden Draft Event")
+
+    def test_surfaces_published_emerging_talent(self):
+        EmergingTalentFeature.objects.create(
+            title="Public Feature",
+            slug="public-feature",
+            display_name="Public Designer",
+            is_published=True,
+            published_at=timezone.now(),
+        )
+        EmergingTalentFeature.objects.create(
+            title="Hidden Draft",
+            slug="hidden-draft",
+            display_name="Draft Designer",
+            is_published=False,
+        )
+        response = self.client.get(reverse("marketing:grads_landing"))
+        self.assertContains(response, "Public Designer")
+        self.assertNotContains(response, "Draft Designer")
 
 
 class SeedCommunityStarterContentTests(TestCase):
