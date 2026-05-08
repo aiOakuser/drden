@@ -15,9 +15,10 @@
     <p class="gdh-lead">
         A curated selection of emerging GDH designers — their portfolios,
         their stories, and the brands and projects they're shipping for.
-        Want to be featured?
-        <a href="{% url 'marketing:mentorship_landing' %}">Apply to a mentorship</a> or
-        keep building on your <a href="/dashboard/">GDH portfolio</a>.
+    </p>
+    <p style="margin-top:-12px;">
+        <a class="gdh-cta" href="{% url 'marketing:emerging_talent_submit' %}">Apply to be featured</a>
+        <a class="gdh-cta gdh-cta-ghost" style="margin-left:6px;" href="{% url 'marketing:grads_landing' %}">For grads: see the full hub</a>
     </p>
 
     {% if features %}
