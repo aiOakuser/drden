@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models import (
     BrandPartnershipLead,
     EmergingTalentFeature,
+    EmergingTalentSubmission,
     Event,
     EventRegistration,
     FashionConsultLead,
@@ -95,6 +96,45 @@ class EmergingTalentFeatureAdmin(admin.ModelAdmin):
                 feature.mark_published()
                 updated += 1
         self.message_user(request, f"Published {updated} feature(s).")
+
+
+@admin.register(EmergingTalentSubmission)
+class EmergingTalentSubmissionAdmin(admin.ModelAdmin):
+    list_display = (
+        "full_name",
+        "email",
+        "school",
+        "grad_year",
+        "status",
+        "converted_feature",
+        "created_at",
+    )
+    list_filter = ("status", "created_at")
+    search_fields = ("full_name", "email", "school", "focus_areas")
+    readonly_fields = ("converted_feature", "created_at", "updated_at")
+    actions = ("convert_to_feature_action", "decline_action")
+
+    @admin.action(description="Convert to draft Emerging Talent feature")
+    def convert_to_feature_action(self, request, queryset):
+        converted = 0
+        skipped = 0
+        for submission in queryset:
+            if submission.converted_feature is None:
+                submission.convert_to_feature()
+                converted += 1
+            else:
+                skipped += 1
+        msg = f"Converted {converted} submission(s) to feature drafts."
+        if skipped:
+            msg += f" Skipped {skipped} already-converted submission(s)."
+        self.message_user(request, msg)
+
+    @admin.action(description="Decline")
+    def decline_action(self, request, queryset):
+        updated = queryset.exclude(status=EmergingTalentSubmission.Status.DECLINED).update(
+            status=EmergingTalentSubmission.Status.DECLINED
+        )
+        self.message_user(request, f"Declined {updated} submission(s).")
 
 
 @admin.register(BrandPartnershipLead)

@@ -7,6 +7,7 @@ app_name = "marketing"
 urlpatterns = [
     path("lead-capture/", views.home, name="home"),
     path("lead-capture/thank-you/", views.popup_thank_you, name="popup_thank_you"),
+    path("grads/", views.grads_landing, name="grads_landing"),
     path("events/", views.events_list, name="events_list"),
     path("events/<slug:slug>/", views.event_detail, name="event_detail"),
     path(
@@ -18,6 +19,16 @@ urlpatterns = [
         "emerging-talent/",
         views.emerging_talent_list,
         name="emerging_talent_list",
+    ),
+    path(
+        "emerging-talent/submit/",
+        views.emerging_talent_submit,
+        name="emerging_talent_submit",
+    ),
+    path(
+        "emerging-talent/submitted/",
+        views.emerging_talent_submitted,
+        name="emerging_talent_submitted",
     ),
     path(
         "emerging-talent/<slug:slug>/",

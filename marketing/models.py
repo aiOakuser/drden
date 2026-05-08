@@ -405,6 +405,117 @@ class MentorshipApplication(models.Model):
         return f"{self.get_role_display()}: {self.full_name} <{self.email}>"
 
 
+class EmergingTalentSubmission(models.Model):
+    """
+    A designer self-nominates to be featured in the Emerging Talent section.
+
+    The published showcase (`EmergingTalentFeature`) stays staff-curated —
+    this model is the inbound funnel. A staff "Convert to feature" admin
+    action lifts an approved submission into a draft EmergingTalentFeature
+    that editors can polish and publish.
+    """
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending review"
+        UNDER_REVIEW = "under_review", "Under review"
+        APPROVED = "approved", "Approved · feature drafted"
+        DECLINED = "declined", "Declined"
+        WITHDRAWN = "withdrawn", "Withdrew"
+
+    full_name = models.CharField(max_length=150)
+    email = models.EmailField()
+    portfolio_url = models.URLField(
+        help_text="Public portfolio URL (LinkedIn, personal site, GDH portfolio).",
+    )
+    school = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text="School + program (e.g. 'Parsons · BFA Fashion Design').",
+    )
+    grad_year = models.CharField(
+        max_length=40,
+        blank=True,
+        help_text="Year (e.g. '2026 final year', 'recent grad').",
+    )
+    focus_areas = models.CharField(
+        max_length=240,
+        blank=True,
+        help_text="Comma-separated focus areas (e.g. 'tailoring, denim, womenswear').",
+    )
+    story = models.TextField(
+        blank=True,
+        help_text="Tell us about your work, your aesthetic, and why you'd be a fit.",
+    )
+    consent_share = models.BooleanField(
+        default=False,
+        help_text="Designer consents to GDH publishing the feature.",
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="emerging_talent_submissions",
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.PENDING,
+        db_index=True,
+    )
+    converted_feature = models.ForeignKey(
+        "EmergingTalentFeature",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="source_submissions",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Emerging Talent submission"
+        verbose_name_plural = "Emerging Talent submissions"
+
+    def __str__(self) -> str:
+        return f"{self.full_name} <{self.email}> ({self.get_status_display()})"
+
+    def convert_to_feature(self) -> "EmergingTalentFeature":
+        """
+        Create a draft `EmergingTalentFeature` from this submission and
+        link it back. Idempotent: if already converted, returns the
+        existing feature.
+        """
+        if self.converted_feature is not None:
+            return self.converted_feature
+
+        from django.utils.text import slugify
+
+        base_slug = slugify(self.full_name)[:200] or f"submission-{self.pk}"
+        candidate = base_slug
+        suffix = 1
+        while EmergingTalentFeature.objects.filter(slug=candidate).exists():
+            suffix += 1
+            candidate = f"{base_slug}-{suffix}"
+            if len(candidate) > 220:
+                candidate = candidate[:220]
+
+        feature = EmergingTalentFeature.objects.create(
+            title=f"Featured: {self.full_name}",
+            slug=candidate,
+            display_name=self.full_name,
+            designer_user=self.user,
+            designer_portfolio_url=self.portfolio_url,
+            bio_html=f"<p>{self.story}</p>" if self.story else "",
+            is_published=False,
+        )
+        self.converted_feature = feature
+        self.status = self.Status.APPROVED
+        self.save(update_fields=["converted_feature", "status", "updated_at"])
+        return feature
+
+
 class ForumInterestSignup(models.Model):
     """
     Email capture for the (not-yet-built) community forums. Lets us gauge
