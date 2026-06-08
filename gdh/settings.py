@@ -244,6 +244,9 @@ IOS_APP_NAME = _default_ios_app_name()
 # Mobile app distribution links (optional)
 IOS_APP_STORE_URL = os.getenv("IOS_APP_STORE_URL", "").strip()
 IOS_TESTFLIGHT_URL = os.getenv("IOS_TESTFLIGHT_URL", "").strip()
+# Android distribution links (optional): Google Play listing and/or a direct APK download.
+ANDROID_PLAY_STORE_URL = os.getenv("ANDROID_PLAY_STORE_URL", "").strip()
+ANDROID_APK_URL = os.getenv("ANDROID_APK_URL", "").strip()
 
 # Official Global Designer Hub Instagram (navbar, contact, VolumeOne CTA, AI social context).
 def _default_gdh_instagram_url() -> str:
@@ -524,6 +527,8 @@ TEMPLATES = [
                 "designer_portfolio.context_processors.referral_context",
                 "designer_portfolio.context_processors.google_review_url",
                 "designer_portfolio.context_processors.gdh_instagram_url",
+                "designer_portfolio.context_processors.mobile_app_context",
+                "designer_portfolio.context_processors.designer_ai_chat_context",
                 "social_django.context_processors.backends",
                 "social_django.context_processors.login_redirect",
             ],
@@ -734,9 +739,10 @@ SOCIAL_AUTH_REDIRECT_IS_HTTPS = env_bool(
 # Credentials (from env). Prefer explicit SOCIAL_ vars, fallback to GOOGLE_* for convenience.
 # python-dotenv does not expand ${VAR}; if SOCIAL_AUTH_* is literally "${GOOGLE_CLIENT_ID}", use GOOGLE_*.
 def _oauth_val(primary: str, fallback: str) -> str:
-    v = os.getenv(primary) or ""
-    if not v or (v.strip().startswith("${") and v.strip().endswith("}")):
-        return os.getenv(fallback, "") or ""
+    """Resolve OAuth client id/secret from env; strip whitespace so .env typos don't break login."""
+    v = (os.getenv(primary) or "").strip()
+    if not v or (v.startswith("${") and v.endswith("}")):
+        return (os.getenv(fallback, "") or "").strip()
     return v
 
 
@@ -820,3 +826,17 @@ GOOGLE_REVIEW_URL = (os.getenv("GOOGLE_REVIEW_URL", "") or "").strip()
 # --- OpenAI (Site Builder AI, Designer AI Chat) ---
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+# Optional: https://platform.openai.com/settings/organization (multi-project billing)
+_openai_org = (os.getenv("OPENAI_ORGANIZATION", "") or "").strip()
+OPENAI_ORGANIZATION = _openai_org or None
+# Optional: custom API base (e.g. Azure OpenAI proxy). Default is platform OpenAI.
+_openai_base = (os.getenv("OPENAI_BASE_URL", "") or "").strip()
+OPENAI_BASE_URL = _openai_base or None
+# httpx read timeout (seconds) for OpenAI calls — streaming needs a generous read window.
+try:
+    OPENAI_TIMEOUT = float((os.getenv("OPENAI_TIMEOUT", "300") or "300").strip())
+except ValueError:
+    OPENAI_TIMEOUT = 300.0
+OPENAI_TIMEOUT = max(60.0, min(OPENAI_TIMEOUT, 900.0))
+# When True and OPENAI_API_KEY is set, chat widget auto-opens once per browser tab (sessionStorage).
+DESIGNER_AI_AUTO_POPUP = env_bool("DESIGNER_AI_AUTO_POPUP", default=True)

@@ -115,6 +115,7 @@ img {
   font-variation-settings: "SOFT" 40, "WONK" 0.9;
   letter-spacing: -0.02em;
   color: var(--color-secondary);
+  white-space: nowrap;
 }
 .brand__tagline {
   font-family: var(--font-body);
@@ -138,15 +139,17 @@ img {
 /* Nav */
 .nav {
   display: flex;
-  gap: 142px;
+  align-items: center;
+  gap: 15px;
 }
 .nav a {
   font-family: var(--font-body);
-  color: var(--color-surface-muted);
+  color: var(--color-secondary);
   text-transform: uppercase;
   font-weight: 800;
-  font-size: 32.5px;
+  font-size: 14.9px;
   letter-spacing: 0.08em;
+  white-space: nowrap;
 }
 .nav a:hover {
   color: var(--color-accent);

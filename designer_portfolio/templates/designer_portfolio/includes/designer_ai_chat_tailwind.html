@@ -1,6 +1,10 @@
 {% load static %}
 <!-- Designer AI Chat Widget - Tailwind Version with Dark Mode -->
-<div id="designer-ai-widget" class="fixed bottom-6 right-6 z-50 font-sans">
+<div
+  id="designer-ai-widget"
+  class="fixed bottom-6 right-6 z-50 font-sans"
+  data-auto-popup="{% if designer_ai_auto_popup %}true{% else %}false{% endif %}"
+>
   <!-- Floating Chat Bubble with Animation -->
   <button
     id="designer-ai-toggle"
@@ -80,7 +84,15 @@
           <li>🔧 Using GlobalDesignerHub features</li>
           <li>📚 API and integration questions</li>
         </ul>
-        <p class="text-xs text-gray-500 dark:text-gray-500 italic">Try: "How do I create my portfolio?"</p>
+        <p class="text-xs text-gray-500 dark:text-gray-500 italic mb-3">Or tap a question below to get started:</p>
+        <div id="chat-suggestions" class="flex flex-wrap gap-2 justify-center">
+          <button type="button" class="chat-suggestion px-3 py-1.5 text-xs font-medium bg-purple-100 hover:bg-purple-200 dark:bg-purple-900/40 dark:hover:bg-purple-900/70 text-purple-800 dark:text-purple-200 rounded-full border border-purple-200 dark:border-purple-700 transition-colors" data-question="How do I create my portfolio?">How do I create my portfolio?</button>
+          <button type="button" class="chat-suggestion px-3 py-1.5 text-xs font-medium bg-purple-100 hover:bg-purple-200 dark:bg-purple-900/40 dark:hover:bg-purple-900/70 text-purple-800 dark:text-purple-200 rounded-full border border-purple-200 dark:border-purple-700 transition-colors" data-question="What image size should I upload?">What image size should I upload?</button>
+          <button type="button" class="chat-suggestion px-3 py-1.5 text-xs font-medium bg-purple-100 hover:bg-purple-200 dark:bg-purple-900/40 dark:hover:bg-purple-900/70 text-purple-800 dark:text-purple-200 rounded-full border border-purple-200 dark:border-purple-700 transition-colors" data-question="How do I organize my work into collections?">Organize work into collections</button>
+          <button type="button" class="chat-suggestion px-3 py-1.5 text-xs font-medium bg-purple-100 hover:bg-purple-200 dark:bg-purple-900/40 dark:hover:bg-purple-900/70 text-purple-800 dark:text-purple-200 rounded-full border border-purple-200 dark:border-purple-700 transition-colors" data-question="How do I generate a tech pack?">How do I generate a tech pack?</button>
+          <button type="button" class="chat-suggestion px-3 py-1.5 text-xs font-medium bg-purple-100 hover:bg-purple-200 dark:bg-purple-900/40 dark:hover:bg-purple-900/70 text-purple-800 dark:text-purple-200 rounded-full border border-purple-200 dark:border-purple-700 transition-colors" data-question="Help me write a client proposal">Write a client proposal</button>
+          <button type="button" class="chat-suggestion px-3 py-1.5 text-xs font-medium bg-purple-100 hover:bg-purple-200 dark:bg-purple-900/40 dark:hover:bg-purple-900/70 text-purple-800 dark:text-purple-200 rounded-full border border-purple-200 dark:border-purple-700 transition-colors" data-question="How do I find clients?">How do I find clients?</button>
+        </div>
       </div>
       {% if referral_invite_url %}
       <div id="chat-referral-block" class="mt-4 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
@@ -182,6 +194,23 @@
     return null;
   }
 
+  /** CSRF for POST: hidden input from {% csrf_token %} or csrftoken cookie (Django default name). */
+  function getCsrfToken() {
+    const el = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (el && el.value) return el.value;
+    const m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]*)/);
+    return m ? decodeURIComponent(m[1]) : '';
+  }
+
+  async function readJsonResponse(response) {
+    try {
+      const text = await response.text();
+      return text ? JSON.parse(text) : {};
+    } catch (_) {
+      return {};
+    }
+  }
+
   // Toggle Chat
   function toggleChat() {
     isOpen = !isOpen;
@@ -271,13 +300,22 @@
     input.disabled = true;
     form.querySelector('button[type="submit"]').disabled = true;
 
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
     const payload = {
       message: message,
       context_page: window.location.pathname,
       current_url: window.location.href,
       language: currentLanguage
     };
+
+    const fetchOpts = () => ({
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCsrfToken()
+      },
+      body: JSON.stringify(payload)
+    });
 
     function formatMarkdown(t) {
       return t.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -288,61 +326,106 @@
         .replace(/\((\/docs\/[^)]+)\)/g, '(<a href="$1" target="_blank" class="text-purple-400 underline">$1</a>)');
     }
 
+    async function postDesignerChatFallback() {
+      const fallback = await fetch('/api/ai/designer-chat/', fetchOpts());
+      if (fallback.status === 403) {
+        addMessage('Could not verify your browser session (security token). Refresh the page and try again.');
+        return;
+      }
+      const fbData = await readJsonResponse(fallback);
+      if (fbData.success && fbData.response) {
+        addMessage(fbData.response);
+        if (fbData.session_id) sessionId = fbData.session_id;
+      } else if (fbData.error) {
+        addMessage(fbData.error);
+      } else {
+        addMessage('Sorry, the chat service returned an error (' + fallback.status + '). Please try again.');
+      }
+    }
+
     try {
-      const response = await fetch('/api/ai/stream/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken || '' },
-        body: JSON.stringify(payload)
-      });
+      const response = await fetch('/api/ai/stream/', fetchOpts());
 
-      if (response.ok && response.headers.get('content-type')?.includes('text/event-stream')) {
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let fullText = '';
-        const { contentEl } = addMessage('', false, true) || {};
+      if (response.ok && (response.headers.get('content-type') || '').includes('text/event-stream')) {
+        if (!response.body) {
+          addMessage('Streaming is not available in this browser. Try another browser or refresh.');
+        } else {
+          let fullText = '';
+          let streamHadError = false;
+          let contentEl = null;
+          const addRet = addMessage('', false, true);
+          if (addRet) contentEl = addRet.contentEl;
 
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          const chunk = decoder.decode(value, { stream: true });
-          for (const line of chunk.split('\n')) {
-            if (line.startsWith('data: ')) {
+          try {
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let lineBuf = '';
+
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              lineBuf += decoder.decode(value, { stream: true });
+              const parts = lineBuf.split('\n');
+              lineBuf = parts.pop() || '';
+              for (const line of parts) {
+                if (!line.startsWith('data: ')) continue;
+                try {
+                  const data = JSON.parse(line.slice(6));
+                  if (data.delta) {
+                    fullText += data.delta;
+                    if (contentEl) contentEl.innerHTML = formatMarkdown(fullText);
+                    messages.scrollTop = messages.scrollHeight;
+                  } else if (data.error) {
+                    streamHadError = true;
+                    if (contentEl) contentEl.textContent = data.error;
+                  }
+                } catch (_) {}
+              }
+            }
+            if (lineBuf.startsWith('data: ')) {
               try {
-                const data = JSON.parse(line.slice(6));
+                const data = JSON.parse(lineBuf.slice(6));
                 if (data.delta) {
                   fullText += data.delta;
                   if (contentEl) contentEl.innerHTML = formatMarkdown(fullText);
-                  messages.scrollTop = messages.scrollHeight;
                 } else if (data.error) {
+                  streamHadError = true;
                   if (contentEl) contentEl.textContent = data.error;
                 }
               } catch (_) {}
             }
+
+            if (streamHadError && !fullText.trim()) {
+              const row = contentEl && contentEl.closest('.flex');
+              if (row && row.parentNode) row.remove();
+              await postDesignerChatFallback();
+            } else if (!streamHadError && !fullText.trim()) {
+              const cur = contentEl ? (contentEl.textContent || '').trim() : '';
+              if (!cur) await postDesignerChatFallback();
+            }
+          } catch (streamErr) {
+            console.error('SSE stream failed:', streamErr);
+            if (!fullText.trim()) await postDesignerChatFallback();
           }
         }
-        if (contentEl && !fullText) contentEl.textContent = 'Sorry, no response was generated.';
+      } else if (response.status === 403) {
+        addMessage('Could not verify your browser session (security token). Refresh the page and try again.');
       } else {
-        const data = await response.json();
+        const data = await readJsonResponse(response);
         if (data.error) {
           addMessage(data.error);
         } else {
-          const fallback = await fetch('/api/ai/designer-chat/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken || '' },
-            body: JSON.stringify(payload)
-          });
-          const fbData = await fallback.json();
-          if (fbData.success) {
-            addMessage(fbData.response);
-            if (fbData.session_id) sessionId = fbData.session_id;
-          } else {
-            addMessage('Sorry, I encountered an error. Please try again later.');
-          }
+          await postDesignerChatFallback();
         }
       }
     } catch (error) {
       console.error('Chat error:', error);
-      addMessage('Sorry, I couldn\'t connect to Designer AI. Please check your connection and try again.');
+      try {
+        await postDesignerChatFallback();
+      } catch (fallbackErr) {
+        console.error('Fallback chat failed:', fallbackErr);
+        addMessage('Sorry, I couldn\'t connect to Designer AI. Please check your connection and try again.');
+      }
     } finally {
       typingIndicator.classList.add('hidden');
       input.disabled = false;
@@ -381,6 +464,19 @@
     currentLanguage = e.target.value;
   });
 
+  // Suggested question chips: send the question on click
+  const suggestionsContainer = document.getElementById('chat-suggestions');
+  if (suggestionsContainer) {
+    suggestionsContainer.addEventListener('click', (e) => {
+      const btn = e.target.closest('.chat-suggestion');
+      if (!btn) return;
+      const question = btn.getAttribute('data-question');
+      if (question) {
+        sendMessage(question);
+      }
+    });
+  }
+
   // Dark mode toggle (if you have one)
   function initDarkMode() {
     const isDark = localStorage.getItem('darkMode') === 'true' || 
@@ -399,6 +495,25 @@
     }
     input.focus();
   };
+
+  // Auto-open once per browser tab when OpenAI is configured (server sets data-auto-popup).
+  const widgetRoot = document.getElementById('designer-ai-widget');
+  const autoPopup = widgetRoot && widgetRoot.getAttribute('data-auto-popup') === 'true';
+  const autoPopupStorageKey = 'gdh_designer_ai_auto_popup_shown';
+  if (autoPopup && toggle && panel) {
+    try {
+      if (!sessionStorage.getItem(autoPopupStorageKey)) {
+        window.setTimeout(function() {
+          if (!isOpen) {
+            toggleChat();
+            sessionStorage.setItem(autoPopupStorageKey, '1');
+          }
+        }, 1400);
+      }
+    } catch (err) {
+      /* sessionStorage unavailable; skip */
+    }
+  }
 })();
 </script>
 

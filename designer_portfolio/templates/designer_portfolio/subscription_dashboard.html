@@ -1,0 +1,219 @@
+{% extends "designer_portfolio/dashboard_base.html" %}
+{% load static %}
+
+{% block title %}Subscription - {{ user.username }} | designer{% endblock %}
+
+{% block dashboard_content %}
+<div class="subscription-page">
+  <!-- Current plan summary -->
+  <section class="sub-card sub-current">
+    <div class="sub-current__info">
+      <p class="sub-eyebrow">Your plan</p>
+      {% if subscription %}
+        <h2 class="sub-current__title">
+          {% if subscription.plan %}{{ subscription.plan.display_name }}{% else %}Free Trial{% endif %}
+        </h2>
+        <p class="sub-current__meta">
+          <span class="sub-status sub-status--{{ subscription.status }}">
+            {{ subscription.get_status_display }}
+          </span>
+          {% if subscription.status == 'free_trial' and subscription.days_left_in_trial %}
+          <span class="sub-current__trial">{{ subscription.days_left_in_trial }} day{{ subscription.days_left_in_trial|pluralize }} left in trial</span>
+          {% endif %}
+        </p>
+        <ul class="sub-detail-list">
+          {% if subscription.plan %}
+          <li><span>Price</span><strong>${{ subscription.plan.price }}</strong></li>
+          {% endif %}
+          {% if subscription.next_billing_date %}
+          <li><span>Next billing</span><strong>{{ subscription.next_billing_date|date:"M j, Y" }}</strong></li>
+          {% endif %}
+          {% if subscription.subscription_end_date %}
+          <li><span>Renews / ends</span><strong>{{ subscription.subscription_end_date|date:"M j, Y" }}</strong></li>
+          {% endif %}
+          {% if subscription.payment_method %}
+          <li><span>Payment method</span><strong>{{ subscription.get_payment_method_display }}</strong></li>
+          {% endif %}
+          <li><span>Auto-renewal</span><strong>{% if subscription.auto_renewal %}On{% else %}Off{% endif %}</strong></li>
+        </ul>
+      {% else %}
+        <h2 class="sub-current__title">No active subscription</h2>
+        <p class="sub-current__meta">
+          <span class="sub-status sub-status--expired">Not subscribed</span>
+        </p>
+        <p class="sub-empty-text">Choose a plan below to unlock premium templates, collaboration tools, and the designer messenger.</p>
+      {% endif %}
+    </div>
+    <div class="sub-current__actions">
+      <a href="{% url 'payment_methods' %}" class="btn btn-primary"><i class="icon">💳</i> Payment methods</a>
+      <a href="{% url 'billing_history' %}" class="btn btn-ghost"><i class="icon">🧾</i> Billing history</a>
+      {% if subscription and subscription.status == 'active' %}
+      <button type="button" class="btn btn-danger" id="cancel-subscription-btn"><i class="icon">✖</i> Cancel plan</button>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- Available plans -->
+  <section class="sub-plans">
+    <h2 class="sub-section-title">Available plans</h2>
+    {% if plans %}
+    <div class="sub-plan-grid">
+      {% for plan in plans %}
+      <article class="sub-card sub-plan {% if subscription.plan and subscription.plan.id == plan.id %}sub-plan--current{% endif %}">
+        {% if subscription.plan and subscription.plan.id == plan.id %}
+        <span class="sub-plan__badge">Current</span>
+        {% endif %}
+        <h3 class="sub-plan__name">{{ plan.display_name }}</h3>
+        <p class="sub-plan__price">${{ plan.price }}<span>/{{ plan.get_name_display|lower }}</span></p>
+        <p class="sub-plan__duration">{{ plan.duration_days }} day access</p>
+        {% if subscription.plan and subscription.plan.id == plan.id %}
+        <button type="button" class="btn btn-ghost" disabled>Your current plan</button>
+        {% else %}
+        <button type="button" class="btn btn-primary sub-plan__choose" data-plan="{{ plan.name }}">Choose plan</button>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="sub-card sub-empty">
+      <p>No plans are available right now. Please check back soon or contact <a href="{% url 'contact' %}">support</a>.</p>
+    </div>
+    {% endif %}
+  </section>
+</div>
+
+<style>
+  .subscription-page { display: grid; gap: 30px; }
+
+  .sub-card {
+    background: var(--color-secondary);
+    border-radius: 14px;
+    padding: 28px;
+    box-shadow: 0 2px 10px rgba(var(--color-primary-rgb), 0.1);
+    border: 1px solid var(--color-border);
+  }
+
+  .sub-eyebrow {
+    margin: 0 0 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-text-muted);
+  }
+
+  .sub-current {
+    display: flex;
+    justify-content: space-between;
+    gap: 30px;
+    flex-wrap: wrap;
+  }
+  .sub-current__info { flex: 1 1 320px; }
+  .sub-current__title { margin: 0 0 10px; font-size: 26px; color: var(--color-primary); }
+  .sub-current__meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0 0 18px; }
+  .sub-current__trial { color: var(--color-text-muted); font-size: 14px; }
+
+  .sub-status {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: rgba(var(--color-primary-rgb), 0.08);
+    color: var(--color-primary);
+  }
+  .sub-status--active { background: rgba(34, 197, 94, 0.15); color: #15803d; }
+  .sub-status--free_trial { background: rgba(var(--color-accent-rgb), 0.18); color: var(--color-accent); }
+  .sub-status--past_due, .sub-status--frozen { background: rgba(234, 179, 8, 0.18); color: #a16207; }
+  .sub-status--canceled, .sub-status--expired { background: rgba(239, 68, 68, 0.15); color: #b91c1c; }
+
+  .sub-detail-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; max-width: 420px; }
+  .sub-detail-list li { display: flex; justify-content: space-between; gap: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--color-border); }
+  .sub-detail-list li:last-child { border-bottom: none; padding-bottom: 0; }
+  .sub-detail-list span { color: var(--color-text-muted); }
+  .sub-detail-list strong { color: var(--color-primary); }
+
+  .sub-empty-text { color: var(--color-text-muted); max-width: 420px; line-height: 1.6; }
+
+  .sub-current__actions { display: flex; flex-direction: column; gap: 12px; align-items: stretch; min-width: 200px; }
+
+  .btn-ghost { background: transparent; color: var(--color-primary); border: 1px solid var(--color-border); }
+  .btn-ghost:hover { background: rgba(var(--color-primary-rgb), 0.06); }
+  .btn-danger { background: rgba(239, 68, 68, 0.1); color: #b91c1c; border: 1px solid rgba(239, 68, 68, 0.3); }
+  .btn-danger:hover { background: rgba(239, 68, 68, 0.18); }
+  .btn[disabled] { opacity: 0.6; cursor: not-allowed; }
+
+  .sub-section-title { margin: 0 0 18px; color: var(--color-primary); font-size: 22px; }
+
+  .sub-plan-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+  .sub-plan { position: relative; display: flex; flex-direction: column; gap: 8px; }
+  .sub-plan--current { border-color: var(--color-accent); box-shadow: 0 6px 20px rgba(var(--color-accent-rgb), 0.18); }
+  .sub-plan__badge {
+    position: absolute; top: 16px; right: 16px;
+    background: var(--color-accent); color: var(--color-primary);
+    font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px; text-transform: uppercase;
+  }
+  .sub-plan__name { margin: 0; font-size: 18px; color: var(--color-primary); }
+  .sub-plan__price { margin: 0; font-size: 30px; font-weight: 800; color: var(--color-primary); }
+  .sub-plan__price span { font-size: 14px; font-weight: 500; color: var(--color-text-muted); }
+  .sub-plan__duration { margin: 0 0 14px; color: var(--color-text-muted); font-size: 14px; }
+  .sub-plan .btn { margin-top: auto; justify-content: center; }
+
+  @media (max-width: 768px) {
+    .sub-current { flex-direction: column; }
+    .sub-current__actions { min-width: 0; }
+  }
+</style>
+
+<script>
+  (function () {
+    function getCsrfToken() {
+      var m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]*)/);
+      return m ? decodeURIComponent(m[1]) : "";
+    }
+
+    document.querySelectorAll(".sub-plan__choose").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var plan = btn.getAttribute("data-plan");
+        btn.disabled = true;
+        var original = btn.textContent;
+        btn.textContent = "Processing…";
+        fetch("{% url 'change_subscription_plan' %}", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrfToken() },
+          body: JSON.stringify({ plan: plan }),
+        })
+          .then(function (r) { return r.json(); })
+          .then(function () { window.location.reload(); })
+          .catch(function () {
+            btn.disabled = false;
+            btn.textContent = original;
+            alert("Could not change plan right now. Please try again.");
+          });
+      });
+    });
+
+    var cancelBtn = document.getElementById("cancel-subscription-btn");
+    if (cancelBtn) {
+      cancelBtn.addEventListener("click", function () {
+        if (!confirm("Cancel your subscription? You'll keep access until the end of your billing period.")) return;
+        cancelBtn.disabled = true;
+        fetch("{% url 'cancel_subscription' %}", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrfToken() },
+        })
+          .then(function (r) { return r.json(); })
+          .then(function () { window.location.reload(); })
+          .catch(function () {
+            cancelBtn.disabled = false;
+            alert("Could not cancel right now. Please try again.");
+          });
+      });
+    }
+  })();
+</script>
+{% endblock %}

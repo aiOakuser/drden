@@ -2,13 +2,16 @@
 AI Chat API views: SSE streaming endpoint.
 """
 import json
+import logging
 import uuid
 from django.conf import settings
 from django.http import StreamingHttpResponse
 from django.views.decorators.csrf import requires_csrf_token
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 
 from .services import stream_openai_chat
+
+logger = logging.getLogger(__name__)
 
 
 def _build_designer_messages(request, user_message: str, context_page: str, language: str):
@@ -145,7 +148,10 @@ def stream_chat(request):
                         pass
             content = "".join(full_content)
             if content and session:
-                _save_designer_messages(session, user_message, content)
+                try:
+                    _save_designer_messages(session, user_message, content)
+                except Exception:
+                    logger.exception("ai_chat: failed to persist Designer AI messages")
         except GeneratorExit:
             pass
 
@@ -154,8 +160,9 @@ def stream_chat(request):
         content_type="text/event-stream",
     )
     response["Cache-Control"] = "no-cache"
+    # nginx only — tells proxy not to buffer SSE (harmless if not behind nginx).
     response["X-Accel-Buffering"] = "no"
-    response["Connection"] = "keep-alive"
+    # Do not set Connection: keep-alive — WSGI forbids hop-by-hop headers (breaks runserver).
 
     if session:
         response.set_cookie(
@@ -171,3 +178,32 @@ def stream_chat(request):
 def _json_error(message: str, status: int):
     from django.http import JsonResponse
     return JsonResponse({"success": False, "error": message}, status=status)
+
+
+@require_GET
+def designer_ai_session_messages(request, session_id: str):
+    """
+    Return persisted Designer AI messages for the browser session cookie.
+    Used by the chat widget when opening the panel (load history).
+    Only returns data when the session_id matches designer_ai_session cookie (no cross-session reads).
+    """
+    from django.http import JsonResponse
+
+    cookie_sid = (request.COOKIES.get("designer_ai_session") or "").strip()
+    if not cookie_sid or cookie_sid != session_id:
+        return JsonResponse({"messages": []})
+
+    from designer_portfolio.models import DesignerAISession, DesignerAIMessage
+
+    try:
+        session = DesignerAISession.objects.get(session_id=session_id)
+    except DesignerAISession.DoesNotExist:
+        return JsonResponse({"messages": []})
+
+    qs = (
+        DesignerAIMessage.objects.filter(session=session)
+        .exclude(role="system")
+        .order_by("created_at")
+    )
+    messages = [{"role": m.role, "content": m.content} for m in qs]
+    return JsonResponse({"messages": messages})

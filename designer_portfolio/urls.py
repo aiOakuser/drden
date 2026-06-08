@@ -73,7 +73,7 @@ from .views import (
     forum_post_toggle_solution,
     GoogleReviewView,
 )
-from ai_chat.views import stream_chat
+from ai_chat.views import designer_ai_session_messages, stream_chat
 from .student_portfolio_views import (
     student_portfolio_dashboard,
     student_portfolio_edit_project,
@@ -236,6 +236,11 @@ urlpatterns = [
     path("api/referrals/leaderboard/", views.ReferralLeaderboardView.as_view(), name="referral_leaderboard"),
     path("api/ai/designer-chat/", designer_ai_chat, name="designer_ai_chat"),
     path("api/ai/config-check/", designer_ai_config_check, name="designer_ai_config_check"),
+    path(
+        "api/ai/session/<str:session_id>/messages/",
+        designer_ai_session_messages,
+        name="designer_ai_session_messages",
+    ),
     path("api/ai/stream/", stream_chat, name="ai_chat_stream"),
     path("designer-ai/history/", my_conversations, name="designer_ai_history"),
 

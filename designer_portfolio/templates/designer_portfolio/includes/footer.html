@@ -4,6 +4,19 @@
 {% endif %}
 
 <footer class="site-footer-light">
+  <p class="footer-app">
+    <span class="footer-app__label">Get the app:</span>
+    {% for dl in mobile_app_downloads %}
+    <a
+      class="footer-app__link"
+      href="{{ dl.url }}"
+      {% if dl.external %}target="_blank" rel="noopener"{% endif %}
+    >
+      <i class="{{ dl.icon }}" aria-hidden="true"></i>
+      <span>{{ dl.label }}</span>
+    </a>
+    {% endfor %}
+  </p>
   <p>
     © designer · 2025 GlobalDesignerHub. All rights reserved.
       <span class="legal-links">
@@ -26,6 +39,19 @@
   </p>
 </footer>
 <footer class="site-footer-dark">
+  <p class="footer-app">
+    <span class="footer-app__label">Get the app:</span>
+    {% for dl in mobile_app_downloads %}
+    <a
+      class="footer-app__link"
+      href="{{ dl.url }}"
+      {% if dl.external %}target="_blank" rel="noopener"{% endif %}
+    >
+      <i class="{{ dl.icon }}" aria-hidden="true"></i>
+      <span>{{ dl.label }}</span>
+    </a>
+    {% endfor %}
+  </p>
   <p>
     © designer · 2025 GlobalDesignerHub. All rights reserved.
     <span class="legal-links">
@@ -70,6 +96,43 @@
     .site-footer-dark .legal-links a {
       color: inherit;
       text-decoration: underline;
+    }
+
+    .footer-app {
+      margin: 2px 0 8px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .footer-app__label {
+      font-weight: 600;
+      opacity: 0.85;
+    }
+    .footer-app__link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 16px;
+      border-radius: 999px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: filter 0.2s ease, background 0.2s ease;
+    }
+    .site-footer-light .footer-app__link {
+      background: var(--color-primary);
+      color: var(--color-secondary);
+    }
+    .site-footer-dark .footer-app__link {
+      background: var(--color-secondary);
+      color: var(--color-primary);
+    }
+    .footer-app__link:hover {
+      filter: brightness(1.08);
+    }
+    .footer-app__link i {
+      font-size: 1.05em;
     }
 
     /* Larger screens - improve footer legibility */

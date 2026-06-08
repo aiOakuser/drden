@@ -1,16 +1,16 @@
 {% extends "designer_portfolio/base.html" %}
 {% load static %}
 
-{% block title %}iPhone App Download | {{ app_name }}{% endblock %}
+{% block title %}Mobile App Download (iOS & Android) | {{ app_name }}{% endblock %}
 
 {% block content %}
 <section class="app-download-hero">
   <div class="app-download__container app-download-hero__grid">
     <div class="app-download-hero__content">
       <p class="app-download-hero__eyebrow">Mobile app</p>
-      <h1 class="app-download-hero__title">Download the {{ app_name }} iPhone app</h1>
+      <h1 class="app-download-hero__title">Download the {{ app_name }} app for iOS &amp; Android</h1>
       <p class="app-download-hero__subtitle">
-        Stay connected to your portfolios, conversations, and studio calendar from anywhere.
+        Stay connected to your portfolios, conversations, and studio calendar from anywhere—on iPhone, iPad, or Android.
       </p>
       <ul class="app-download-hero__list">
         {% for point in app_hero_points %}
@@ -20,27 +20,37 @@
         </li>
         {% endfor %}
       </ul>
-      <div class="app-download-hero__actions">
-        <a
-          href="{{ primary_download.url }}"
-          class="app-download__button app-download__button--primary"
-          {% if primary_download.target %}target="{{ primary_download.target }}"{% endif %}
-          {% if primary_download.rel %}rel="{{ primary_download.rel }}"{% endif %}
-        >
-          <i class="{{ primary_download.icon }}" aria-hidden="true"></i>
-          {{ primary_download.label }}
-        </a>
-        <a
-          href="{{ secondary_download.url }}"
-          class="app-download__button app-download__button--secondary"
-          {% if secondary_download.target %}target="{{ secondary_download.target }}"{% endif %}
-          {% if secondary_download.rel %}rel="{{ secondary_download.rel }}"{% endif %}
-        >
-          <i class="{{ secondary_download.icon }}" aria-hidden="true"></i>
-          {{ secondary_download.label }}
-        </a>
+      <div class="app-download-hero__platforms">
+        {% for platform in app_platforms %}
+        <div class="app-download__platform">
+          <p class="app-download__platform-name">
+            <i class="{{ platform.icon }}" aria-hidden="true"></i>
+            <span>{{ platform.name }}</span>
+          </p>
+          <div class="app-download-hero__actions">
+            <a
+              href="{{ platform.primary.url }}"
+              class="app-download__button app-download__button--primary"
+              {% if platform.primary.target %}target="{{ platform.primary.target }}"{% endif %}
+              {% if platform.primary.rel %}rel="{{ platform.primary.rel }}"{% endif %}
+            >
+              <i class="{{ platform.primary.icon }}" aria-hidden="true"></i>
+              {{ platform.primary.label }}
+            </a>
+            <a
+              href="{{ platform.secondary.url }}"
+              class="app-download__button app-download__button--secondary"
+              {% if platform.secondary.target %}target="{{ platform.secondary.target }}"{% endif %}
+              {% if platform.secondary.rel %}rel="{{ platform.secondary.rel }}"{% endif %}
+            >
+              <i class="{{ platform.secondary.icon }}" aria-hidden="true"></i>
+              {{ platform.secondary.label }}
+            </a>
+          </div>
+          <p class="app-download-hero__footnote">{{ platform.note }}</p>
+        </div>
+        {% endfor %}
       </div>
-      <p class="app-download-hero__footnote">Requires iOS 16 or later. Wi-Fi recommended for first download.</p>
     </div>
     <div class="app-download-hero__device" aria-hidden="true">
       <div class="device-mock">
@@ -68,7 +78,7 @@
 <section class="app-download-features">
   <div class="app-download__container">
     <div class="app-download__section-header">
-      <p class="app-download__eyebrow">Built for iPhone</p>
+      <p class="app-download__eyebrow">Built for iPhone &amp; Android</p>
       <h2 class="app-download__title">Everything you need on the go</h2>
       <p class="app-download__subtitle">
         Move faster with mobile-first tools that mirror your desktop workspace.
@@ -113,31 +123,39 @@
     <div class="app-download-cta__card">
       <div>
         <p class="app-download__eyebrow">Ready to move faster</p>
-        <h2 class="app-download__title">Work from anywhere with the {{ app_name }} iPhone app</h2>
+        <h2 class="app-download__title">Work from anywhere with the {{ app_name }} mobile app</h2>
         <p class="app-download__subtitle">
-          Use the same secure workspace you trust on desktop, now in your pocket.
+          Use the same secure workspace you trust on desktop, now in your pocket—on iOS and Android.
         </p>
       </div>
-      <div class="app-download-cta__actions">
-        <a
-          href="{{ primary_download.url }}"
-          class="app-download__button app-download__button--primary"
-          {% if primary_download.target %}target="{{ primary_download.target }}"{% endif %}
-          {% if primary_download.rel %}rel="{{ primary_download.rel }}"{% endif %}
-        >
-          <i class="{{ primary_download.icon }}" aria-hidden="true"></i>
-          {{ primary_download.label }}
-        </a>
-        <a
-          href="{{ secondary_download.url }}"
-          class="app-download__button app-download__button--secondary"
-          {% if secondary_download.target %}target="{{ secondary_download.target }}"{% endif %}
-          {% if secondary_download.rel %}rel="{{ secondary_download.rel }}"{% endif %}
-        >
-          <i class="{{ secondary_download.icon }}" aria-hidden="true"></i>
-          {{ secondary_download.label }}
-        </a>
+      {% for platform in app_platforms %}
+      <div class="app-download-cta__platform">
+        <p class="app-download__platform-name app-download__platform-name--light">
+          <i class="{{ platform.icon }}" aria-hidden="true"></i>
+          <span>{{ platform.name }}</span>
+        </p>
+        <div class="app-download-cta__actions">
+          <a
+            href="{{ platform.primary.url }}"
+            class="app-download__button app-download__button--primary"
+            {% if platform.primary.target %}target="{{ platform.primary.target }}"{% endif %}
+            {% if platform.primary.rel %}rel="{{ platform.primary.rel }}"{% endif %}
+          >
+            <i class="{{ platform.primary.icon }}" aria-hidden="true"></i>
+            {{ platform.primary.label }}
+          </a>
+          <a
+            href="{{ platform.secondary.url }}"
+            class="app-download__button app-download__button--secondary"
+            {% if platform.secondary.target %}target="{{ platform.secondary.target }}"{% endif %}
+            {% if platform.secondary.rel %}rel="{{ platform.secondary.rel }}"{% endif %}
+          >
+            <i class="{{ platform.secondary.icon }}" aria-hidden="true"></i>
+            {{ platform.secondary.label }}
+          </a>
+        </div>
       </div>
+      {% endfor %}
       <p class="app-download-cta__note">
         Need rollout help? Email <a href="mailto:{{ support_email }}">{{ support_email }}</a>.
       </p>
@@ -213,6 +231,34 @@
     display: flex;
     gap: 16px;
     flex-wrap: wrap;
+  }
+
+  .app-download-hero__platforms {
+    display: grid;
+    gap: 26px;
+  }
+
+  .app-download__platform-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 12px;
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: 0.01em;
+  }
+
+  .app-download__platform-name i {
+    font-size: 1.25rem;
+    color: var(--color-accent);
+  }
+
+  .app-download-cta__platform + .app-download-cta__platform {
+    margin-top: 6px;
+  }
+
+  .app-download__platform-name--light {
+    color: var(--color-secondary);
   }
 
   .app-download__button {

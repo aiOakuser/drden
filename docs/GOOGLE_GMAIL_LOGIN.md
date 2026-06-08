@@ -18,6 +18,8 @@ So the full redirect URIs are:
 | **Production (www)** | `https://www.globaldesignerhub.com/auth/complete/google-oauth2/` |
 | **Local (port 8005)** | `http://localhost:8005/auth/complete/google-oauth2/` |
 | **Local (port 8005)** | `http://127.0.0.1:8005/auth/complete/google-oauth2/` |
+| **Local (port 8004)** | `http://localhost:8004/auth/complete/google-oauth2/` |
+| **Local (port 8004)** | `http://127.0.0.1:8004/auth/complete/google-oauth2/` |
 | **Local (port 8000)** | `http://localhost:8000/auth/complete/google-oauth2/` |
 | **Local (port 8000)** | `http://127.0.0.1:8000/auth/complete/google-oauth2/` |
 
@@ -81,6 +83,11 @@ The **port must match** your runserver port. If you use `runserver 8005`, add:
 ```
 http://localhost:8005/auth/complete/google-oauth2/
 http://127.0.0.1:8005/auth/complete/google-oauth2/
+```
+For port 8004 (see `AGENTS.md` quick reference):
+```
+http://localhost:8004/auth/complete/google-oauth2/
+http://127.0.0.1:8004/auth/complete/google-oauth2/
 ```
 For port 8000:
 ```

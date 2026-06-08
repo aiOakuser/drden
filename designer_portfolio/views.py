@@ -2384,6 +2384,8 @@ class IPhoneAppDownloadView(TemplateView):
         context = super().get_context_data(**kwargs)
         app_store_url = getattr(settings, "IOS_APP_STORE_URL", "").strip()
         testflight_url = getattr(settings, "IOS_TESTFLIGHT_URL", "").strip()
+        play_store_url = getattr(settings, "ANDROID_PLAY_STORE_URL", "").strip()
+        apk_url = getattr(settings, "ANDROID_APK_URL", "").strip()
         support_email = _get_public_contact_email()
         app_name = getattr(settings, "IOS_APP_NAME", "GlobalDesignerHub").strip() or "GlobalDesignerHub"
 
@@ -2417,12 +2419,50 @@ class IPhoneAppDownloadView(TemplateView):
             )
             secondary_download = _link("Email support", f"mailto:{support_email}", "fa-regular fa-envelope")
 
+        if play_store_url:
+            android_primary = _link("Get it on Google Play", play_store_url, "fa-brands fa-google-play", new_tab=True)
+            android_secondary = (
+                _link("Download the APK", apk_url, "fa-brands fa-android", new_tab=True)
+                if apk_url
+                else _link("Email me the link", f"mailto:{support_email}", "fa-regular fa-envelope")
+            )
+        elif apk_url:
+            android_primary = _link("Download the Android APK", apk_url, "fa-brands fa-android", new_tab=True)
+            android_secondary = _link("Email me the link", f"mailto:{support_email}", "fa-regular fa-envelope")
+        else:
+            android_primary = _link(
+                "Request the Android app",
+                reverse("contact"),
+                "fa-regular fa-paper-plane",
+            )
+            android_secondary = _link("Email support", f"mailto:{support_email}", "fa-regular fa-envelope")
+
+        app_platforms = [
+            {
+                "name": "iPhone & iPad",
+                "icon": "fa-brands fa-apple",
+                "primary": primary_download,
+                "secondary": secondary_download,
+                "note": "Requires iOS 16 or later.",
+            },
+            {
+                "name": "Android",
+                "icon": "fa-brands fa-google-play",
+                "primary": android_primary,
+                "secondary": android_secondary,
+                "note": "Requires Android 8.0 or later.",
+            },
+        ]
+
         context.update(
             {
                 "app_name": app_name,
                 "support_email": support_email,
                 "primary_download": primary_download,
                 "secondary_download": secondary_download,
+                "android_primary": android_primary,
+                "android_secondary": android_secondary,
+                "app_platforms": app_platforms,
                 "app_hero_points": [
                     "Review tech packs and approve updates on the go.",
                     "Message designers with secure threads and shared files.",
@@ -4151,8 +4191,21 @@ def designer_design_detail_api(request, design_id):
 
     return JsonResponse({"success": True, "design": data})
 
+@login_required
 def subscription_dashboard(request):
-    return render(request, "designer_portfolio/subscription_dashboard.html", {})
+    subscription = (
+        UserSubscription.objects.select_related("plan").filter(user=request.user).first()
+    )
+    plans = SubscriptionPlan.objects.filter(is_active=True).order_by("price")
+    return render(
+        request,
+        "designer_portfolio/subscription_dashboard.html",
+        {
+            "current_section": "subscription",
+            "subscription": subscription,
+            "plans": plans,
+        },
+    )
 
 def change_subscription_plan(request):
     return JsonResponse({"status": "ok"})
@@ -4160,11 +4213,27 @@ def change_subscription_plan(request):
 def cancel_subscription(request):
     return JsonResponse({"status": "ok"})
 
+@login_required
 def payment_methods(request):
-    return render(request, "designer_portfolio/payment_methods.html", {})
+    subscription = (
+        UserSubscription.objects.select_related("plan").filter(user=request.user).first()
+    )
+    return render(
+        request,
+        "designer_portfolio/payment_methods.html",
+        {"current_section": "subscription", "subscription": subscription},
+    )
 
+@login_required
 def billing_history(request):
-    return render(request, "designer_portfolio/billing_history.html", {})
+    subscription = (
+        UserSubscription.objects.select_related("plan").filter(user=request.user).first()
+    )
+    return render(
+        request,
+        "designer_portfolio/billing_history.html",
+        {"current_section": "subscription", "subscription": subscription},
+    )
 
 def create_stripe_setup_intent(request):
     return JsonResponse({"status": "ok"})
@@ -5446,6 +5515,319 @@ Which tools are you interested in learning more about?"""
 • Includes premium templates and collaboration tools
 
 Need help pricing a specific project type?"""
+        },
+        "collections": {
+            "keywords": ["collection", "collections", "organize work", "group projects", "categorize", "categories"],
+            "response": """**Organizing Work with Collections** 🗂️
+
+Collections let you group related projects so visitors can browse your work by theme.
+
+**How to use Collections:**
+1. Go to Dashboard → Designs
+2. Create a Collection (e.g., "Bridal 2025", "Streetwear", "Branding")
+3. Add designs to the collection
+4. Add a cover image and description
+
+**Best practices:**
+✅ Keep each collection focused on one theme or client
+✅ Use clear, searchable titles
+✅ Tag designs by category for easy discovery
+✅ Order your strongest work first
+
+Learn more: (/docs/designers/portfolio-layouts)
+
+Want tips on which collections to feature first?"""
+        },
+        "branding": {
+            "keywords": ["brand", "branding", "logo", "identity", "brand identity"],
+            "response": """**Building a Strong Brand Identity** 🏷️
+
+A cohesive brand makes you memorable and trustworthy.
+
+**Core elements:**
+• **Logo** - Simple, scalable, and recognizable
+• **Color palette** - 2-3 primary colors + neutrals
+• **Typography** - 1-2 typefaces used consistently
+• **Voice & tone** - How you communicate with clients
+• **Visual style** - Consistent imagery and layouts
+
+**Tips:**
+✅ Design your logo in vector format (SVG)
+✅ Test the logo at small and large sizes
+✅ Document your brand in a simple style guide
+✅ Apply your brand consistently across your portfolio and proposals
+
+Want help defining your color palette or typography?"""
+        },
+        "color": {
+            "keywords": ["color", "colour", "palette", "color theory", "color scheme"],
+            "response": """**Working with Color** 🎨
+
+**Color theory basics:**
+• **Complementary** - Opposite on the wheel (high contrast)
+• **Analogous** - Neighbors on the wheel (harmonious)
+• **Monochromatic** - One hue, varied shades (clean, elegant)
+• **Triadic** - Three evenly spaced hues (balanced, vibrant)
+
+**Building a palette:**
+1. Pick one primary brand color
+2. Add 1-2 accent colors for emphasis
+3. Include neutrals (white, gray, near-black) for text and backgrounds
+4. Check contrast for accessibility (4.5:1 minimum for text)
+
+**Tools:**
+Adobe Color, Coolors, Khroma, Figma color styles
+
+Need help choosing colors for a specific project?"""
+        },
+        "typography": {
+            "keywords": ["typography", "font", "fonts", "typeface", "lettering"],
+            "response": """**Typography Essentials** 🔤
+
+**Choosing fonts:**
+• Limit to 1-2 typefaces per project
+• Pair a display font (headlines) with a readable body font
+• Ensure good legibility at all sizes
+
+**Hierarchy tips:**
+✅ Use size, weight, and spacing to guide the eye
+✅ Keep body text 16px+ for readability
+✅ Use generous line height (1.4-1.6) for body copy
+✅ Limit line length to ~60-75 characters
+
+**Reliable pairings:**
+- Playfair Display + Source Sans
+- Montserrat + Merriweather
+- Inter + Inter (single-family, varied weights)
+
+**Free sources:** Google Fonts, Fontshare
+
+Want font recommendations for your brand style?"""
+        },
+        "proposal": {
+            "keywords": ["proposal", "cover letter", "pitch", "client email", "outreach", "brief"],
+            "response": """**Writing a Winning Proposal** ✉️
+
+**Structure:**
+1. **Greeting** - Personalize with the client's name
+2. **Understanding** - Restate their goal so they feel heard
+3. **Approach** - How you'll solve it (high level)
+4. **Deliverables** - What they'll receive
+5. **Timeline & price** - Clear, no surprises
+6. **Call to action** - Next step to get started
+
+**Tips:**
+✅ Keep it concise — clients skim
+✅ Lead with their outcome, not your process
+✅ Show 1-2 relevant portfolio links
+✅ Set clear revision limits up front
+
+Want me to draft a proposal template you can reuse? Just share the project details!"""
+        },
+        "bio": {
+            "keywords": ["bio", "about me", "introduction", "personal statement", "describe myself"],
+            "response": """**Writing a Great Designer Bio** 🙋
+
+A strong bio builds trust in seconds.
+
+**A simple formula:**
+1. **Who you are** + specialty ("Fashion designer focused on sustainable womenswear")
+2. **What you do** for clients (the value/outcome)
+3. **Proof** - experience, notable clients, or style
+4. **Personality** - one human detail to be memorable
+5. **Call to action** - how to work with you
+
+**Tips:**
+✅ Write in first or third person — stay consistent
+✅ Keep it under 150 words for profiles
+✅ Avoid clichés ("passionate," "detail-oriented")
+✅ Update it as your focus evolves
+
+Share a few details and I'll help you draft one!"""
+        },
+        "referral": {
+            "keywords": ["referral", "invite", "refer", "earn tier", "ambassador", "reward"],
+            "response": """**Referral Program — Invite & Earn** 🎁
+
+Grow the community and earn rewards by inviting fellow designers!
+
+**How it works:**
+1. Find your invite link in this chat widget (Copy button)
+2. Share it with designer friends and on social media
+3. Earn tiers as people join through your link
+
+**Tiers:**
+🌱 **Starter** → 🚀 **Influencer** → ⭐ **Ambassador** → 👑 **Legend**
+
+**Tips to get referrals:**
+✅ Share your link in design communities and forums
+✅ Add it to your email signature
+✅ Mention it when collaborating with peers
+
+Open this chat and use the Copy button to grab your invite link!"""
+        },
+        "subscription": {
+            "keywords": ["subscription", "plan", "upgrade", "trial", "billing", "cancel", "downgrade"],
+            "response": """**Subscriptions & Plans** 💳
+
+**Managing your plan:**
+1. Go to Dashboard → Subscription
+2. View your current plan and billing history
+3. Upgrade, downgrade, or cancel anytime
+4. Manage payment methods securely
+
+**What plans unlock:**
+✅ Premium templates
+✅ Larger media uploads
+✅ Advanced collaboration tools
+✅ Priority support
+
+**Free trial:** Start with a trial to explore Pro features before committing.
+
+**Cancelling:** You keep access until the end of your billing period — no surprise charges.
+
+Need help choosing the right plan for your needs?"""
+        },
+        "seo": {
+            "keywords": ["seo", "search ranking", "discoverable", "get found", "visibility", "rank"],
+            "response": """**Getting Your Portfolio Found** 🔍
+
+**On GlobalDesignerHub:**
+✅ Complete your profile (bio, location, specialties)
+✅ Tag every design with relevant categories/keywords
+✅ Use descriptive titles and captions
+✅ Organize work into well-named Collections
+
+**General SEO tips:**
+• Use clear, keyword-rich project titles
+• Write alt text for images
+• Keep load times fast (compressed images)
+• Link your portfolio from social profiles
+• Stay active — fresh work signals relevance
+
+**Avoid:**
+- Generic titles ("Project 1", "Untitled")
+- Keyword stuffing
+- Missing descriptions
+
+Want help writing searchable titles for your projects?"""
+        },
+        "accessibility": {
+            "keywords": ["accessibility", "accessible", "wcag", "contrast", "screen reader", "a11y"],
+            "response": """**Designing for Accessibility** ♿
+
+Accessible design reaches more people and is often legally required.
+
+**Key checks:**
+• **Contrast** - 4.5:1 for normal text, 3:1 for large text
+• **Alt text** - Describe every meaningful image
+• **Keyboard** - All interactions reachable without a mouse
+• **Focus states** - Visible outlines on interactive elements
+• **Text size** - 16px+ body, resizable without breaking layout
+
+**Don't rely on color alone** to convey meaning (add icons/labels).
+
+**Tools:**
+WAVE, axe DevTools, Lighthouse, Stark (Figma plugin)
+
+GlobalDesignerHub has an accessibility statement: (/policies/accessibility)
+
+Want an accessibility checklist for your portfolio?"""
+        },
+        "techpack": {
+            "keywords": ["techpack", "tech pack", "spec sheet", "manufacturer", "garment spec", "production sheet"],
+            "response": """**Tech Packs for Production** 📐
+
+A tech pack is the blueprint manufacturers use to produce your design accurately.
+
+**A complete tech pack includes:**
+• Technical flat sketches (front/back)
+• Measurements and grading
+• Materials, trims, and fabric details
+• Colorways and Pantone references
+• Construction and stitching notes
+• Labels, tags, and packaging specs
+
+**On GlobalDesignerHub:**
+You can generate a tech pack directly from a design — look for the "Generate Tech Pack" option on your design page.
+
+**Tips:**
+✅ Be precise — ambiguity causes production errors
+✅ Include callouts and annotations
+✅ Keep a version for each sample round
+
+Want help structuring a tech pack for a specific garment?"""
+        },
+        "getting_clients": {
+            "keywords": ["find clients", "get hired", "freelance", "land work", "get work", "new clients"],
+            "response": """**Finding Clients & Getting Hired** 🎯
+
+**Build the foundation:**
+✅ A polished, focused portfolio (quality over quantity)
+✅ A clear niche — clients hire specialists
+✅ Testimonials and case studies for credibility
+
+**Where to find work:**
+• Your network and past clients (referrals convert best)
+• Design communities and forums
+• Social media (share work consistently)
+• Freelance platforms (to start building reviews)
+• Cold outreach with a tailored proposal
+
+**Convert leads:**
+- Respond quickly and professionally
+- Ask about their goals before pitching
+- Send a clear proposal with scope and price
+
+Want help with outreach messages or a proposal template?"""
+        },
+        "feedback": {
+            "keywords": ["feedback", "critique", "review my", "improve my work", "evaluate my"],
+            "response": """**Getting Useful Feedback** 🗣️
+
+Feedback accelerates growth — when you ask the right way.
+
+**How to ask:**
+1. Share context (goal, audience, constraints)
+2. Ask specific questions ("Is the hierarchy clear?")
+3. Request both strengths and improvements
+4. Avoid leading questions
+
+**Where to get it on GDH:**
+• Post in the community forum: /community/forum/
+• Join design challenges
+• Exchange critiques with peers
+
+**Receiving feedback well:**
+✅ Listen without defending
+✅ Look for patterns across multiple opinions
+✅ Decide what serves the project goal — not every note applies
+
+Want me to review the description or structure of a specific project?"""
+        },
+        "social_media": {
+            "keywords": ["instagram", "social media", "promote", "followers", "marketing my", "share my portfolio"],
+            "response": """**Promoting Your Work on Social Media** 📣
+
+**Strategy:**
+✅ Pick 1-2 platforms and post consistently
+✅ Show process, not just final results (reels, time-lapses)
+✅ Use relevant, specific hashtags
+✅ Engage — comment and connect, don't just broadcast
+
+**Content ideas:**
+• Before/after transformations
+• Behind-the-scenes of your process
+• Client results and testimonials
+• Tips and mini-tutorials
+• New portfolio pieces with a link
+
+**Tips:**
+- Add your portfolio link in your bio
+- Cross-post to your GlobalDesignerHub profile
+- Maintain a consistent visual style (your brand!)
+
+Want a simple weekly posting plan?"""
         }
     }
     
@@ -5586,18 +5968,18 @@ def designer_ai_chat(request):
         messages.append({"role": "user", "content": user_message})
         
         # Check if OpenAI is configured
-        openai_api_key = os.getenv("OPENAI_API_KEY")
-        use_openai = openai_api_key and openai_api_key.strip()
-        
+        openai_api_key = (getattr(settings, "OPENAI_API_KEY", "") or "").strip()
+        use_openai = bool(openai_api_key)
+
         ai_response = None
-        
+
         if use_openai:
             try:
-                import openai
+                from ai_chat.services import build_openai_client
 
-                client = openai.OpenAI(api_key=openai_api_key)
+                client = build_openai_client(openai_api_key)
                 response = client.chat.completions.create(
-                    model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+                    model=getattr(settings, "OPENAI_MODEL", "gpt-4o-mini"),
                     messages=messages,
                     temperature=0.7,
                     max_tokens=1000

@@ -1,8 +1,7 @@
-import os
-
 from django.conf import settings
 from django.db.models import Q
 from django.http import HttpRequest
+from django.urls import reverse
 
 from .models import Design, DesignerProfile, DressOrder
 
@@ -24,12 +23,10 @@ def messenger_inbox_count(request: HttpRequest) -> dict:
 
 
 def _google_oauth_ready() -> bool:
-    """Check if Google OAuth is configured (from settings or GOOGLE_* env fallback)."""
-    key = getattr(settings, "SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", "") or ""
-    secret = getattr(settings, "SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET", "") or ""
-    if key and secret:
-        return True
-    return bool((os.getenv("GOOGLE_CLIENT_ID") or "").strip() and (os.getenv("GOOGLE_CLIENT_SECRET") or "").strip())
+    """True when Django has Google OAuth credentials (same values used by social-auth)."""
+    key = (getattr(settings, "SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", "") or "").strip()
+    secret = (getattr(settings, "SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET", "") or "").strip()
+    return bool(key and secret)
 
 
 def social_login_providers(request: HttpRequest) -> dict:
@@ -128,6 +125,54 @@ def google_review_url(request: HttpRequest) -> dict:
 def gdh_instagram_url(request: HttpRequest) -> dict:
     """Official Global Designer Hub Instagram profile URL (override via GDH_INSTAGRAM_URL)."""
     return {"gdh_instagram_url": getattr(settings, "GDH_INSTAGRAM_URL", "") or ""}
+
+
+def designer_ai_chat_context(request: HttpRequest) -> dict:
+    """Whether OpenAI-backed chat is configured; drives optional auto-popup (never expose the API key)."""
+    key = (getattr(settings, "OPENAI_API_KEY", "") or "").strip()
+    openai_ready = bool(key)
+    auto_popup = openai_ready and getattr(settings, "DESIGNER_AI_AUTO_POPUP", True)
+    return {
+        "designer_ai_openai_ready": openai_ready,
+        "designer_ai_auto_popup": auto_popup,
+    }
+
+
+def mobile_app_context(request: HttpRequest) -> dict:
+    """Expose iOS and Android download links for the home page and footer.
+
+    Prefers official store links (App Store / TestFlight, Google Play / APK) when
+    configured, otherwise falls back to the in-app download/details page.
+    """
+    app_name = (getattr(settings, "IOS_APP_NAME", "GlobalDesignerHub") or "GlobalDesignerHub").strip() or "GlobalDesignerHub"
+    details_url = reverse("iphone_app")
+
+    app_store_url = (getattr(settings, "IOS_APP_STORE_URL", "") or "").strip()
+    testflight_url = (getattr(settings, "IOS_TESTFLIGHT_URL", "") or "").strip()
+    play_store_url = (getattr(settings, "ANDROID_PLAY_STORE_URL", "") or "").strip()
+    apk_url = (getattr(settings, "ANDROID_APK_URL", "") or "").strip()
+
+    if app_store_url:
+        ios = {"label": "Download on the App Store", "url": app_store_url, "external": True}
+    elif testflight_url:
+        ios = {"label": "Join the iOS TestFlight beta", "url": testflight_url, "external": True}
+    else:
+        ios = {"label": "iPhone / iPad", "url": details_url, "external": False}
+    ios.update({"platform": "ios", "icon": "fa-brands fa-apple"})
+
+    if play_store_url:
+        android = {"label": "Get it on Google Play", "url": play_store_url, "external": True}
+    elif apk_url:
+        android = {"label": "Download the Android APK", "url": apk_url, "external": True}
+    else:
+        android = {"label": "Android", "url": details_url, "external": False}
+    android.update({"platform": "android", "icon": "fa-brands fa-google-play"})
+
+    return {
+        "mobile_app_name": app_name,
+        "mobile_app_details_url": details_url,
+        "mobile_app_downloads": [ios, android],
+    }
 
 
 def utm_context(request: HttpRequest) -> dict:

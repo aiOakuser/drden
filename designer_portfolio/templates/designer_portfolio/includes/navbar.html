@@ -36,8 +36,9 @@
 
     <!-- Navigation -->
     <nav class="nav">
+      {% with un=request.resolver_match.url_name %}
       <div class="nav-dropdown">
-        <a href="{% url 'designers_list' %}" class="nav-dropdown__trigger" aria-haspopup="true" aria-expanded="false" id="nav-designers-trigger">
+        <a href="{% url 'designers_list' %}" class="nav-dropdown__trigger{% if un == 'designers_list' or un == 'designer_public_detail' or un == 'student_page' %} active{% endif %}" aria-haspopup="true" aria-expanded="false" id="nav-designers-trigger">
           Designers <i class="fas fa-chevron-down" style="font-size: 10px; margin-left: 4px; opacity: 0.9;"></i>
         </a>
         <div class="nav-dropdown__menu" role="menu" aria-labelledby="nav-designers-trigger">
@@ -45,14 +46,13 @@
           <a href="{% url 'student_page' %}" role="menuitem">Student</a>
         </div>
       </div>
-      <a href="{% url 'event_list' %}">Events</a>
-        <a href="{% url 'forum_index' %}">Community Forum</a>
-      <a href="{% url 'about_site' %}">About Site</a>
-      <a href="{% url 'iphone_app' %}">iPhone App</a>
-      <a href="{% url 'neworders_dresses' %}">Orders</a>
+      <a href="{% url 'event_list' %}" class="{% if un == 'event_list' or un == 'event_detail' %}active{% endif %}">Events</a>
+        <a href="{% url 'forum_index' %}" class="{% if un == 'forum_index' or un == 'forum_category' or un == 'forum_topic' or un == 'forum_create_topic' or un == 'forum_create_post' or un == 'forum_search' %}active{% endif %}">Community Forum</a>
+      <a href="{% url 'about_site' %}" class="{% if un == 'about_site' %}active{% endif %}">About Site</a>
+      <a href="{% url 'neworders_dresses' %}" class="{% if un == 'neworders_dresses' %}active{% endif %}">Orders</a>
       {% if user.is_authenticated %}
       <div class="nav-dropdown">
-        <a href="{% url 'messenger_list' %}" class="nav-dropdown__trigger" aria-haspopup="true" aria-expanded="false" id="nav-messages-trigger">
+        <a href="{% url 'messenger_list' %}" class="nav-dropdown__trigger{% if un == 'messenger_list' or un == 'messenger_thread' or un == 'messenger_start' %} active{% endif %}" aria-haspopup="true" aria-expanded="false" id="nav-messages-trigger">
           Messages <i class="fas fa-chevron-down" style="font-size: 10px; margin-left: 4px; opacity: 0.9;"></i>
         </a>
         <div class="nav-dropdown__menu" role="menu" aria-labelledby="nav-messages-trigger">
@@ -64,8 +64,8 @@
           <a href="{% url 'designers_list' %}" role="menuitem"><i class="fas fa-handshake" style="margin-right: 8px;"></i> Collaborate with new designers</a>
         </div>
       </div>
-      <a href="{% url 'builder_sites_list' %}">Site Builder</a>
-      <a href="{% url 'designer_dashboard' %}">Dashboard</a>
+      <a href="{% url 'builder_sites_list' %}" class="{% if un == 'builder_sites_list' %}active{% endif %}">Site Builder</a>
+      <a href="{% url 'designer_dashboard' %}" class="{% if un == 'designer_dashboard' %}active{% endif %}">Dashboard</a>
       <form action="{% url 'logout' %}" method="post" class="nav-logout-form">
         {% csrf_token %}
         <button type="submit" class="nav-logout-btn">Logout</button>
@@ -77,9 +77,10 @@
         <a href="{% url 'about_site' %}#help" class="header__nav-icon header__nav-icon--help" aria-label="Help"><i class="fa-regular fa-circle-question"></i></a>
       </div>
       {% else %}
-      <a href="{% url 'login' %}">Login</a>
+      <a href="{% url 'login' %}" class="{% if un == 'login' %}active{% endif %}">Login</a>
       <a href="{% url 'signup' %}" class="nav-trial-cta" aria-label="Start your free trial until you're satisfied">Start Free Trial</a>
       {% endif %}
+      {% endwith %}
     </nav>
 
     <!-- Designer nav bar icons: Notifications, Messages, Help (authenticated users) -->
@@ -242,8 +243,20 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 16px;
       position: relative;
     }
+
+  /* ===== Brand / Logo lockup (kept inline so it never overlaps nav) ===== */
+  .brand {
+    flex-shrink: 0;
+  }
+  .brand__lockup {
+    min-width: 0;
+  }
+  .brand__name {
+    white-space: nowrap;
+  }
 
   /* ===== Mobile Menu Toggle ===== */
   .mobile-menu-toggle {
@@ -298,6 +311,17 @@
 
   .nav a:hover {
     color: var(--color-accent);
+  }
+
+  /* Active/selected nav item — orange highlight */
+  .nav > a.active,
+  .nav > a.active:hover,
+  .nav .nav-dropdown__trigger.active,
+  .nav .nav-dropdown__trigger.active:hover {
+    background: rgba(249, 115, 22, 0.16);
+    color: #f97316;
+    border-radius: 8px;
+    box-shadow: inset 0 -2px 0 0 #f97316;
   }
 
   /* Messages dropdown */

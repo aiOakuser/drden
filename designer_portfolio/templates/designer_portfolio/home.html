@@ -576,6 +576,35 @@
   </div>
 </section>
 
+<!-- iPhone App Download CTA -->
+<section class="app-download" aria-label="Download the GlobalDesignerHub iPhone app">
+  <div class="container app-download__inner">
+    <div class="app-download__text">
+      <p class="section-eyebrow">On the go</p>
+      <h2 class="app-download__title">Take {{ mobile_app_name }} with you</h2>
+      <p class="app-download__lede">
+        Review tech packs, approve updates, message designers, and track collections and events—on iPhone, iPad, and Android.
+      </p>
+      <div class="app-download__actions">
+        {% for dl in mobile_app_downloads %}
+        <a
+          class="btn btn-accent app-download__cta"
+          href="{{ dl.url }}"
+          {% if dl.external %}target="_blank" rel="noopener"{% endif %}
+        >
+          <i class="{{ dl.icon }}" aria-hidden="true"></i>
+          {{ dl.label }}
+        </a>
+        {% endfor %}
+        <a class="btn app-download__ghost" href="{{ mobile_app_details_url }}">Learn more</a>
+      </div>
+    </div>
+    <div class="app-download__visual" aria-hidden="true">
+      <i class="fa-solid fa-mobile-screen-button"></i>
+    </div>
+  </div>
+</section>
+
   <style>
     /* Hero Section */
   .hero-section {
@@ -1433,6 +1462,83 @@
     object-fit: cover;
     border-radius: 20px;
     box-shadow: 0 20px 40px rgba(var(--color-primary-rgb), 0.15);
+  }
+
+  /* iPhone App Download CTA */
+  .app-download {
+    padding: 80px 0;
+    background: linear-gradient(135deg, var(--color-primary) 0%, rgba(var(--color-primary-rgb), 0.92) 100%);
+    color: var(--color-secondary);
+  }
+  .app-download__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 40px;
+  }
+  .app-download__text {
+    max-width: 620px;
+  }
+  .app-download .section-eyebrow {
+    color: var(--color-accent);
+  }
+  .app-download__title {
+    font-family: var(--font-head);
+    font-size: clamp(1.75rem, 4vw, 2.6rem);
+    font-weight: 700;
+    margin: 0 0 14px;
+  }
+  .app-download__lede {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    opacity: 0.92;
+    margin: 0 0 26px;
+  }
+  .app-download__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .app-download__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .app-download__ghost {
+    background: transparent;
+    color: var(--color-secondary);
+    border: 2px solid rgba(var(--color-secondary-rgb), 0.6);
+  }
+  .app-download__ghost:hover {
+    background: var(--color-secondary);
+    color: var(--color-primary);
+  }
+  .app-download__visual {
+    flex-shrink: 0;
+    width: 140px;
+    height: 140px;
+    border-radius: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(var(--color-secondary-rgb), 0.1);
+    border: 1px solid rgba(var(--color-secondary-rgb), 0.18);
+  }
+  .app-download__visual i {
+    font-size: 4rem;
+    color: var(--color-secondary);
+  }
+  @media (max-width: 768px) {
+    .app-download {
+      padding: 60px 0;
+    }
+    .app-download__inner {
+      flex-direction: column-reverse;
+      text-align: center;
+    }
+    .app-download__actions {
+      justify-content: center;
+    }
   }
 
   /* Empty State */
