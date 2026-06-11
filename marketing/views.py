@@ -8,6 +8,7 @@ from django.views.decorators.http import require_http_methods
 
 from .forms import (
     BrandPartnershipLeadForm,
+    EmergingTalentSubmissionForm,
     EventRegistrationForm,
     FashionConsultLeadForm,
     ForumInterestForm,
@@ -142,6 +143,72 @@ def emerging_talent_detail(request, slug: str):
         request,
         "marketing/emerging_talent_detail.html",
         {"feature": feature},
+    )
+
+
+@require_http_methods(["GET", "POST"])
+def emerging_talent_submit(request):
+    """Designer self-nomination for the Emerging Talent section."""
+    initial = {}
+    if request.user.is_authenticated:
+        initial = {
+            "full_name": (request.user.get_full_name() or "").strip(),
+            "email": (request.user.email or "").strip(),
+        }
+
+    if request.method == "POST":
+        form = EmergingTalentSubmissionForm(request.POST)
+        if form.is_valid():
+            submission = form.save(commit=False)
+            if request.user.is_authenticated:
+                submission.user = request.user
+            submission.save()
+            return redirect("marketing:emerging_talent_submitted")
+    else:
+        form = EmergingTalentSubmissionForm(initial=initial)
+
+    return render(
+        request,
+        "marketing/emerging_talent_submit.html",
+        {"form": form},
+    )
+
+
+def emerging_talent_submitted(request):
+    return render(request, "marketing/emerging_talent_submitted.html")
+
+
+# ---------------------------------------------------------------------------
+# /grads/ — landing page for final-year fashion grad students
+# ---------------------------------------------------------------------------
+
+
+def grads_landing(request):
+    """
+    Marketing landing page targeting final-year fashion grad students.
+
+    Mirrors the email's three-section structure (Showcase / Stay Ahead /
+    Connect) and pulls live content from the rest of the marketing app:
+    upcoming events, recent Emerging Talent features.
+    """
+    now = timezone.now()
+    upcoming_events = (
+        Event.objects.filter(
+            status__in=(Event.Status.SCHEDULED, Event.Status.LIVE),
+            starts_at__gte=now,
+        )
+        .order_by("starts_at")[:3]
+    )
+    featured_designers = (
+        EmergingTalentFeature.objects.filter(is_published=True)[:3]
+    )
+    return render(
+        request,
+        "marketing/grads_landing.html",
+        {
+            "upcoming_events": upcoming_events,
+            "featured_designers": featured_designers,
+        },
     )
 
 

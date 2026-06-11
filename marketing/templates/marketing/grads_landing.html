@@ -1,0 +1,346 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Unleash Your Design Potential — Global Designer Hub</title>
+    <meta name="description" content="Final-year fashion grad? Showcase your work, stay ahead of industry trends, and connect with peers and pros on Global Designer Hub.">
+    <meta property="og:title" content="Unleash Your Design Potential — Global Designer Hub">
+    <meta property="og:description" content="Built for final-year fashion design students: showcase your work, stay ahead of trends, and grow your network.">
+    <meta property="og:type" content="website">
+    {% include "marketing/_growth_styles.html" %}
+    <style>
+        .grads-hero {
+            background:
+                radial-gradient(circle at 0% 0%, rgba(199, 107, 74, 0.18), transparent 55%),
+                radial-gradient(circle at 100% 0%, rgba(60, 20, 88, 0.22), transparent 55%),
+                linear-gradient(135deg, #fff 0%, #f7f4ee 100%);
+            border-radius: 28px;
+            padding: 64px 48px;
+            box-shadow: 0 30px 60px rgba(20, 18, 26, 0.08);
+            margin-bottom: 32px;
+        }
+        .grads-hero h1 {
+            font-size: 56px;
+            line-height: 1.02;
+            margin: 0 0 18px;
+            letter-spacing: -0.025em;
+        }
+        .grads-hero p.gdh-lead {
+            font-size: 19px;
+            margin-bottom: 28px;
+        }
+        .grads-eyebrow-emoji {
+            font-size: 28px;
+            display: inline-block;
+            margin-right: 6px;
+            transform: translateY(2px);
+        }
+        .grads-section {
+            margin-top: 64px;
+        }
+        .grads-section-header {
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+        .grads-section-header h2 {
+            font-size: 30px;
+            margin: 0;
+            color: var(--gdh-deep);
+            letter-spacing: -0.015em;
+        }
+        .grads-section-header .grads-section-tag {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            color: var(--gdh-accent);
+            font-weight: 700;
+        }
+        .grads-pair {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 16px;
+        }
+        .grads-feature-card {
+            background: var(--gdh-card);
+            border-radius: 20px;
+            padding: 28px 26px;
+            box-shadow: 0 18px 36px rgba(20, 18, 26, 0.06);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .grads-feature-card .grads-icon {
+            font-size: 30px;
+        }
+        .grads-feature-card h3 {
+            margin: 0;
+            font-size: 20px;
+            color: var(--gdh-deep);
+        }
+        .grads-feature-card p {
+            margin: 0;
+            color: var(--gdh-text-soft);
+            line-height: 1.55;
+            font-size: 15px;
+        }
+        .grads-feature-card .grads-feature-cta {
+            margin-top: auto;
+        }
+        .grads-cta-card {
+            margin-top: 80px;
+            padding: 56px 48px;
+            background: linear-gradient(135deg, var(--gdh-deep) 0%, #2a0a40 100%);
+            color: #fff;
+            border-radius: 28px;
+            text-align: center;
+            box-shadow: 0 30px 60px rgba(60, 20, 88, 0.35);
+        }
+        .grads-cta-card h2 {
+            color: #fff;
+            font-size: 40px;
+            margin: 0 0 12px;
+            letter-spacing: -0.02em;
+        }
+        .grads-cta-card p {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 18px;
+            margin: 0 auto 24px;
+            max-width: 580px;
+            line-height: 1.55;
+        }
+        .grads-cta-card .gdh-cta {
+            background: var(--gdh-accent);
+            font-size: 16px;
+            padding: 14px 32px;
+        }
+        .grads-cta-card .gdh-cta:hover { opacity: 0.93; }
+        .grads-cta-card .grads-cta-secondary {
+            margin-left: 8px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            color: #fff;
+            box-shadow: none;
+        }
+        .grads-signoff {
+            margin-top: 40px;
+            color: var(--gdh-text-soft);
+            font-size: 14px;
+            text-align: center;
+        }
+        .grads-live-strip {
+            margin-top: 32px;
+            padding: 24px;
+            border-radius: 18px;
+            background: #fff;
+            box-shadow: 0 14px 30px rgba(20, 18, 26, 0.05);
+        }
+        .grads-live-strip h4 {
+            margin: 0 0 12px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: var(--gdh-accent);
+        }
+        .grads-live-strip ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+        }
+        .grads-live-strip li a {
+            color: var(--gdh-deep);
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 15px;
+        }
+        .grads-live-strip li a:hover { text-decoration: underline; }
+        .grads-live-strip li span {
+            display: block;
+            font-size: 12px;
+            color: var(--gdh-text-soft);
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+<div class="gdh-container">
+
+    <header class="grads-hero">
+        <p class="gdh-eyebrow"><span class="grads-eyebrow-emoji">💡</span>For final-year fashion grads</p>
+        <h1>Unleash your design potential.</h1>
+        <p class="gdh-lead">
+            You're on the cusp of launching your career.
+            Global Designer Hub is where the next generation of fashion designers
+            shows their work, sharpens their craft, and gets noticed by the
+            brands they want to work with.
+        </p>
+        <div>
+            <a class="gdh-cta" href="/accounts/signup/">Launch your portfolio now 🚀</a>
+            <a class="gdh-cta gdh-cta-ghost" style="margin-left:8px;" href="{% url 'marketing:emerging_talent_submit' %}">Apply to Emerging Talent</a>
+        </div>
+    </header>
+
+    {% if upcoming_events or featured_designers %}
+    <section class="grads-live-strip">
+        {% if upcoming_events %}
+            <h4>Coming up live</h4>
+            <ul>
+                {% for event in upcoming_events %}
+                    <li>
+                        <a href="{% url 'marketing:event_detail' event.slug %}">{{ event.title }}</a>
+                        <span>{{ event.starts_at|date:"M j · g:i A" }}{% if event.timezone_label %} {{ event.timezone_label }}{% endif %} · {{ event.get_kind_display }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% if featured_designers %}
+            <h4 style="margin-top:18px;">Recently featured</h4>
+            <ul>
+                {% for feature in featured_designers %}
+                    <li>
+                        <a href="{% url 'marketing:emerging_talent_detail' feature.slug %}">{{ feature.display_name }}</a>
+                        <span>{{ feature.title }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </section>
+    {% endif %}
+
+    <!-- Section 1: Showcase Your Work -->
+    <section class="grads-section" id="showcase">
+        <div class="grads-section-header">
+            <span class="grads-section-tag">01 · Showcase your work</span>
+            <h2>Designed to be seen by the right people.</h2>
+        </div>
+        <p class="gdh-lead" style="font-size:16px;">
+            A portfolio buyers actually open. A platform that puts emerging
+            designers in front of brands that hire them.
+        </p>
+        <div class="grads-pair">
+            <article class="grads-feature-card">
+                <span class="grads-icon">🌟</span>
+                <h3>Get featured in 'Emerging Talent'</h3>
+                <p>
+                    Apply to be featured in our editorial showcase and reach
+                    global brands looking for the next generation of designers.
+                </p>
+                <div class="grads-feature-cta">
+                    <a class="gdh-cta" href="{% url 'marketing:emerging_talent_submit' %}">Apply to be featured</a>
+                    <a class="gdh-cta gdh-cta-ghost" style="margin-left:6px;" href="{% url 'marketing:emerging_talent_list' %}">See current cohort</a>
+                </div>
+            </article>
+            <article class="grads-feature-card">
+                <span class="grads-icon">🧵</span>
+                <h3>Build a standout portfolio</h3>
+                <p>
+                    Spin up a polished designer site with our customizable
+                    templates — tech packs, look books, mood boards and BOMs
+                    in one branded space.
+                </p>
+                <div class="grads-feature-cta">
+                    <a class="gdh-cta" href="/accounts/signup/">Create your portfolio</a>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <!-- Section 2: Stay Ahead of the Curve -->
+    <section class="grads-section" id="stay-ahead">
+        <div class="grads-section-header">
+            <span class="grads-section-tag">02 · Stay ahead of the curve</span>
+            <h2>The industry, decoded for you.</h2>
+        </div>
+        <p class="gdh-lead" style="font-size:16px;">
+            Everything you wish you'd learned about the industry — without
+            scrolling seventeen apps to find it.
+        </p>
+        <div class="grads-pair">
+            <article class="grads-feature-card">
+                <span class="grads-icon">📈</span>
+                <h3>Industry insights in your inbox</h3>
+                <p>
+                    Trend forecasting, color directions and expert analysis
+                    delivered straight to your inbox by the GDH editorial team.
+                </p>
+                <div class="grads-feature-cta">
+                    <a class="gdh-cta" href="/newsletter/?source=student_hub">Subscribe to the digest</a>
+                </div>
+            </article>
+            <article class="grads-feature-card">
+                <span class="grads-icon">🎤</span>
+                <h3>Expert-led webinars and workshops</h3>
+                <p>
+                    Live portfolio teardowns, tech-pack workshops and design
+                    jams — hosted by working designers and technical leads.
+                </p>
+                <div class="grads-feature-cta">
+                    <a class="gdh-cta" href="{% url 'marketing:events_list' %}">Browse upcoming events</a>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <!-- Section 3: Connect and Collaborate -->
+    <section class="grads-section" id="connect">
+        <div class="grads-section-header">
+            <span class="grads-section-tag">03 · Connect and collaborate</span>
+            <h2>Your fashion network starts here.</h2>
+        </div>
+        <p class="gdh-lead" style="font-size:16px;">
+            Cohorts, mentors, and a community that ships work together.
+            Your studio, scaled.
+        </p>
+        <div class="grads-pair">
+            <article class="grads-feature-card">
+                <span class="grads-icon">🤝</span>
+                <h3>Community forums</h3>
+                <p>
+                    Connect with peers and pros, share work, get feedback,
+                    and grow your network. Forums are launching soon — get
+                    early access today.
+                </p>
+                <div class="grads-feature-cta">
+                    <a class="gdh-cta" href="{% url 'marketing:community_forum' %}">Get early access</a>
+                </div>
+            </article>
+            <article class="grads-feature-card">
+                <span class="grads-icon">🎓</span>
+                <h3>1:1 mentorship</h3>
+                <p>
+                    Get matched with a working pro — designers, technical
+                    leads, buyers — for short, focused sessions on real
+                    portfolio work.
+                </p>
+                <div class="grads-feature-cta">
+                    <a class="gdh-cta" href="{% url 'marketing:mentorship_apply' 'find-a-mentor' %}">Find a mentor</a>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <!-- Closing CTA -->
+    <section class="grads-cta-card">
+        <h2>Launch your portfolio now 🚀</h2>
+        <p>
+            Create your portfolio and get noticed by top brands.
+            It takes about ten minutes — and it's free.
+        </p>
+        <a class="gdh-cta" href="/accounts/signup/">Start building</a>
+        <a class="gdh-cta grads-cta-secondary" href="{% url 'marketing:emerging_talent_submit' %}">Apply to be featured</a>
+    </section>
+
+    <p class="grads-signoff">
+        — The Global Designer Hub Team
+    </p>
+</div>
+</body>
+</html>

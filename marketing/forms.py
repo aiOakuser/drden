@@ -2,6 +2,7 @@ from django import forms
 
 from .models import (
     BrandPartnershipLead,
+    EmergingTalentSubmission,
     EventRegistration,
     FashionConsultLead,
     ForumInterestSignup,
@@ -231,6 +232,83 @@ class MentorshipApplicationForm(forms.ModelForm):
         if commit:
             application.save()
         return application
+
+
+class EmergingTalentSubmissionForm(forms.ModelForm):
+    """
+    Designer self-nomination for the Emerging Talent section.
+    `consent_share` is required (so the form can't be submitted without
+    explicit publish consent), and the success-story prompt nudges the
+    designer toward the kind of copy our editors actually use.
+    """
+
+    consent_share = forms.BooleanField(
+        required=True,
+        label="I consent to Global Designer Hub publishing my work as part of the Emerging Talent feature.",
+        help_text="We'll review and reach out before publishing anything.",
+    )
+
+    class Meta:
+        model = EmergingTalentSubmission
+        fields = [
+            "full_name",
+            "email",
+            "portfolio_url",
+            "school",
+            "grad_year",
+            "focus_areas",
+            "story",
+            "consent_share",
+        ]
+        widgets = {
+            "full_name": forms.TextInput(
+                attrs={**_GROWTH_INPUT_ATTRS, "placeholder": "Your full name"}
+            ),
+            "email": forms.EmailInput(
+                attrs={
+                    **_GROWTH_INPUT_ATTRS,
+                    "placeholder": "you@example.com",
+                    "autocomplete": "email",
+                }
+            ),
+            "portfolio_url": forms.URLInput(
+                attrs={
+                    **_GROWTH_INPUT_ATTRS,
+                    "placeholder": "https://yourportfolio.com",
+                }
+            ),
+            "school": forms.TextInput(
+                attrs={
+                    **_GROWTH_INPUT_ATTRS,
+                    "placeholder": "School + program (e.g. Parsons · BFA Fashion Design)",
+                }
+            ),
+            "grad_year": forms.TextInput(
+                attrs={
+                    **_GROWTH_INPUT_ATTRS,
+                    "placeholder": "e.g. 2026 final year",
+                }
+            ),
+            "focus_areas": forms.TextInput(
+                attrs={
+                    **_GROWTH_INPUT_ATTRS,
+                    "placeholder": "Comma-separated focus areas (tailoring, denim, womenswear…)",
+                }
+            ),
+            "story": forms.Textarea(
+                attrs={
+                    **_GROWTH_INPUT_ATTRS,
+                    "rows": 5,
+                    "placeholder": (
+                        "Tell us about your work, your aesthetic, and why you'd "
+                        "be a fit for Emerging Talent."
+                    ),
+                }
+            ),
+        }
+
+    def clean_email(self) -> str:
+        return (self.cleaned_data["email"] or "").strip().lower()
 
 
 class ForumInterestForm(forms.Form):
