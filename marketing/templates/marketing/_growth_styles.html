@@ -1,0 +1,223 @@
+{% comment %}
+Self-contained CSS partial for the community feature pack (events,
+emerging talent, mentorship, brand partnerships, forum interest). Kept
+inline so the routes work even when the static pipeline has not been
+collected yet.
+{% endcomment %}
+<style>
+    :root {
+        --gdh-bg: #f7f4ee;
+        --gdh-bg-soft: #ebe4d8;
+        --gdh-accent: #c76b4a;
+        --gdh-deep: #3c1458;
+        --gdh-text: #14121a;
+        --gdh-text-soft: #4f4561;
+        --gdh-card: #ffffff;
+        --gdh-border: #e3e3e3;
+    }
+    * { box-sizing: border-box; }
+    body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Source Sans 3", sans-serif;
+        margin: 0;
+        background: linear-gradient(165deg, var(--gdh-bg) 0%, var(--gdh-bg-soft) 55%, rgba(199, 107, 74, 0.12) 100%);
+        color: var(--gdh-text);
+        min-height: 100vh;
+    }
+    .gdh-container {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 56px 24px 96px;
+    }
+    .gdh-eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        font-size: 12px;
+        color: var(--gdh-accent);
+        font-weight: 700;
+        margin-bottom: 12px;
+    }
+    h1.gdh-h1 {
+        font-size: 42px;
+        line-height: 1.05;
+        letter-spacing: -0.02em;
+        margin: 0 0 16px;
+    }
+    h2.gdh-h2 {
+        font-size: 26px;
+        margin: 0 0 12px;
+        letter-spacing: -0.01em;
+    }
+    p.gdh-lead {
+        max-width: 700px;
+        font-size: 17px;
+        color: var(--gdh-text-soft);
+        line-height: 1.55;
+        margin: 0 0 24px;
+    }
+    .gdh-cta {
+        display: inline-block;
+        background: var(--gdh-deep);
+        color: #fff;
+        border: none;
+        border-radius: 999px;
+        padding: 12px 26px;
+        font-weight: 600;
+        font-size: 15px;
+        text-decoration: none;
+        cursor: pointer;
+        box-shadow: 0 12px 28px rgba(60, 20, 88, 0.18);
+    }
+    .gdh-cta.gdh-cta-ghost {
+        background: transparent;
+        color: var(--gdh-deep);
+        border: 1px solid var(--gdh-deep);
+        box-shadow: none;
+    }
+    .gdh-cta.gdh-cta-accent { background: var(--gdh-accent); }
+    .gdh-cta:hover { opacity: 0.92; }
+    .gdh-card {
+        background: var(--gdh-card);
+        border-radius: 18px;
+        padding: 24px 22px;
+        box-shadow: 0 14px 30px rgba(20, 18, 26, 0.06);
+    }
+    .gdh-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 20px;
+    }
+    .gdh-section { margin-top: 48px; }
+    .gdh-back {
+        display: inline-block;
+        margin-bottom: 24px;
+        color: var(--gdh-deep);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+    }
+    .gdh-form .gdh-field { margin-bottom: 14px; }
+    .gdh-form label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--gdh-deep);
+        margin-bottom: 6px;
+    }
+    .gdh-form .gdh-input,
+    .gdh-form input,
+    .gdh-form select,
+    .gdh-form textarea {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid var(--gdh-border);
+        padding: 11px 14px;
+        font-size: 14px;
+        font-family: inherit;
+        outline: none;
+        background: #fff;
+    }
+    .gdh-form .gdh-input:focus,
+    .gdh-form input:focus,
+    .gdh-form select:focus,
+    .gdh-form textarea:focus {
+        border-color: var(--gdh-deep);
+        box-shadow: 0 0 0 2px rgba(60, 20, 88, 0.15);
+    }
+    .gdh-help {
+        font-size: 12px;
+        color: var(--gdh-text-soft);
+        margin-top: 4px;
+    }
+    .gdh-error {
+        color: #c62828;
+        font-size: 12px;
+        margin-top: 4px;
+    }
+    .gdh-pill {
+        display: inline-block;
+        padding: 3px 12px;
+        border-radius: 999px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: 700;
+        background: #f0ebf6;
+        color: var(--gdh-deep);
+    }
+    .gdh-pill-accent { background: rgba(199, 107, 74, 0.15); color: #8a3914; }
+    .gdh-pill-live { background: #ffe6e6; color: #b53030; }
+    .gdh-pill-ended { background: #ececec; color: #555; }
+    .gdh-pill-scheduled { background: #e8f1ff; color: #1f3d8a; }
+    .gdh-meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        font-size: 13px;
+        color: var(--gdh-text-soft);
+        margin: 8px 0 14px;
+    }
+    .gdh-event-list, .gdh-feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .gdh-event-list li, .gdh-feature-list li {
+        background: var(--gdh-card);
+        border-radius: 16px;
+        padding: 18px 22px;
+        margin-bottom: 14px;
+        box-shadow: 0 8px 18px rgba(20, 18, 26, 0.05);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .gdh-event-list a, .gdh-feature-list a {
+        color: var(--gdh-deep);
+        font-weight: 700;
+        text-decoration: none;
+        font-size: 18px;
+    }
+    .gdh-event-list a:hover, .gdh-feature-list a:hover { text-decoration: underline; }
+    .gdh-event-summary { color: var(--gdh-text-soft); font-size: 14px; line-height: 1.5; }
+    .gdh-stat-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 14px;
+        margin: 18px 0 28px;
+    }
+    .gdh-stat {
+        background: #fff;
+        border-radius: 14px;
+        padding: 14px 18px;
+        box-shadow: 0 8px 18px rgba(20, 18, 26, 0.05);
+    }
+    .gdh-stat .gdh-stat-num {
+        font-size: 26px;
+        font-weight: 700;
+        color: var(--gdh-deep);
+        margin: 0;
+    }
+    .gdh-stat .gdh-stat-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--gdh-text-soft);
+        margin: 4px 0 0;
+    }
+    .gdh-feature-card-img {
+        width: 100%;
+        max-height: 260px;
+        object-fit: cover;
+        border-radius: 14px;
+        margin-bottom: 14px;
+    }
+    .gdh-prose { font-size: 16px; line-height: 1.65; }
+    .gdh-prose h2, .gdh-prose h3 { color: var(--gdh-deep); }
+    .gdh-prose a { color: var(--gdh-accent); }
+    .gdh-toggle-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin: 12px 0 24px;
+    }
+</style>

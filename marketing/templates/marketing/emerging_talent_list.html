@@ -1,0 +1,61 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Emerging Talent — Global Designer Hub</title>
+    <meta name="description" content="A curated showcase of emerging fashion designers ready to be discovered by global brands.">
+    {% include "marketing/_growth_styles.html" %}
+</head>
+<body>
+<div class="gdh-container">
+    <p class="gdh-eyebrow">Emerging Talent</p>
+    <h1 class="gdh-h1">Designers worth watching.</h1>
+    <p class="gdh-lead">
+        A curated selection of emerging GDH designers — their portfolios,
+        their stories, and the brands and projects they're shipping for.
+    </p>
+    <p style="margin-top:-12px;">
+        <a class="gdh-cta" href="{% url 'marketing:emerging_talent_submit' %}">Apply to be featured</a>
+        <a class="gdh-cta gdh-cta-ghost" style="margin-left:6px;" href="{% url 'marketing:grads_landing' %}">For grads: see the full hub</a>
+    </p>
+
+    {% if features %}
+        <div class="gdh-grid" style="margin-top:8px;">
+            {% for feature in features %}
+                <article class="gdh-card">
+                    {% if feature.hero_image_url %}
+                        <img class="gdh-feature-card-img" src="{{ feature.hero_image_url }}" alt="Work by {{ feature.display_name }}">
+                    {% endif %}
+                    <span class="gdh-pill gdh-pill-accent">Featured</span>
+                    <h2 class="gdh-h2" style="font-size:22px; margin-top:10px;">
+                        <a style="color:inherit; text-decoration:none;" href="{% url 'marketing:emerging_talent_detail' feature.slug %}">{{ feature.title }}</a>
+                    </h2>
+                    <p class="gdh-event-summary" style="margin:0 0 6px;">{{ feature.display_name }}</p>
+                    {% if feature.bio_html %}
+                        <div class="gdh-prose" style="font-size:14px; color:var(--gdh-text-soft);">
+                            {{ feature.bio_html|safe|truncatewords_html:25 }}
+                        </div>
+                    {% endif %}
+                    <div style="margin-top:14px;">
+                        <a class="gdh-cta gdh-cta-ghost" href="{% url 'marketing:emerging_talent_detail' feature.slug %}">Read the story</a>
+                        {% if feature.designer_portfolio_url %}
+                            <a class="gdh-cta" style="margin-left:6px;" href="{{ feature.designer_portfolio_url }}" target="_blank" rel="noopener">View portfolio</a>
+                        {% endif %}
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="gdh-card">
+            <p class="gdh-lead" style="margin:0;">
+                Our first cohort of featured designers is being curated now.
+                Subscribe to the <a href="/newsletter/">GDH newsletter</a> to
+                be the first to see them.
+            </p>
+        </div>
+    {% endif %}
+</div>
+</body>
+</html>

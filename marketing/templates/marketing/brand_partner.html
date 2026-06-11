@@ -1,0 +1,34 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Brand partnerships — Global Designer Hub</title>
+    <meta name="description" content="Run a design competition, collaboration, scholarship or mentorship sponsorship with the Global Designer Hub community.">
+    {% include "marketing/_growth_styles.html" %}
+</head>
+<body>
+<div class="gdh-container">
+    <p class="gdh-eyebrow">For brands</p>
+    <h1 class="gdh-h1">Run a competition. Drop a capsule. Sponsor a scholarship.</h1>
+    <p class="gdh-lead">
+        Tap the next generation of fashion designers via Global Designer
+        Hub. We help brands run design competitions, capsule collaborations,
+        scholarship grants, and mentorship sponsorships with our community
+        of emerging designers and fashion-school students.
+    </p>
+
+    <form class="gdh-form gdh-card" method="post" novalidate style="max-width:640px;">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="gdh-error">{{ form.non_field_errors|join:" " }}</div>
+        {% endif %}
+        {% for field in form %}
+            {% include "marketing/_growth_form_field.html" with field=field %}
+        {% endfor %}
+        <button type="submit" class="gdh-cta">Pitch a partnership</button>
+    </form>
+</div>
+</body>
+</html>

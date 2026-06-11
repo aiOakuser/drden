@@ -1,0 +1,21 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Thanks — Brand partnership pitch</title>
+    {% include "marketing/_growth_styles.html" %}
+</head>
+<body>
+<div class="gdh-container">
+    <p class="gdh-eyebrow">Pitch received</p>
+    <h1 class="gdh-h1">We'll be in touch.</h1>
+    <p class="gdh-lead">
+        Our partnerships team reads every brief. If your campaign is a
+        fit for an upcoming GDH program, expect to hear from us by email.
+    </p>
+    <a class="gdh-cta" href="{% url 'marketing:emerging_talent_list' %}">See who you'd be working with</a>
+</div>
+</body>
+</html>

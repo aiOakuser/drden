@@ -1,0 +1,52 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Community forums — Global Designer Hub</title>
+    <meta name="description" content="Community forums for fashion students and emerging designers — coming soon. Get on the early-access list.">
+    {% include "marketing/_growth_styles.html" %}
+</head>
+<body>
+<div class="gdh-container">
+    <p class="gdh-eyebrow">Community · Coming soon</p>
+    <h1 class="gdh-h1">Forums for fashion designers, by fashion designers.</h1>
+    <p class="gdh-lead">
+        We're building community forums where students and emerging
+        designers can connect, share work, swap feedback, and grow their
+        network. Drop your email and we'll let you in early — and tell us
+        what you'd want forums to be.
+    </p>
+
+    {% if submitted %}
+        <div class="gdh-card" style="margin-bottom:24px; border-left:4px solid var(--gdh-accent);">
+            <p style="margin:0; color:var(--gdh-deep); font-weight:600;">
+                You're on the early-access list — thanks!
+            </p>
+            <p class="gdh-help" style="margin-top:6px;">We'll email you when forums open.</p>
+        </div>
+    {% endif %}
+
+    <form class="gdh-form gdh-card" method="post" novalidate style="max-width:560px;">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="gdh-error">{{ form.non_field_errors|join:" " }}</div>
+        {% endif %}
+        {% for field in form %}
+            {% include "marketing/_growth_form_field.html" with field=field %}
+        {% endfor %}
+        <button type="submit" class="gdh-cta">Get early access</button>
+    </form>
+
+    <section class="gdh-section">
+        <h2 class="gdh-h2">In the meantime</h2>
+        <div class="gdh-toggle-row">
+            <a class="gdh-cta gdh-cta-ghost" href="{% url 'marketing:events_list' %}">Live events</a>
+            <a class="gdh-cta gdh-cta-ghost" href="{% url 'marketing:mentorship_landing' %}">1:1 mentorship</a>
+            <a class="gdh-cta gdh-cta-ghost" href="/newsletter/">Newsletter</a>
+        </div>
+    </section>
+</div>
+</body>
+</html>

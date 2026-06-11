@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Events — Global Designer Hub</title>
+    <meta name="description" content="Webinars, workshops, virtual meetups and design jams hosted by Global Designer Hub.">
+    {% include "marketing/_growth_styles.html" %}
+</head>
+<body>
+<div class="gdh-container">
+    <p class="gdh-eyebrow">Events</p>
+    <h1 class="gdh-h1">Live with the GDH community.</h1>
+    <p class="gdh-lead">
+        Expert-led webinars, hands-on workshops, virtual meetups and
+        design jams — built for fashion students and emerging designers.
+        Browse what's coming up and grab a spot.
+    </p>
+
+    <section class="gdh-section">
+        <h2 class="gdh-h2">Upcoming</h2>
+        {% if upcoming %}
+            <ul class="gdh-event-list">
+                {% for event in upcoming %}
+                    <li>
+                        <div>
+                            <span class="gdh-pill {% if event.status == 'live' %}gdh-pill-live{% else %}gdh-pill-scheduled{% endif %}">
+                                {{ event.get_status_display }}
+                            </span>
+                            <span class="gdh-pill gdh-pill-accent" style="margin-left:6px;">{{ event.get_kind_display }}</span>
+                        </div>
+                        <a href="{% url 'marketing:event_detail' event.slug %}">{{ event.title }}</a>
+                        <div class="gdh-event-summary">{{ event.summary }}</div>
+                        <div class="gdh-meta-row">
+                            <span>📅 {{ event.starts_at|date:"D M j · g:i A" }}{% if event.timezone_label %} · {{ event.timezone_label }}{% endif %}</span>
+                            {% if event.host_name %}<span>🎤 {{ event.host_name }}</span>{% endif %}
+                            {% if event.is_virtual %}<span>💻 Virtual</span>{% else %}<span>📍 {{ event.location }}</span>{% endif %}
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="gdh-card">
+                <p class="gdh-lead" style="margin:0;">
+                    No upcoming events scheduled yet. Subscribe to the
+                    <a href="/newsletter/">GDH newsletter</a> to hear about
+                    the next webinar / workshop / design jam.
+                </p>
+            </div>
+        {% endif %}
+    </section>
+
+    {% if past %}
+    <section class="gdh-section">
+        <h2 class="gdh-h2">Recent past events</h2>
+        <ul class="gdh-event-list">
+            {% for event in past %}
+                <li>
+                    <div>
+                        <span class="gdh-pill gdh-pill-ended">Ended</span>
+                        <span class="gdh-pill gdh-pill-accent" style="margin-left:6px;">{{ event.get_kind_display }}</span>
+                    </div>
+                    <a href="{% url 'marketing:event_detail' event.slug %}">{{ event.title }}</a>
+                    <div class="gdh-event-summary">{{ event.summary }}</div>
+                    <div class="gdh-meta-row">
+                        <span>📅 {{ event.starts_at|date:"M j, Y" }}</span>
+                        {% if event.host_name %}<span>🎤 {{ event.host_name }}</span>{% endif %}
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    </section>
+    {% endif %}
+</div>
+</body>
+</html>

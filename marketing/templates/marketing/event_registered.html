@@ -1,0 +1,22 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Registered — {{ event.title }}</title>
+    {% include "marketing/_growth_styles.html" %}
+</head>
+<body>
+<div class="gdh-container">
+    <p class="gdh-eyebrow">You're in</p>
+    <h1 class="gdh-h1">See you at "{{ event.title }}".</h1>
+    <p class="gdh-lead">
+        We've saved you a spot for {{ event.starts_at|date:"l M j, Y · g:i A" }}{% if event.timezone_label %} ({{ event.timezone_label }}){% endif %}.
+        We'll send a reminder closer to the date with the join link.
+    </p>
+    <a class="gdh-cta" href="{% url 'marketing:events_list' %}">Browse more events</a>
+    <a class="gdh-cta gdh-cta-ghost" style="margin-left:6px;" href="{% url 'marketing:event_detail' event.slug %}">Back to event details</a>
+</div>
+</body>
+</html>
