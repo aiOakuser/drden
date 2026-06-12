@@ -37,34 +37,34 @@
     <!-- Navigation -->
     <nav class="nav">
       {% with un=request.resolver_match.url_name %}
+      <a href="{% url 'builder_sites_list' %}" class="{% if un == 'builder_sites_list' or un == 'builder_site_create' or un == 'builder_editor' or un == 'builder_editor_page' %}active{% endif %}">Product</a>
       <div class="nav-dropdown">
-        <a href="{% url 'designers_list' %}" class="nav-dropdown__trigger{% if un == 'designers_list' or un == 'designer_public_detail' or un == 'student_page' %} active{% endif %}" aria-haspopup="true" aria-expanded="false" id="nav-designers-trigger">
-          Designers <i class="fas fa-chevron-down" style="font-size: 10px; margin-left: 4px; opacity: 0.9;"></i>
+        <a href="{% url 'designers_list' %}" class="nav-dropdown__trigger{% if un == 'designers_list' or un == 'designer_public_detail' or un == 'emerging_talent_list' or un == 'emerging_talent_detail' %} active{% endif %}" aria-haspopup="true" aria-expanded="false" id="nav-teams-trigger">
+          Teams <i class="fas fa-chevron-down" aria-hidden="true"></i>
         </a>
-        <div class="nav-dropdown__menu" role="menu" aria-labelledby="nav-designers-trigger">
-          <a href="{% url 'designers_list' %}" role="menuitem">Browse Designers</a>
-          <a href="{% url 'student_page' %}" role="menuitem">Student</a>
+        <div class="nav-dropdown__menu" role="menu" aria-labelledby="nav-teams-trigger">
+          <a href="{% url 'designers_list' %}" role="menuitem"><i class="fas fa-rocket nav-dropdown__icon" aria-hidden="true"></i> Startups</a>
+          <a href="{% url 'marketing:brand_partner' %}" role="menuitem"><i class="fas fa-briefcase nav-dropdown__icon" aria-hidden="true"></i> Agencies</a>
+          <a href="{% url 'signup' %}" role="menuitem"><i class="fas fa-right-left nav-dropdown__icon" aria-hidden="true"></i> Switch</a>
+          <a href="{% url 'volume_one_public' %}" role="menuitem"><i class="fas fa-heart nav-dropdown__icon" aria-hidden="true"></i> Stories</a>
         </div>
       </div>
-      <a href="{% url 'event_list' %}" class="{% if un == 'event_list' or un == 'event_detail' %}active{% endif %}">Events</a>
-        <a href="{% url 'forum_index' %}" class="{% if un == 'forum_index' or un == 'forum_category' or un == 'forum_topic' or un == 'forum_create_topic' or un == 'forum_create_post' or un == 'forum_search' %}active{% endif %}">Community Forum</a>
-      <a href="{% url 'about_site' %}" class="{% if un == 'about_site' %}active{% endif %}">About Site</a>
-      <a href="{% url 'neworders_dresses' %}" class="{% if un == 'neworders_dresses' %}active{% endif %}">Orders</a>
+      <div class="nav-dropdown">
+        <a href="{% url 'docs_index' %}" class="nav-dropdown__trigger{% if un == 'docs_index' or un == 'docs_category' or un == 'docs_detail' or un == 'collections' or un == 'collection_detail' or un == 'student_page' or un == 'events_list' or un == 'event_list' or un == 'event_detail' or un == 'volume_one_public' %} active{% endif %}" aria-haspopup="true" aria-expanded="false" id="nav-resources-trigger">
+          Resources <i class="fas fa-chevron-down" aria-hidden="true"></i>
+        </a>
+        <div class="nav-dropdown__menu" role="menu" aria-labelledby="nav-resources-trigger">
+          <a href="{% url 'collections' %}" role="menuitem"><i class="fas fa-store nav-dropdown__icon" aria-hidden="true"></i> Marketplace</a>
+          <a href="{% url 'student_page' %}" role="menuitem"><i class="fas fa-circle-play nav-dropdown__icon" aria-hidden="true"></i> Academy</a>
+          <a href="{% url 'marketing:events_list' %}" role="menuitem"><i class="fas fa-square nav-dropdown__icon" aria-hidden="true"></i> Updates</a>
+          <a href="{% url 'volume_one_public' %}" role="menuitem"><i class="fas fa-newspaper nav-dropdown__icon" aria-hidden="true"></i> Blog</a>
+        </div>
+      </div>
+      <a href="{% url 'forum_index' %}" class="{% if un == 'forum_index' or un == 'forum_category' or un == 'forum_topic' or un == 'forum_create_topic' or un == 'forum_create_post' or un == 'forum_search' or un == 'community_forum' %}active{% endif %}">Community</a>
+      <a href="{% url 'contact' %}" class="{% if un == 'contact' or un == 'report_problem' or un == 'report_problem_thanks' %}active{% endif %}">Support</a>
+      <a href="{% url 'marketing:brand_partner' %}" class="{% if un == 'brand_partner' or un == 'brand_partner_thanks' %}active{% endif %}">Enterprise</a>
+      <a href="{% url 'student_portfolio_pricing' %}" class="{% if un == 'student_portfolio_pricing' or un == 'subscription_dashboard' or un == 'change_subscription_plan' %}active{% endif %}">Pricing</a>
       {% if user.is_authenticated %}
-      <div class="nav-dropdown">
-        <a href="{% url 'messenger_list' %}" class="nav-dropdown__trigger{% if un == 'messenger_list' or un == 'messenger_thread' or un == 'messenger_start' %} active{% endif %}" aria-haspopup="true" aria-expanded="false" id="nav-messages-trigger">
-          Messages <i class="fas fa-chevron-down" style="font-size: 10px; margin-left: 4px; opacity: 0.9;"></i>
-        </a>
-        <div class="nav-dropdown__menu" role="menu" aria-labelledby="nav-messages-trigger">
-          <a href="{% url 'messenger_list' %}" role="menuitem"><i class="fa-regular fa-envelope" style="margin-right: 8px;"></i> Inbox{% if messenger_inbox_count is not None %} ({{ messenger_inbox_count }}){% endif %}</a>
-          <div class="nav-dropdown__divider" role="presentation"></div>
-          <span class="nav-dropdown__label" style="display: block; padding: 6px 12px 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-muted);">Quick actions</span>
-          <a href="{% url 'unified_search' %}?type=designers" role="menuitem"><i class="fas fa-search" style="margin-right: 8px;"></i> Find a designer</a>
-          <a href="{% url 'designers_list' %}" role="menuitem"><i class="fas fa-comments" style="margin-right: 8px;"></i> Chat with a designer</a>
-          <a href="{% url 'designers_list' %}" role="menuitem"><i class="fas fa-handshake" style="margin-right: 8px;"></i> Collaborate with new designers</a>
-        </div>
-      </div>
-      <a href="{% url 'builder_sites_list' %}" class="{% if un == 'builder_sites_list' %}active{% endif %}">Site Builder</a>
       <a href="{% url 'designer_dashboard' %}" class="{% if un == 'designer_dashboard' %}active{% endif %}">Dashboard</a>
       <form action="{% url 'logout' %}" method="post" class="nav-logout-form">
         {% csrf_token %}
@@ -74,11 +74,11 @@
       <div class="header__nav-icons header__nav-icons--mobile">
         <a href="{% url 'designer_dashboard' %}#notifications" class="header__nav-icon header__nav-icon--bell" aria-label="Notifications"><i class="fa-regular fa-bell"></i><span class="header__nav-icon-dot" aria-hidden="true"></span></a>
         <a href="{% url 'messenger_list' %}" class="header__nav-icon header__nav-icon--envelope" aria-label="Messages"><i class="fa-regular fa-envelope"></i><span class="header__nav-icon-dot" aria-hidden="true"></span></a>
-        <a href="{% url 'about_site' %}#help" class="header__nav-icon header__nav-icon--help" aria-label="Help"><i class="fa-regular fa-circle-question"></i></a>
+        <a href="{% url 'contact' %}" class="header__nav-icon header__nav-icon--help" aria-label="Help"><i class="fa-regular fa-circle-question"></i></a>
       </div>
       {% else %}
-      <a href="{% url 'login' %}" class="{% if un == 'login' %}active{% endif %}">Login</a>
-      <a href="{% url 'signup' %}" class="nav-trial-cta" aria-label="Start your free trial until you're satisfied">Start Free Trial</a>
+      <a href="{% url 'login' %}" class="{% if un == 'login' %}active{% endif %}">Log in</a>
+      <a href="{% url 'signup' %}" class="nav-trial-cta{% if un == 'signup' %} active{% endif %}" aria-label="Sign up for Global Designer Hub">Sign up</a>
       {% endif %}
       {% endwith %}
     </nav>
@@ -138,12 +138,41 @@
         nav.classList.toggle("active");
       });
 
-      // Close mobile menu when clicking nav links
-      const navLinks = nav.querySelectorAll("a");
+      const dropdownTriggers = nav.querySelectorAll(".nav-dropdown__trigger");
+      dropdownTriggers.forEach((trigger) => {
+        trigger.addEventListener("click", function (event) {
+          if (!window.matchMedia("(max-width: 768px)").matches) {
+            return;
+          }
+
+          event.preventDefault();
+          const dropdown = trigger.closest(".nav-dropdown");
+          const shouldOpen = !dropdown.classList.contains("is-open");
+          nav.querySelectorAll(".nav-dropdown.is-open").forEach((openDropdown) => {
+            openDropdown.classList.remove("is-open");
+            const openTrigger = openDropdown.querySelector(".nav-dropdown__trigger");
+            if (openTrigger) {
+              openTrigger.setAttribute("aria-expanded", "false");
+            }
+          });
+          dropdown.classList.toggle("is-open", shouldOpen);
+          trigger.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
+        });
+      });
+
+      // Close mobile menu when clicking regular nav links
+      const navLinks = nav.querySelectorAll("a:not(.nav-dropdown__trigger), .nav-dropdown__menu a");
       navLinks.forEach((link) => {
         link.addEventListener("click", () => {
           mobileToggle.classList.remove("active");
           nav.classList.remove("active");
+          nav.querySelectorAll(".nav-dropdown.is-open").forEach((dropdown) => {
+            dropdown.classList.remove("is-open");
+            const trigger = dropdown.querySelector(".nav-dropdown__trigger");
+            if (trigger) {
+              trigger.setAttribute("aria-expanded", "false");
+            }
+          });
         });
       });
 
@@ -155,6 +184,13 @@
         ) {
           mobileToggle.classList.remove("active");
           nav.classList.remove("active");
+          nav.querySelectorAll(".nav-dropdown.is-open").forEach((dropdown) => {
+            dropdown.classList.remove("is-open");
+            const trigger = dropdown.querySelector(".nav-dropdown__trigger");
+            if (trigger) {
+              trigger.setAttribute("aria-expanded", "false");
+            }
+          });
         }
       });
     }
@@ -324,7 +360,7 @@
     box-shadow: inset 0 -2px 0 0 #f97316;
   }
 
-  /* Messages dropdown */
+  /* Nav dropdowns */
   .nav-dropdown {
     position: relative;
     display: inline-block;
@@ -332,6 +368,11 @@
   .nav-dropdown__trigger {
     display: inline-flex;
     align-items: center;
+    gap: 4px;
+  }
+  .nav-dropdown__trigger .fa-chevron-down {
+    font-size: 10px;
+    opacity: 0.9;
   }
   .nav-dropdown__menu {
     position: absolute;
@@ -352,6 +393,7 @@
     list-style: none;
   }
   .nav-dropdown:hover .nav-dropdown__menu,
+  .nav-dropdown.is-open .nav-dropdown__menu,
   .nav-dropdown__menu:focus-within {
     opacity: 1;
     visibility: visible;
@@ -373,6 +415,11 @@
   .nav-dropdown__menu a:hover {
     background: rgba(var(--color-primary-rgb, 30, 30, 30), 0.06);
     color: var(--color-accent) !important;
+  }
+  .nav-dropdown__icon {
+    width: 18px;
+    margin-right: 10px;
+    text-align: center;
   }
   .nav-dropdown__divider {
     height: 1px;
@@ -630,6 +677,10 @@
       visibility: visible;
       transform: none;
       background: rgba(var(--color-primary-rgb), 0.96);
+      display: none;
+    }
+    .nav.active .nav-dropdown.is-open .nav-dropdown__menu {
+      display: block;
     }
     .nav.active .nav-dropdown__menu a {
       color: rgba(var(--color-secondary-rgb), 0.9) !important;
