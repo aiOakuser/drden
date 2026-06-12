@@ -387,6 +387,39 @@ class CanonicalDomainRedirectTests(TestCase):
     CSRF_COOKIE_SECURE=False,
     STORAGES=TEST_STORAGE_BACKENDS,
 )
+class NavbarTests(TestCase):
+    def test_public_nav_renders_requested_item_list(self):
+        response = self.client.get(reverse("home"))
+        self.assertEqual(response.status_code, 200)
+
+        for label in (
+            "Product",
+            "Teams",
+            "Startups",
+            "Agencies",
+            "Switch",
+            "Stories",
+            "Resources",
+            "Marketplace",
+            "Academy",
+            "Updates",
+            "Blog",
+            "Community",
+            "Support",
+            "Enterprise",
+            "Pricing",
+            "Log in",
+            "Sign up",
+        ):
+            self.assertContains(response, label)
+
+
+@override_settings(
+    SECURE_SSL_REDIRECT=False,
+    SESSION_COOKIE_SECURE=False,
+    CSRF_COOKIE_SECURE=False,
+    STORAGES=TEST_STORAGE_BACKENDS,
+)
 class ReportProblemViewTests(TransactionTestCase):
     def test_get_report_page_renders(self):
         response = self.client.get(reverse("report_problem"))
