@@ -1884,6 +1884,48 @@ class HomePageView(TemplateView):
             "https://community.globaldesignerhub.com",
         )
         context["community_forum_url"] = forum_url
+        context["lead_generation_tools"] = [
+            {
+                "title": "Contact inquiry forms",
+                "icon": "fa-regular fa-paper-plane",
+                "description": "Visitors can send project requests directly from a designer profile.",
+            },
+            {
+                "title": "Request a quote",
+                "icon": "fa-solid fa-file-invoice-dollar",
+                "description": "Brands can ask for pricing, timelines, and project estimates before committing.",
+            },
+            {
+                "title": "Book a consultation",
+                "icon": "fa-regular fa-calendar-check",
+                "description": "Schedule discovery calls for tech packs, CLO3D, pattern making, or full collections.",
+            },
+            {
+                "title": "Direct messaging",
+                "icon": "fa-regular fa-comments",
+                "description": "Clients and designers keep introductions, questions, and next steps inside the platform.",
+            },
+            {
+                "title": "Portfolio inquiries",
+                "icon": "fa-solid fa-shirt",
+                "description": "Visitors can ask about a specific design, collection, or service package.",
+            },
+            {
+                "title": "Project request forms",
+                "icon": "fa-solid fa-list-check",
+                "description": "Brands can submit requirements for tech packs, fashion design, CLO3D, and production prep.",
+            },
+            {
+                "title": "Email notifications",
+                "icon": "fa-regular fa-bell",
+                "description": "Designers receive instant alerts when a new lead arrives.",
+            },
+            {
+                "title": "Analytics dashboard",
+                "icon": "fa-solid fa-chart-line",
+                "description": "Track profile views, inquiries, and conversion signals from visitor to client.",
+            },
+        ]
         context["global_designer_features"] = [
             {
                 "title": "Global designer profiles",

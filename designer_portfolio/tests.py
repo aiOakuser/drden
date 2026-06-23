@@ -387,6 +387,28 @@ class CanonicalDomainRedirectTests(TestCase):
     CSRF_COOKIE_SECURE=False,
     STORAGES=TEST_STORAGE_BACKENDS,
 )
+class HomePageContentTests(TestCase):
+    def test_homepage_renders_lead_generation_tools(self):
+        response = self.client.get(reverse("home"))
+        self.assertEqual(response.status_code, 200)
+
+        tools = response.context["lead_generation_tools"]
+        self.assertEqual(len(tools), 8)
+        self.assertEqual(tools[0]["title"], "Contact inquiry forms")
+
+        self.assertContains(response, "Turn profile visitors into client projects")
+        self.assertContains(response, "Request a quote")
+        self.assertContains(response, "Book a consultation")
+        self.assertContains(response, "Analytics dashboard")
+        self.assertContains(response, "Built to turn profile visitors into real business opportunities.")
+
+
+@override_settings(
+    SECURE_SSL_REDIRECT=False,
+    SESSION_COOKIE_SECURE=False,
+    CSRF_COOKIE_SECURE=False,
+    STORAGES=TEST_STORAGE_BACKENDS,
+)
 class NavbarTests(TestCase):
     def test_public_nav_renders_requested_item_list(self):
         response = self.client.get(reverse("home"))
