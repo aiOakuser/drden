@@ -24,6 +24,8 @@ def gather_site_context_text(
     chunks: list[str] = [
         "Brand: Global Designer Hub — marketplace for fashion/design talent, portfolios, "
         "collections, events, in-platform messaging, DesignerBot, site builder for designers.\n"
+        "Social media scope: platforms like Facebook, Instagram, LinkedIn, X (Twitter), "
+        "and YouTube. Goals: build audience, increase brand awareness, and engage users directly.\n"
     ]
 
     cols = (
@@ -133,8 +135,8 @@ def _parse_json_object(raw: str) -> dict[str, Any]:
 def generate_platforms_json(*, context: str) -> tuple[dict[str, Any], str]:
     """
     Call OpenAI; return (payload dict, model name).
-    payload keys: instagram_caption, instagram_hashtags, linkedin_post, x_post,
-    suggested_cta, notes_for_designer
+    payload keys: facebook_post, instagram_caption, instagram_hashtags,
+    linkedin_post, x_post, youtube_post, suggested_cta, notes_for_designer
     """
     api_key = (getattr(settings, "OPENAI_API_KEY", None) or "").strip()
     if not api_key:
@@ -147,16 +149,19 @@ def generate_platforms_json(*, context: str) -> tuple[dict[str, Any], str]:
 
     system = """You write social posts for Global Designer Hub (fashion/design talent & portfolios).
 Return ONLY a single JSON object (no markdown) with these exact keys:
+- "facebook_post" (string, <= 1200 characters, accessible, community-oriented, invite replies)
 - "instagram_caption" (string, <= 2100 characters, line breaks allowed)
 - "instagram_hashtags" (array of 6-14 strings, each starting with #)
 - "linkedin_post" (string, <= 2800 characters, short paragraphs, professional)
 - "x_post" (string, <= 260 characters for X/Twitter)
+- "youtube_post" (string, <= 1000 characters, suitable for a YouTube Community post or Shorts description)
 - "suggested_cta" (string, one line, e.g. link text + why click)
 - "notes_for_designer" (string, optional internal reminder: tone, timing, asset ideas)
 
 Rules:
 - Warm, confident, inclusive; avoid hype numbers you cannot verify.
 - Use only facts implied by CONTEXT; if context is thin, write strong evergreen copy about the hub's purpose (hire designers, living portfolios, collections, events, safe in-app collaboration).
+- Treat social media as Facebook, Instagram, LinkedIn, X (Twitter), and YouTube; each draft should help build audience, increase brand awareness, or engage users directly.
 - Do not claim discounts or legal promises unless stated in CONTEXT.
 - No hashtags inside instagram_caption body; put all hashtags only in instagram_hashtags."""
 
@@ -175,10 +180,12 @@ Rules:
     raw = (response.choices[0].message.content or "").strip()
     data = _parse_json_object(raw)
     required = (
+        "facebook_post",
         "instagram_caption",
         "instagram_hashtags",
         "linkedin_post",
         "x_post",
+        "youtube_post",
         "suggested_cta",
         "notes_for_designer",
     )

@@ -20,7 +20,7 @@ from marketing.social_regenerator import regenerate_bundle
 
 
 class Command(BaseCommand):
-    help = "Regenerate Instagram / LinkedIn / X copy from site context (OpenAI); saves SocialContentBundle by default."
+    help = "Regenerate Facebook / Instagram / LinkedIn / X / YouTube copy from site context (OpenAI); saves SocialContentBundle by default."
 
     def add_arguments(self, parser):
         parser.add_argument(

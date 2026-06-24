@@ -24,6 +24,7 @@ from .models import (
     FashionConsultLead,
     ForumInterestSignup,
     MentorshipApplication,
+    SocialContentBundle,
 )
 from .social_regenerator import (
     gather_ios_app_promo_context_text,
@@ -102,6 +103,8 @@ class SocialContentGatherTests(TestCase):
     def test_gather_site_context_returns_string(self):
         text = gather_site_context_text()
         self.assertIn("Global Designer Hub", text)
+        self.assertIn("Facebook, Instagram, LinkedIn, X (Twitter), and YouTube", text)
+        self.assertIn("build audience", text)
 
     def test_gather_ios_app_context_returns_string(self):
         text = gather_ios_app_promo_context_text()
@@ -122,6 +125,30 @@ class SocialContentDashboardViewTests(TestCase):
         response = self.client.get(reverse("marketing:social_content_dashboard"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Social content regeneration")
+        self.assertContains(response, "Facebook / IG / LinkedIn / X / YouTube")
+
+    def test_staff_dashboard_renders_expanded_hub_platforms(self):
+        User.objects.create_user(username="staffer", password="x", is_staff=True)
+        self.client.login(username="staffer", password="x")
+        SocialContentBundle.objects.create(
+            bundle_kind=SocialContentBundle.Kind.HUB_SOCIAL,
+            platforms={
+                "facebook_post": "Facebook audience prompt",
+                "instagram_caption": "Instagram awareness caption",
+                "instagram_hashtags": ["#GlobalDesignerHub"],
+                "linkedin_post": "LinkedIn brand story",
+                "x_post": "X direct engagement post",
+                "youtube_post": "YouTube community post",
+                "suggested_cta": "Explore the hub",
+                "notes_for_designer": "Invite replies and questions.",
+            },
+        )
+
+        response = self.client.get(reverse("marketing:social_content_dashboard"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Facebook audience prompt")
+        self.assertContains(response, "YouTube community post")
 
     def test_non_staff_forbidden(self):
         User.objects.create_user(username="regular", password="x", is_staff=False)

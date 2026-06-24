@@ -17,7 +17,7 @@ class SocialContentBundle(models.Model):
     """
 
     class Kind(models.TextChoices):
-        HUB_SOCIAL = "hub_social", "Hub (IG / LinkedIn / X)"
+        HUB_SOCIAL = "hub_social", "Hub (Facebook / IG / LinkedIn / X / YouTube)"
         INSTAGRAM_APP = "instagram_app", "Instagram — designer iPhone app"
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -34,7 +34,7 @@ class SocialContentBundle(models.Model):
     )
     platforms = models.JSONField(
         default=dict,
-        help_text="hub_social: instagram_caption, instagram_hashtags, linkedin_post, x_post, … "
+        help_text="hub_social: facebook_post, instagram_caption, instagram_hashtags, linkedin_post, x_post, youtube_post, … "
         "instagram_app: caption, hashtags, carousel_slides, stories_bullets, ai_designer_image_prompt, …",
     )
     model_used = models.CharField(max_length=80, blank=True)

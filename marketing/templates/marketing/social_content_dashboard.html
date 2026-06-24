@@ -91,7 +91,7 @@
   <div class="wrap">
     <h1>Social content regeneration</h1>
     <p class="sub">
-      AI drafts for review only—nothing posts to Instagram automatically. Use the <strong>iPhone app pack</strong> for
+      AI drafts for review only—nothing posts automatically to any social platform. Use the <strong>iPhone app pack</strong> for
       captions, carousel lines, story beats, and a prompt to generate an original “AI designer” visual in your image tool.
     </p>
     {% if message %}<p class="msg">{{ message }}</p>{% endif %}
@@ -100,7 +100,7 @@
       <form class="inline" method="post" action="">
         {% csrf_token %}
         <input type="hidden" name="action" value="regenerate_hub" />
-        <button type="submit" class="regen regen--secondary">Regenerate hub (IG / LinkedIn / X)</button>
+        <button type="submit" class="regen regen--secondary">Regenerate hub (Facebook / IG / LinkedIn / X / YouTube)</button>
       </form>
       <form class="inline" method="post" action="">
         {% csrf_token %}
@@ -169,6 +169,10 @@
       {% endif %}
       {% with p=current_hub.platforms %}
         <section>
+          <h2>Facebook</h2>
+          <p class="mono">{{ p.facebook_post|default:"—" }}</p>
+        </section>
+        <section>
           <h2>Instagram caption</h2>
           <p class="mono">{{ p.instagram_caption|default:"—" }}</p>
           <p class="tags">{% if p.instagram_hashtags %}{{ p.instagram_hashtags|join:" " }}{% endif %}</p>
@@ -180,6 +184,10 @@
         <section>
           <h2>X (Twitter)</h2>
           <p class="mono">{{ p.x_post|default:"—" }}</p>
+        </section>
+        <section>
+          <h2>YouTube</h2>
+          <p class="mono">{{ p.youtube_post|default:"—" }}</p>
         </section>
         <section>
           <h2>CTA & notes</h2>

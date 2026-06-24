@@ -387,7 +387,8 @@ def community_dashboard(request):
 @require_http_methods(["GET", "POST"])
 def social_content_dashboard(request):
     """
-    Staff-only: view latest saved bundles and trigger regeneration (copy-paste to Meta / LinkedIn / X).
+    Staff-only: view latest saved bundles and trigger regeneration
+    (copy-paste to Facebook / Instagram / LinkedIn / X / YouTube).
     """
     if not request.user.is_active or not request.user.is_staff:
         raise PermissionDenied()
