@@ -516,6 +516,36 @@ class EmergingTalentSubmission(models.Model):
         return feature
 
 
+class NewsletterSubscription(models.Model):
+    """
+    Email capture for the Global Designer Hub digest — emerging talent,
+    events, VolumeOne stories, student hub updates, and product news.
+    """
+
+    email = models.EmailField(unique=True)
+    full_name = models.CharField(max_length=150, blank=True)
+    source = models.CharField(
+        max_length=64,
+        blank=True,
+        help_text="Inbound funnel label (e.g. student_hub, events, footer).",
+    )
+    interests = models.CharField(
+        max_length=240,
+        blank=True,
+        help_text="Optional topics the subscriber asked to hear about.",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Newsletter subscription"
+        verbose_name_plural = "Newsletter subscriptions"
+
+    def __str__(self) -> str:
+        return self.email
+
+
 class ForumInterestSignup(models.Model):
     """
     Email capture for the (not-yet-built) community forums. Lets us gauge

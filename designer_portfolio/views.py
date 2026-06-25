@@ -53,7 +53,7 @@ from .forms import (
 )
 from .auth_utils import ensure_designer_access
 from .recaptcha_utils import recaptcha_template_context, verify_recaptcha_token
-from .context_processors import _google_oauth_ready
+from .social_providers import _google_oauth_ready, get_social_login_providers
 from .messenger_utils import user_can_use_messenger, message_contains_prohibited_content
 from .emails import (
     send_registration_notifications,
@@ -164,6 +164,7 @@ def _gdh_instagram_profile_url() -> str:
     return (getattr(settings, "GDH_INSTAGRAM_URL", None) or "").strip()
 VOLUMEONE_FEED_CACHE_KEY = "designer_portfolio:volumeone-feed"
 VOLUMEONE_FEED_CACHE_TTL = 60 * 30  # 30 minutes
+VOLUMEONE_FEED_STALE_CACHE_TTL = 60 * 60 * 24  # 24 hours — reuse on 429/errors
 VOLUMEONE_MAX_SLIDES = 20
 VOLUMEONE_DEFAULT_SLIDES = 8
 VOLUMEONE_USER_AGENT = (
@@ -967,6 +968,7 @@ def _volumeone_fallback_feed(limit: int) -> dict:
 def get_volumeone_feed(limit: int = VOLUMEONE_DEFAULT_SLIDES) -> dict:
     limit = max(1, min(int(limit or VOLUMEONE_DEFAULT_SLIDES), VOLUMEONE_MAX_SLIDES))
     cache_key = f"{VOLUMEONE_FEED_CACHE_KEY}:{limit}"
+    stale_key = f"{VOLUMEONE_FEED_CACHE_KEY}:stale:{limit}"
     cached = cache.get(cache_key)
     if cached:
         return cached
@@ -975,9 +977,20 @@ def get_volumeone_feed(limit: int = VOLUMEONE_DEFAULT_SLIDES) -> dict:
         payload = _request_instagram_profile(VOLUMEONE_INSTAGRAM_USERNAME)
         feed = _transform_instagram_payload(payload, limit)
         cache.set(cache_key, feed, VOLUMEONE_FEED_CACHE_TTL)
+        cache.set(stale_key, feed, VOLUMEONE_FEED_STALE_CACHE_TTL)
         return feed
     except Exception as exc:
-        logger.warning("Falling back to cached VolumeOne feed: %s", exc, exc_info=isinstance(exc, (HTTPError, URLError)))
+        rate_limited = isinstance(exc, HTTPError) and getattr(exc, "code", None) == 429
+        if rate_limited:
+            logger.info("VolumeOne Instagram rate-limited (429); serving stale or fallback feed.")
+        else:
+            logger.warning("VolumeOne live feed unavailable: %s", exc)
+
+        stale = cache.get(stale_key)
+        if stale:
+            cache.set(cache_key, stale, 300)
+            return stale
+
         fallback = _volumeone_fallback_feed(limit)
         cache.set(cache_key, fallback, 300)
         return fallback
@@ -5134,11 +5147,6 @@ class DesignerLoginView(LoginView):
     template_name = "registration/login.html"
     authentication_form = DesignerLoginForm
 
-    def _provider_enabled(self, key_attr: str, secret_attr: str) -> bool:
-        key = getattr(settings, key_attr, "") or ""
-        secret = getattr(settings, secret_attr, "") or ""
-        return bool(key and secret)
-
     def _google_enabled(self) -> bool:
         return _google_oauth_ready()
 
@@ -5158,45 +5166,9 @@ class DesignerLoginView(LoginView):
             settings, "GOOGLE_LOGIN_MANDATORY", False
         )
         context["google_login_available"] = self._google_enabled()
-        provider_catalog = [
-            (
-                "SOCIAL_AUTH_GOOGLE_OAUTH2_KEY",
-                "SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET",
-                "google-oauth2",
-                "Google",
-                "google",
-                "G",
-            ),
-            (
-                "SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY",
-                "SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET",
-                "linkedin-oauth2",
-                "LinkedIn",
-                "linkedin",
-                "in",
-            ),
-            (
-                "SOCIAL_AUTH_INSTAGRAM_KEY",
-                "SOCIAL_AUTH_INSTAGRAM_SECRET",
-                "instagram",
-                "Instagram",
-                "instagram",
-                "IG",
-            ),
-        ]
-
-        providers = []
-        for key_attr, secret_attr, backend_name, label, css_class, icon in provider_catalog:
-            if (backend_name == "google-oauth2" and _google_oauth_ready()) or self._provider_enabled(key_attr, secret_attr):
-                providers.append(
-                    {
-                        "backend": backend_name,
-                        "label": label,
-                        "css_class": css_class,
-                        "icon": icon,
-                    }
-                )
-
+        providers = get_social_login_providers()
+        if context.get("google_login_mandatory"):
+            providers = [p for p in providers if p["backend"] == "google-oauth2"]
         context["social_login_providers"] = providers
         return context
 

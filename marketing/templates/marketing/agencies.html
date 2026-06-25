@@ -1,0 +1,350 @@
+{% extends "designer_portfolio/base.html" %}
+{% load static %}
+
+{% block title %}Agencies — Global Designer Hub{% endblock %}
+
+{% block content %}
+<section class="agencies-hero">
+  <div class="agencies-hero__inner container">
+    <p class="agencies-eyebrow">{{ hero.eyebrow }}</p>
+    <h1 class="agencies-hero__title">{{ hero.title }}</h1>
+    <p class="agencies-hero__lead">{{ hero.lead }}</p>
+    <div class="agencies-hero__actions">
+      {% for cta in ctas %}
+      <a href="{{ cta.url }}" class="agencies-btn agencies-btn--{{ cta.style }}">{{ cta.label }}</a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="agencies-stats container" aria-label="Platform highlights">
+  <div class="agencies-stats__grid">
+    {% for stat in stats %}
+    <article class="agencies-stat">
+      <p class="agencies-stat__value">{{ stat.value }}</p>
+      <p class="agencies-stat__label">{{ stat.label }}</p>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="agencies-workflow container">
+  <header class="agencies-section-head">
+    <p class="agencies-eyebrow">How agencies work on GDH</p>
+    <h2 class="agencies-section-title">From discovery to delivery in three moves</h2>
+  </header>
+  <div class="agencies-workflow__grid">
+    {% for step in workflow %}
+    <article class="agencies-workflow-card">
+      <span class="agencies-workflow-card__step">{{ step.step }}</span>
+      <h3>{{ step.title }}</h3>
+      <p>{{ step.body }}</p>
+      <a href="{{ step.url }}" class="agencies-link">{{ step.cta }} &rarr;</a>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+{% for group in feature_groups %}
+<section class="agencies-features container" id="{{ group.id }}">
+  <header class="agencies-section-head">
+    <p class="agencies-eyebrow">{{ group.title }}</p>
+    <h2 class="agencies-section-title">{{ group.summary }}</h2>
+  </header>
+  <div class="agencies-features__grid">
+    {% for feature in group.features %}
+    <article class="agencies-feature-card">
+      <div class="agencies-feature-card__icon" aria-hidden="true">
+        <i class="fas {{ feature.icon }}"></i>
+      </div>
+      <h3>{{ feature.title }}</h3>
+      <p>{{ feature.description }}</p>
+      <a href="{{ feature.url }}" class="agencies-link">{{ feature.link_label }} &rarr;</a>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endfor %}
+
+<section class="agencies-plans container">
+  <header class="agencies-section-head agencies-section-head--center">
+    <p class="agencies-eyebrow">Membership for studios</p>
+    <h2 class="agencies-section-title">Scale one seat or an entire roster</h2>
+    <p class="agencies-section-lead">
+      Activate Professional, Personal Website, or Premium Fashion Studio plans per designer —
+      billing, hosting, and upgrades run through secure Stripe checkout.
+    </p>
+  </header>
+  <div class="agencies-plans__grid">
+    {% for plan in plans %}
+    <article class="agencies-plan-card{% if plan.recommended %} agencies-plan-card--recommended{% endif %}">
+      {% if plan.recommended %}<span class="agencies-plan-card__badge">Recommended</span>{% endif %}
+      <h3>{{ plan.name }}</h3>
+      <p class="agencies-plan-card__tagline">{{ plan.tagline }}</p>
+      <ul>
+        {% for item in plan.highlights %}
+        <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+    </article>
+    {% endfor %}
+  </div>
+  <p class="agencies-plans__cta">
+    <a href="{% url 'membership_upgrade' %}" class="agencies-btn agencies-btn--primary">Compare membership plans</a>
+  </p>
+</section>
+
+<section class="agencies-bottom-cta">
+  <div class="container agencies-bottom-cta__inner">
+    <h2>Ready to run your agency on Global Designer Hub?</h2>
+    <p>
+      Partner with our team on competitions and campaigns, or spin up designer accounts today and
+      explore portfolios, tech packs, site builder, and community programs.
+    </p>
+    <div class="agencies-hero__actions">
+      <a href="{% url 'marketing:brand_partner' %}" class="agencies-btn agencies-btn--light">Pitch a partnership</a>
+      <a href="{% url 'signup' %}" class="agencies-btn agencies-btn--ghost-light">Create free account</a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .agencies-hero {
+    background: linear-gradient(
+      135deg,
+      var(--color-primary) 0%,
+      rgba(var(--color-primary-rgb), 0.92) 55%,
+      rgba(var(--color-highlight-rgb), 0.35) 100%
+    );
+    color: var(--color-secondary);
+    padding: 72px 20px 64px;
+  }
+  .agencies-hero__inner { max-width: 920px; }
+  .agencies-eyebrow {
+    margin: 0 0 12px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #f97316;
+  }
+  .agencies-hero__title {
+    margin: 0 0 18px;
+    font-family: var(--font-head);
+    font-size: clamp(2rem, 4.5vw, 3.25rem);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    max-width: 18ch;
+  }
+  .agencies-hero__lead {
+    margin: 0 0 28px;
+    max-width: 52rem;
+    font-size: clamp(1rem, 2.2vw, 1.15rem);
+    line-height: 1.6;
+    opacity: 0.94;
+  }
+  .agencies-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .agencies-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 24px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 15px;
+    text-decoration: none;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+  .agencies-btn:hover { transform: translateY(-1px); opacity: 0.94; }
+  .agencies-btn--primary,
+  .agencies-btn--light {
+    background: #f97316;
+    color: #fff;
+    border: 2px solid #f97316;
+  }
+  .agencies-btn--ghost {
+    background: transparent;
+    color: var(--color-secondary);
+    border: 2px solid rgba(var(--color-secondary-rgb), 0.55);
+  }
+  .agencies-btn--ghost-light {
+    background: transparent;
+    color: #fff;
+    border: 2px solid rgba(255, 255, 255, 0.65);
+  }
+
+  .agencies-stats { padding: 36px 20px 12px; }
+  .agencies-stats__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+  }
+  .agencies-stat {
+    background: var(--color-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    padding: 20px 18px;
+    text-align: center;
+    box-shadow: 0 10px 24px rgba(var(--color-primary-rgb), 0.06);
+  }
+  .agencies-stat__value {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--color-primary);
+  }
+  .agencies-stat__label {
+    margin: 6px 0 0;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    font-weight: 700;
+  }
+
+  .agencies-workflow,
+  .agencies-features,
+  .agencies-plans {
+    padding: 56px 20px;
+  }
+  .agencies-section-head { margin-bottom: 28px; max-width: 720px; }
+  .agencies-section-head--center {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+  }
+  .agencies-section-title {
+    margin: 0;
+    font-family: var(--font-head);
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    color: var(--color-primary);
+    line-height: 1.15;
+  }
+  .agencies-section-lead {
+    margin: 14px 0 0;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+    font-size: 1.05rem;
+  }
+  .agencies-workflow__grid,
+  .agencies-features__grid,
+  .agencies-plans__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+  }
+  .agencies-workflow-card,
+  .agencies-feature-card,
+  .agencies-plan-card {
+    background: var(--color-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 18px;
+    padding: 24px 22px;
+    box-shadow: 0 12px 28px rgba(var(--color-primary-rgb), 0.05);
+  }
+  .agencies-workflow-card__step {
+    display: inline-block;
+    margin-bottom: 12px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    color: #f97316;
+  }
+  .agencies-workflow-card h3,
+  .agencies-feature-card h3,
+  .agencies-plan-card h3 {
+    margin: 0 0 10px;
+    font-size: 1.2rem;
+    color: var(--color-primary);
+  }
+  .agencies-workflow-card p,
+  .agencies-feature-card p,
+  .agencies-plan-card__tagline {
+    margin: 0 0 14px;
+    color: var(--color-text-muted);
+    line-height: 1.55;
+    font-size: 0.98rem;
+  }
+  .agencies-link {
+    color: #f97316;
+    font-weight: 700;
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .agencies-link:hover { text-decoration: underline; }
+  .agencies-feature-card__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+    background: rgba(var(--color-primary-rgb), 0.08);
+    color: var(--color-primary);
+    font-size: 18px;
+  }
+  .agencies-plan-card { position: relative; }
+  .agencies-plan-card--recommended {
+    border-color: #f97316;
+    box-shadow: 0 16px 34px rgba(249, 115, 22, 0.14);
+  }
+  .agencies-plan-card__badge {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(249, 115, 22, 0.14);
+    color: #c2410c;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+  .agencies-plan-card ul {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--color-text);
+    line-height: 1.7;
+    font-size: 0.95rem;
+  }
+  .agencies-plans__cta { text-align: center; margin-top: 28px; }
+
+  .agencies-bottom-cta {
+    background: linear-gradient(120deg, #3c1458 0%, var(--color-primary) 100%);
+    color: #fff;
+    padding: 64px 20px 80px;
+    margin-top: 12px;
+  }
+  .agencies-bottom-cta__inner {
+    max-width: 760px;
+    text-align: center;
+  }
+  .agencies-bottom-cta h2 {
+    margin: 0 0 14px;
+    font-family: var(--font-head);
+    font-size: clamp(1.75rem, 3.5vw, 2.4rem);
+  }
+  .agencies-bottom-cta p {
+    margin: 0 0 24px;
+    line-height: 1.6;
+    opacity: 0.92;
+    font-size: 1.05rem;
+  }
+  .agencies-bottom-cta .agencies-hero__actions {
+    justify-content: center;
+  }
+
+  @media (max-width: 640px) {
+    .agencies-hero { padding-top: 56px; }
+    .agencies-workflow,
+    .agencies-features,
+    .agencies-plans { padding-top: 44px; padding-bottom: 44px; }
+  }
+</style>
+{% endblock %}

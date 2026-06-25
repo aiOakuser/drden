@@ -36,6 +36,7 @@ urlpatterns = [
         name="emerging_talent_detail",
     ),
     path("partners/brands/", views.brand_partner, name="brand_partner"),
+    path("agencies/", views.agencies_landing, name="agencies"),
     path(
         "partners/brands/thank-you/",
         views.brand_partner_thanks,
@@ -52,6 +53,7 @@ urlpatterns = [
         views.mentorship_applied,
         name="mentorship_applied",
     ),
+    path("newsletter/", views.newsletter, name="newsletter"),
     path("community/", views.community_forum, name="community_forum"),
     path(
         "internal/community/",

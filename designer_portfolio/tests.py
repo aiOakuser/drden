@@ -462,6 +462,35 @@ class NavbarTests(TestCase):
     CSRF_COOKIE_SECURE=False,
     STORAGES=TEST_STORAGE_BACKENDS,
 )
+class SocialLoginProviderTests(TestCase):
+    def test_login_page_renders_configured_social_providers(self):
+        with self.settings(
+            SOCIAL_AUTH_GOOGLE_OAUTH2_KEY="google-id",
+            SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET="google-secret",
+            SOCIAL_AUTH_FACEBOOK_KEY="facebook-id",
+            SOCIAL_AUTH_FACEBOOK_SECRET="facebook-secret",
+            SOCIAL_AUTH_LINKEDIN_OPENIDCONNECT_KEY="linkedin-id",
+            SOCIAL_AUTH_LINKEDIN_OPENIDCONNECT_SECRET="linkedin-secret",
+            SOCIAL_AUTH_INSTAGRAM_KEY="instagram-id",
+            SOCIAL_AUTH_INSTAGRAM_SECRET="instagram-secret",
+        ):
+            response = self.client.get(reverse("login"))
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, "Continue with Google")
+            self.assertContains(response, "Continue with Facebook")
+            self.assertContains(response, "Continue with LinkedIn")
+            self.assertContains(response, "Continue with Instagram")
+            self.assertContains(response, reverse("social:begin", args=["facebook"]))
+            self.assertContains(response, reverse("social:begin", args=["linkedin-openidconnect"]))
+            self.assertContains(response, reverse("social:begin", args=["instagram"]))
+
+
+@override_settings(
+    SECURE_SSL_REDIRECT=False,
+    SESSION_COOKIE_SECURE=False,
+    CSRF_COOKIE_SECURE=False,
+    STORAGES=TEST_STORAGE_BACKENDS,
+)
 class ReportProblemViewTests(TransactionTestCase):
     def test_get_report_page_renders(self):
         response = self.client.get(reverse("report_problem"))

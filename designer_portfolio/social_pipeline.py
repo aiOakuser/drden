@@ -116,7 +116,7 @@ def activate_social_user(strategy, backend=None, user=None, is_new=False, *args,
 
 
 def sync_user_details(strategy, backend=None, user=None, details=None, response=None, *args, **kwargs):
-    """Keep Django user + designer profile metadata aligned with Google data."""
+    """Keep Django user + designer profile metadata aligned with social provider data."""
     if user is None:
         return
 

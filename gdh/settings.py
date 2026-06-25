@@ -740,6 +740,8 @@ LOGOUT_REDIRECT_URL = "home"
 LOGIN_URL = "login"
 AUTHENTICATION_BACKENDS = [
     "social_core.backends.google.GoogleOAuth2",
+    "social_core.backends.facebook.FacebookOAuth2",
+    "social_core.backends.linkedin.LinkedinOpenIdConnect",
     "social_core.backends.linkedin.LinkedinOAuth2",
     "social_core.backends.instagram.InstagramOAuth2",
     "designer_portfolio.auth_backends.EmailOrUsernameModelBackend",
@@ -790,7 +792,20 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = _oauth_val("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET"
 # When True, only Gmail/Google login is allowed; username/password and passkeys are disabled.
 GOOGLE_LOGIN_MANDATORY = env_bool("GOOGLE_LOGIN_MANDATORY", default=False)
 
-# LinkedIn OAuth (optional)
+# LinkedIn OAuth (optional — prefers OpenID Connect; legacy OAuth2 still supported)
+_linkedin_client_id = _oauth_val("SOCIAL_AUTH_LINKEDIN_OPENIDCONNECT_KEY", "LINKEDIN_CLIENT_ID") or _oauth_val(
+    "SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY", "LINKEDIN_CLIENT_ID"
+)
+_linkedin_client_secret = _oauth_val("SOCIAL_AUTH_LINKEDIN_OPENIDCONNECT_SECRET", "LINKEDIN_CLIENT_SECRET") or _oauth_val(
+    "SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET", "LINKEDIN_CLIENT_SECRET"
+)
+SOCIAL_AUTH_LINKEDIN_OPENIDCONNECT_KEY = _linkedin_client_id
+SOCIAL_AUTH_LINKEDIN_OPENIDCONNECT_SECRET = _linkedin_client_secret
+SOCIAL_AUTH_LINKEDIN_OPENIDCONNECT_SCOPE = env_list(
+    "SOCIAL_AUTH_LINKEDIN_OPENIDCONNECT_SCOPE",
+    default=["openid", "profile", "email"],
+)
+
 SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = os.getenv("SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY") or os.getenv("LINKEDIN_CLIENT_ID", "")
 SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = os.getenv("SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET") or os.getenv("LINKEDIN_CLIENT_SECRET", "")
 SOCIAL_AUTH_LINKEDIN_OAUTH2_SCOPE = env_list("SOCIAL_AUTH_LINKEDIN_OAUTH2_SCOPE", default=["r_liteprofile", "r_emailaddress"])
@@ -802,9 +817,15 @@ SOCIAL_AUTH_LINKEDIN_OAUTH2_EXTRA_DATA = [
     ("emailAddress", "email"),
 ]
 
+# Facebook OAuth (optional)
+SOCIAL_AUTH_FACEBOOK_KEY = _oauth_val("SOCIAL_AUTH_FACEBOOK_KEY", "FACEBOOK_APP_ID")
+SOCIAL_AUTH_FACEBOOK_SECRET = _oauth_val("SOCIAL_AUTH_FACEBOOK_SECRET", "FACEBOOK_APP_SECRET")
+SOCIAL_AUTH_FACEBOOK_SCOPE = env_list("SOCIAL_AUTH_FACEBOOK_SCOPE", default=["email", "public_profile"])
+SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {"fields": "id,name,email,first_name,last_name"}
+
 # Instagram Basic Display (optional)
-SOCIAL_AUTH_INSTAGRAM_KEY = os.getenv("SOCIAL_AUTH_INSTAGRAM_KEY") or os.getenv("INSTAGRAM_CLIENT_ID", "")
-SOCIAL_AUTH_INSTAGRAM_SECRET = os.getenv("SOCIAL_AUTH_INSTAGRAM_SECRET") or os.getenv("INSTAGRAM_CLIENT_SECRET", "")
+SOCIAL_AUTH_INSTAGRAM_KEY = _oauth_val("SOCIAL_AUTH_INSTAGRAM_KEY", "INSTAGRAM_CLIENT_ID")
+SOCIAL_AUTH_INSTAGRAM_SECRET = _oauth_val("SOCIAL_AUTH_INSTAGRAM_SECRET", "INSTAGRAM_CLIENT_SECRET")
 SOCIAL_AUTH_INSTAGRAM_SCOPE = env_list("SOCIAL_AUTH_INSTAGRAM_SCOPE", default=["user_profile"])
 
 # Redirects for social auth

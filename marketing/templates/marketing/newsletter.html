@@ -1,0 +1,62 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GDH Newsletter — Global Designer Hub</title>
+    <meta name="description" content="Subscribe to the Global Designer Hub digest for emerging talent, events, VolumeOne stories, student resources, and platform updates.">
+    {% include "marketing/_growth_styles.html" %}
+</head>
+<body>
+<div class="gdh-container">
+    <p class="gdh-eyebrow">Global Designer Hub digest</p>
+    <h1 class="gdh-h1">Stay close to the GDH community</h1>
+    <p class="gdh-lead">
+        One email for what matters on GlobalDesignerHub — emerging designers,
+        live events, VolumeOne editorials, student hub resources, and product
+        updates from portfolios to tech packs to site builder releases.
+    </p>
+
+    {% if submitted %}
+    <div class="gdh-card" style="margin-bottom:24px; border-left:4px solid var(--gdh-accent);">
+        <p style="margin:0; color:var(--gdh-deep); font-weight:600;">
+            You're subscribed — welcome to the GDH digest.
+        </p>
+        <p class="gdh-help" style="margin-top:6px;">Watch your inbox for talent spotlights, event invites, and platform news.</p>
+    </div>
+    {% endif %}
+
+    <div class="gdh-grid" style="margin-bottom:32px;">
+        {% for title, blurb in digest_topics %}
+        <article class="gdh-card">
+            <span class="gdh-pill gdh-pill-accent">{{ title }}</span>
+            <p class="gdh-event-summary" style="margin-top:12px; font-size:15px;">{{ blurb }}</p>
+        </article>
+        {% endfor %}
+    </div>
+
+    <form class="gdh-form gdh-card" method="post" novalidate style="max-width:560px;">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="gdh-error">{{ form.non_field_errors|join:" " }}</div>
+        {% endif %}
+        {% for field in form %}
+            {% include "marketing/_growth_form_field.html" with field=field %}
+        {% endfor %}
+        <button type="submit" class="gdh-cta">Subscribe to the digest</button>
+    </form>
+
+    <section class="gdh-section">
+        <h2 class="gdh-h2">Explore while you wait</h2>
+        <div class="gdh-toggle-row">
+            <a class="gdh-cta gdh-cta-ghost" href="{% url 'marketing:events_list' %}">Upcoming events</a>
+            <a class="gdh-cta gdh-cta-ghost" href="{% url 'marketing:emerging_talent_list' %}">Emerging talent</a>
+            <a class="gdh-cta gdh-cta-ghost" href="{% url 'volume_one_public' %}">VolumeOne blog</a>
+            <a class="gdh-cta gdh-cta-ghost" href="{% url 'marketing:agencies' %}">Agencies</a>
+            <a class="gdh-cta gdh-cta-ghost" href="{% url 'signup' %}">Create free account</a>
+        </div>
+    </section>
+</div>
+</body>
+</html>

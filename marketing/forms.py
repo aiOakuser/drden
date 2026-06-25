@@ -7,6 +7,7 @@ from .models import (
     FashionConsultLead,
     ForumInterestSignup,
     MentorshipApplication,
+    NewsletterSubscription,
 )
 
 
@@ -368,4 +369,69 @@ class ForumInterestForm(forms.Form):
 
         return ForumInterestSignup.objects.create(
             email=email, full_name=full_name, notes=notes
+        )
+
+
+class NewsletterSignupForm(forms.Form):
+    """GDH digest signup — idempotent on email like forum interest."""
+
+    email = forms.EmailField(
+        widget=forms.EmailInput(
+            attrs={
+                **_GROWTH_INPUT_ATTRS,
+                "placeholder": "you@example.com",
+                "autocomplete": "email",
+            }
+        )
+    )
+    full_name = forms.CharField(
+        required=False,
+        max_length=150,
+        widget=forms.TextInput(
+            attrs={**_GROWTH_INPUT_ATTRS, "placeholder": "Your name (optional)"}
+        ),
+    )
+    interests = forms.CharField(
+        required=False,
+        max_length=240,
+        widget=forms.TextInput(
+            attrs={
+                **_GROWTH_INPUT_ATTRS,
+                "placeholder": "Topics you care about (events, emerging talent, tech packs…)",
+            }
+        ),
+    )
+
+    def __init__(self, *args, source: str = "", **kwargs):
+        super().__init__(*args, **kwargs)
+        self.source = (source or "").strip()[:64]
+
+    def clean_email(self) -> str:
+        return (self.cleaned_data["email"] or "").strip().lower()
+
+    def save(self) -> NewsletterSubscription:
+        email = self.cleaned_data["email"]
+        full_name = (self.cleaned_data.get("full_name") or "").strip()
+        interests = (self.cleaned_data.get("interests") or "").strip()
+
+        existing = NewsletterSubscription.objects.filter(email__iexact=email).first()
+        if existing is not None:
+            update_fields: list[str] = ["updated_at"]
+            if full_name and existing.full_name != full_name:
+                existing.full_name = full_name
+                update_fields.append("full_name")
+            if interests and existing.interests != interests:
+                existing.interests = interests
+                update_fields.append("interests")
+            if self.source and existing.source != self.source:
+                existing.source = self.source
+                update_fields.append("source")
+            existing.save(update_fields=update_fields)
+            return existing
+
+        return NewsletterSubscription.objects.create(
+            email=email,
+            full_name=full_name,
+            interests=interests,
+            source=self.source,
         )

@@ -9,6 +9,7 @@ from .models import (
     FashionConsultLead,
     ForumInterestSignup,
     MentorshipApplication,
+    NewsletterSubscription,
     SocialContentBundle,
 )
 
@@ -186,6 +187,13 @@ class MentorshipApplicationAdmin(admin.ModelAdmin):
             status=MentorshipApplication.Status.DECLINED
         )
         self.message_user(request, f"Declined {updated} application(s).")
+
+
+@admin.register(NewsletterSubscription)
+class NewsletterSubscriptionAdmin(admin.ModelAdmin):
+    list_display = ("email", "full_name", "source", "created_at")
+    search_fields = ("email", "full_name", "interests", "source")
+    readonly_fields = ("created_at", "updated_at")
 
 
 @admin.register(ForumInterestSignup)

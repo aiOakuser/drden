@@ -40,12 +40,12 @@
       {% with un=request.resolver_match.url_name %}
       <a href="{% url 'builder_sites_list' %}" class="{% if un == 'builder_sites_list' or un == 'builder_site_create' or un == 'builder_editor' or un == 'builder_editor_page' %}active{% endif %}">Product</a>
       <div class="nav-dropdown">
-        <a href="{% url 'designers_list' %}" class="nav-dropdown__trigger{% if un == 'designers_list' or un == 'designer_public_detail' or un == 'emerging_talent_list' or un == 'emerging_talent_detail' %} active{% endif %}" aria-haspopup="true" aria-expanded="false" id="nav-teams-trigger">
+        <a href="{% url 'designers_list' %}" class="nav-dropdown__trigger{% if un == 'designers_list' or un == 'designer_public_detail' or un == 'emerging_talent_list' or un == 'emerging_talent_detail' or un == 'agencies' or un == 'brand_partner' or un == 'brand_partner_thanks' %} active{% endif %}" aria-haspopup="true" aria-expanded="false" id="nav-teams-trigger">
           Teams <i class="fas fa-chevron-down" aria-hidden="true"></i>
         </a>
         <div class="nav-dropdown__menu" role="menu" aria-labelledby="nav-teams-trigger">
           <a href="{% url 'designers_list' %}" role="menuitem"><i class="fas fa-rocket nav-dropdown__icon" aria-hidden="true"></i> Startups</a>
-          <a href="{% url 'marketing:brand_partner' %}" role="menuitem"><i class="fas fa-briefcase nav-dropdown__icon" aria-hidden="true"></i> Agencies</a>
+          <a href="{% url 'marketing:agencies' %}" role="menuitem"><i class="fas fa-briefcase nav-dropdown__icon" aria-hidden="true"></i> Agencies</a>
           <a href="{% url 'signup' %}" role="menuitem"><i class="fas fa-right-left nav-dropdown__icon" aria-hidden="true"></i> Switch</a>
           <a href="{% url 'volume_one_public' %}" role="menuitem"><i class="fas fa-heart nav-dropdown__icon" aria-hidden="true"></i> Stories</a>
         </div>
@@ -63,7 +63,7 @@
         </div>
       </div>
       <a href="{% url 'forum_index' %}" class="{% if un == 'forum_index' or un == 'forum_category' or un == 'forum_topic' or un == 'forum_create_topic' or un == 'forum_create_post' or un == 'forum_search' or un == 'community_forum' %}active{% endif %}">Community</a>
-      <a href="{% url 'marketing:brand_partner' %}" class="{% if un == 'brand_partner' or un == 'brand_partner_thanks' %}active{% endif %}">Enterprise</a>
+      <a href="{% url 'marketing:agencies' %}" class="{% if un == 'agencies' or un == 'brand_partner' or un == 'brand_partner_thanks' %}active{% endif %}">Enterprise</a>
       <a href="{% url 'membership_upgrade' %}" class="{% if un == 'membership_upgrade' or un == 'student_portfolio_pricing' or un == 'subscription_dashboard' or un == 'change_subscription_plan' %}active{% endif %}">Pricing</a>
       {% if user.is_authenticated %}
       <a href="{% url 'designer_dashboard' %}" class="{% if un == 'designer_dashboard' %}active{% endif %}">Dashboard</a>

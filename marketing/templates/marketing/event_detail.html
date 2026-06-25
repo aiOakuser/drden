@@ -56,12 +56,12 @@
         <h2 class="gdh-h2" style="font-size:22px;">Save your spot</h2>
         {% if event.status == 'ended' %}
             <p class="gdh-lead" style="margin:0;">This event has ended. Watch the
-                <a href="/newsletter/">newsletter</a> for the recap and the next session.</p>
+                <a href="{% url 'marketing:newsletter' %}">newsletter</a> for the recap and the next session.</p>
         {% elif event.status == 'cancelled' %}
             <p class="gdh-lead" style="margin:0;">This event was cancelled.</p>
         {% elif event.is_full %}
             <p class="gdh-lead" style="margin:0;">We're at capacity. Subscribe to the
-                <a href="/newsletter/">newsletter</a> and you'll hear about the next session first.</p>
+                <a href="{% url 'marketing:newsletter' %}">newsletter</a> and you'll hear about the next session first.</p>
         {% else %}
             <form method="post" class="gdh-form" novalidate>
                 {% csrf_token %}

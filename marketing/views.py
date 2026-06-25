@@ -13,6 +13,7 @@ from .forms import (
     FashionConsultLeadForm,
     ForumInterestForm,
     MentorshipApplicationForm,
+    NewsletterSignupForm,
 )
 from .models import (
     EmergingTalentFeature,
@@ -213,6 +214,76 @@ def grads_landing(request):
 
 
 # ---------------------------------------------------------------------------
+# Agencies / enterprise functionality overview
+# ---------------------------------------------------------------------------
+
+
+def _resolve_link(url_name: str, url_namespace: str | None = None) -> str:
+    from django.urls import NoReverseMatch, reverse
+
+    qualified = f"{url_namespace}:{url_name}" if url_namespace else url_name
+    try:
+        return reverse(qualified)
+    except NoReverseMatch:
+        return "#"
+
+
+def agencies_landing(request):
+    from .agencies_data import (
+        AGENCIES_CTAS,
+        AGENCIES_FEATURE_GROUPS,
+        AGENCIES_HERO,
+        AGENCIES_PLANS,
+        AGENCIES_STATS,
+        AGENCIES_WORKFLOW,
+    )
+
+    feature_groups = []
+    for group in AGENCIES_FEATURE_GROUPS:
+        features = []
+        for feature in group["features"]:
+            features.append(
+                {
+                    **feature,
+                    "url": _resolve_link(
+                        feature["url_name"],
+                        feature.get("url_namespace"),
+                    ),
+                }
+            )
+        feature_groups.append({**group, "features": features})
+
+    workflow = [
+        {
+            **step,
+            "url": _resolve_link(step["url_name"]),
+        }
+        for step in AGENCIES_WORKFLOW
+    ]
+
+    ctas = [
+        {
+            **cta,
+            "url": _resolve_link(cta["url_name"], cta.get("url_namespace")),
+        }
+        for cta in AGENCIES_CTAS
+    ]
+
+    return render(
+        request,
+        "marketing/agencies.html",
+        {
+            "hero": AGENCIES_HERO,
+            "stats": AGENCIES_STATS,
+            "workflow": workflow,
+            "feature_groups": feature_groups,
+            "plans": AGENCIES_PLANS,
+            "ctas": ctas,
+        },
+    )
+
+
+# ---------------------------------------------------------------------------
 # Brand partnership lead capture
 # ---------------------------------------------------------------------------
 
@@ -294,6 +365,45 @@ def mentorship_applied(request, role_path: str):
         {
             "role": role,
             "is_mentor": role == MentorshipApplication.Role.MENTOR,
+        },
+    )
+
+
+# ---------------------------------------------------------------------------
+# GDH newsletter / digest
+# ---------------------------------------------------------------------------
+
+
+@require_http_methods(["GET", "POST"])
+def newsletter(request):
+    source = (request.GET.get("source") or "").strip()[:64]
+    submitted = False
+    if request.method == "POST":
+        form = NewsletterSignupForm(request.POST, source=source)
+        if form.is_valid():
+            form.save()
+            submitted = True
+            form = NewsletterSignupForm(source=source)
+    else:
+        form = NewsletterSignupForm(source=source)
+
+    digest_topics = (
+        ("Emerging talent", "Spotlights on new designers and student collections."),
+        ("Events & workshops", "Webinars, design jams, and virtual meetup recaps."),
+        ("VolumeOne stories", "Editorial drops from the RunVolumeOne collective desk."),
+        ("Student hub", "Academy updates, mentorship openings, and grad resources."),
+        ("Product news", "Site builder, tech packs, memberships, and mobile app releases."),
+        ("Agency & brand programs", "Partnerships, competitions, and enterprise features."),
+    )
+
+    return render(
+        request,
+        "marketing/newsletter.html",
+        {
+            "form": form,
+            "submitted": submitted,
+            "source": source,
+            "digest_topics": digest_topics,
         },
     )
 

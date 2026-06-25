@@ -342,6 +342,71 @@ class EmergingTalentViewTests(TestCase):
         self.assertIsNotNone(feature.published_at)
 
 
+class NewsletterViewTests(TestCase):
+    def test_newsletter_page_renders(self):
+        response = self.client.get(reverse("marketing:newsletter"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Stay close to the GDH community")
+        self.assertContains(response, "Emerging talent")
+        self.assertContains(response, "VolumeOne stories")
+        self.assertContains(response, "Subscribe to the digest")
+
+    def test_newsletter_subscribe_creates_row(self):
+        response = self.client.post(
+            reverse("marketing:newsletter"),
+            {
+                "email": "reader@example.com",
+                "full_name": "Reader",
+                "interests": "events, emerging talent",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "You're subscribed")
+        from marketing.models import NewsletterSubscription
+
+        self.assertEqual(NewsletterSubscription.objects.count(), 1)
+        sub = NewsletterSubscription.objects.get()
+        self.assertEqual(sub.email, "reader@example.com")
+
+    def test_newsletter_source_query_param(self):
+        response = self.client.get(
+            reverse("marketing:newsletter"),
+            {"source": "student_hub"},
+        )
+        self.assertEqual(response.status_code, 200)
+        response = self.client.post(
+            f"{reverse('marketing:newsletter')}?source=student_hub",
+            {"email": "student@example.com"},
+        )
+        self.assertEqual(response.status_code, 200)
+        from marketing.models import NewsletterSubscription
+
+        self.assertEqual(
+            NewsletterSubscription.objects.get().source,
+            "student_hub",
+        )
+
+
+class AgenciesLandingTests(TestCase):
+    def test_agencies_page_renders_feature_sections(self):
+        response = self.client.get(reverse("marketing:agencies"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "For agencies &amp; studios")
+        self.assertContains(response, "Talent discovery &amp; portfolios")
+        self.assertContains(response, "Site builder")
+        self.assertContains(response, "Custom orders")
+        self.assertContains(response, "Designer forum")
+        self.assertContains(response, "Designer AI")
+        self.assertContains(response, "Premium Fashion Studio")
+        self.assertContains(response, reverse("marketing:brand_partner"))
+
+    def test_agencies_feature_links_resolve(self):
+        response = self.client.get(reverse("marketing:agencies"))
+        self.assertContains(response, reverse("unified_search"))
+        self.assertContains(response, reverse("builder_sites_list"))
+        self.assertContains(response, reverse("marketing:events_list"))
+
+
 class BrandPartnershipViewTests(TestCase):
     def test_get_renders_form(self):
         response = self.client.get(reverse("marketing:brand_partner"))
@@ -753,7 +818,7 @@ class GradsLandingViewTests(TestCase):
             reverse("marketing:community_forum"),
             reverse("marketing:mentorship_apply", args=["find-a-mentor"]),
             "/accounts/signup/",
-            "/newsletter/?source=student_hub",
+            f"{reverse('marketing:newsletter')}?source=student_hub",
         ):
             self.assertIn(url, body, f"Expected {url} on grads landing page")
 

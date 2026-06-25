@@ -22,19 +22,29 @@ def messenger_inbox_count(request: HttpRequest) -> dict:
         return {"messenger_inbox_count": None}
 
 
-def _google_oauth_ready() -> bool:
-    """True when Django has Google OAuth credentials (same values used by social-auth)."""
-    key = (getattr(settings, "SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", "") or "").strip()
-    secret = (getattr(settings, "SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET", "") or "").strip()
-    return bool(key and secret)
+from .social_providers import _google_oauth_ready, get_social_login_providers
+
+
+def _google_oauth_redirect_uri(request: HttpRequest) -> str:
+    """Match social-auth redirect_uri for the current request (see CanonicalDjangoStrategy)."""
+    from gdh.social_strategy import CanonicalDjangoStrategy
+
+    strategy = CanonicalDjangoStrategy(None)
+    strategy.request = request
+    return strategy.build_absolute_uri("/auth/complete/google-oauth2/")
 
 
 def social_login_providers(request: HttpRequest) -> dict:
     """Expose enabled social login providers for auth modal and login page."""
-    providers = []
-    if _google_oauth_ready():
-        providers.append({"backend": "google-oauth2", "label": "Google", "css_class": "google", "icon": "G"})
-    return {"social_login_providers": providers}
+    providers = get_social_login_providers()
+
+    context: dict = {"social_login_providers": providers}
+    if getattr(settings, "DEBUG", False) and providers:
+        context["google_oauth_redirect_uri"] = _google_oauth_redirect_uri(request)
+        context["show_google_oauth_setup_hint"] = any(
+            provider["backend"] == "google-oauth2" for provider in providers
+        )
+    return context
 
 
 def dashboard_counts(request: HttpRequest) -> dict:
