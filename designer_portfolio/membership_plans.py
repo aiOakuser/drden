@@ -85,8 +85,8 @@ MEMBERSHIP_PLANS: tuple[MembershipPlan, ...] = (
 PAYMENT_METHODS: tuple[str, ...] = (
     "Credit Card",
     "Debit Card",
-    "Stripe",
-    "PayPal",
+    "Stripe Checkout",
+    "Link by Stripe",
     "Apple Pay",
     "Google Pay",
 )

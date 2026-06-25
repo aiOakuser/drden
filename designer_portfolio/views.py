@@ -4243,6 +4243,10 @@ def subscription_dashboard(request):
     )
     checkout_success = request.GET.get("checkout") == "success"
     is_active = subscription and subscription.status == "active"
+    billing_portal_available = (
+        bool(subscription and subscription.stripe_customer_id)
+        and stripe_billing.is_configured()
+    )
     return render(
         request,
         "designer_portfolio/subscription_dashboard.html",
@@ -4257,6 +4261,7 @@ def subscription_dashboard(request):
             "stripe_publishable_key": settings.STRIPE_PUBLISHABLE_KEY,
             "checkout_success": checkout_success,
             "show_activation": checkout_success or is_active,
+            "billing_portal_available": billing_portal_available,
             "register_url": reverse("signup"),
             "login_url": reverse("login"),
         },
@@ -4323,6 +4328,28 @@ def cancel_subscription(request):
 
 
 @login_required
+@require_POST
+def create_stripe_billing_portal_session(request):
+    from . import stripe_billing
+
+    if not stripe_billing.is_configured():
+        return JsonResponse(
+            {"error": "Stripe is not configured."},
+            status=503,
+        )
+
+    try:
+        session = stripe_billing.create_billing_portal_session(
+            user=request.user,
+            return_url=request.build_absolute_uri(reverse("subscription_dashboard")),
+        )
+    except stripe_billing.StripeBillingError as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
+
+    return JsonResponse({"portal_url": session.url})
+
+
+@login_required
 def payment_methods(request):
     from .auth_utils import ensure_designer_access
     from . import stripe_billing
@@ -4354,13 +4381,35 @@ def payment_methods(request):
 
 @login_required
 def billing_history(request):
+    from .auth_utils import ensure_designer_access
+    from . import stripe_billing
+
+    ensure_designer_access(request.user)
     subscription = (
         UserSubscription.objects.select_related("plan").filter(user=request.user).first()
     )
+    invoices = []
+    billing_history_error = ""
+    if subscription and subscription.stripe_customer_id and stripe_billing.is_configured():
+        try:
+            invoices = stripe_billing.list_customer_invoices(subscription)
+        except stripe_billing.StripeBillingError as exc:
+            billing_history_error = str(exc)
+
+    if not invoices and subscription:
+        local_invoice = stripe_billing.local_invoice_entry(subscription)
+        if local_invoice:
+            invoices = [local_invoice]
+
     return render(
         request,
         "designer_portfolio/billing_history.html",
-        {"current_section": "subscription", "subscription": subscription},
+        {
+            "current_section": "subscription",
+            "subscription": subscription,
+            "invoices": invoices,
+            "billing_history_error": billing_history_error,
+        },
     )
 
 @login_required

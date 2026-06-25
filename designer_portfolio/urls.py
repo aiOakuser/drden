@@ -260,6 +260,7 @@ urlpatterns = [
     path("subscription/", views.subscription_dashboard, name="subscription_dashboard"),
     path("subscription/change-plan/", views.change_subscription_plan, name="change_subscription_plan"),
     path("subscription/cancel/", views.cancel_subscription, name="cancel_subscription"),
+    path("subscription/stripe-portal/", views.create_stripe_billing_portal_session, name="stripe_billing_portal"),
     path("subscription/payment-methods/", views.payment_methods, name="payment_methods"),
     path("subscription/billing-history/", views.billing_history, name="billing_history"),
     

@@ -36,7 +36,7 @@
       <form id="payment-form">
         <div id="payment-element"></div>
         <p id="payment-message" class="pm-message" hidden></p>
-        <button type="submit" class="btn btn-primary pm-submit" id="submit-button">Save payment method</button>
+        <button type="submit" class="btn btn-primary pm-submit" id="submit-button" disabled>Save payment method</button>
       </form>
     </div>
   {% else %}
@@ -93,6 +93,7 @@
         elements = stripe.elements({ clientSecret: result.data.client_secret });
         paymentElement = elements.create("payment");
         paymentElement.mount("#payment-element");
+        document.getElementById("submit-button").disabled = false;
       })
       .catch(function (err) {
         showMessage(err.message || "Payment form unavailable.");
@@ -100,6 +101,10 @@
 
     document.getElementById("payment-form").addEventListener("submit", function (event) {
       event.preventDefault();
+      if (!elements) {
+        showMessage("Payment form is still loading. Please try again in a moment.");
+        return;
+      }
       var submitBtn = document.getElementById("submit-button");
       submitBtn.disabled = true;
       submitBtn.textContent = "Saving…";

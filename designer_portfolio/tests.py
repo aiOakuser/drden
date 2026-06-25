@@ -1278,6 +1278,30 @@ class SubscriptionPaymentTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["checkout_url"], "https://checkout.stripe.com/test")
+        checkout_kwargs = mock_session_create.call_args.kwargs
+        self.assertEqual(checkout_kwargs["mode"], "subscription")
+        self.assertEqual(checkout_kwargs["payment_method_types"], ["card"])
+        self.assertEqual(checkout_kwargs["metadata"]["plan_slug"], "personal_designer_website")
+
+    @override_settings(
+        STRIPE_SECRET_KEY="sk_test_example",
+        STRIPE_PUBLISHABLE_KEY="pk_test_example",
+    )
+    @patch("designer_portfolio.stripe_billing.stripe.billing_portal.Session.create")
+    def test_billing_portal_returns_stripe_url_when_configured(self, mock_portal_create):
+        subscription = self.user.subscription
+        subscription.stripe_customer_id = "cus_test"
+        subscription.save(update_fields=["stripe_customer_id"])
+        mock_portal_create.return_value = type(
+            "PortalSession", (), {"url": "https://billing.stripe.com/test"}
+        )()
+
+        self.client.login(username=self.user.username, password=self.password)
+        response = self.client.post(reverse("stripe_billing_portal"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["portal_url"], "https://billing.stripe.com/test")
+        self.assertEqual(mock_portal_create.call_args.kwargs["customer"], "cus_test")
 
     def test_payment_methods_page_loads(self):
         self.client.login(username=self.user.username, password=self.password)
@@ -1291,6 +1315,111 @@ class SubscriptionPaymentTests(TestCase):
         subscription.membership_tier = "personal_designer_website"
         subscription.save(update_fields=["membership_tier"])
         self.assertEqual(subscription.membership_display_name, "Personal Designer Website")
+
+    @override_settings(
+        STRIPE_SECRET_KEY="sk_test_example",
+        STRIPE_PUBLISHABLE_KEY="pk_test_example",
+    )
+    @patch("designer_portfolio.stripe_billing.stripe.Invoice.list")
+    def test_billing_history_shows_stripe_invoices(self, mock_invoice_list):
+        subscription = self.user.subscription
+        subscription.stripe_customer_id = "cus_test"
+        subscription.membership_tier = "personal_designer_website"
+        subscription.payment_method = "stripe"
+        subscription.save(
+            update_fields=["stripe_customer_id", "membership_tier", "payment_method"]
+        )
+        mock_invoice_list.return_value = type(
+            "InvoiceList",
+            (),
+            {
+                "data": [
+                    {
+                        "created": 1710000000,
+                        "amount_paid": 7900,
+                        "currency": "usd",
+                        "status": "paid",
+                        "hosted_invoice_url": "https://invoice.stripe.com/test",
+                        "invoice_pdf": "",
+                        "lines": {
+                            "data": [
+                                {"description": "Personal Designer Website monthly"}
+                            ]
+                        },
+                    }
+                ]
+            },
+        )()
+
+        self.client.login(username=self.user.username, password=self.password)
+        response = self.client.get(reverse("billing_history"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Personal Designer Website monthly")
+        self.assertContains(response, "USD 79.00")
+        self.assertContains(response, "Stripe / Link")
+        self.assertContains(response, "https://invoice.stripe.com/test")
+
+    @override_settings(
+        STRIPE_SECRET_KEY="sk_test_example",
+        STRIPE_WEBHOOK_SECRET="whsec_test",
+    )
+    @patch("designer_portfolio.emails.notify_membership_activated")
+    @patch("designer_portfolio.stripe_billing.stripe.Subscription.retrieve")
+    @patch("designer_portfolio.stripe_billing.stripe.Webhook.construct_event")
+    def test_stripe_webhook_activates_designer_membership(
+        self, mock_construct_event, mock_subscription_retrieve, mock_notify
+    ):
+        class StripeSubscription(dict):
+            @property
+            def id(self):
+                return self["id"]
+
+        mock_construct_event.return_value = {
+            "type": "checkout.session.completed",
+            "data": {
+                "object": {
+                    "customer": "cus_test",
+                    "subscription": "sub_test",
+                    "metadata": {
+                        "user_id": str(self.user.pk),
+                        "plan_slug": "personal_designer_website",
+                        "interval": "monthly",
+                    },
+                }
+            },
+        }
+        mock_subscription_retrieve.return_value = StripeSubscription(
+            {
+                "id": "sub_test",
+                "customer": "cus_test",
+                "metadata": {
+                    "user_id": str(self.user.pk),
+                    "plan_slug": "personal_designer_website",
+                    "interval": "monthly",
+                },
+                "status": "active",
+                "current_period_end": 1710000000,
+                "cancel_at_period_end": False,
+            }
+        )
+
+        response = self.client.post(
+            reverse("stripe_webhook"),
+            data=b"{}",
+            content_type="application/json",
+            HTTP_STRIPE_SIGNATURE="test-signature",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        subscription = UserSubscription.objects.get(user=self.user)
+        self.assertEqual(subscription.status, "active")
+        self.assertEqual(subscription.payment_method, "stripe")
+        self.assertEqual(subscription.membership_tier, "personal_designer_website")
+        self.assertEqual(subscription.billing_interval, "monthly")
+        self.assertEqual(subscription.stripe_customer_id, "cus_test")
+        self.assertEqual(subscription.stripe_subscription_id, "sub_test")
+        mock_notify.assert_called_once_with(subscription)
 
     def test_register_url_redirects_to_signup(self):
         response = self.client.get("/register/")
