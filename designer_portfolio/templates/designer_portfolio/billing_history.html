@@ -11,7 +11,13 @@
     <p class="bh-eyebrow">Billing</p>
     <h2 class="bh-title">Billing history</h2>
 
-    {% if subscription and subscription.last_payment_date %}
+    {% if billing_history_error %}
+    <div class="bh-alert" role="alert">
+      Stripe invoice history is temporarily unavailable. Showing the latest local billing record.
+    </div>
+    {% endif %}
+
+    {% if invoices %}
     <table class="bh-table">
       <thead>
         <tr>
@@ -23,13 +29,22 @@
         </tr>
       </thead>
       <tbody>
+        {% for invoice in invoices %}
         <tr>
-          <td>{{ subscription.last_payment_date|date:"M j, Y" }}</td>
-          <td>{% if subscription.plan %}{{ subscription.plan.display_name }}{% else %}—{% endif %}</td>
-          <td>{% if subscription.plan %}${{ subscription.plan.price }}{% else %}—{% endif %}</td>
-          <td>{{ subscription.get_payment_method_display|default:"—" }}</td>
-          <td><span class="bh-status">Paid</span></td>
+          <td>{% if invoice.date %}{{ invoice.date|date:"M j, Y" }}{% else %}-{% endif %}</td>
+          <td>{{ invoice.plan }}</td>
+          <td>{{ invoice.amount }}</td>
+          <td>{{ invoice.method }}</td>
+          <td>
+            <span class="bh-status">{{ invoice.status }}</span>
+            {% if invoice.hosted_invoice_url %}
+            <a href="{{ invoice.hosted_invoice_url }}" class="bh-link" target="_blank" rel="noopener">View</a>
+            {% elif invoice.invoice_pdf %}
+            <a href="{{ invoice.invoice_pdf }}" class="bh-link" target="_blank" rel="noopener">PDF</a>
+            {% endif %}
+          </td>
         </tr>
+        {% endfor %}
       </tbody>
     </table>
     {% else %}
@@ -61,6 +76,8 @@
   .bh-table th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-muted); }
   .bh-table td { color: var(--color-primary); }
   .bh-status { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; background: rgba(34, 197, 94, 0.15); color: #15803d; }
+  .bh-link { margin-left: 8px; color: var(--color-accent); font-size: 13px; font-weight: 600; }
+  .bh-alert { margin: 0 0 18px; padding: 12px 14px; border-radius: 10px; background: rgba(234, 179, 8, 0.14); color: #92400e; font-size: 14px; }
   .bh-empty { text-align: center; padding: 50px 20px; }
   .bh-empty__icon { font-size: 56px; opacity: 0.5; margin-bottom: 16px; }
   .bh-empty h3 { margin: 0 0 8px; color: var(--color-primary); }

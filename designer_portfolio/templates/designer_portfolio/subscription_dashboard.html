@@ -85,6 +85,9 @@
     <div class="sub-current__actions">
       <a href="{% url 'payment_methods' %}" class="btn btn-primary"><i class="icon">💳</i> Payment methods</a>
       <a href="{% url 'billing_history' %}" class="btn btn-ghost"><i class="icon">🧾</i> Billing history</a>
+      {% if billing_portal_available %}
+      <button type="button" class="btn btn-ghost" id="stripe-portal-btn"><i class="icon">↗</i> Manage in Stripe</button>
+      {% endif %}
       {% if subscription and subscription.status == 'active' %}
       <button type="button" class="btn btn-danger" id="cancel-subscription-btn"><i class="icon">✖</i> Cancel plan</button>
       {% endif %}
@@ -146,7 +149,7 @@
     </p>
     {% else %}
     <p class="sub-stripe-note">
-      Step 3: Pay securely with credit card, debit card, Stripe, Apple Pay, or Google Pay.
+      Step 3: Pay securely with credit card, debit card, Link by Stripe, Apple Pay, or Google Pay.
       <a href="{% url 'payment_methods' %}">Manage saved payment methods</a>.
     </p>
     {% endif %}
@@ -490,6 +493,33 @@
           .catch(function () {
             cancelBtn.disabled = false;
             alert("Could not cancel right now. Please try again.");
+          });
+      });
+    }
+
+    var portalBtn = document.getElementById("stripe-portal-btn");
+    if (portalBtn) {
+      portalBtn.addEventListener("click", function () {
+        portalBtn.disabled = true;
+        var original = portalBtn.textContent;
+        portalBtn.textContent = "Opening Stripe…";
+        fetch("{% url 'stripe_billing_portal' %}", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrfToken() },
+        })
+          .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+          .then(function (result) {
+            if (result.ok && result.data.portal_url) {
+              window.location.href = result.data.portal_url;
+              return;
+            }
+            throw new Error((result.data && result.data.error) || "Could not open Stripe billing.");
+          })
+          .catch(function (err) {
+            portalBtn.disabled = false;
+            portalBtn.textContent = original;
+            alert(err.message || "Could not open Stripe billing. Please try again.");
           });
       });
     }

@@ -27,7 +27,7 @@
           </span>
           {% elif user.subscription.status == 'active' %}
           <span class="active-badge"
-            >{{ user.subscription.plan.display_name }}</span
+            >{{ user.subscription.membership_display_name }}</span
           >
           {% endif %}
         </div>
