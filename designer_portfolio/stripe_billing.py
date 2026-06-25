@@ -204,6 +204,13 @@ def apply_checkout_session(session: dict[str, Any]) -> None:
     if stripe_subscription_id:
         sync_stripe_subscription(stripe_subscription_id)
 
+    try:
+        from .emails import notify_membership_activated
+
+        notify_membership_activated(subscription)
+    except Exception:
+        logger.exception("Failed to send membership activation email for user_id=%s", user_id)
+
 
 def sync_stripe_subscription(stripe_subscription_id: str) -> None:
     _configure_stripe()

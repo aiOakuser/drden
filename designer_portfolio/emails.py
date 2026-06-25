@@ -87,6 +87,46 @@ def send_registration_notifications(user, *, request=None, source: str = "passwo
         )
 
 
+def notify_membership_activated(subscription, *, request=None) -> None:
+    """Email the designer when a paid membership is activated."""
+
+    user = getattr(subscription, "user", None)
+    if user is None:
+        return
+
+    recipient = _coalesce_user_email(user)
+    if not recipient:
+        return
+
+    plan_name = subscription.membership_display_name
+    billing = (subscription.billing_interval or "monthly").title()
+    dashboard_url = _absolute_url(request, reverse("designer_dashboard"))
+    membership_url = _absolute_url(request, reverse("subscription_dashboard"))
+    site_name = _site_name()
+
+    message = (
+        f"Hi {user.get_full_name() or user.username},\n\n"
+        f"Your {site_name} membership is now active.\n\n"
+        f"Plan: {plan_name}\n"
+        f"Billing: {billing}\n\n"
+        "What happens next:\n"
+        "• Membership activated automatically\n"
+        "• Website hosting enabled (where included in your plan)\n"
+        "• Designer profile upgraded\n"
+        "• Premium features unlocked\n\n"
+        f"Manage your membership: {membership_url}\n"
+        f"Open your dashboard: {dashboard_url}\n\n"
+        f"— {site_name}"
+    )
+    send_mail(
+        subject=f"Your {site_name} membership is active — {plan_name}",
+        message=message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[recipient],
+        fail_silently=True,
+    )
+
+
 def notify_password_reset_request(user, *, request=None):
     """Alert administrators that a password reset was requested."""
 

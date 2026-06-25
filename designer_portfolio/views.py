@@ -4236,13 +4236,20 @@ def designer_design_detail_api(request, design_id):
 @login_required
 def subscription_dashboard(request):
     from .auth_utils import ensure_designer_access
-    from .membership_plans import MEMBERSHIP_BENEFITS, list_membership_plans
+    from .membership_plans import (
+        ACTIVATION_CHECKLIST,
+        PAYMENT_METHODS,
+        UPGRADE_STEPS,
+        list_membership_plans,
+    )
     from . import stripe_billing
 
     ensure_designer_access(request.user)
     subscription = (
         UserSubscription.objects.select_related("plan").filter(user=request.user).first()
     )
+    checkout_success = request.GET.get("checkout") == "success"
+    is_active = subscription and subscription.status == "active"
     return render(
         request,
         "designer_portfolio/subscription_dashboard.html",
@@ -4250,10 +4257,15 @@ def subscription_dashboard(request):
             "current_section": "subscription",
             "subscription": subscription,
             "membership_plans": list_membership_plans(),
-            "membership_benefits": MEMBERSHIP_BENEFITS,
+            "payment_methods_list": PAYMENT_METHODS,
+            "activation_checklist": ACTIVATION_CHECKLIST,
+            "upgrade_steps": UPGRADE_STEPS,
             "stripe_enabled": stripe_billing.is_configured(),
             "stripe_publishable_key": settings.STRIPE_PUBLISHABLE_KEY,
-            "checkout_success": request.GET.get("checkout") == "success",
+            "checkout_success": checkout_success,
+            "show_activation": checkout_success or is_active,
+            "register_url": reverse("signup"),
+            "login_url": reverse("login"),
         },
     )
 

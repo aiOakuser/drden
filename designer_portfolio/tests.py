@@ -1181,10 +1181,10 @@ class SubscriptionPaymentTests(TestCase):
         self.client.login(username=self.user.username, password=self.password)
         response = self.client.get(reverse("subscription_dashboard"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Professional Portfolio")
-        self.assertContains(response, "Personal Designer Website")
-        self.assertContains(response, "Premium Fashion Studio")
-        self.assertContains(response, "Pay Now")
+        self.assertContains(response, "Membership Plans")
+        self.assertContains(response, "Choose your membership plan")
+        self.assertContains(response, "Select Plan")
+        self.assertContains(response, "Dedicated Designer Website")
 
     def test_checkout_requires_stripe_configuration(self):
         self.client.login(username=self.user.username, password=self.password)
@@ -1238,4 +1238,9 @@ class SubscriptionPaymentTests(TestCase):
         subscription.membership_tier = "personal_designer_website"
         subscription.save(update_fields=["membership_tier"])
         self.assertEqual(subscription.membership_display_name, "Personal Designer Website")
+
+    def test_register_url_redirects_to_signup(self):
+        response = self.client.get("/register/")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers.get("Location"), reverse("signup"))
 

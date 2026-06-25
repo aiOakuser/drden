@@ -24,6 +24,7 @@ urlpatterns = [
     path("", include("marketing.urls")),
     # Friendly alias: /login or /login/ -> accounts/login/ (preserve query string like ?next=)
     re_path(r"^login/?$", RedirectView.as_view(pattern_name="login", permanent=False, query_string=True)),
+    re_path(r"^register/?$", RedirectView.as_view(pattern_name="signup", permanent=False, query_string=True)),
     path("accounts/login/", DesignerLoginView.as_view(), name="login"),
     path("accounts/logout/", auth_views.LogoutView.as_view(next_page="home"), name="logout"),
     path("accounts/password_reset/", DesignerPasswordResetView.as_view(), name="password_reset"),

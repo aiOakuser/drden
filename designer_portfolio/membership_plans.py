@@ -18,6 +18,7 @@ class MembershipPlan:
     monthly_price: Decimal
     yearly_price: Decimal
     tagline: str
+    benefits: tuple[str, ...]
     is_recommended: bool = False
 
     def stripe_price_id(self, interval: BillingInterval) -> str:
@@ -34,18 +35,6 @@ class MembershipPlan:
         return f"${amount:,.0f}/month"
 
 
-MEMBERSHIP_BENEFITS: tuple[str, ...] = (
-    "Personalized Designer Profile",
-    "Portfolio & Collections Showcase",
-    "Tech Pack Storage",
-    "Custom Designer URL",
-    "Hosting & SSL",
-    "SEO Optimization",
-    "Lead Inquiry Forms",
-    "Analytics Dashboard",
-    "Ongoing Profile Maintenance",
-)
-
 MEMBERSHIP_PLANS: tuple[MembershipPlan, ...] = (
     MembershipPlan(
         slug="professional_portfolio",
@@ -53,13 +42,28 @@ MEMBERSHIP_PLANS: tuple[MembershipPlan, ...] = (
         monthly_price=Decimal("29"),
         yearly_price=Decimal("290"),
         tagline="Essential hub profile, portfolio showcase, and core tools.",
+        benefits=(
+            "Unlimited Portfolio Uploads",
+            "Featured Designer Profile",
+            "Tech Pack Storage",
+            "Priority Visibility",
+            "Direct Client Inquiries",
+        ),
     ),
     MembershipPlan(
         slug="personal_designer_website",
         name="Personal Designer Website",
         monthly_price=Decimal("79"),
         yearly_price=Decimal("790"),
-        tagline="Your own branded site with custom URL, hosting, SSL, SEO, and analytics.",
+        tagline="Your own branded site with custom URL, hosting, SSL, SEO, and lead tools.",
+        benefits=(
+            "Dedicated Designer Website",
+            "Custom Branding",
+            "Blog & Collections",
+            "Hosting & Maintenance Included",
+            "SEO Optimization",
+            "Lead Generation Tools",
+        ),
         is_recommended=True,
     ),
     MembershipPlan(
@@ -67,8 +71,55 @@ MEMBERSHIP_PLANS: tuple[MembershipPlan, ...] = (
         name="Premium Fashion Studio",
         monthly_price=Decimal("149"),
         yearly_price=Decimal("1490"),
-        tagline="Studio-grade tools for larger collections and advanced workflows.",
+        tagline="Studio-grade tools for teams, analytics, and advanced workflows.",
+        benefits=(
+            "Multi-Page Website",
+            "Team Profiles",
+            "Advanced Analytics",
+            "Priority Support",
+            "Custom Domain Support",
+        ),
     ),
+)
+
+PAYMENT_METHODS: tuple[str, ...] = (
+    "Credit Card",
+    "Debit Card",
+    "Stripe",
+    "PayPal",
+    "Apple Pay",
+    "Google Pay",
+)
+
+ACTIVATION_CHECKLIST: tuple[str, ...] = (
+    "Membership activated automatically",
+    "Website hosting enabled",
+    "Designer profile upgraded",
+    "Premium features unlocked",
+    "Confirmation email sent",
+)
+
+UPGRADE_STEPS: tuple[dict[str, str], ...] = (
+    {
+        "number": "1",
+        "title": "Create or log in to your designer account",
+        "description": "Register free, or sign in with your existing GlobalDesignerHub credentials.",
+    },
+    {
+        "number": "2",
+        "title": "Choose your membership plan",
+        "description": "Dashboard → Membership Plans. Pick monthly or yearly billing.",
+    },
+    {
+        "number": "3",
+        "title": "Complete secure payment",
+        "description": "Pay with credit/debit card, Stripe Link, Apple Pay, or Google Pay.",
+    },
+    {
+        "number": "4",
+        "title": "Account activation",
+        "description": "Your membership, hosting, and premium features unlock automatically after payment.",
+    },
 )
 
 
