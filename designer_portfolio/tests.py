@@ -1360,6 +1360,31 @@ class SubscriptionPaymentTests(TestCase):
         self.assertContains(response, "Stripe / Link")
         self.assertContains(response, "https://invoice.stripe.com/test")
 
+    def test_billing_history_local_fallback_shows_membership_tier_amount(self):
+        subscription = self.user.subscription
+        subscription.status = "active"
+        subscription.payment_method = "stripe"
+        subscription.membership_tier = "personal_designer_website"
+        subscription.billing_interval = "monthly"
+        subscription.last_payment_date = timezone.now()
+        subscription.save(
+            update_fields=[
+                "status",
+                "payment_method",
+                "membership_tier",
+                "billing_interval",
+                "last_payment_date",
+            ]
+        )
+
+        self.client.login(username=self.user.username, password=self.password)
+        response = self.client.get(reverse("billing_history"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Personal Designer Website")
+        self.assertContains(response, "USD 79.00")
+        self.assertContains(response, "Stripe (Credit/Debit Card)")
+
     @override_settings(
         STRIPE_SECRET_KEY="sk_test_example",
         STRIPE_WEBHOOK_SECRET="whsec_test",

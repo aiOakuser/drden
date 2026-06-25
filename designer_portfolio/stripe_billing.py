@@ -256,7 +256,12 @@ def local_invoice_entry(subscription: UserSubscription) -> dict[str, Any] | None
     if not subscription.last_payment_date:
         return None
     amount = None
-    if subscription.plan_id:
+    if subscription.membership_tier:
+        plan = get_membership_plan(subscription.membership_tier)
+        interval = subscription.billing_interval
+        if plan and interval in {"monthly", "yearly"}:
+            amount = f"USD {plan.price_for(interval):,.2f}"
+    elif subscription.plan_id:
         amount = f"USD {subscription.plan.price:,.2f}"
     return {
         "date": subscription.last_payment_date,
