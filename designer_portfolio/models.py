@@ -655,7 +655,30 @@ class UserSubscription(models.Model):
     @property
     def is_subscription_active(self):
         from django.utils import timezone
-        return self.status == 'active' and self.subscription_end_date and self.subscription_end_date > timezone.now()
+
+        now = timezone.now()
+        if self.status not in {"active", "past_due"}:
+            return False
+        if self.subscription_end_date:
+            return self.subscription_end_date > now
+        # Stripe-backed membership may be active before period end is synced.
+        if self.membership_tier and self.stripe_subscription_id:
+            return self.status == "active"
+        if self.plan_id:
+            return self.status == "active"
+        return False
+
+    @property
+    def has_paid_membership(self) -> bool:
+        """True when the designer has an active paid membership tier."""
+        return self.is_subscription_active and bool(self.membership_tier)
+
+    @property
+    def annual_renewal_date_display(self) -> str:
+        """Human-readable renewal date for yearly billing."""
+        if not self.subscription_end_date:
+            return ""
+        return self.subscription_end_date.strftime("%B %d, %Y")
     
     @property
     def days_left_in_trial(self):
@@ -683,14 +706,16 @@ class UserSubscription(models.Model):
 
     def can_use_designer_messenger(self):
         """
-        Designer-to-designer messenger requires $4.99/month or higher subscription.
+        Designer-to-designer messenger requires an active paid membership.
         Frozen accounts cannot use messenger.
         """
-        from django.utils import timezone
-        if self.status == 'frozen':
+        if self.status == "frozen":
             return False
-        if self.status == 'active' and self.plan and self.subscription_end_date and self.subscription_end_date > timezone.now():
-            # Must have monthly ($4.99) or higher plan
+        if not self.is_subscription_active:
+            return False
+        if self.membership_tier:
+            return True
+        if self.plan_id:
             min_price = 4.99
             return float(self.plan.price) >= min_price
         return False

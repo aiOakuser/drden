@@ -1,8 +1,13 @@
 {% load static %}
 <div class="header__apphub-banner">
-  <a href="{% url 'home' %}" class="header__apphub-home">
-    <span class="header__apphub-home__name">Global Designer Hub</span>
-    <span class="header__apphub-home__line">Portfolios, projects, and people—worldwide</span>
+  <a href="{% url 'home' %}" class="header__apphub-home" aria-label="Global Designer Hub home">
+    <img
+      class="header__apphub-logo"
+      src="{% static 'images/brand/gdh-logo.png' %}"
+      width="32"
+      height="32"
+      alt=""
+    />
   </a>
   <span class="header__apphub-divider" aria-hidden="true">|</span>
   <a href="{% url 'contact' %}">Contact</a>
@@ -13,18 +18,14 @@
 <header class="header">
     <div class="header__inner">
     <!-- Logo -->
-    <a class="brand" href="{% url 'home' %}">
+    <a class="brand" href="{% url 'home' %}" aria-label="Global Designer Hub home">
       <img
         class="brand__mark"
-        src="{% static 'images/brand/gdh-mark.svg' %}"
-        width="48"
-        height="48"
-        alt=""
+        src="{% static 'images/brand/gdh-logo.png' %}"
+        width="52"
+        height="52"
+        alt="Global Designer Hub"
       />
-      <span class="brand__lockup">
-        <span class="brand__name">Global Designer Hub</span>
-        <span class="brand__tagline">Hire globally · Design boldly</span>
-      </span>
     </a>
 
     <!-- Mobile Menu Toggle -->
@@ -55,13 +56,13 @@
         </a>
         <div class="nav-dropdown__menu" role="menu" aria-labelledby="nav-resources-trigger">
           <a href="{% url 'collections' %}" role="menuitem"><i class="fas fa-store nav-dropdown__icon" aria-hidden="true"></i> Marketplace</a>
+          <a href="{% url 'neworders_dresses' %}" role="menuitem"><i class="fas fa-shirt nav-dropdown__icon" aria-hidden="true"></i> Custom Orders</a>
           <a href="{% url 'student_page' %}" role="menuitem"><i class="fas fa-circle-play nav-dropdown__icon" aria-hidden="true"></i> Academy</a>
           <a href="{% url 'marketing:events_list' %}" role="menuitem"><i class="fas fa-square nav-dropdown__icon" aria-hidden="true"></i> Updates</a>
           <a href="{% url 'volume_one_public' %}" role="menuitem"><i class="fas fa-newspaper nav-dropdown__icon" aria-hidden="true"></i> Blog</a>
         </div>
       </div>
       <a href="{% url 'forum_index' %}" class="{% if un == 'forum_index' or un == 'forum_category' or un == 'forum_topic' or un == 'forum_create_topic' or un == 'forum_create_post' or un == 'forum_search' or un == 'community_forum' %}active{% endif %}">Community</a>
-      <a href="{% url 'contact' %}" class="{% if un == 'contact' or un == 'report_problem' or un == 'report_problem_thanks' %}active{% endif %}">Support</a>
       <a href="{% url 'marketing:brand_partner' %}" class="{% if un == 'brand_partner' or un == 'brand_partner_thanks' %}active{% endif %}">Enterprise</a>
       <a href="{% url 'membership_upgrade' %}" class="{% if un == 'membership_upgrade' or un == 'student_portfolio_pricing' or un == 'subscription_dashboard' or un == 'change_subscription_plan' %}active{% endif %}">Pricing</a>
       {% if user.is_authenticated %}
@@ -221,28 +222,18 @@
 
   .header__apphub-home {
     display: inline-flex;
-    flex-direction: column;
     align-items: center;
-    gap: 2px;
+    justify-content: center;
     text-decoration: none;
     color: inherit;
-    max-width: min(420px, 100%);
   }
 
-  .header__apphub-home__name {
-    font-family: "Fraunces", Georgia, serif;
-    font-weight: 600;
-    font-size: clamp(0.95rem, 2.2vw, 1.15rem);
-    letter-spacing: -0.02em;
-    line-height: 1.15;
-  }
-
-  .header__apphub-home__line {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    opacity: 0.78;
+  .header__apphub-logo {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    display: block;
+    transition: transform 0.2s ease;
   }
 
     .header__apphub-banner a:not(.header__apphub-home) {
@@ -261,8 +252,8 @@
       opacity: 0.8;
     }
 
-    .header__apphub-home:hover .header__apphub-home__name {
-      color: var(--color-accent);
+    .header__apphub-home:hover .header__apphub-logo {
+      transform: scale(1.05);
     }
 
     /* ===== Header Base Styles ===== */
@@ -283,15 +274,9 @@
       position: relative;
     }
 
-  /* ===== Brand / Logo lockup (kept inline so it never overlaps nav) ===== */
+  /* ===== Brand / Logo ===== */
   .brand {
     flex-shrink: 0;
-  }
-  .brand__lockup {
-    min-width: 0;
-  }
-  .brand__name {
-    white-space: nowrap;
   }
 
   /* ===== Mobile Menu Toggle ===== */
@@ -429,14 +414,10 @@
 
   /* Free Trial CTA in nav */
   .nav-trial-cta {
-    background: var(--color-accent);
-    color: var(--color-primary) !important;
     padding: 8px 12px;
     border-radius: 16px;
-    border: 1px solid rgba(var(--color-primary-rgb), 0.08);
-    font-weight: 900;
+    border: 1px solid rgba(var(--color-button-rgb), 0.2);
   }
-  .nav-trial-cta:hover { filter: brightness(0.95); }
 
   /* Logout button styling to match nav links */
   .nav-logout-form {
@@ -719,10 +700,6 @@
       .header__apphub-banner {
         font-size: 12px;
       }
-
-    .header__apphub-home__line {
-      display: none;
-    }
 
     .header {
       padding: 10px 15px;

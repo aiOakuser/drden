@@ -2037,7 +2037,7 @@ class StudentPageView(TemplateView):
         return context
 
 
-# Dress types for the designer-only custom orders page.
+# Dress types for the viewer custom orders page.
 DRESS_TYPES = [
     ("evening", "Evening Dress"),
     ("cocktail", "Cocktail Dress"),
@@ -2101,19 +2101,11 @@ FORMAL_SUBCATEGORIES = [
 ]
 
 
-def _require_designer_custom_orders_access(request):
-    if not getattr(request.user, "is_authenticated", False):
-        raise Http404("Custom orders page not found.")
-    if not DesignerProfile.objects.filter(user=request.user).exists():
-        raise Http404("Custom orders page not found.")
-
-
 def neworders_dresses_view(request):
     """
-    New orders page for dresses — /neworders/dresses/
-    Hidden from viewers; only designer accounts can access the custom order flow.
+    Custom dress orders — /neworders/dresses/
+    Viewers enter a phone gate, pick a designer, and submit measurements/fabric details.
     """
-    _require_designer_custom_orders_access(request)
     session_key = "neworder_dresses_phone"
     has_access = bool(request.session.get(session_key))
 
@@ -2166,7 +2158,6 @@ def neworders_dresses_submit_view(request):
     Submit a dress order to a designer. Requires session access (phone gate).
     Sends email notification to the designer and confirmation to the viewer.
     """
-    _require_designer_custom_orders_access(request)
     session_key = "neworder_dresses_phone"
     if not request.session.get(session_key):
         messages.error(request, "Please enter your phone number to submit an order.")
@@ -4250,8 +4241,26 @@ def subscription_dashboard(request):
     subscription = (
         UserSubscription.objects.select_related("plan").filter(user=request.user).first()
     )
-    checkout_success = request.GET.get("checkout") == "success"
-    is_active = subscription and subscription.status == "active"
+
+    checkout_summary = None
+    session_id = (request.GET.get("session_id") or "").strip()
+    if session_id and stripe_billing.is_configured():
+        try:
+            checkout_summary = stripe_billing.verify_checkout_session(
+                session_id, user=request.user
+            )
+            subscription = (
+                UserSubscription.objects.select_related("plan")
+                .filter(user=request.user)
+                .first()
+            )
+        except stripe_billing.StripeBillingError:
+            checkout_summary = None
+
+    checkout_success = bool(checkout_summary and checkout_summary.get("paid"))
+    is_active = subscription and (
+        subscription.is_subscription_active or subscription.status == "active"
+    )
     billing_portal_available = (
         bool(subscription and subscription.stripe_customer_id)
         and stripe_billing.is_configured()
@@ -4269,6 +4278,7 @@ def subscription_dashboard(request):
             "stripe_enabled": stripe_billing.is_configured(),
             "stripe_publishable_key": settings.STRIPE_PUBLISHABLE_KEY,
             "checkout_success": checkout_success,
+            "checkout_summary": checkout_summary,
             "show_activation": checkout_success or is_active,
             "billing_portal_available": billing_portal_available,
             "register_url": reverse("signup"),
@@ -4288,7 +4298,7 @@ def change_subscription_plan(request):
         return JsonResponse({"error": "Invalid request."}, status=400)
 
     plan_slug = (payload.get("plan") or payload.get("plan_slug") or "").strip()
-    interval = (payload.get("interval") or "monthly").strip().lower()
+    interval = (payload.get("interval") or "yearly").strip().lower()
     if interval not in {"monthly", "yearly"}:
         return JsonResponse({"error": "Invalid billing interval."}, status=400)
     if not plan_slug:
@@ -4299,6 +4309,18 @@ def change_subscription_plan(request):
             {"error": "Online payments are not configured yet. Contact support."},
             status=503,
         )
+
+    subscription = stripe_billing.ensure_user_subscription(request.user)
+    if subscription.stripe_subscription_id and subscription.is_subscription_active:
+        try:
+            stripe_billing.change_membership_subscription(
+                user=request.user,
+                plan_slug=plan_slug,
+                interval=interval,
+            )
+        except stripe_billing.StripeBillingError as exc:
+            return JsonResponse({"error": str(exc)}, status=400)
+        return JsonResponse({"status": "updated", "redirect_url": reverse("subscription_dashboard")})
 
     try:
         session = stripe_billing.create_membership_checkout_session(
@@ -4330,10 +4352,13 @@ def cancel_subscription(request):
             return JsonResponse({"error": str(exc)}, status=400)
 
     subscription.auto_renewal = False
-    if subscription.status == "active":
-        subscription.status = "canceled"
-    subscription.save(update_fields=["auto_renewal", "status", "updated_at"])
-    return JsonResponse({"status": "canceled"})
+    subscription.save(update_fields=["auto_renewal", "updated_at"])
+    return JsonResponse(
+        {
+            "status": "scheduled_cancel",
+            "message": "Auto-renewal is off. You keep access until the end of your billing period.",
+        }
+    )
 
 
 @login_required

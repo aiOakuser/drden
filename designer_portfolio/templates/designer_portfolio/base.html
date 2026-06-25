@@ -6,6 +6,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}Global Designer Hub{% endblock %}</title>
+    <link rel="icon" href="{% static 'images/brand/gdh-logo.png' %}" type="image/png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -71,6 +72,8 @@
 
     <!-- Designer AI Chat Widget (Tailwind Version) -->
     {% include "designer_portfolio/includes/designer_ai_chat_tailwind.html" %}
+
+    <link rel="stylesheet" href="{% static 'css/buttons.css' %}" />
 
     <!-- Global scripts -->
     <script src="{% static 'js/main.js' %}"></script>

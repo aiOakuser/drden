@@ -94,14 +94,20 @@ def create_membership_checkout_session(
     customer_id = ensure_stripe_customer(subscription, user)
     _configure_stripe()
 
+    session_success_url = (
+        success_url
+        + ("&" if "?" in success_url else "?")
+        + "session_id={CHECKOUT_SESSION_ID}"
+    )
+
     try:
         return stripe.checkout.Session.create(
             customer=customer_id,
             mode="subscription",
             line_items=[{"price": price_id, "quantity": 1}],
-            success_url=success_url + ("&" if "?" in success_url else "?") + "checkout=success",
+            success_url=session_success_url,
             cancel_url=cancel_url,
-            payment_method_types=["card"],
+            automatic_payment_methods={"enabled": True},
             metadata={
                 "user_id": str(user.pk),
                 "plan_slug": plan_slug,
@@ -118,6 +124,94 @@ def create_membership_checkout_session(
         )
     except stripe.error.StripeError as exc:
         _handle_stripe_error(exc)
+
+
+def change_membership_subscription(
+    *,
+    user: User,
+    plan_slug: str,
+    interval: BillingInterval,
+) -> None:
+    """Swap an existing Stripe subscription to a new tier or billing interval."""
+    plan = get_membership_plan(plan_slug)
+    if plan is None:
+        raise StripeBillingError("Unknown membership plan.")
+
+    price_id = plan.stripe_price_id(interval)
+    if not price_id:
+        raise StripeBillingError(
+            f"Stripe price is not configured for {plan.name} ({interval})."
+        )
+
+    subscription = ensure_user_subscription(user)
+    if not subscription.stripe_subscription_id:
+        raise StripeBillingError("No active Stripe subscription to change.")
+
+    _configure_stripe()
+    try:
+        stripe_sub = stripe.Subscription.retrieve(subscription.stripe_subscription_id)
+        items = stripe_sub.get("items", {}).get("data", [])
+        if not items:
+            raise StripeBillingError("Stripe subscription has no line items.")
+        item_id = items[0]["id"]
+        stripe.Subscription.modify(
+            subscription.stripe_subscription_id,
+            items=[{"id": item_id, "price": price_id}],
+            metadata={
+                "user_id": str(user.pk),
+                "plan_slug": plan_slug,
+                "interval": interval,
+            },
+            proration_behavior="create_prorations",
+        )
+    except stripe.error.StripeError as exc:
+        _handle_stripe_error(exc)
+
+    subscription.membership_tier = plan_slug
+    subscription.billing_interval = interval
+    subscription.save(update_fields=["membership_tier", "billing_interval", "updated_at"])
+    sync_stripe_subscription(subscription.stripe_subscription_id)
+
+
+def verify_checkout_session(session_id: str, *, user: User) -> dict[str, Any]:
+    """
+    Retrieve a completed Checkout session, apply membership if paid, and return
+    a summary for the success page.
+    """
+    if not session_id:
+        raise StripeBillingError("Missing checkout session.")
+
+    _configure_stripe()
+    try:
+        session = stripe.checkout.Session.retrieve(
+            session_id,
+            expand=["subscription", "line_items"],
+        )
+    except stripe.error.StripeError as exc:
+        _handle_stripe_error(exc)
+
+    metadata = session.get("metadata") or {}
+    session_user_id = metadata.get("user_id")
+    if session_user_id and str(user.pk) != str(session_user_id):
+        raise StripeBillingError("This checkout session does not belong to your account.")
+
+    payment_status = session.get("payment_status")
+    if payment_status == "paid" or session.get("status") == "complete":
+        apply_checkout_session(session)
+
+    subscription = ensure_user_subscription(user)
+    plan_slug = metadata.get("plan_slug") or subscription.membership_tier
+    interval = metadata.get("interval") or subscription.billing_interval or "yearly"
+    plan = get_membership_plan(plan_slug) if plan_slug else None
+    amount = plan.price_for(interval) if plan and interval in {"monthly", "yearly"} else None
+
+    return {
+        "paid": payment_status == "paid" or session.get("status") == "complete",
+        "plan_name": plan.name if plan else subscription.membership_display_name,
+        "interval": interval,
+        "amount": f"${amount:,.2f}" if amount is not None else "",
+        "renewal_date": subscription.annual_renewal_date_display,
+    }
 
 
 def create_setup_intent(user: User) -> stripe.SetupIntent:
@@ -396,6 +490,9 @@ def handle_webhook_event(payload: bytes, signature: str) -> None:
         if subscription:
             subscription.last_payment_date = timezone.now()
             subscription.save(update_fields=["last_payment_date", "updated_at"])
+        stripe_sub_id = data_object.get("subscription")
+        if stripe_sub_id:
+            sync_stripe_subscription(stripe_sub_id)
     elif event_type == "setup_intent.succeeded":
         customer_id = data_object.get("customer")
         payment_method_id = data_object.get("payment_method")

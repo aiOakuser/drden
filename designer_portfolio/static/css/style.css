@@ -7,8 +7,12 @@
   --color-primary-rgb: 20, 18, 26;
   --color-secondary: #f7f4ee;
   --color-secondary-rgb: 247, 244, 238;
-  --color-accent: #c76b4a;
-  --color-accent-rgb: 199, 107, 74;
+  --color-accent: #ea580c;
+  --color-accent-rgb: 234, 88, 12;
+  --color-button: #ea580c;
+  --color-button-rgb: 234, 88, 12;
+  --color-button-hover: #fdba74;
+  --color-button-hover-rgb: 253, 186, 116;
   --color-graphite: #2f2c38;
   --color-graphite-rgb: 47, 44, 56;
   --color-highlight: #dcd4c8;
@@ -90,8 +94,8 @@ img {
   min-width: 0;
 }
 .brand__mark {
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   flex-shrink: 0;
   object-fit: contain;
   transition: transform 0.25s ease, filter 0.25s ease;
@@ -100,36 +104,7 @@ img {
   transform: scale(1.04);
   filter: brightness(1.06);
 }
-.brand__lockup {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  line-height: 1.05;
-  min-width: 0;
-}
-.brand__name {
-  font-family: var(--font-head);
-  font-size: clamp(1.05rem, 2.1vw, 1.35rem);
-  font-weight: 600;
-  font-variation-settings: "SOFT" 40, "WONK" 0.9;
-  letter-spacing: -0.02em;
-  color: var(--color-secondary);
-  white-space: nowrap;
-}
-.brand__tagline {
-  font-family: var(--font-body);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(var(--color-secondary-rgb), 0.72);
-  white-space: nowrap;
-}
 @media (max-width: 520px) {
-  .brand__tagline {
-    display: none;
-  }
   .brand__mark {
     width: 44px;
     height: 44px;

@@ -7,9 +7,21 @@
 
 {% block dashboard_content %}
 <div class="subscription-page">
-  {% if checkout_success %}
+  {% if checkout_success and checkout_summary %}
   <div class="sub-alert sub-alert--success" role="status">
-    Payment received — your membership is activating. Check Step 4 below for what unlocks next.
+    Payment confirmed — <strong>{{ checkout_summary.plan_name }}</strong>
+    {% if checkout_summary.interval == 'yearly' %}
+      (1-year membership{% if checkout_summary.amount %}, {{ checkout_summary.amount }}/year{% endif %})
+    {% else %}
+      ({{ checkout_summary.interval }} billing{% if checkout_summary.amount %}, {{ checkout_summary.amount }}/month{% endif %})
+    {% endif %}
+    {% if checkout_summary.renewal_date %}
+      Renews on {{ checkout_summary.renewal_date }}.
+    {% endif %}
+  </div>
+  {% elif checkout_success %}
+  <div class="sub-alert sub-alert--success" role="status">
+    Payment received — your membership is active. See Step 4 below for what unlocked.
   </div>
   {% endif %}
 
@@ -103,8 +115,8 @@
     </div>
 
     <div class="sub-billing-toggle" role="group" aria-label="Billing interval">
-      <button type="button" class="sub-billing-toggle__btn is-active" data-interval="monthly">Monthly</button>
-      <button type="button" class="sub-billing-toggle__btn" data-interval="yearly">Yearly <span class="sub-billing-toggle__save">Save ~17%</span></button>
+      <button type="button" class="sub-billing-toggle__btn" data-interval="monthly">Monthly</button>
+      <button type="button" class="sub-billing-toggle__btn is-active" data-interval="yearly">Yearly <span class="sub-billing-toggle__save">Save ~17%</span></button>
     </div>
 
     <div class="sub-plan-grid">
@@ -117,11 +129,11 @@
         {% endif %}
         <h3 class="sub-plan__name">{{ plan.name }}</h3>
         <p class="sub-plan__price" data-monthly="${{ plan.monthly_price|floatformat:0 }}" data-yearly="${{ plan.yearly_price|floatformat:0 }}">
-          <span class="sub-plan__amount">${{ plan.monthly_price|floatformat:0 }}</span>
-          <span class="sub-plan__period">/month</span>
+          <span class="sub-plan__amount">${{ plan.yearly_price|floatformat:0 }}</span>
+          <span class="sub-plan__period">/year</span>
         </p>
         <p class="sub-plan__alt-price" data-monthly-alt="or ${{ plan.yearly_price|floatformat:0 }}/year" data-yearly-alt="or ${{ plan.monthly_price|floatformat:0 }}/month">
-          or ${{ plan.yearly_price|floatformat:0 }}/year
+          or ${{ plan.monthly_price|floatformat:0 }}/month
         </p>
         <ul class="sub-plan__benefits">
           {% for benefit in plan.benefits %}
@@ -419,7 +431,8 @@
 
 <script>
   (function () {
-    var selectedInterval = "monthly";
+    var selectedInterval = "yearly";
+    updatePriceLabels();
 
     function getCsrfToken() {
       var m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]*)/);
@@ -466,6 +479,10 @@
           .then(function (result) {
             if (result.ok && result.data.checkout_url) {
               window.location.href = result.data.checkout_url;
+              return;
+            }
+            if (result.ok && result.data.status === "updated") {
+              window.location.href = result.data.redirect_url || "{% url 'subscription_dashboard' %}";
               return;
             }
             throw new Error((result.data && result.data.error) || "Checkout failed.");

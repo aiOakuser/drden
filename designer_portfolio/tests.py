@@ -448,7 +448,6 @@ class NavbarTests(TestCase):
             "Updates",
             "Blog",
             "Community",
-            "Support",
             "Enterprise",
             "Pricing",
             "Log in",
@@ -1057,21 +1056,19 @@ class DressOrderConfirmationEmailTests(TestCase):
         session["neworder_dresses_phone"] = "+1 555 123 4567"
         session.save()
 
-    def test_custom_orders_hidden_from_anonymous_viewers(self):
+    def test_anonymous_viewers_can_access_custom_orders_gate(self):
         page_response = self.client.get(reverse("neworders_dresses"))
-        self.assertEqual(page_response.status_code, 404)
+        self.assertEqual(page_response.status_code, 200)
+        self.assertContains(page_response, "Orders — Dresses")
 
         gate_response = self.client.post(
             reverse("neworders_dresses"),
             {"phone": "+1 555 123 4567"},
         )
-        self.assertEqual(gate_response.status_code, 404)
+        self.assertEqual(gate_response.status_code, 302)
+        self.assertEqual(gate_response.headers.get("Location"), reverse("neworders_dresses"))
 
-        submit_response = self.client.post(reverse("neworders_dresses_submit"))
-        self.assertEqual(submit_response.status_code, 404)
-        self.assertEqual(DressOrder.objects.count(), 0)
-
-    def test_custom_orders_hidden_from_authenticated_non_designers(self):
+    def test_viewers_can_submit_custom_orders(self):
         viewer_user = User.objects.create_user(
             username="orders-viewer",
             email="orders-viewer@example.com",
@@ -1083,18 +1080,20 @@ class DressOrderConfirmationEmailTests(TestCase):
         self._unlock_neworder_session()
 
         page_response = self.client.get(reverse("neworders_dresses"))
-        self.assertEqual(page_response.status_code, 404)
+        self.assertEqual(page_response.status_code, 200)
 
-        submit_response = self.client.post(
+        response = self.client.post(
             reverse("neworders_dresses_submit"),
             {
                 "designer_id": str(self.designer_user.id),
                 "dress_type": "casual",
                 "dress_label": "Casual Dress",
+                "customer_email": "viewer@example.com",
             },
+            follow=False,
         )
-        self.assertEqual(submit_response.status_code, 404)
-        self.assertEqual(DressOrder.objects.count(), 0)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(DressOrder.objects.count(), 1)
 
     def test_designer_can_open_custom_orders_gate(self):
         self.client.login(username="designer-orders", password="StrongPass123!")
@@ -1104,9 +1103,10 @@ class DressOrderConfirmationEmailTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Orders — Dresses")
 
-    def test_mobile_custom_orders_hidden_from_anonymous_viewers(self):
+    def test_mobile_custom_orders_available_to_viewers(self):
         options_response = self.client.get(reverse("mobile_neworders_options"))
-        self.assertEqual(options_response.status_code, 404)
+        self.assertEqual(options_response.status_code, 200)
+        self.assertIn("dress_types", options_response.json())
 
         submit_response = self.client.post(
             reverse("mobile_neworders_submit"),
@@ -1114,15 +1114,17 @@ class DressOrderConfirmationEmailTests(TestCase):
                 {
                     "phone": "+1 555 765 4321",
                     "designer_id": self.designer_user.id,
+                    "customer_email": "mobile-viewer@example.com",
+                    "dress_type": "casual",
+                    "dress_label": "Casual Dress",
                 }
             ),
             content_type="application/json",
         )
-        self.assertEqual(submit_response.status_code, 404)
-        self.assertEqual(DressOrder.objects.count(), 0)
+        self.assertEqual(submit_response.status_code, 200)
+        self.assertEqual(DressOrder.objects.count(), 1)
 
     def test_web_submit_sends_designer_and_viewer_emails(self):
-        self.client.login(username="designer-orders", password="StrongPass123!")
         mail.outbox.clear()
         self._unlock_neworder_session()
 
@@ -1157,7 +1159,6 @@ class DressOrderConfirmationEmailTests(TestCase):
         self.assertEqual(viewer_email.to, ["viewer@example.com"])
 
     def test_mobile_submit_sends_designer_and_viewer_emails(self):
-        self.client.login(username="designer-orders", password="StrongPass123!")
         mail.outbox.clear()
 
         response = self.client.post(
@@ -1346,8 +1347,138 @@ class SubscriptionPaymentTests(TestCase):
         self.assertEqual(response.json()["checkout_url"], "https://checkout.stripe.com/test")
         checkout_kwargs = mock_session_create.call_args.kwargs
         self.assertEqual(checkout_kwargs["mode"], "subscription")
-        self.assertEqual(checkout_kwargs["payment_method_types"], ["card"])
+        self.assertEqual(checkout_kwargs["automatic_payment_methods"], {"enabled": True})
         self.assertEqual(checkout_kwargs["metadata"]["plan_slug"], "personal_designer_website")
+
+    @override_settings(
+        STRIPE_SECRET_KEY="sk_test_example",
+        STRIPE_PUBLISHABLE_KEY="pk_test_example",
+        STRIPE_MEMBERSHIP_PRICE_IDS={
+            "personal_designer_website": {
+                "monthly": "price_test_monthly",
+                "yearly": "price_test_yearly",
+            }
+        },
+    )
+    @patch("designer_portfolio.stripe_billing.stripe.checkout.Session.create")
+    @patch("designer_portfolio.stripe_billing.stripe.Customer.create")
+    def test_yearly_checkout_uses_yearly_stripe_price(
+        self, mock_customer_create, mock_session_create
+    ):
+        mock_customer_create.return_value = type("Customer", (), {"id": "cus_test"})()
+        mock_session_create.return_value = type(
+            "Session", (), {"url": "https://checkout.stripe.com/yearly"}
+        )()
+
+        self.client.login(username=self.user.username, password=self.password)
+        response = self.client.post(
+            reverse("change_subscription_plan"),
+            data=json.dumps({"plan": "personal_designer_website", "interval": "yearly"}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        checkout_kwargs = mock_session_create.call_args.kwargs
+        self.assertEqual(checkout_kwargs["line_items"][0]["price"], "price_test_yearly")
+        self.assertEqual(checkout_kwargs["metadata"]["interval"], "yearly")
+        self.assertIn("session_id={CHECKOUT_SESSION_ID}", checkout_kwargs["success_url"])
+
+    @override_settings(
+        STRIPE_SECRET_KEY="sk_test_example",
+        STRIPE_PUBLISHABLE_KEY="pk_test_example",
+        STRIPE_MEMBERSHIP_PRICE_IDS={
+            "premium_fashion_studio": {
+                "monthly": "price_premium_monthly",
+                "yearly": "price_premium_yearly",
+            }
+        },
+    )
+    @patch("designer_portfolio.stripe_billing.sync_stripe_subscription")
+    @patch("designer_portfolio.stripe_billing.stripe.Subscription.modify")
+    @patch("designer_portfolio.stripe_billing.stripe.Subscription.retrieve")
+    def test_change_plan_updates_existing_stripe_subscription(
+        self, mock_subscription_retrieve, mock_subscription_modify, mock_sync
+    ):
+        subscription = self.user.subscription
+        subscription.status = "active"
+        subscription.stripe_subscription_id = "sub_existing"
+        subscription.stripe_customer_id = "cus_test"
+        subscription.membership_tier = "personal_designer_website"
+        subscription.billing_interval = "yearly"
+        subscription.subscription_end_date = timezone.now() + timezone.timedelta(days=300)
+        subscription.save()
+
+        mock_subscription_retrieve.return_value = {
+            "id": "sub_existing",
+            "items": {"data": [{"id": "si_test"}]},
+        }
+
+        self.client.login(username=self.user.username, password=self.password)
+        response = self.client.post(
+            reverse("change_subscription_plan"),
+            data=json.dumps({"plan": "premium_fashion_studio", "interval": "yearly"}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "updated")
+        modify_kwargs = mock_subscription_modify.call_args.kwargs
+        self.assertEqual(modify_kwargs["items"][0]["price"], "price_premium_yearly")
+        subscription.refresh_from_db()
+        self.assertEqual(subscription.membership_tier, "premium_fashion_studio")
+        mock_sync.assert_called_once_with("sub_existing")
+
+    @override_settings(
+        STRIPE_SECRET_KEY="sk_test_example",
+        STRIPE_PUBLISHABLE_KEY="pk_test_example",
+    )
+    @patch("designer_portfolio.stripe_billing.apply_checkout_session")
+    @patch("designer_portfolio.stripe_billing.stripe.checkout.Session.retrieve")
+    def test_verify_checkout_session_on_dashboard_success(
+        self, mock_session_retrieve, mock_apply
+    ):
+        from datetime import timezone as dt_timezone
+
+        period_end = int((timezone.now() + timezone.timedelta(days=365)).timestamp())
+        mock_session_retrieve.return_value = {
+            "payment_status": "paid",
+            "status": "complete",
+            "metadata": {
+                "user_id": str(self.user.pk),
+                "plan_slug": "personal_designer_website",
+                "interval": "yearly",
+            },
+            "customer": "cus_test",
+            "subscription": "sub_test",
+        }
+        subscription = self.user.subscription
+        subscription.membership_tier = "personal_designer_website"
+        subscription.billing_interval = "yearly"
+        subscription.subscription_end_date = timezone.datetime.fromtimestamp(
+            period_end, tz=dt_timezone.utc
+        )
+        subscription.save()
+
+        self.client.login(username=self.user.username, password=self.password)
+        response = self.client.get(
+            reverse("subscription_dashboard") + "?session_id=cs_test_yearly"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Payment confirmed")
+        self.assertContains(response, "Personal Designer Website")
+        self.assertContains(response, "1-year membership")
+        mock_apply.assert_called_once()
+
+    def test_yearly_membership_is_subscription_active(self):
+        subscription = self.user.subscription
+        subscription.status = "active"
+        subscription.membership_tier = "personal_designer_website"
+        subscription.billing_interval = "yearly"
+        subscription.stripe_subscription_id = "sub_test"
+        subscription.subscription_end_date = timezone.now() + timezone.timedelta(days=365)
+        subscription.save()
+        self.assertTrue(subscription.is_subscription_active)
+        self.assertTrue(subscription.has_paid_membership)
+        self.assertTrue(subscription.can_use_designer_messenger())
 
     @override_settings(
         STRIPE_SECRET_KEY="sk_test_example",
