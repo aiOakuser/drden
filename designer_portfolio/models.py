@@ -618,6 +618,10 @@ class UserSubscription(models.Model):
     subscription_start_date = models.DateTimeField(null=True, blank=True)
     subscription_end_date = models.DateTimeField(null=True, blank=True)
     
+    # Designer membership tier (professional_portfolio, personal_designer_website, …)
+    membership_tier = models.CharField(max_length=64, blank=True, default="")
+    billing_interval = models.CharField(max_length=16, blank=True, default="")
+
     # Payment provider IDs
     stripe_customer_id = models.CharField(max_length=200, blank=True, null=True)
     stripe_subscription_id = models.CharField(max_length=200, blank=True, null=True)
@@ -664,6 +668,18 @@ class UserSubscription(models.Model):
     def is_frozen(self):
         """True if account is frozen due to policy violation (e.g., contact sharing)."""
         return self.status == 'frozen'
+
+    @property
+    def membership_display_name(self) -> str:
+        if self.membership_tier:
+            from .membership_plans import get_membership_plan
+
+            plan = get_membership_plan(self.membership_tier)
+            if plan:
+                return plan.name
+        if self.plan_id:
+            return self.plan.display_name
+        return "Free Trial"
 
     def can_use_designer_messenger(self):
         """

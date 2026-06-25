@@ -1151,3 +1151,91 @@ class GoogleReviewViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Search on Google")
         self.assertContains(response, "google.com/search")
+
+
+@override_settings(
+    SECURE_SSL_REDIRECT=False,
+    SESSION_COOKIE_SECURE=False,
+    CSRF_COOKIE_SECURE=False,
+    STORAGES=TEST_STORAGE_BACKENDS,
+    STRIPE_SECRET_KEY="",
+    STRIPE_PUBLISHABLE_KEY="",
+)
+class SubscriptionPaymentTests(TestCase):
+    def setUp(self) -> None:
+        self.password = "TestPass123!"
+        self.user = User.objects.create_user(
+            username="billing_user",
+            email="billing@example.com",
+            password=self.password,
+            is_active=True,
+        )
+        UserSubscription.objects.create(
+            user=self.user,
+            status="free_trial",
+            trial_end_date=timezone.now() + timezone.timedelta(days=14),
+            next_billing_date=timezone.now() + timezone.timedelta(days=14),
+        )
+
+    def test_subscription_dashboard_shows_membership_plans(self):
+        self.client.login(username=self.user.username, password=self.password)
+        response = self.client.get(reverse("subscription_dashboard"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Professional Portfolio")
+        self.assertContains(response, "Personal Designer Website")
+        self.assertContains(response, "Premium Fashion Studio")
+        self.assertContains(response, "Pay Now")
+
+    def test_checkout_requires_stripe_configuration(self):
+        self.client.login(username=self.user.username, password=self.password)
+        response = self.client.post(
+            reverse("change_subscription_plan"),
+            data=json.dumps({"plan": "personal_designer_website", "interval": "monthly"}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 503)
+        payload = response.json()
+        self.assertIn("error", payload)
+
+    @override_settings(
+        STRIPE_SECRET_KEY="sk_test_example",
+        STRIPE_PUBLISHABLE_KEY="pk_test_example",
+        STRIPE_MEMBERSHIP_PRICE_IDS={
+            "personal_designer_website": {
+                "monthly": "price_test_monthly",
+                "yearly": "price_test_yearly",
+            }
+        },
+    )
+    @patch("designer_portfolio.stripe_billing.stripe.checkout.Session.create")
+    @patch("designer_portfolio.stripe_billing.stripe.Customer.create")
+    def test_checkout_returns_stripe_url_when_configured(
+        self, mock_customer_create, mock_session_create
+    ):
+        mock_customer_create.return_value = type("Customer", (), {"id": "cus_test"})()
+        mock_session_create.return_value = type(
+            "Session", (), {"url": "https://checkout.stripe.com/test"}
+        )()
+
+        self.client.login(username=self.user.username, password=self.password)
+        response = self.client.post(
+            reverse("change_subscription_plan"),
+            data=json.dumps({"plan": "personal_designer_website", "interval": "monthly"}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["checkout_url"], "https://checkout.stripe.com/test")
+
+    def test_payment_methods_page_loads(self):
+        self.client.login(username=self.user.username, password=self.password)
+        response = self.client.get(reverse("payment_methods"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Payment methods")
+        self.assertContains(response, "Credit / Debit card")
+
+    def test_membership_display_name_uses_tier(self):
+        subscription = self.user.subscription
+        subscription.membership_tier = "personal_designer_website"
+        subscription.save(update_fields=["membership_tier"])
+        self.assertEqual(subscription.membership_display_name, "Personal Designer Website")
+

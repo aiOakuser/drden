@@ -20,7 +20,7 @@ from django.contrib.auth.views import LoginView, PasswordResetView, PasswordRese
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import login, authenticate, get_user_model
 from django.http import JsonResponse, Http404, QueryDict, HttpResponse
-from django.views.decorators.csrf import requires_csrf_token
+from django.views.decorators.csrf import requires_csrf_token, csrf_exempt
 from django.views.decorators.http import require_POST
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -4235,35 +4235,116 @@ def designer_design_detail_api(request, design_id):
 
 @login_required
 def subscription_dashboard(request):
+    from .auth_utils import ensure_designer_access
+    from .membership_plans import MEMBERSHIP_BENEFITS, list_membership_plans
+    from . import stripe_billing
+
+    ensure_designer_access(request.user)
     subscription = (
         UserSubscription.objects.select_related("plan").filter(user=request.user).first()
     )
-    plans = SubscriptionPlan.objects.filter(is_active=True).order_by("price")
     return render(
         request,
         "designer_portfolio/subscription_dashboard.html",
         {
             "current_section": "subscription",
             "subscription": subscription,
-            "plans": plans,
+            "membership_plans": list_membership_plans(),
+            "membership_benefits": MEMBERSHIP_BENEFITS,
+            "stripe_enabled": stripe_billing.is_configured(),
+            "stripe_publishable_key": settings.STRIPE_PUBLISHABLE_KEY,
+            "checkout_success": request.GET.get("checkout") == "success",
         },
     )
 
-def change_subscription_plan(request):
-    return JsonResponse({"status": "ok"})
 
+@login_required
+@require_POST
+def change_subscription_plan(request):
+    from . import stripe_billing
+
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid request."}, status=400)
+
+    plan_slug = (payload.get("plan") or payload.get("plan_slug") or "").strip()
+    interval = (payload.get("interval") or "monthly").strip().lower()
+    if interval not in {"monthly", "yearly"}:
+        return JsonResponse({"error": "Invalid billing interval."}, status=400)
+    if not plan_slug:
+        return JsonResponse({"error": "Choose a membership plan."}, status=400)
+
+    if not stripe_billing.is_configured():
+        return JsonResponse(
+            {"error": "Online payments are not configured yet. Contact support."},
+            status=503,
+        )
+
+    try:
+        session = stripe_billing.create_membership_checkout_session(
+            user=request.user,
+            plan_slug=plan_slug,
+            interval=interval,
+            success_url=request.build_absolute_uri(reverse("subscription_dashboard")),
+            cancel_url=request.build_absolute_uri(reverse("subscription_dashboard")),
+        )
+    except stripe_billing.StripeBillingError as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
+
+    return JsonResponse({"checkout_url": session.url})
+
+
+@login_required
+@require_POST
 def cancel_subscription(request):
-    return JsonResponse({"status": "ok"})
+    from . import stripe_billing
+
+    subscription = UserSubscription.objects.filter(user=request.user).first()
+    if subscription is None:
+        return JsonResponse({"error": "No subscription found."}, status=404)
+
+    if subscription.stripe_subscription_id and stripe_billing.is_configured():
+        try:
+            stripe_billing.cancel_stripe_subscription(subscription)
+        except stripe_billing.StripeBillingError as exc:
+            return JsonResponse({"error": str(exc)}, status=400)
+
+    subscription.auto_renewal = False
+    if subscription.status == "active":
+        subscription.status = "canceled"
+    subscription.save(update_fields=["auto_renewal", "status", "updated_at"])
+    return JsonResponse({"status": "canceled"})
+
 
 @login_required
 def payment_methods(request):
+    from .auth_utils import ensure_designer_access
+    from . import stripe_billing
+
+    ensure_designer_access(request.user)
     subscription = (
         UserSubscription.objects.select_related("plan").filter(user=request.user).first()
     )
+    saved_card = None
+    if subscription and subscription.stripe_customer_id and stripe_billing.is_configured():
+        try:
+            saved_card = stripe_billing.get_default_payment_method_summary(
+                subscription.stripe_customer_id
+            )
+        except Exception:
+            saved_card = None
+
     return render(
         request,
         "designer_portfolio/payment_methods.html",
-        {"current_section": "subscription", "subscription": subscription},
+        {
+            "current_section": "subscription",
+            "subscription": subscription,
+            "saved_card": saved_card,
+            "stripe_enabled": stripe_billing.is_configured(),
+            "stripe_publishable_key": settings.STRIPE_PUBLISHABLE_KEY,
+        },
     )
 
 @login_required
@@ -4277,10 +4358,35 @@ def billing_history(request):
         {"current_section": "subscription", "subscription": subscription},
     )
 
+@login_required
+@require_POST
 def create_stripe_setup_intent(request):
-    return JsonResponse({"status": "ok"})
+    from . import stripe_billing
 
+    if not stripe_billing.is_configured():
+        return JsonResponse(
+            {"error": "Stripe is not configured."},
+            status=503,
+        )
+    try:
+        intent = stripe_billing.create_setup_intent(request.user)
+    except stripe_billing.StripeBillingError as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
+    return JsonResponse({"client_secret": intent.client_secret})
+
+
+@csrf_exempt
+@require_POST
 def stripe_webhook(request):
+    from . import stripe_billing
+
+    signature = request.META.get("HTTP_STRIPE_SIGNATURE", "")
+    try:
+        stripe_billing.handle_webhook_event(request.body, signature)
+    except stripe_billing.StripeBillingError as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
+    except ValueError:
+        return JsonResponse({"error": "Invalid payload."}, status=400)
     return JsonResponse({"status": "ok"})
 
 def create_paypal_subscription(request):

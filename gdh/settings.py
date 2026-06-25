@@ -840,3 +840,22 @@ except ValueError:
 OPENAI_TIMEOUT = max(60.0, min(OPENAI_TIMEOUT, 900.0))
 # When True and OPENAI_API_KEY is set, chat widget auto-opens once per browser tab (sessionStorage).
 DESIGNER_AI_AUTO_POPUP = env_bool("DESIGNER_AI_AUTO_POPUP", default=True)
+
+# --- Stripe (designer membership checkout — cards + Link via Checkout / Payment Element) ---
+STRIPE_PUBLISHABLE_KEY = (os.getenv("STRIPE_PUBLISHABLE_KEY", "") or "").strip()
+STRIPE_SECRET_KEY = (os.getenv("STRIPE_SECRET_KEY", "") or "").strip()
+STRIPE_WEBHOOK_SECRET = (os.getenv("STRIPE_WEBHOOK_SECRET", "") or "").strip()
+STRIPE_MEMBERSHIP_PRICE_IDS = {
+    "professional_portfolio": {
+        "monthly": (os.getenv("STRIPE_PRICE_PROFESSIONAL_MONTHLY", "") or "").strip(),
+        "yearly": (os.getenv("STRIPE_PRICE_PROFESSIONAL_YEARLY", "") or "").strip(),
+    },
+    "personal_designer_website": {
+        "monthly": (os.getenv("STRIPE_PRICE_PERSONAL_WEBSITE_MONTHLY", "") or "").strip(),
+        "yearly": (os.getenv("STRIPE_PRICE_PERSONAL_WEBSITE_YEARLY", "") or "").strip(),
+    },
+    "premium_fashion_studio": {
+        "monthly": (os.getenv("STRIPE_PRICE_PREMIUM_STUDIO_MONTHLY", "") or "").strip(),
+        "yearly": (os.getenv("STRIPE_PRICE_PREMIUM_STUDIO_YEARLY", "") or "").strip(),
+    },
+}

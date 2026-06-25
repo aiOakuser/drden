@@ -5,14 +5,18 @@
 
 {% block dashboard_content %}
 <div class="subscription-page">
+  {% if checkout_success %}
+  <div class="sub-alert sub-alert--success" role="status">
+    Payment received — your membership is activating. It may take a moment to update.
+  </div>
+  {% endif %}
+
   <!-- Current plan summary -->
   <section class="sub-card sub-current">
     <div class="sub-current__info">
       <p class="sub-eyebrow">Your plan</p>
       {% if subscription %}
-        <h2 class="sub-current__title">
-          {% if subscription.plan %}{{ subscription.plan.display_name }}{% else %}Free Trial{% endif %}
-        </h2>
+        <h2 class="sub-current__title">{{ subscription.membership_display_name }}</h2>
         <p class="sub-current__meta">
           <span class="sub-status sub-status--{{ subscription.status }}">
             {{ subscription.get_status_display }}
@@ -22,7 +26,9 @@
           {% endif %}
         </p>
         <ul class="sub-detail-list">
-          {% if subscription.plan %}
+          {% if subscription.membership_tier and subscription.billing_interval %}
+          <li><span>Billing</span><strong>{{ subscription.billing_interval|title }}</strong></li>
+          {% elif subscription.plan %}
           <li><span>Price</span><strong>${{ subscription.plan.price }}</strong></li>
           {% endif %}
           {% if subscription.next_billing_date %}
@@ -41,7 +47,7 @@
         <p class="sub-current__meta">
           <span class="sub-status sub-status--expired">Not subscribed</span>
         </p>
-        <p class="sub-empty-text">Choose a plan below to unlock premium templates, collaboration tools, and the designer messenger.</p>
+        <p class="sub-empty-text">Choose a plan below to unlock your professional designer website and premium hub features.</p>
       {% endif %}
     </div>
     <div class="sub-current__actions">
@@ -53,37 +59,84 @@
     </div>
   </section>
 
-  <!-- Available plans -->
+  <!-- Membership benefits -->
+  <section class="sub-card sub-benefits">
+    <h2 class="sub-section-title">Included benefits</h2>
+    <ul class="sub-benefits__list">
+      {% for benefit in membership_benefits %}
+      <li>{{ benefit }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <!-- Designer membership plans -->
   <section class="sub-plans">
-    <h2 class="sub-section-title">Available plans</h2>
-    {% if plans %}
+    <div class="sub-plans__header">
+      <h2 class="sub-section-title">Upgrade your designer membership</h2>
+      <p class="sub-plans__intro">Unlock premium features and launch your professional designer website.</p>
+    </div>
+
+    <div class="sub-billing-toggle" role="group" aria-label="Billing interval">
+      <button type="button" class="sub-billing-toggle__btn is-active" data-interval="monthly">Monthly</button>
+      <button type="button" class="sub-billing-toggle__btn" data-interval="yearly">Yearly <span class="sub-billing-toggle__save">Save ~17%</span></button>
+    </div>
+
     <div class="sub-plan-grid">
-      {% for plan in plans %}
-      <article class="sub-card sub-plan {% if subscription.plan and subscription.plan.id == plan.id %}sub-plan--current{% endif %}">
-        {% if subscription.plan and subscription.plan.id == plan.id %}
-        <span class="sub-plan__badge">Current</span>
+      {% for plan in membership_plans %}
+      <article class="sub-card sub-plan {% if plan.is_recommended %}sub-plan--recommended{% endif %} {% if subscription.membership_tier == plan.slug %}sub-plan--current{% endif %}">
+        {% if plan.is_recommended %}
+        <span class="sub-plan__badge">Recommended</span>
+        {% elif subscription.membership_tier == plan.slug %}
+        <span class="sub-plan__badge sub-plan__badge--current">Current</span>
         {% endif %}
-        <h3 class="sub-plan__name">{{ plan.display_name }}</h3>
-        <p class="sub-plan__price">${{ plan.price }}<span>/{{ plan.get_name_display|lower }}</span></p>
-        <p class="sub-plan__duration">{{ plan.duration_days }} day access</p>
-        {% if subscription.plan and subscription.plan.id == plan.id %}
+        <h3 class="sub-plan__name">{{ plan.name }}</h3>
+        <p class="sub-plan__price" data-monthly="${{ plan.monthly_price|floatformat:0 }}" data-yearly="${{ plan.yearly_price|floatformat:0 }}">
+          <span class="sub-plan__amount">${{ plan.monthly_price|floatformat:0 }}</span>
+          <span class="sub-plan__period">/month</span>
+        </p>
+        <p class="sub-plan__tagline">{{ plan.tagline }}</p>
+        {% if subscription.membership_tier == plan.slug and subscription.status == 'active' %}
         <button type="button" class="btn btn-ghost" disabled>Your current plan</button>
         {% else %}
-        <button type="button" class="btn btn-primary sub-plan__choose" data-plan="{{ plan.name }}">Choose plan</button>
+        <button
+          type="button"
+          class="btn btn-primary sub-plan__pay"
+          data-plan="{{ plan.slug }}"
+          {% if not stripe_enabled %}disabled title="Stripe is not configured yet"{% endif %}
+        >Pay Now</button>
         {% endif %}
       </article>
       {% endfor %}
     </div>
+
+    {% if not stripe_enabled %}
+    <p class="sub-stripe-note">
+      Card and Link checkout will appear once Stripe keys are configured.
+      To upgrade now, email <a href="mailto:admin@globaldesignerhub.com">admin@globaldesignerhub.com</a>.
+    </p>
     {% else %}
-    <div class="sub-card sub-empty">
-      <p>No plans are available right now. Please check back soon or contact <a href="{% url 'contact' %}">support</a>.</p>
-    </div>
+    <p class="sub-stripe-note">
+      Pay securely with credit or debit card, or <strong>Link</strong> by Stripe.
+      <a href="{% url 'payment_methods' %}">Manage saved payment methods</a>.
+    </p>
     {% endif %}
   </section>
 </div>
 
 <style>
   .subscription-page { display: grid; gap: 30px; }
+
+  .sub-alert {
+    padding: 14px 18px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .sub-alert--success {
+    background: rgba(34, 197, 94, 0.12);
+    color: #15803d;
+    border: 1px solid rgba(34, 197, 94, 0.25);
+  }
 
   .sub-card {
     background: var(--color-secondary);
@@ -135,7 +188,7 @@
   .sub-detail-list span { color: var(--color-text-muted); }
   .sub-detail-list strong { color: var(--color-primary); }
 
-  .sub-empty-text { color: var(--color-text-muted); max-width: 420px; line-height: 1.6; }
+  .sub-empty-text { color: var(--color-text-muted); max-width: 520px; line-height: 1.6; }
 
   .sub-current__actions { display: flex; flex-direction: column; gap: 12px; align-items: stretch; min-width: 200px; }
 
@@ -145,53 +198,147 @@
   .btn-danger:hover { background: rgba(239, 68, 68, 0.18); }
   .btn[disabled] { opacity: 0.6; cursor: not-allowed; }
 
-  .sub-section-title { margin: 0 0 18px; color: var(--color-primary); font-size: 22px; }
+  .sub-section-title { margin: 0 0 10px; color: var(--color-primary); font-size: 22px; }
+  .sub-plans__intro { margin: 0 0 20px; color: var(--color-text-muted); line-height: 1.6; }
 
-  .sub-plan-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
-  .sub-plan { position: relative; display: flex; flex-direction: column; gap: 8px; }
-  .sub-plan--current { border-color: var(--color-accent); box-shadow: 0 6px 20px rgba(var(--color-accent-rgb), 0.18); }
+  .sub-benefits__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px 20px;
+  }
+  .sub-benefits__list li {
+    position: relative;
+    padding-left: 18px;
+    color: var(--color-text);
+    line-height: 1.5;
+  }
+  .sub-benefits__list li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: var(--color-accent);
+    font-weight: 700;
+  }
+
+  .sub-billing-toggle {
+    display: inline-flex;
+    gap: 6px;
+    padding: 4px;
+    border-radius: 999px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    margin-bottom: 22px;
+  }
+  .sub-billing-toggle__btn {
+    border: none;
+    background: transparent;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+  .sub-billing-toggle__btn.is-active {
+    background: var(--color-primary);
+    color: var(--color-secondary);
+  }
+  .sub-billing-toggle__save {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--color-accent);
+    margin-left: 4px;
+  }
+
+  .sub-plan-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+  .sub-plan { position: relative; display: flex; flex-direction: column; gap: 8px; min-height: 100%; }
+  .sub-plan--recommended {
+    border-color: var(--color-accent);
+    box-shadow: 0 8px 28px rgba(var(--color-accent-rgb), 0.2);
+    transform: translateY(-2px);
+  }
+  .sub-plan--current { border-color: var(--color-accent); }
   .sub-plan__badge {
     position: absolute; top: 16px; right: 16px;
     background: var(--color-accent); color: var(--color-primary);
     font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px; text-transform: uppercase;
   }
-  .sub-plan__name { margin: 0; font-size: 18px; color: var(--color-primary); }
+  .sub-plan__badge--current { background: var(--color-primary); color: var(--color-secondary); }
+  .sub-plan__name { margin: 28px 0 0; font-size: 18px; color: var(--color-primary); }
   .sub-plan__price { margin: 0; font-size: 30px; font-weight: 800; color: var(--color-primary); }
-  .sub-plan__price span { font-size: 14px; font-weight: 500; color: var(--color-text-muted); }
-  .sub-plan__duration { margin: 0 0 14px; color: var(--color-text-muted); font-size: 14px; }
-  .sub-plan .btn { margin-top: auto; justify-content: center; }
+  .sub-plan__period { font-size: 14px; font-weight: 500; color: var(--color-text-muted); }
+  .sub-plan__tagline { margin: 0 0 14px; color: var(--color-text-muted); font-size: 14px; line-height: 1.5; flex: 1; }
+  .sub-plan .btn { margin-top: auto; justify-content: center; width: 100%; }
+
+  .sub-stripe-note {
+    margin: 20px 0 0;
+    color: var(--color-text-muted);
+    font-size: 14px;
+    line-height: 1.6;
+  }
 
   @media (max-width: 768px) {
     .sub-current { flex-direction: column; }
     .sub-current__actions { min-width: 0; }
+    .sub-plan--recommended { transform: none; }
   }
 </style>
 
 <script>
   (function () {
+    var selectedInterval = "monthly";
+
     function getCsrfToken() {
       var m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]*)/);
       return m ? decodeURIComponent(m[1]) : "";
     }
 
-    document.querySelectorAll(".sub-plan__choose").forEach(function (btn) {
+    function updatePriceLabels() {
+      document.querySelectorAll(".sub-plan__price").forEach(function (priceEl) {
+        var amount = priceEl.getAttribute("data-" + selectedInterval) || "";
+        var amountEl = priceEl.querySelector(".sub-plan__amount");
+        var periodEl = priceEl.querySelector(".sub-plan__period");
+        if (amountEl) amountEl.textContent = amount;
+        if (periodEl) periodEl.textContent = selectedInterval === "yearly" ? "/year" : "/month";
+      });
+    }
+
+    document.querySelectorAll(".sub-billing-toggle__btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        selectedInterval = btn.getAttribute("data-interval") || "monthly";
+        document.querySelectorAll(".sub-billing-toggle__btn").forEach(function (b) {
+          b.classList.toggle("is-active", b === btn);
+        });
+        updatePriceLabels();
+      });
+    });
+
+    document.querySelectorAll(".sub-plan__pay").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var plan = btn.getAttribute("data-plan");
         btn.disabled = true;
         var original = btn.textContent;
-        btn.textContent = "Processing…";
+        btn.textContent = "Redirecting…";
         fetch("{% url 'change_subscription_plan' %}", {
           method: "POST",
           credentials: "same-origin",
           headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrfToken() },
-          body: JSON.stringify({ plan: plan }),
+          body: JSON.stringify({ plan: plan, interval: selectedInterval }),
         })
-          .then(function (r) { return r.json(); })
-          .then(function () { window.location.reload(); })
-          .catch(function () {
+          .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+          .then(function (result) {
+            if (result.ok && result.data.checkout_url) {
+              window.location.href = result.data.checkout_url;
+              return;
+            }
+            throw new Error((result.data && result.data.error) || "Checkout failed.");
+          })
+          .catch(function (err) {
             btn.disabled = false;
             btn.textContent = original;
-            alert("Could not change plan right now. Please try again.");
+            alert(err.message || "Could not start checkout. Please try again.");
           });
       });
     });
