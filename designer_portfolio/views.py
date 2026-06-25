@@ -2037,7 +2037,7 @@ class StudentPageView(TemplateView):
         return context
 
 
-# Dress types for new orders page (viewer-facing)
+# Dress types for the designer-only custom orders page.
 DRESS_TYPES = [
     ("evening", "Evening Dress"),
     ("cocktail", "Cocktail Dress"),
@@ -2101,11 +2101,19 @@ FORMAL_SUBCATEGORIES = [
 ]
 
 
+def _require_designer_custom_orders_access(request):
+    if not getattr(request.user, "is_authenticated", False):
+        raise Http404("Custom orders page not found.")
+    if not DesignerProfile.objects.filter(user=request.user).exists():
+        raise Http404("Custom orders page not found.")
+
+
 def neworders_dresses_view(request):
     """
     New orders page for dresses — /neworders/dresses/
-    Gate: viewers enter phone number to access designer list and dress types.
+    Hidden from viewers; only designer accounts can access the custom order flow.
     """
+    _require_designer_custom_orders_access(request)
     session_key = "neworder_dresses_phone"
     has_access = bool(request.session.get(session_key))
 
@@ -2158,6 +2166,7 @@ def neworders_dresses_submit_view(request):
     Submit a dress order to a designer. Requires session access (phone gate).
     Sends email notification to the designer and confirmation to the viewer.
     """
+    _require_designer_custom_orders_access(request)
     session_key = "neworder_dresses_phone"
     if not request.session.get(session_key):
         messages.error(request, "Please enter your phone number to submit an order.")

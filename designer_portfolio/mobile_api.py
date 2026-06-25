@@ -30,6 +30,12 @@ from .serializers import DesignSerializer, EventSerializer
 logger = logging.getLogger(__name__)
 
 
+def _mobile_user_can_access_custom_orders(user):
+    if not getattr(user, "is_authenticated", False):
+        return False
+    return DesignerProfile.objects.filter(user=user).exists()
+
+
 # --- Mobile serializers (absolute image URLs) ---
 class MobileDesignerProfileSerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(source="user.id", read_only=True)
@@ -275,9 +281,10 @@ class MobileEventDetail(RetrieveAPIView):
 class MobileNewOrdersOptionsView(APIView):
     """Return dress types, fabric types, wool types, textures, formal subcategories for new orders form."""
     permission_classes = [AllowAny]
-    authentication_classes = []
 
     def get(self, request):
+        if not _mobile_user_can_access_custom_orders(request.user):
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
         return Response({
             "dress_types": [{"value": v, "label": l} for v, l in DRESS_TYPES],
             "fabric_types": [{"value": v, "label": l} for v, l in FABRIC_TYPES],
@@ -290,9 +297,10 @@ class MobileNewOrdersOptionsView(APIView):
 class MobileNewOrdersSubmitView(APIView):
     """Submit a dress order. Mobile passes phone in body (no session)."""
     permission_classes = [AllowAny]
-    authentication_classes = []
 
     def post(self, request):
+        if not _mobile_user_can_access_custom_orders(request.user):
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
         data = getattr(request, "data", {}) or {}
         designer_id = data.get("designer_id")
         phone = (data.get("phone") or "").strip()
