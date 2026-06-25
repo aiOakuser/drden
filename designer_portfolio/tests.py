@@ -1072,13 +1072,14 @@ class DressOrderConfirmationEmailTests(TestCase):
         self.assertEqual(DressOrder.objects.count(), 0)
 
     def test_custom_orders_hidden_from_authenticated_non_designers(self):
-        User.objects.create_user(
+        viewer_user = User.objects.create_user(
             username="orders-viewer",
             email="orders-viewer@example.com",
             password="StrongPass123!",
             is_active=True,
         )
         self.client.login(username="orders-viewer", password="StrongPass123!")
+        DesignerProfile.objects.filter(user=viewer_user).delete()
         self._unlock_neworder_session()
 
         page_response = self.client.get(reverse("neworders_dresses"))
@@ -1121,8 +1122,8 @@ class DressOrderConfirmationEmailTests(TestCase):
         self.assertEqual(DressOrder.objects.count(), 0)
 
     def test_web_submit_sends_designer_and_viewer_emails(self):
-        mail.outbox.clear()
         self.client.login(username="designer-orders", password="StrongPass123!")
+        mail.outbox.clear()
         self._unlock_neworder_session()
 
         response = self.client.post(
@@ -1156,8 +1157,8 @@ class DressOrderConfirmationEmailTests(TestCase):
         self.assertEqual(viewer_email.to, ["viewer@example.com"])
 
     def test_mobile_submit_sends_designer_and_viewer_emails(self):
-        mail.outbox.clear()
         self.client.login(username="designer-orders", password="StrongPass123!")
+        mail.outbox.clear()
 
         response = self.client.post(
             reverse("mobile_neworders_submit"),
