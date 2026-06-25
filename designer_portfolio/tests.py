@@ -1057,7 +1057,72 @@ class DressOrderConfirmationEmailTests(TestCase):
         session["neworder_dresses_phone"] = "+1 555 123 4567"
         session.save()
 
+    def test_custom_orders_hidden_from_anonymous_viewers(self):
+        page_response = self.client.get(reverse("neworders_dresses"))
+        self.assertEqual(page_response.status_code, 404)
+
+        gate_response = self.client.post(
+            reverse("neworders_dresses"),
+            {"phone": "+1 555 123 4567"},
+        )
+        self.assertEqual(gate_response.status_code, 404)
+
+        submit_response = self.client.post(reverse("neworders_dresses_submit"))
+        self.assertEqual(submit_response.status_code, 404)
+        self.assertEqual(DressOrder.objects.count(), 0)
+
+    def test_custom_orders_hidden_from_authenticated_non_designers(self):
+        viewer_user = User.objects.create_user(
+            username="orders-viewer",
+            email="orders-viewer@example.com",
+            password="StrongPass123!",
+            is_active=True,
+        )
+        self.client.login(username="orders-viewer", password="StrongPass123!")
+        DesignerProfile.objects.filter(user=viewer_user).delete()
+        self._unlock_neworder_session()
+
+        page_response = self.client.get(reverse("neworders_dresses"))
+        self.assertEqual(page_response.status_code, 404)
+
+        submit_response = self.client.post(
+            reverse("neworders_dresses_submit"),
+            {
+                "designer_id": str(self.designer_user.id),
+                "dress_type": "casual",
+                "dress_label": "Casual Dress",
+            },
+        )
+        self.assertEqual(submit_response.status_code, 404)
+        self.assertEqual(DressOrder.objects.count(), 0)
+
+    def test_designer_can_open_custom_orders_gate(self):
+        self.client.login(username="designer-orders", password="StrongPass123!")
+
+        response = self.client.get(reverse("neworders_dresses"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Orders — Dresses")
+
+    def test_mobile_custom_orders_hidden_from_anonymous_viewers(self):
+        options_response = self.client.get(reverse("mobile_neworders_options"))
+        self.assertEqual(options_response.status_code, 404)
+
+        submit_response = self.client.post(
+            reverse("mobile_neworders_submit"),
+            data=json.dumps(
+                {
+                    "phone": "+1 555 765 4321",
+                    "designer_id": self.designer_user.id,
+                }
+            ),
+            content_type="application/json",
+        )
+        self.assertEqual(submit_response.status_code, 404)
+        self.assertEqual(DressOrder.objects.count(), 0)
+
     def test_web_submit_sends_designer_and_viewer_emails(self):
+        self.client.login(username="designer-orders", password="StrongPass123!")
         mail.outbox.clear()
         self._unlock_neworder_session()
 
@@ -1092,6 +1157,7 @@ class DressOrderConfirmationEmailTests(TestCase):
         self.assertEqual(viewer_email.to, ["viewer@example.com"])
 
     def test_mobile_submit_sends_designer_and_viewer_emails(self):
+        self.client.login(username="designer-orders", password="StrongPass123!")
         mail.outbox.clear()
 
         response = self.client.post(

@@ -13,7 +13,6 @@ import CollectionsScreen from "./src/screens/CollectionsScreen";
 import CollectionDetailScreen from "./src/screens/CollectionDetailScreen";
 import EventsScreen from "./src/screens/EventsScreen";
 import EventDetailScreen from "./src/screens/EventDetailScreen";
-import NewOrdersScreen from "./src/screens/NewOrdersScreen";
 import AccountScreen from "./src/screens/AccountScreen";
 import LoginScreen from "./src/screens/LoginScreen";
 import SignupScreen from "./src/screens/SignupScreen";
@@ -69,7 +68,6 @@ function AppNavigator() {
         <Stack.Screen name="DesignerDetail" component={DesignerDetailScreen} options={{ title: "Designer" }} />
         <Stack.Screen name="CollectionDetail" component={CollectionDetailScreen} options={{ title: "Collection" }} />
         <Stack.Screen name="EventDetail" component={EventDetailScreen} options={{ title: "Event" }} />
-        <Stack.Screen name="NewOrders" component={NewOrdersScreen} options={{ title: "Orders" }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
