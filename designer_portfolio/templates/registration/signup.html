@@ -309,11 +309,7 @@
       </div>
     </div>
 
-    {% if recaptcha_enabled %}
-    <div class="form-section captcha-section">
-      <div class="g-recaptcha" data-sitekey="{{ recaptcha_site_key }}"></div>
-    </div>
-    {% endif %}
+    {% include "registration/includes/recaptcha.html" %}
 
     <button type="submit" class="submit-btn">🚀 Start My Free Trial</button>
   </form>
@@ -680,6 +676,13 @@
     justify-content: center;
   }
 
+  .recaptcha-v3-note {
+    margin: 0;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    text-align: center;
+  }
+
   @media (max-width: 768px) {
     .signup-container {
       margin: 20px;
@@ -732,8 +735,6 @@
     updatePaymentSection();
   });
 </script>
-{% if recaptcha_enabled %}
-<script src="https://www.google.com/recaptcha/api.js" async defer></script>
-{% endif %}
+{% include "registration/includes/recaptcha_scripts.html" %}
 
 {% endblock %}

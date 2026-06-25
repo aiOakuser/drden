@@ -63,7 +63,7 @@
       <a href="{% url 'forum_index' %}" class="{% if un == 'forum_index' or un == 'forum_category' or un == 'forum_topic' or un == 'forum_create_topic' or un == 'forum_create_post' or un == 'forum_search' or un == 'community_forum' %}active{% endif %}">Community</a>
       <a href="{% url 'contact' %}" class="{% if un == 'contact' or un == 'report_problem' or un == 'report_problem_thanks' %}active{% endif %}">Support</a>
       <a href="{% url 'marketing:brand_partner' %}" class="{% if un == 'brand_partner' or un == 'brand_partner_thanks' %}active{% endif %}">Enterprise</a>
-      <a href="{% url 'student_portfolio_pricing' %}" class="{% if un == 'student_portfolio_pricing' or un == 'subscription_dashboard' or un == 'change_subscription_plan' %}active{% endif %}">Pricing</a>
+      <a href="{% url 'membership_upgrade' %}" class="{% if un == 'membership_upgrade' or un == 'student_portfolio_pricing' or un == 'subscription_dashboard' or un == 'change_subscription_plan' %}active{% endif %}">Pricing</a>
       {% if user.is_authenticated %}
       <a href="{% url 'designer_dashboard' %}" class="{% if un == 'designer_dashboard' %}active{% endif %}">Dashboard</a>
       <form action="{% url 'logout' %}" method="post" class="nav-logout-form">

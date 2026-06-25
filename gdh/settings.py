@@ -682,23 +682,51 @@ else:
     SESSION_ENGINE = "django.contrib.sessions.backends.db"
 
 # --- Email ---
-# Email Configuration
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
-# Allow Gmail app-password alias used by some hosts.
-EMAIL_HOST_PASSWORD = env_first("EMAIL_HOST_PASSWORD", "GMAIL_APP_PASSWORD") or ""
+def resolve_email_backend(
+    *,
+    debug: bool,
+    host_user: str,
+    host_password: str,
+    force_smtp: bool = False,
+    override: str = "",
+) -> str:
+    """Pick console vs SMTP based on environment (testable without reloading settings)."""
+    if override:
+        return override
+    if debug and not (host_user and host_password) and not force_smtp:
+        return "django.core.mail.backends.console.EmailBackend"
+    return "django.core.mail.backends.smtp.EmailBackend"
 
-# Use console backend in development if no email credentials configured
-if DEBUG and not EMAIL_HOST_USER:
-    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-else:
-    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+# Email Configuration
+EMAIL_HOST_USER = (os.getenv("EMAIL_HOST_USER", "") or "").strip()
+# Allow Gmail app-password alias used by some hosts.
+EMAIL_HOST_PASSWORD = (env_first("EMAIL_HOST_PASSWORD", "GMAIL_APP_PASSWORD") or "").strip()
+EMAIL_FORCE_SMTP = env_bool("EMAIL_FORCE_SMTP", default=False)
+_email_backend_override = (os.getenv("EMAIL_BACKEND", "") or "").strip()
+
+EMAIL_BACKEND = resolve_email_backend(
+    debug=DEBUG,
+    host_user=EMAIL_HOST_USER,
+    host_password=EMAIL_HOST_PASSWORD,
+    force_smtp=EMAIL_FORCE_SMTP,
+    override=_email_backend_override,
+)
+if EMAIL_BACKEND.endswith("smtp.EmailBackend"):
     EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
     EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))
     EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", default=True)
     EMAIL_USE_SSL = env_bool("EMAIL_USE_SSL", default=False)  # Use SSL for port 465
     EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", 10))  # Connection timeout in seconds
 
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "GlobalDesignerHub <no-reply@globaldesignerhub.com>")
+_configured_from = (os.getenv("DEFAULT_FROM_EMAIL", "") or "").strip()
+if _configured_from:
+    DEFAULT_FROM_EMAIL = _configured_from
+elif EMAIL_HOST_USER:
+    # Gmail and most SMTP providers require From to match the authenticated mailbox.
+    DEFAULT_FROM_EMAIL = f"GlobalDesignerHub <{EMAIL_HOST_USER}>"
+else:
+    DEFAULT_FROM_EMAIL = "GlobalDesignerHub <no-reply@globaldesignerhub.com>"
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 ADMIN_EMAIL = "admin@globaldesignerhub.com"
 PRETTYPEARL_CONTACT_EMAIL = os.getenv("PRETTYPEARL_CONTACT_EMAIL", "").strip()
@@ -726,6 +754,16 @@ REMEMBER_ME_SESSION_AGE = int(os.getenv("REMEMBER_ME_SESSION_AGE", 60 * 60 * 24 
 # Set both values in env to enable validation.
 RECAPTCHA_SITE_KEY = (env_first("RECAPTCHA_SITE_KEY", "GOOGLE_RECAPTCHA_SITE_KEY") or "").strip()
 RECAPTCHA_SECRET_KEY = (env_first("RECAPTCHA_SECRET_KEY", "GOOGLE_RECAPTCHA_SECRET_KEY") or "").strip()
+# v2 = checkbox widget; v3 = invisible score-based (common for new Google reCAPTCHA keys).
+RECAPTCHA_VERSION = (os.getenv("RECAPTCHA_VERSION", "v3") or "v3").strip().lower()
+try:
+    RECAPTCHA_V3_MIN_SCORE = float((os.getenv("RECAPTCHA_V3_MIN_SCORE", "0.5") or "0.5").strip())
+except ValueError:
+    RECAPTCHA_V3_MIN_SCORE = 0.5
+RECAPTCHA_V3_MIN_SCORE = max(0.0, min(RECAPTCHA_V3_MIN_SCORE, 1.0))
+# In DEBUG, skip reCAPTCHA unless keys are explicitly forced (avoids "Invalid key type" locally).
+RECAPTCHA_DISABLE_IN_DEBUG = env_bool("RECAPTCHA_DISABLE_IN_DEBUG", default=True)
+RECAPTCHA_FORCE_IN_DEBUG = env_bool("RECAPTCHA_FORCE_IN_DEBUG", default=False)
 
 # --- Social Authentication (Google) ---
 SOCIAL_AUTH_URL_NAMESPACE = "social"

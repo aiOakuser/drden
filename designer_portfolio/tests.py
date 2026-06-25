@@ -252,6 +252,27 @@ class PasswordResetFlowTests(TestCase):
         )
 
     @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_incomplete_smtp_credentials_use_console_in_debug(self):
+        from gdh.settings import resolve_email_backend
+
+        self.assertEqual(
+            resolve_email_backend(
+                debug=True,
+                host_user="partial@gmail.com",
+                host_password="",
+            ),
+            "django.core.mail.backends.console.EmailBackend",
+        )
+        self.assertEqual(
+            resolve_email_backend(
+                debug=True,
+                host_user="user@gmail.com",
+                host_password="app-password",
+            ),
+            "django.core.mail.backends.smtp.EmailBackend",
+        )
+
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
     def test_password_reset_falls_back_to_contact_email(self):
         mail.outbox.clear()
         fallback_email = "sleepy-contact@example.com"
@@ -1158,6 +1179,38 @@ class GoogleReviewViewTests(TestCase):
     SESSION_COOKIE_SECURE=False,
     CSRF_COOKIE_SECURE=False,
     STORAGES=TEST_STORAGE_BACKENDS,
+)
+class RecaptchaUtilsTests(TestCase):
+    @override_settings(DEBUG=True, RECAPTCHA_DISABLE_IN_DEBUG=True, RECAPTCHA_FORCE_IN_DEBUG=False)
+    def test_recaptcha_disabled_in_debug_by_default(self):
+        from designer_portfolio.recaptcha_utils import is_recaptcha_enabled
+
+        with self.settings(RECAPTCHA_SITE_KEY="site", RECAPTCHA_SECRET_KEY="secret"):
+            self.assertFalse(is_recaptcha_enabled())
+
+    @override_settings(DEBUG=False, RECAPTCHA_VERSION="v3")
+    def test_recaptcha_enabled_when_keys_set_in_production(self):
+        from designer_portfolio.recaptcha_utils import is_recaptcha_enabled, recaptcha_version
+
+        with self.settings(RECAPTCHA_SITE_KEY="site", RECAPTCHA_SECRET_KEY="secret"):
+            self.assertTrue(is_recaptcha_enabled())
+            self.assertEqual(recaptcha_version(), "v3")
+
+    @override_settings(DEBUG=True, RECAPTCHA_DISABLE_IN_DEBUG=False)
+    def test_verify_skipped_when_disabled(self):
+        from designer_portfolio.recaptcha_utils import verify_recaptcha_token
+
+        with self.settings(RECAPTCHA_SITE_KEY="", RECAPTCHA_SECRET_KEY=""):
+            ok, err = verify_recaptcha_token("")
+            self.assertTrue(ok)
+            self.assertIsNone(err)
+
+
+@override_settings(
+    SECURE_SSL_REDIRECT=False,
+    SESSION_COOKIE_SECURE=False,
+    CSRF_COOKIE_SECURE=False,
+    STORAGES=TEST_STORAGE_BACKENDS,
     STRIPE_SECRET_KEY="",
     STRIPE_PUBLISHABLE_KEY="",
 )
@@ -1243,4 +1296,13 @@ class SubscriptionPaymentTests(TestCase):
         response = self.client.get("/register/")
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.headers.get("Location"), reverse("signup"))
+
+    def test_public_membership_upgrade_page(self):
+        response = self.client.get(reverse("membership_upgrade"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Membership upgrade process")
+        self.assertContains(response, "Professional Portfolio")
+        self.assertContains(response, "Personal Designer Website")
+        self.assertContains(response, "Select Plan")
+        self.assertContains(response, "Membership activated automatically")
 

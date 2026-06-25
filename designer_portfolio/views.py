@@ -52,6 +52,7 @@ from .forms import (
     NewOrderAccessForm,
 )
 from .auth_utils import ensure_designer_access
+from .recaptcha_utils import recaptcha_template_context, verify_recaptcha_token
 from .context_processors import _google_oauth_ready
 from .messenger_utils import user_can_use_messenger, message_contains_prohibited_content
 from .emails import (
@@ -1583,51 +1584,8 @@ def _find_user_by_identifier(identifier: str):
             return None
 
 
-def _is_recaptcha_enabled() -> bool:
-    site_key = (getattr(settings, "RECAPTCHA_SITE_KEY", "") or "").strip()
-    secret_key = (getattr(settings, "RECAPTCHA_SECRET_KEY", "") or "").strip()
-    return bool(site_key and secret_key)
-
-
 def _signup_template_context(form: DesignerSignUpForm) -> dict:
-    return {
-        "form": form,
-        "recaptcha_enabled": _is_recaptcha_enabled(),
-        "recaptcha_site_key": (getattr(settings, "RECAPTCHA_SITE_KEY", "") or "").strip(),
-    }
-
-
-def _verify_recaptcha_token(token: str, remote_ip: str | None = None) -> tuple[bool, str | None]:
-    if not _is_recaptcha_enabled():
-        return True, None
-
-    if not token:
-        return False, "Please complete the reCAPTCHA challenge."
-
-    payload = urlencode(
-        {
-            "secret": (getattr(settings, "RECAPTCHA_SECRET_KEY", "") or "").strip(),
-            "response": token,
-            "remoteip": remote_ip or "",
-        }
-    ).encode("utf-8")
-    request_obj = urllib.request.Request(
-        "https://www.google.com/recaptcha/api/siteverify",
-        data=payload,
-        headers={"Content-Type": "application/x-www-form-urlencoded"},
-    )
-
-    try:
-        with urllib.request.urlopen(request_obj, timeout=10) as response:
-            verification_result = json.loads(response.read().decode("utf-8"))
-    except (HTTPError, URLError, TimeoutError, OSError, json.JSONDecodeError):
-        logger.warning("reCAPTCHA verification request failed.", exc_info=True)
-        return False, "reCAPTCHA verification failed. Please try again."
-
-    if verification_result.get("success"):
-        return True, None
-
-    return False, "reCAPTCHA verification failed. Please try again."
+    return {"form": form, **recaptcha_template_context()}
 
 
 def signup_view(request):
@@ -1646,7 +1604,7 @@ def signup_view(request):
         password2 = request.POST.get("password2") or ""
         recaptcha_token = (request.POST.get("g-recaptcha-response") or "").strip()
 
-        recaptcha_ok, recaptcha_error = _verify_recaptcha_token(
+        recaptcha_ok, recaptcha_error = verify_recaptcha_token(
             recaptcha_token, remote_ip=request.META.get("REMOTE_ADDR")
         )
         if not recaptcha_ok:
@@ -3669,7 +3627,7 @@ class DesignerRegistrationView(APIView):
         recaptcha_token = (
             (data.get("g-recaptcha-response") or data.get("recaptcha_token") or "").strip()
         )
-        recaptcha_ok, recaptcha_error = _verify_recaptcha_token(
+        recaptcha_ok, recaptcha_error = verify_recaptcha_token(
             recaptcha_token, remote_ip=request.META.get("REMOTE_ADDR")
         )
         if not recaptcha_ok:
@@ -4232,6 +4190,41 @@ def designer_design_detail_api(request, design_id):
     ]
 
     return JsonResponse({"success": True, "design": data})
+
+
+def membership_upgrade(request):
+    """Public designer membership upgrade guide and plan comparison."""
+    from .membership_plans import (
+        ACTIVATION_CHECKLIST,
+        PAYMENT_METHODS,
+        UPGRADE_STEPS,
+        list_membership_plans,
+    )
+    from . import stripe_billing
+
+    plans_url = reverse("subscription_dashboard")
+    if request.user.is_authenticated:
+        select_plan_url = plans_url
+    else:
+        select_plan_url = f"{reverse('login')}?next={plans_url}"
+
+    return render(
+        request,
+        "designer_portfolio/membership_upgrade.html",
+        {
+            "membership_plans": list_membership_plans(),
+            "payment_methods_list": PAYMENT_METHODS,
+            "activation_checklist": ACTIVATION_CHECKLIST,
+            "upgrade_steps": UPGRADE_STEPS,
+            "register_url": reverse("signup"),
+            "login_url": reverse("login"),
+            "select_plan_url": select_plan_url,
+            "plans_dashboard_url": plans_url,
+            "is_authenticated": request.user.is_authenticated,
+            "stripe_enabled": stripe_billing.is_configured(),
+        },
+    )
+
 
 @login_required
 def subscription_dashboard(request):

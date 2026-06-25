@@ -4,7 +4,12 @@
 This guide will help you configure email settings so users can receive password reset notifications and other system emails.
 
 ## Development Mode
-In development (DEBUG=True), if no email credentials are provided, emails will print to the console instead of sending. This is useful for testing without setting up SMTP.
+In development (`DEBUG=True`), emails print to the **terminal console** unless SMTP is fully configured.
+
+- **Console (default):** Leave `EMAIL_HOST_USER` empty, or leave `EMAIL_HOST_PASSWORD` / `GMAIL_APP_PASSWORD` unset.
+- **Real SMTP in dev:** Set both `EMAIL_HOST_USER` and `GMAIL_APP_PASSWORD`, then optionally `EMAIL_FORCE_SMTP=True`.
+
+If you set `EMAIL_HOST_USER` without a valid app password, older builds tried SMTP and Gmail returned `530 Authentication Required`. The app now falls back to the console backend automatically when credentials are incomplete.
 
 ## Production Setup
 

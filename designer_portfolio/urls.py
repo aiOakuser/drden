@@ -256,6 +256,7 @@ urlpatterns = [
     path("admin/reinstate-designer/<int:designer_id>/", reinstate_designer, name="reinstate_designer"),
 
     # Subscription management
+    path("membership/", views.membership_upgrade, name="membership_upgrade"),
     path("subscription/", views.subscription_dashboard, name="subscription_dashboard"),
     path("subscription/change-plan/", views.change_subscription_plan, name="change_subscription_plan"),
     path("subscription/cancel/", views.cancel_subscription, name="cancel_subscription"),
