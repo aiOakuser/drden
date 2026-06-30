@@ -43,7 +43,6 @@ MEMBERSHIP_PLANS: tuple[MembershipPlan, ...] = (
         yearly_price=Decimal("290"),
         tagline="Essential hub profile, portfolio showcase, and core tools.",
         benefits=(
-            "Unlimited Portfolio Uploads",
             "Featured Designer Profile",
             "Tech Pack Storage",
             "Priority Visibility",

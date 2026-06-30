@@ -1,0 +1,46 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch: # allows manual trigger from GitHub UI
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /var/www/koyal
+
+            # Pull latest code
+            git pull origin main
+
+            # Activate virtual environment
+            source venv/bin/activate
+
+            # Install/update dependencies
+            pip install -r requirements.txt --quiet
+
+            # Run migrations
+            python manage.py migrate --noinput
+
+            # Collect static files
+            python manage.py collectstatic --noinput 2>/dev/null || true
+
+            # Clear Django cache
+            python -c "import django,os;os.environ.setdefault('DJANGO_SETTINGS_MODULE','koyal.settings');django.setup();from django.core.cache import cache;cache.clear()"
+
+            # Restart the application
+            sudo systemctl restart koyal
+
+            echo "✅ Deployment complete!"
