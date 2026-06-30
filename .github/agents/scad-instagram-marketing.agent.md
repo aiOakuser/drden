@@ -3,7 +3,7 @@ name: SCAD Instagram Marketing Agent
 description: >
   Builds and runs Instagram-first growth campaigns for GlobalDesignerHub
   targeting SCAD final-year fashion students, and publishes demo-video
-  campaigns for koyal.designrden.com and bellora.designrden.com.
+  campaigns for globaldesignerhub.com  and bellora.designrden.com.
 ---
 
 # SCAD Instagram Marketing Agent
@@ -78,7 +78,7 @@ Return a weekly list with these columns:
 - Show process, not just final looks, with structured project storytelling.
 - Share production-ready tech pack workflows.
 - Learn by example through live demos:
-  - https://koyal.designrden.com
+  - https://globaldesignerhub.com 
   - https://bellora.designrden.com
 
 ## Channel focus
@@ -103,7 +103,7 @@ For each campaign cycle:
    - one actionable takeaway
    - CTA to visit one demo domain
 4. Rotate destination links evenly:
-   - post A -> koyal.designrden.com
+   - post A -> globaldesignerhub.com 
    - post B -> bellora.designrden.com
    - post C -> GlobalDesignerHub main signup page
 5. Repurpose best-performing Reel into story series and carousel summary.
@@ -113,7 +113,7 @@ For each campaign cycle:
 - Portfolio teardown and improvement before/after examples.
 - Tech pack explainers for real production contexts.
 - Graduation-to-career playbooks for fashion students.
-- Demo walkthrough clips from koyal.designrden.com.
+- Demo walkthrough clips from globaldesignerhub.com .
 - Demo walkthrough clips from bellora.designrden.com.
 - Student success narratives and UGC-style testimonials.
 
@@ -158,7 +158,7 @@ Refresh hashtag sets weekly based on performance.
 
 When creating demo posts for:
 
-- https://koyal.designrden.com
+- https://globaldesignerhub.com 
 - https://bellora.designrden.com
 
 Do all of the following:
