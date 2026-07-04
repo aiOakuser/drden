@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1600" viewBox="0 0 1200 1600" role="img" aria-labelledby="title desc">
+  <title>PH&#201;RIX monoceros label</title>
+  <desc>Metallic label with PH&#201;RIX, monoceros, New York, Autumn/Winter '26, and Manya Marri.</desc>
+  <defs>
+    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c9c9c9"/>
+      <stop offset="45%" stop-color="#9ea0a2"/>
+      <stop offset="100%" stop-color="#6f7376"/>
+    </linearGradient>
+    <pattern id="grain" width="6" height="6" patternUnits="userSpaceOnUse">
+      <rect width="6" height="6" fill="transparent"/>
+      <path d="M0 3 H6" stroke="#d7d7d7" stroke-width="0.6" opacity="0.45"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="1600" fill="url(#steel)"/>
+  <rect width="1200" height="1600" fill="url(#grain)" opacity="0.6"/>
+  <text x="120" y="240" fill="#f1f1f1" font-size="150" font-family="Garamond, 'Times New Roman', serif" letter-spacing="6" font-weight="600">PH&#201;RIX</text>
+  <text x="990" y="270" fill="#f1f1f1" font-size="48" font-family="Garamond, 'Times New Roman', serif">(222)</text>
+  <text x="600" y="620" text-anchor="middle" fill="#f1f1f1" font-size="80" font-family="Garamond, 'Times New Roman', serif" letter-spacing="2">"monoceros"</text>
+  <text x="120" y="720" fill="#f1f1f1" font-size="36" font-family="Inter, Arial, sans-serif" letter-spacing="2">new york</text>
+  <text x="1080" y="720" text-anchor="end" fill="#f1f1f1" font-size="36" font-family="Inter, Arial, sans-serif" letter-spacing="2">autumn / winter ['26]</text>
+  <text x="160" y="1420" fill="#f1f1f1" font-size="60" font-family="'Brush Script MT', 'Segoe Script', cursive">Manya Marri</text>
+</svg>

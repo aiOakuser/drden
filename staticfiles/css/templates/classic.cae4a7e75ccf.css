@@ -1,0 +1,11 @@
+/* Default Classic Template styles */
+/* Place overrides to shape default designer template here */
+
+/* Larger-screen base font scaling for readability */
+@media (min-width: 1200px) {
+  html { font-size: 16.5px; }
+}
+
+@media (min-width: 1440px) {
+  html { font-size: 17px; }
+}

@@ -1,0 +1,364 @@
+"""Reusable email helpers for authentication events."""
+
+from __future__ import annotations
+
+from django.conf import settings
+from django.core.mail import send_mail
+from django.urls import reverse
+
+
+def _coalesce_user_email(user) -> str:
+    """Return the best email address we can find for a user."""
+
+    email = (getattr(user, "email", "") or "").strip()
+    if email:
+        return email
+
+    profile = getattr(user, "designer_profile", None)
+    if profile:
+        fallback = (getattr(profile, "contact_email", "") or "").strip()
+        if fallback:
+            return fallback
+
+    return ""
+
+
+def _absolute_url(request, path: str) -> str:
+    """Build an absolute URL even when a request object is missing."""
+
+    if path and path.startswith(("http://", "https://")):
+        return path
+
+    if request is not None:
+        return request.build_absolute_uri(path)
+
+    base_url = getattr(settings, "BASE_URL_SERVER", "") or ""
+    base_url = base_url.rstrip("/")
+    if not base_url:
+        return path
+    return f"{base_url}{path}"
+
+
+def _site_name() -> str:
+    return getattr(settings, "SITE_NAME", "designrden")
+
+
+def send_registration_notifications(user, *, request=None, source: str = "password"):
+    """Send welcome/administrative emails after a successful registration."""
+
+    login_url = _absolute_url(request, reverse("login"))
+    dashboard_url = _absolute_url(request, reverse("designer_dashboard"))
+    subject = f"Welcome to {_site_name()}!"
+
+    recipient = _coalesce_user_email(user)
+    if recipient:
+        message = (
+            f"Hi {user.get_full_name() or user.username},\n\n"
+            f"Welcome to {_site_name()} — you're all set.\n"
+            f"You can manage your portfolio from {dashboard_url} and update your account anytime.\n\n"
+            f"Sign in again here: {login_url}\n\n"
+            "If you weren't expecting this email, contact support immediately."
+        )
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[recipient],
+            fail_silently=True,
+        )
+
+    admin_email = (getattr(settings, "ADMIN_EMAIL", "") or "").strip()
+    if admin_email:
+        profile = getattr(user, "designer_profile", None)
+        website = getattr(profile, "portfolio_website", "") if profile else ""
+        message = (
+            f"A new account was created on {_site_name()} via {source}.\n\n"
+            f"Username: {user.username}\n"
+            f"Email: {recipient or 'N/A'}\n"
+            f"Website: {website or 'N/A'}\n"
+            f"Dashboard: {dashboard_url}\n"
+        )
+        send_mail(
+            subject=f"[{_site_name()}] New registration ({user.username})",
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[admin_email],
+            fail_silently=True,
+        )
+
+
+def notify_membership_activated(subscription, *, request=None) -> None:
+    """Email the designer when a paid membership is activated."""
+
+    user = getattr(subscription, "user", None)
+    if user is None:
+        return
+
+    recipient = _coalesce_user_email(user)
+    if not recipient:
+        return
+
+    plan_name = subscription.membership_display_name
+    billing = (subscription.billing_interval or "monthly").title()
+    dashboard_url = _absolute_url(request, reverse("designer_dashboard"))
+    membership_url = _absolute_url(request, reverse("subscription_dashboard"))
+    site_name = _site_name()
+
+    message = (
+        f"Hi {user.get_full_name() or user.username},\n\n"
+        f"Your {site_name} membership is now active.\n\n"
+        f"Plan: {plan_name}\n"
+        f"Billing: {billing}\n\n"
+        "What happens next:\n"
+        "• Membership activated automatically\n"
+        "• Website hosting enabled (where included in your plan)\n"
+        "• Designer profile upgraded\n"
+        "• Premium features unlocked\n\n"
+        f"Manage your membership: {membership_url}\n"
+        f"Open your dashboard: {dashboard_url}\n\n"
+        f"— {site_name}"
+    )
+    send_mail(
+        subject=f"Your {site_name} membership is active — {plan_name}",
+        message=message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[recipient],
+        fail_silently=True,
+    )
+
+
+def notify_password_reset_request(user, *, request=None):
+    """Alert administrators that a password reset was requested."""
+
+    admin_email = (getattr(settings, "ADMIN_EMAIL", "") or "").strip()
+    if not admin_email:
+        return
+
+    recipient = _coalesce_user_email(user)
+    request_meta = getattr(request, "META", {}) or {}
+    ip_address = request_meta.get("REMOTE_ADDR", "unknown")
+    message = (
+        f"{user.get_username()} requested a password reset on {_site_name()}.\n\n"
+        f"Primary email: {recipient or 'N/A'}\n"
+        f"IP (if available): {ip_address}\n"
+        f"Login page: {_absolute_url(request, reverse('login'))}\n"
+    )
+    send_mail(
+        subject=f"[{_site_name()}] Password reset requested",
+        message=message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[admin_email],
+        fail_silently=True,
+    )
+
+
+def notify_user_password_reset_completion(user, *, request=None):
+    """Let the account owner know their password has been updated."""
+
+    recipient = _coalesce_user_email(user)
+    if not recipient:
+        return
+
+    login_url = _absolute_url(request, reverse("login"))
+    message = (
+        f"Hi {user.get_full_name() or user.username},\n\n"
+        "This is a confirmation that your password was successfully reset. "
+        "If you did not perform this action, please reset your password again immediately "
+        f"and contact support.\n\nSign back in: {login_url}"
+    )
+    send_mail(
+        subject=f"Your {_site_name()} password was changed",
+        message=message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[recipient],
+        fail_silently=True,
+    )
+
+
+def _collect_designer_emails(designer_profile) -> list[str]:
+    """Return unique designer recipient emails (contact + user account)."""
+
+    recipients: list[str] = []
+    contact_email = (getattr(designer_profile, "contact_email", "") or "").strip()
+    if contact_email:
+        recipients.append(contact_email)
+
+    user = getattr(designer_profile, "user", None)
+    user_email = (getattr(user, "email", "") or "").strip() if user else ""
+    if user_email and user_email not in recipients:
+        recipients.append(user_email)
+
+    return recipients
+
+
+def notify_designer_new_dress_order(order, *, request=None):
+    """Email the designer when a new dress order is submitted through designrden."""
+
+    recipients = _collect_designer_emails(order.designer)
+    if not recipients:
+        return
+
+    designer_name = (
+        getattr(order.designer.user, "get_full_name", lambda: "")()
+        or getattr(order.designer.user, "username", "Designer")
+    )
+    site_name = _site_name()
+
+    dress_line = order.dress_label or order.dress_type or "—"
+    if order.formal_subcategory:
+        dress_line += f" ({order.formal_subcategory.replace('_', ' ').title()})"
+    lines = [
+        f"Hi {designer_name},",
+        "",
+        f"You have received a new dress order through {site_name}.",
+        "",
+        "Order details:",
+        f"  Dress type: {dress_line}",
+        f"  Fabric: {order.fabric_label or order.fabric_type or '—'}",
+    ]
+    if order.wool_type:
+        lines.append(f"  Wool type: {order.wool_type.replace('_', ' ').title()}")
+    if order.fabric_texture:
+        lines.append(f"  Texture: {order.fabric_texture.replace('_', ' ').title()}")
+
+    meas = []
+    if order.shoulder_width is not None:
+        meas.append(f"Shoulder width: {order.shoulder_width} cm")
+    if order.chest is not None:
+        meas.append(f"Chest: {order.chest} cm")
+    if order.sleeve_short is not None:
+        meas.append(f"Short sleeve: {order.sleeve_short} cm")
+    if order.sleeve_wrist is not None:
+        meas.append(f"Wrist length: {order.sleeve_wrist} cm")
+    if meas:
+        lines.extend(["", "Measurements:"] + [f"  {m}" for m in meas])
+
+    if order.customer_phone:
+        lines.extend(["", f"Customer phone: {order.customer_phone}"])
+
+    if request:
+        from django.urls import reverse
+        try:
+            orders_url = request.build_absolute_uri(reverse("designer_orders_list"))
+            lines.extend(["", f"View order: {orders_url}"])
+        except Exception:
+            pass
+
+    lines.extend(["", "— designrden"])
+
+    message = "\n".join(lines)
+    subject = f"[{site_name}] New dress order — {order.dress_label or 'Dress'}"
+
+    send_mail(
+        subject=subject,
+        message=message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=recipients,
+        fail_silently=True,
+    )
+
+
+def notify_viewer_dress_order_confirmation(order, *, viewer_email: str = "", request=None) -> bool:
+    """Email order confirmation details to the submitting viewer/customer."""
+
+    recipient = (viewer_email or "").strip()
+    if not recipient and request is not None:
+        user = getattr(request, "user", None)
+        if user is not None and getattr(user, "is_authenticated", False):
+            recipient = _coalesce_user_email(user)
+
+    if not recipient:
+        return False
+
+    designer_name = (
+        getattr(order.designer.user, "get_full_name", lambda: "")()
+        or getattr(order.designer.user, "username", "Designer")
+    )
+    site_name = _site_name()
+
+    dress_line = order.dress_label or order.dress_type or "—"
+    if order.formal_subcategory:
+        dress_line += f" ({order.formal_subcategory.replace('_', ' ').title()})"
+    lines = [
+        "Hi,",
+        "",
+        f"Your order has been sent to {designer_name} on {site_name}.",
+        "",
+        "Order details:",
+        f"  Dress type: {dress_line}",
+        f"  Fabric: {order.fabric_label or order.fabric_type or '—'}",
+    ]
+
+    if order.wool_type:
+        lines.append(f"  Wool type: {order.wool_type.replace('_', ' ').title()}")
+    if order.fabric_texture:
+        lines.append(f"  Texture: {order.fabric_texture.replace('_', ' ').title()}")
+
+    meas = []
+    if order.shoulder_width is not None:
+        meas.append(f"Shoulder width: {order.shoulder_width} cm")
+    if order.chest is not None:
+        meas.append(f"Chest: {order.chest} cm")
+    if order.sleeve_short is not None:
+        meas.append(f"Short sleeve: {order.sleeve_short} cm")
+    if order.sleeve_wrist is not None:
+        meas.append(f"Wrist length: {order.sleeve_wrist} cm")
+    if meas:
+        lines.extend(["", "Measurements:"] + [f"  {m}" for m in meas])
+
+    if order.customer_phone:
+        lines.extend(["", f"Phone: {order.customer_phone}"])
+
+    if order.access_token and request:
+        from django.urls import reverse
+        order_url = request.build_absolute_uri(reverse("viewer_order_detail", args=[order.access_token]))
+        lines.extend([
+            "",
+            "Track your order:",
+            f"  {order_url}",
+        ])
+
+    lines.extend(["", "We will notify the designer right away.", "", "— designrden"])
+    message = "\n".join(lines)
+    subject = f"[{site_name}] Order confirmation — {order.dress_label or 'Dress'}"
+
+    send_mail(
+        subject=subject,
+        message=message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[recipient],
+        fail_silently=True,
+    )
+    return True
+
+
+def notify_problem_report(report, *, request=None):
+    """Alert admins whenever a new problem report is submitted."""
+
+    admin_email = (getattr(settings, "ADMIN_EMAIL", "") or "").strip()
+    if not admin_email:
+        return
+
+    issue_url = (report.page_url or "").strip()
+    if issue_url and request is not None and issue_url.startswith("/"):
+        issue_url = request.build_absolute_uri(issue_url)
+
+    reporter_name = report.reporter_display_name
+    message = (
+        f"A new issue was reported on {_site_name()}.\n\n"
+        f"Category: {report.get_category_display()}\n"
+        f"Subject: {report.subject}\n"
+        f"From: {reporter_name} <{report.email}>\n"
+        f"Page: {issue_url or 'n/a'}\n"
+        f"IP: {report.ip_address or 'n/a'}\n"
+        f"User agent: {report.user_agent or 'n/a'}\n\n"
+        f"Message:\n{report.message}\n"
+    )
+
+    send_mail(
+        subject=f"[{_site_name()}] New problem report",
+        message=message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[admin_email],
+        fail_silently=True,
+    )

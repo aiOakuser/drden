@@ -1,0 +1,37 @@
+{% extends "designer_portfolio/base.html" %}
+{% load static %}
+
+{% block title %}Your Order — {{ order.dress_label|default:"Dress" }} | designrden{% endblock %}
+
+{% block content %}
+<section class="viewer-order-detail" style="max-width: 720px; margin: 40px auto; padding: 0 16px;">
+  <h1 style="margin: 0 0 24px; font-size: 1.75rem;">Your order</h1>
+
+  <div style="background: var(--color-secondary); border: 1px solid var(--color-border); border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+    <div style="margin-bottom: 16px;"><strong>Designer:</strong> {{ order.designer.user.get_full_name|default:order.designer.user.username }}</div>
+    <div style="margin-bottom: 16px;"><strong>Dress:</strong> {{ order.dress_label|default:order.dress_type|default:"—" }}{% if order.formal_subcategory %} ({{ order.formal_subcategory }}){% endif %}</div>
+    <div style="margin-bottom: 16px;"><strong>Fabric:</strong> {{ order.fabric_label|default:order.fabric_type|default:"—" }}</div>
+    <div style="margin-bottom: 16px;"><strong>Status:</strong> {{ order.get_status_display }}</div>
+    <div style="font-size: 0.9rem; color: var(--color-text-muted);">Placed {{ order.created_at|date:"M j, Y" }}</div>
+  </div>
+
+  {% if order.design %}
+  <div style="background: var(--color-secondary); border: 1px solid var(--color-border); border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+    <h2 style="margin: 0 0 16px; font-size: 1.2rem;">Design for your order</h2>
+    <p style="font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 16px;">The designer has shared a design with you for this order.</p>
+    <a href="{% url 'design_detail' order.design.slug %}?token={{ order.access_token }}" class="btn btn-primary" style="display: inline-block; padding: 12px 24px; background: var(--color-primary); color: var(--color-secondary); text-decoration: none; border-radius: 8px; font-weight: 600;">View design</a>
+  </div>
+  {% endif %}
+
+  {% for upd in order.updates.all %}
+  {% if upd.notes %}
+  <div style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; padding: 20px; margin-bottom: 16px;">
+    <div style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 8px;">{{ upd.created_at|date:"M j, Y" }}</div>
+    <p style="margin: 0;">{{ upd.notes }}</p>
+  </div>
+  {% endif %}
+  {% endfor %}
+
+  <p style="font-size: 0.9rem; color: var(--color-text-muted);">Save this link to check your order status anytime.</p>
+</section>
+{% endblock %}

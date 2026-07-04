@@ -1,0 +1,41 @@
+{% extends "designer_portfolio/base.html" %}
+{% load static %}
+{% block title %}{{ profile_user.get_full_name|default:profile_user.username }} | designrden{% endblock %}
+{% block content %}
+<section class="designer-public-detail" style="max-width: 800px; margin: 40px auto; padding: 0 16px;">
+  <div style="display: flex; align-items: flex-start; gap: 24px; flex-wrap: wrap;">
+    <div>
+      {% if designer.profile_image %}
+      <img src="{{ designer.profile_image.url }}" alt="{{ profile_user.get_full_name|default:profile_user.username }}" style="width: 140px; height: 140px; border-radius: 50%; object-fit: cover;" />
+      {% else %}
+      <div style="width: 140px; height: 140px; border-radius: 50%; background: var(--color-surface); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 48px; color: var(--color-primary);">{{ profile_user.username|first|upper }}</div>
+      {% endif %}
+    </div>
+    <div style="flex: 1; min-width: 260px;">
+      <h1 style="margin: 0 0 8px; font-size: 28px; color: var(--color-primary);">{{ profile_user.get_full_name|default:profile_user.username }}</h1>
+      <p style="margin: 0 0 12px; font-size: 16px; color: var(--color-text-muted);">{{ designer.specialization|default:"Fashion Designer" }}</p>
+      {% if designer.location_display or designer.location %}
+      <p style="margin: 0 0 12px; font-size: 14px; color: var(--color-text);"><i class="fas fa-map-marker-alt" aria-hidden="true"></i> {{ designer.location_display|default:designer.location }}</p>
+      {% endif %}
+      {% if designer.years_of_experience %}
+      <p style="margin: 0 0 12px; font-size: 14px; color: var(--color-text);">{{ designer.years_of_experience }} years experience</p>
+      {% endif %}
+      {% if designer.bio %}
+      <div style="margin-top: 16px; color: var(--color-text); line-height: 1.6;">{{ designer.bio|linebreaks }}</div>
+      {% endif %}
+      <div class="social-links" style="margin-top: 16px; display: flex; gap: 12px;">
+        {% if designer.instagram_handle %}
+        <a href="https://instagram.com/{{ designer.instagram_handle }}" target="_blank" rel="noopener" style="color: var(--color-primary);" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+        {% endif %}
+        {% if designer.linkedin_profile %}
+        <a href="{{ designer.linkedin_profile }}" target="_blank" rel="noopener" style="color: var(--color-primary);" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+        {% endif %}
+        {% if designer.portfolio_website %}
+        <a href="{{ designer.portfolio_website }}" target="_blank" rel="noopener" style="color: var(--color-primary);" aria-label="Portfolio"><i class="fas fa-globe"></i></a>
+        {% endif %}
+      </div>
+      {% include "designer_portfolio/includes/detail_actions.html" with detail_type="designer" detail_user_id=profile_user.id next_url=request.get_full_path %}
+    </div>
+  </div>
+</section>
+{% endblock %}

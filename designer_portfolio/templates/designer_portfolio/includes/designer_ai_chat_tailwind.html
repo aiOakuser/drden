@@ -1,0 +1,519 @@
+{% load static %}
+<!-- Designer AI Chat Widget - Tailwind Version with Dark Mode -->
+<div
+  id="designer-ai-widget"
+  class="fixed bottom-6 right-6 z-50 font-sans"
+  data-auto-popup="{% if designer_ai_auto_popup %}true{% else %}false{% endif %}"
+>
+  <!-- Floating Chat Bubble with Animation -->
+  <button
+    id="designer-ai-toggle"
+    class="group relative flex items-center gap-3 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white px-6 py-4 rounded-full shadow-2xl transition-all duration-300 hover:scale-105 hover:shadow-purple-500/50 focus:outline-none focus:ring-4 focus:ring-purple-300 dark:focus:ring-purple-600"
+    aria-label="Open Designer AI Chat"
+  >
+    <!-- Animated Bot Icon -->
+    <div class="relative">
+      <svg class="w-6 h-6 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+      </svg>
+      <!-- Pulse animation ring -->
+      <span class="absolute inset-0 rounded-full bg-purple-400 animate-ping opacity-75"></span>
+    </div>
+    <span class="font-semibold text-sm hidden sm:inline">Ask Designer AI</span>
+    <!-- Notification badge -->
+    <span id="chat-notification" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">!</span>
+  </button>
+
+  <!-- Chat Panel -->
+  <div
+    id="designer-ai-panel"
+    class="fixed bottom-24 right-6 w-96 max-w-[calc(100vw-3rem)] h-[600px] max-h-[calc(100vh-8rem)] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden transform transition-all duration-300 scale-0 opacity-0 origin-bottom-right"
+    style="display: none"
+  >
+    <!-- Chat Header -->
+    <div class="bg-gradient-to-r from-purple-600 to-purple-800 dark:from-purple-700 dark:to-purple-900 text-white p-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="relative">
+          <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+            </svg>
+          </div>
+          <span class="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white dark:border-gray-800"></span>
+        </div>
+        <div>
+          <h3 class="font-bold text-sm">Designer AI</h3>
+          <p class="text-xs text-white/80">Always here to help</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <!-- Language Selector -->
+        <select id="chat-language" class="bg-white/20 text-white text-xs px-2 py-1 rounded border-0 focus:ring-0">
+          <option value="en">EN</option>
+          <option value="es">ES</option>
+          <option value="fr">FR</option>
+          <option value="de">DE</option>
+        </select>
+        <!-- Close Button -->
+        <button
+          id="designer-ai-close"
+          class="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
+          aria-label="Close chat"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Messages Container -->
+    <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-900">
+      <!-- Welcome Message -->
+      <div id="welcome-message" class="text-center py-8">
+        <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+          </svg>
+        </div>
+        <h4 class="font-bold text-gray-900 dark:text-white mb-2">Hello! I'm Designer AI</h4>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">I can help you with:</p>
+        <ul class="text-sm text-gray-600 dark:text-gray-400 space-y-1 mb-4">
+          <li>✨ Portfolio structure and layouts</li>
+          <li>📸 Image sizes and formats</li>
+          <li>🔧 Using designrden features</li>
+          <li>📚 API and integration questions</li>
+        </ul>
+        <p class="text-xs text-gray-500 dark:text-gray-500 italic mb-3">Or tap a question below to get started:</p>
+        <div id="chat-suggestions" class="flex flex-wrap gap-2 justify-center">
+          <button type="button" class="chat-suggestion px-3 py-1.5 text-xs font-medium bg-purple-100 hover:bg-purple-200 dark:bg-purple-900/40 dark:hover:bg-purple-900/70 text-purple-800 dark:text-purple-200 rounded-full border border-purple-200 dark:border-purple-700 transition-colors" data-question="How do I create my portfolio?">How do I create my portfolio?</button>
+          <button type="button" class="chat-suggestion px-3 py-1.5 text-xs font-medium bg-purple-100 hover:bg-purple-200 dark:bg-purple-900/40 dark:hover:bg-purple-900/70 text-purple-800 dark:text-purple-200 rounded-full border border-purple-200 dark:border-purple-700 transition-colors" data-question="What image size should I upload?">What image size should I upload?</button>
+          <button type="button" class="chat-suggestion px-3 py-1.5 text-xs font-medium bg-purple-100 hover:bg-purple-200 dark:bg-purple-900/40 dark:hover:bg-purple-900/70 text-purple-800 dark:text-purple-200 rounded-full border border-purple-200 dark:border-purple-700 transition-colors" data-question="How do I organize my work into collections?">Organize work into collections</button>
+          <button type="button" class="chat-suggestion px-3 py-1.5 text-xs font-medium bg-purple-100 hover:bg-purple-200 dark:bg-purple-900/40 dark:hover:bg-purple-900/70 text-purple-800 dark:text-purple-200 rounded-full border border-purple-200 dark:border-purple-700 transition-colors" data-question="How do I generate a tech pack?">How do I generate a tech pack?</button>
+          <button type="button" class="chat-suggestion px-3 py-1.5 text-xs font-medium bg-purple-100 hover:bg-purple-200 dark:bg-purple-900/40 dark:hover:bg-purple-900/70 text-purple-800 dark:text-purple-200 rounded-full border border-purple-200 dark:border-purple-700 transition-colors" data-question="Help me write a client proposal">Write a client proposal</button>
+          <button type="button" class="chat-suggestion px-3 py-1.5 text-xs font-medium bg-purple-100 hover:bg-purple-200 dark:bg-purple-900/40 dark:hover:bg-purple-900/70 text-purple-800 dark:text-purple-200 rounded-full border border-purple-200 dark:border-purple-700 transition-colors" data-question="How do I find clients?">How do I find clients?</button>
+        </div>
+      </div>
+      {% if referral_invite_url %}
+      <div id="chat-referral-block" class="mt-4 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+        <p class="text-xs font-semibold text-purple-800 dark:text-purple-200 mb-2">Invite friends, earn tiers</p>
+        <div class="flex gap-2">
+          <input type="text" id="chat-referral-link" value="{{ referral_invite_url }}" readonly class="flex-1 px-2 py-1.5 text-xs bg-white dark:bg-gray-800 rounded border border-purple-200 dark:border-purple-700 text-gray-800 dark:text-gray-200" />
+          <button type="button" id="chat-referral-copy" class="px-3 py-1.5 text-xs font-medium bg-purple-600 hover:bg-purple-700 text-white rounded transition-colors whitespace-nowrap">Copy</button>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Typing Indicator -->
+    <div id="typing-indicator" class="px-4 py-2 hidden">
+      <div class="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+        <div class="flex gap-1">
+          <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0s"></span>
+          <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
+          <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></span>
+        </div>
+        <span class="text-xs">Designer AI is typing...</span>
+      </div>
+    </div>
+
+    <!-- Input Container -->
+    <div class="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+      <form id="chat-form" class="flex gap-2">
+        {% csrf_token %}
+        <input
+          type="text"
+          id="chat-input"
+          class="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 text-sm"
+          placeholder="Ask about design, portfolios, or designrden..."
+          autocomplete="off"
+          aria-label="Type your message"
+        />
+        <button
+          type="submit"
+          class="px-4 py-2 bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-800 text-white rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          aria-label="Send message"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+          </svg>
+        </button>
+      </form>
+      <div class="mt-2 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+        <span>Press Enter to send</span>
+        <a href="{% url 'designer_ai_history' %}" class="text-purple-600 dark:text-purple-400 hover:underline">View History</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tailwind CSS (if not already included) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        animation: {
+          'bounce': 'bounce 1s infinite',
+          'pulse': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          'ping': 'ping 1s cubic-bezier(0, 0, 0.2, 1) infinite',
+        }
+      }
+    }
+  }
+</script>
+
+<script>
+(function() {
+  // Chat Widget State
+  let isOpen = false;
+  let currentLanguage = 'en';
+  let sessionId = null;
+
+  // Elements
+  const toggle = document.getElementById('designer-ai-toggle');
+  const panel = document.getElementById('designer-ai-panel');
+  const closeBtn = document.getElementById('designer-ai-close');
+  const form = document.getElementById('chat-form');
+  const input = document.getElementById('chat-input');
+  const messages = document.getElementById('chat-messages');
+  const welcomeMsg = document.getElementById('welcome-message');
+  const typingIndicator = document.getElementById('typing-indicator');
+  const languageSelect = document.getElementById('chat-language');
+
+  // Get session ID from cookie
+  function getSessionId() {
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+      const [name, value] = cookie.trim().split('=');
+      if (name === 'designer_ai_session') {
+        return value;
+      }
+    }
+    return null;
+  }
+
+  /** CSRF for POST: hidden input from {% csrf_token %} or csrftoken cookie (Django default name). */
+  function getCsrfToken() {
+    const el = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (el && el.value) return el.value;
+    const m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]*)/);
+    return m ? decodeURIComponent(m[1]) : '';
+  }
+
+  async function readJsonResponse(response) {
+    try {
+      const text = await response.text();
+      return text ? JSON.parse(text) : {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  // Toggle Chat
+  function toggleChat() {
+    isOpen = !isOpen;
+    if (isOpen) {
+      panel.style.display = 'flex';
+      setTimeout(() => {
+        panel.classList.remove('scale-0', 'opacity-0');
+        panel.classList.add('scale-100', 'opacity-100');
+      }, 10);
+      input.focus();
+      loadChatHistory();
+    } else {
+      panel.classList.remove('scale-100', 'opacity-100');
+      panel.classList.add('scale-0', 'opacity-0');
+      setTimeout(() => {
+        panel.style.display = 'none';
+      }, 300);
+    }
+  }
+
+  // Load chat history
+  async function loadChatHistory() {
+    sessionId = getSessionId();
+    if (!sessionId) return;
+
+    try {
+      const response = await fetch(`/api/ai/session/${sessionId}/messages/`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.messages && data.messages.length > 0) {
+          welcomeMsg.style.display = 'none';
+          data.messages.forEach(msg => {
+            addMessage(msg.content, msg.role === 'user');
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load history:', error);
+    }
+  }
+
+  // Add Message (optional: isStreaming=true returns { contentEl } for progressive updates)
+  function addMessage(text, isUser = false, isStreaming = false) {
+    if (welcomeMsg) welcomeMsg.style.display = 'none';
+
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`;
+
+    const bubble = document.createElement('div');
+    bubble.className = `max-w-[80%] rounded-lg px-4 py-2 ${
+      isUser
+        ? 'bg-purple-600 text-white'
+        : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600'
+    }`;
+
+    let formattedText = text;
+    if (!isStreaming) {
+      formattedText = text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/`(.*?)`/g, '<code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">$1</code>')
+        .replace(/\n/g, '<br>');
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      formattedText = formattedText.replace(urlRegex, '<a href="$1" target="_blank" class="text-purple-400 underline">$1</a>');
+      const docLinkRegex = /\((\/docs\/[^)]+)\)/g;
+      formattedText = formattedText.replace(docLinkRegex, '(<a href="$1" target="_blank" class="text-purple-400 underline">$1</a>)');
+    }
+
+    bubble.innerHTML = `
+      <div class="text-xs opacity-75 mb-1">${isUser ? 'You' : 'Designer AI'}</div>
+      <div class="text-sm whitespace-pre-wrap">${formattedText}</div>
+    `;
+
+    messageDiv.appendChild(bubble);
+    messages.appendChild(messageDiv);
+    messages.scrollTop = messages.scrollHeight;
+    if (isStreaming) return { contentEl: bubble.querySelector('.text-sm') };
+  }
+
+  // Send Message (SSE streaming for fast UX via /api/ai/stream)
+  async function sendMessage(message) {
+    if (!message.trim()) return;
+
+    addMessage(message, true);
+    input.value = '';
+    typingIndicator.classList.remove('hidden');
+    input.disabled = true;
+    form.querySelector('button[type="submit"]').disabled = true;
+
+    const payload = {
+      message: message,
+      context_page: window.location.pathname,
+      current_url: window.location.href,
+      language: currentLanguage
+    };
+
+    const fetchOpts = () => ({
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCsrfToken()
+      },
+      body: JSON.stringify(payload)
+    });
+
+    function formatMarkdown(t) {
+      return t.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/`(.*?)`/g, '<code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">$1</code>')
+        .replace(/\n/g, '<br>')
+        .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" class="text-purple-400 underline">$1</a>')
+        .replace(/\((\/docs\/[^)]+)\)/g, '(<a href="$1" target="_blank" class="text-purple-400 underline">$1</a>)');
+    }
+
+    async function postDesignerChatFallback() {
+      const fallback = await fetch('/api/ai/designer-chat/', fetchOpts());
+      if (fallback.status === 403) {
+        addMessage('Could not verify your browser session (security token). Refresh the page and try again.');
+        return;
+      }
+      const fbData = await readJsonResponse(fallback);
+      if (fbData.success && fbData.response) {
+        addMessage(fbData.response);
+        if (fbData.session_id) sessionId = fbData.session_id;
+      } else if (fbData.error) {
+        addMessage(fbData.error);
+      } else {
+        addMessage('Sorry, the chat service returned an error (' + fallback.status + '). Please try again.');
+      }
+    }
+
+    try {
+      const response = await fetch('/api/ai/stream/', fetchOpts());
+
+      if (response.ok && (response.headers.get('content-type') || '').includes('text/event-stream')) {
+        if (!response.body) {
+          addMessage('Streaming is not available in this browser. Try another browser or refresh.');
+        } else {
+          let fullText = '';
+          let streamHadError = false;
+          let contentEl = null;
+          const addRet = addMessage('', false, true);
+          if (addRet) contentEl = addRet.contentEl;
+
+          try {
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let lineBuf = '';
+
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              lineBuf += decoder.decode(value, { stream: true });
+              const parts = lineBuf.split('\n');
+              lineBuf = parts.pop() || '';
+              for (const line of parts) {
+                if (!line.startsWith('data: ')) continue;
+                try {
+                  const data = JSON.parse(line.slice(6));
+                  if (data.delta) {
+                    fullText += data.delta;
+                    if (contentEl) contentEl.innerHTML = formatMarkdown(fullText);
+                    messages.scrollTop = messages.scrollHeight;
+                  } else if (data.error) {
+                    streamHadError = true;
+                    if (contentEl) contentEl.textContent = data.error;
+                  }
+                } catch (_) {}
+              }
+            }
+            if (lineBuf.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(lineBuf.slice(6));
+                if (data.delta) {
+                  fullText += data.delta;
+                  if (contentEl) contentEl.innerHTML = formatMarkdown(fullText);
+                } else if (data.error) {
+                  streamHadError = true;
+                  if (contentEl) contentEl.textContent = data.error;
+                }
+              } catch (_) {}
+            }
+
+            if (streamHadError && !fullText.trim()) {
+              const row = contentEl && contentEl.closest('.flex');
+              if (row && row.parentNode) row.remove();
+              await postDesignerChatFallback();
+            } else if (!streamHadError && !fullText.trim()) {
+              const cur = contentEl ? (contentEl.textContent || '').trim() : '';
+              if (!cur) await postDesignerChatFallback();
+            }
+          } catch (streamErr) {
+            console.error('SSE stream failed:', streamErr);
+            if (!fullText.trim()) await postDesignerChatFallback();
+          }
+        }
+      } else if (response.status === 403) {
+        addMessage('Could not verify your browser session (security token). Refresh the page and try again.');
+      } else {
+        const data = await readJsonResponse(response);
+        if (data.error) {
+          addMessage(data.error);
+        } else {
+          await postDesignerChatFallback();
+        }
+      }
+    } catch (error) {
+      console.error('Chat error:', error);
+      try {
+        await postDesignerChatFallback();
+      } catch (fallbackErr) {
+        console.error('Fallback chat failed:', fallbackErr);
+        addMessage('Sorry, I couldn\'t connect to Designer AI. Please check your connection and try again.');
+      }
+    } finally {
+      typingIndicator.classList.add('hidden');
+      input.disabled = false;
+      form.querySelector('button[type="submit"]').disabled = false;
+      input.focus();
+    }
+  }
+
+  // Referral copy button
+  const copyBtn = document.getElementById('chat-referral-copy');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', function() {
+      const input = document.getElementById('chat-referral-link');
+      if (input) {
+        navigator.clipboard.writeText(input.value);
+        const orig = copyBtn.textContent;
+        copyBtn.textContent = 'Copied!';
+        setTimeout(function() { copyBtn.textContent = orig; }, 1500);
+      }
+    });
+  }
+
+  // Event Listeners
+  toggle.addEventListener('click', toggleChat);
+  closeBtn.addEventListener('click', toggleChat);
+  
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const message = input.value.trim();
+    if (message) {
+      sendMessage(message);
+    }
+  });
+
+  languageSelect.addEventListener('change', (e) => {
+    currentLanguage = e.target.value;
+  });
+
+  // Suggested question chips: send the question on click
+  const suggestionsContainer = document.getElementById('chat-suggestions');
+  if (suggestionsContainer) {
+    suggestionsContainer.addEventListener('click', (e) => {
+      const btn = e.target.closest('.chat-suggestion');
+      if (!btn) return;
+      const question = btn.getAttribute('data-question');
+      if (question) {
+        sendMessage(question);
+      }
+    });
+  }
+
+  // Dark mode toggle (if you have one)
+  function initDarkMode() {
+    const isDark = localStorage.getItem('darkMode') === 'true' || 
+                   (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    }
+  }
+
+  initDarkMode();
+
+  // Expose for contextual help
+  window.openDesignerAI = function() {
+    if (!isOpen) {
+      toggleChat();
+    }
+    input.focus();
+  };
+
+  // Auto-open once per browser tab when OpenAI is configured (server sets data-auto-popup).
+  const widgetRoot = document.getElementById('designer-ai-widget');
+  const autoPopup = widgetRoot && widgetRoot.getAttribute('data-auto-popup') === 'true';
+  const autoPopupStorageKey = 'drden_designer_ai_auto_popup_shown';
+  if (autoPopup && toggle && panel) {
+    try {
+      if (!sessionStorage.getItem(autoPopupStorageKey)) {
+        window.setTimeout(function() {
+          if (!isOpen) {
+            toggleChat();
+            sessionStorage.setItem(autoPopupStorageKey, '1');
+          }
+        }, 1400);
+      }
+    } catch (err) {
+      /* sessionStorage unavailable; skip */
+    }
+  }
+})();
+</script>
+

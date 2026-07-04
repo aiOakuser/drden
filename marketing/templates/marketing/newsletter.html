@@ -1,0 +1,62 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>drden Newsletter — Global Designer Hub</title>
+    <meta name="description" content="Subscribe to the Global Designer Hub digest for emerging talent, events, VolumeOne stories, student resources, and platform updates.">
+    {% include "marketing/_growth_styles.html" %}
+</head>
+<body>
+<div class="drden-container">
+    <p class="drden-eyebrow">Global Designer Hub digest</p>
+    <h1 class="drden-h1">Stay close to the drden community</h1>
+    <p class="drden-lead">
+        One email for what matters on designrden — emerging designers,
+        live events, VolumeOne editorials, student hub resources, and product
+        updates from portfolios to tech packs to site builder releases.
+    </p>
+
+    {% if submitted %}
+    <div class="drden-card" style="margin-bottom:24px; border-left:4px solid var(--drden-accent);">
+        <p style="margin:0; color:var(--drden-deep); font-weight:600;">
+            You're subscribed — welcome to the drden digest.
+        </p>
+        <p class="drden-help" style="margin-top:6px;">Watch your inbox for talent spotlights, event invites, and platform news.</p>
+    </div>
+    {% endif %}
+
+    <div class="drden-grid" style="margin-bottom:32px;">
+        {% for title, blurb in digest_topics %}
+        <article class="drden-card">
+            <span class="drden-pill drden-pill-accent">{{ title }}</span>
+            <p class="drden-event-summary" style="margin-top:12px; font-size:15px;">{{ blurb }}</p>
+        </article>
+        {% endfor %}
+    </div>
+
+    <form class="drden-form drden-card" method="post" novalidate style="max-width:560px;">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="drden-error">{{ form.non_field_errors|join:" " }}</div>
+        {% endif %}
+        {% for field in form %}
+            {% include "marketing/_growth_form_field.html" with field=field %}
+        {% endfor %}
+        <button type="submit" class="drden-cta">Subscribe to the digest</button>
+    </form>
+
+    <section class="drden-section">
+        <h2 class="drden-h2">Explore while you wait</h2>
+        <div class="drden-toggle-row">
+            <a class="drden-cta drden-cta-ghost" href="{% url 'marketing:events_list' %}">Upcoming events</a>
+            <a class="drden-cta drden-cta-ghost" href="{% url 'marketing:emerging_talent_list' %}">Emerging talent</a>
+            <a class="drden-cta drden-cta-ghost" href="{% url 'volume_one_public' %}">VolumeOne blog</a>
+            <a class="drden-cta drden-cta-ghost" href="{% url 'marketing:agencies' %}">Agencies</a>
+            <a class="drden-cta drden-cta-ghost" href="{% url 'signup' %}">Create free account</a>
+        </div>
+    </section>
+</div>
+</body>
+</html>

@@ -1,0 +1,114 @@
+{% extends "designer_portfolio/dashboard_base.html" %} {% block
+dashboard_content %}
+<div class="dashboard-overview">
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">🎨</div>
+      <div class="stat-content">
+        <h3>{{ total_designs }}</h3>
+        <p>Total Designs</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">📋</div>
+      <div class="stat-content">
+        <h3>{{ designs_with_techpack_count }}</h3>
+        <p>With Tech Packs</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">📅</div>
+      <div class="stat-content">
+        <h3>{{ user.date_joined|date:"M Y" }}</h3>
+        <p>Member Since</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">⭐</div>
+      <div class="stat-content">
+        <h3>{{ published_designs_count }}</h3>
+        <p>Published</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="recent-activity">
+    <h2>Recent Designs</h2>
+    <div class="designs-grid">
+      {% for design in recent_designs %}
+      <div class="design-card" onclick="openDesignModal('{{ design.id }}')">
+        {% if design.cover_image %}
+        <img
+          src="{{ design.cover_image.url }}"
+          alt="{{ design.title }}"
+          class="design-image"
+        />
+        {% else %}
+        <div class="design-placeholder">
+          <i class="icon">🎨</i>
+        </div>
+        {% endif %}
+        <div class="design-info">
+          <h4>{{ design.title }}</h4>
+          <p>{{ design.season }} {{ design.year }}</p>
+          {% if design.has_techpack %}
+          <span class="techpack-badge">📋 Tech Pack</span>
+          {% endif %}
+        </div>
+      </div>
+      {% empty %}
+      <div class="empty-state">
+        <div class="empty-icon">🎨</div>
+        <h3>No designs yet</h3>
+        <p>Upload your first design to get started!</p>
+        <a href="{% url 'designer_design_create' %}" class="btn btn-primary"
+          >Upload Design</a
+        >
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if user.subscription.status == 'free_trial' %}
+  <div class="trial-warning">
+    <div class="trial-content">
+      <h3>🎉 Free Trial Active</h3>
+      <p>
+        You have
+        <strong>{{ user.subscription.days_left_in_trial }} days</strong> left in
+        your free trial.
+      </p>
+      <a href="{% url 'subscription_dashboard' %}" class="btn btn-primary"
+        >Upgrade Now</a
+      >
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<style>
+  .trial-warning {
+    margin-top: 30px;
+    background: linear-gradient(135deg, var(--color-accent-soft), var(--color-accent-soft));
+    border: 1px solid var(--color-accent-soft);
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+  }
+
+  .trial-content h3 {
+    margin: 0 0 10px 0;
+    color: var(--color-primary);
+    font-size: 20px;
+  }
+
+  .trial-content p {
+    margin: 0 0 20px 0;
+    color: var(--color-primary);
+    font-size: 16px;
+  }
+</style>
+{% endblock %}

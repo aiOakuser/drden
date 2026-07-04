@@ -1,0 +1,109 @@
+{% extends "designer_portfolio/base.html" %}
+{% load static %}
+
+{% block title %}Search Forum | designrden{% endblock %}
+
+{% block extra_css %}
+<style>
+  .forum-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .search-header {
+    margin-bottom: 2rem;
+  }
+
+  .search-header h1 {
+    color: var(--color-primary);
+    margin-bottom: 1rem;
+  }
+
+  .search-box {
+    max-width: 600px;
+  }
+
+  .search-box input {
+    width: 100%;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1.1rem;
+  }
+
+  .search-results {
+    margin-top: 2rem;
+  }
+
+  .result-item {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .result-title {
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .result-title a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .result-title a:hover {
+    color: var(--color-accent);
+  }
+
+  .result-meta {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 0.75rem;
+  }
+
+  .result-excerpt {
+    color: #333;
+    line-height: 1.6;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="forum-page">
+  <div class="search-header">
+    <h1>🔍 Search Forum</h1>
+    <div class="search-box">
+      <form method="get">
+        <input type="text" name="q" placeholder="Search topics and posts..." value="{{ query }}" autofocus>
+      </form>
+    </div>
+  </div>
+
+  {% if query %}
+    <div class="search-results">
+      <p>Showing results for: <strong>{{ query }}</strong></p>
+      
+      {% if results %}
+        {% for result in results %}
+          <div class="result-item">
+            <div class="result-title">
+              <a href="{% url 'forum_topic' result.slug %}">{{ result.title }}</a>
+            </div>
+            <div class="result-meta">
+              by {{ result.author.username }} in {{ result.category.name }} • {{ result.created_at|timesince }} ago
+            </div>
+            <div class="result-excerpt">
+              {{ result.content|truncatewords:50 }}
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p>No results found. Try different keywords.</p>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

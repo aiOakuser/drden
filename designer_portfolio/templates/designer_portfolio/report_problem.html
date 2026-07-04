@@ -1,0 +1,266 @@
+{% extends "designer_portfolio/base.html" %}
+
+{% block title %}Report a problem — designrden{% endblock %}
+
+{% block content %}
+<section class="report-problem">
+  <div class="report-problem__intro">
+    <p class="eyebrow">Need a hand?</p>
+    <h1>Report a problem or improvement idea</h1>
+    <p class="lead">
+      Tell the designrden (drden) team about technical issues, billing questions, or ways we can improve the experience.
+      We read every submission and typically reply within one business day.
+    </p>
+    <p class="support-email">
+      Prefer email? Reach us at <a href="mailto:{{ support_email }}">{{ support_email }}</a>
+    </p>
+  </div>
+
+  <div class="report-problem__grid">
+    <aside class="report-problem__guide">
+      <h2>Common categories</h2>
+      <div class="category-cards">
+        {% for card in category_cards %}
+        <article class="category-card">
+          <div class="category-card__icon">
+            <i class="{{ card.icon }}"></i>
+          </div>
+          <div>
+            <h3>{{ card.title }}</h3>
+            <p>{{ card.description }}</p>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+      <div class="guide-note">
+        <strong>Tip:</strong> include the page link, steps to reproduce, and any error text you saw.
+      </div>
+    </aside>
+
+    <div class="report-problem__form">
+      {% if messages %}
+        <div class="messages">
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="{{ form.name.id_for_label }}">Name</label>
+            {{ form.name }}
+            {{ form.name.errors }}
+          </div>
+          <div class="form-group">
+            <label for="{{ form.email.id_for_label }}">Email<span aria-hidden="true">*</span></label>
+            {{ form.email }}
+            {{ form.email.errors }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.category.id_for_label }}">Category</label>
+          {{ form.category }}
+          {{ form.category.errors }}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.subject.id_for_label }}">Subject<span aria-hidden="true">*</span></label>
+          {{ form.subject }}
+          {{ form.subject.errors }}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.message.id_for_label }}">Message<span aria-hidden="true">*</span></label>
+          {{ form.message }}
+          {{ form.message.errors }}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.page_url.id_for_label }}">Page URL (optional)</label>
+          {{ form.page_url }}
+          {{ form.page_url.errors }}
+        </div>
+
+        <button type="submit" class="btn-primary">
+          Submit report
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+  --rp-bg: #f5f3f0;
+  --rp-border: rgba(0, 0, 0, 0.08);
+}
+
+.report-problem {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 60px 20px 100px;
+}
+
+.report-problem__intro {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.report-problem__intro .eyebrow {
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--color-accent);
+}
+
+.report-problem__intro h1 {
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  margin: 10px 0;
+}
+
+.report-problem__intro .lead {
+  font-size: 1.1rem;
+  color: var(--color-text-muted);
+}
+
+.report-problem__grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
+  gap: 30px;
+}
+
+.report-problem__guide {
+  background: var(--rp-bg);
+  border-radius: 22px;
+  padding: 30px;
+  border: 1px solid var(--rp-border);
+}
+
+.report-problem__guide h2 {
+  margin-bottom: 20px;
+  font-size: 1.25rem;
+}
+
+.category-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.category-card {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 18px;
+  background: var(--color-secondary);
+  border: 1px solid var(--rp-border);
+}
+
+.category-card__icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: rgba(var(--color-primary-rgb), 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: var(--color-primary);
+}
+
+.guide-note {
+  margin-top: 20px;
+  font-size: 0.95rem;
+  padding: 12px 14px;
+  border-left: 3px solid var(--color-accent);
+  background: rgba(var(--color-accent-rgb, 216, 181, 122), 0.1);
+}
+
+.report-problem__form {
+  border-radius: 22px;
+  padding: 30px;
+  border: 1px solid var(--rp-border);
+  background: var(--color-secondary);
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.06);
+}
+
+form .form-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+form .form-group {
+  flex: 1 1 200px;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 18px;
+}
+
+form label {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+form input,
+form textarea,
+form select {
+  border: 1px solid var(--rp-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+form textarea {
+  resize: vertical;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: var(--color-secondary);
+  border: none;
+  border-radius: 999px;
+  padding: 14px 32px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 30px rgba(var(--color-primary-rgb), 0.2);
+}
+
+.messages .alert {
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: rgba(var(--color-accent-rgb, 216, 181, 122), 0.12);
+  margin-bottom: 12px;
+}
+
+.support-email a {
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+@media (max-width: 900px) {
+  .report-problem__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .report-problem__guide,
+  .report-problem__form {
+    padding: 24px;
+  }
+}
+</style>
+{% endblock %}

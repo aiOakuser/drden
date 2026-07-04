@@ -1,0 +1,218 @@
+{% load static %} {% load text_filters %}
+
+<div class="media-grid">
+  {% for file in media %}
+  <button
+    type="button"
+    class="card"
+    onclick="openPopup({{ forloop.counter0 }})"
+  >
+    {% if file.type == "video" %}
+    <!-- Video with lazy load + blurred poster -->
+    <video
+      class="thumb lazyload-video"
+      muted
+      preload="none"
+      loading="lazy"
+      poster="{{ file.url }}"
+    >
+      <source src="{{ file.url }}" type="video/mp4" />
+    </video>
+    <span class="play-overlay">&#9658;</span>
+    {% else %}
+    <!-- Image with lazy load + blur-up -->
+    <img
+      src="{{ file.url }}"
+      data-src="{{ file.url }}"
+      alt="{{ file.name|prettify }}"
+      class="thumb lazyload"
+      loading="lazy"
+    />
+    {% endif %}
+    <!-- ✅ Styled caption -->
+    <div class="meta">{{ file.name|prettify }}</div>
+  </button>
+  {% endfor %}
+</div>
+
+<!-- Shared popup -->
+<div id="popup" class="popup">
+  <button
+    type="button"
+    class="close"
+    onclick="closePopup()"
+    aria-label="Close popup"
+  >
+    &times;
+  </button>
+  <span class="arrow left" onclick="changePopup(-1)">&#10094;</span>
+  <span class="arrow right" onclick="changePopup(1)">&#10095;</span>
+  <div class="popup-inner">
+    <img
+      id="popup-img"
+      class="popup-content"
+      src=""
+      alt="Media preview"
+      style="display: none"
+    />
+    <video
+      id="popup-video"
+      class="popup-content"
+      controls
+      style="display: none"
+    ></video>
+    <!-- ✅ Styled popup caption -->
+    <div id="popup-caption" class="caption"></div>
+  </div>
+</div>
+
+<script>
+  // preload all media items
+  let mediaItems = [
+    {% for file in media %}
+      { url: "{{ file.url }}", type: "{{ file.type }}" }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ];
+  let currentIndex = 0;
+
+  // ✅ Updated function with decodeURIComponent
+  function prettifyFilename(filename) {
+    filename = decodeURIComponent(filename);
+
+    return filename
+      .replace(/\.[^/.]+$/, "")
+      .replace(/[-_]/g, " ")
+      .replace(/\w\S*/g, w =>
+        w.charAt(0).toUpperCase() + w.substr(1).toLowerCase()
+      );
+  }
+
+  function openPopup(index) {
+    currentIndex = index;
+    const popup = document.getElementById("popup");
+    const img = document.getElementById("popup-img");
+    const video = document.getElementById("popup-video");
+    const caption = document.getElementById("popup-caption");
+    const item = mediaItems[index];
+
+    if (item.type === "image") {
+      img.src = item.url;
+      img.style.display = "block";
+      video.style.display = "none";
+      video.pause();
+    } else {
+      video.src = item.url;
+      video.style.display = "block";
+      img.style.display = "none";
+    }
+
+    caption.innerText = prettifyFilename(item.url.split("/").pop());
+    popup.classList.add("show");
+  }
+
+  function closePopup() {
+    const popup = document.getElementById("popup");
+    const video = document.getElementById("popup-video");
+    video.pause();
+    popup.classList.remove("show");
+  }
+
+  function changePopup(direction) {
+    currentIndex = (currentIndex + direction + mediaItems.length) % mediaItems.length;
+    openPopup(currentIndex);
+  }
+
+  document.addEventListener("keydown", function(e) {
+    const popup = document.getElementById("popup");
+    if (!popup.classList.contains("show")) return;
+    if (e.key === "Escape") closePopup();
+    if (e.key === "ArrowRight") changePopup(1);
+    if (e.key === "ArrowLeft") changePopup(-1);
+  });
+
+  // ✅ Lazyload swap for blur-up previews
+  document.addEventListener("DOMContentLoaded", function() {
+    // For images
+    const lazyImages = document.querySelectorAll("img.lazyload");
+    lazyImages.forEach(img => {
+      const fullSrc = img.getAttribute("data-src");
+      if (fullSrc) {
+        const loader = new Image();
+        loader.src = fullSrc;
+        loader.onload = () => {
+          img.src = fullSrc;
+          img.classList.add("loaded");
+        };
+      }
+    });
+
+    // For videos (blurred until user interacts)
+    const lazyVideos = document.querySelectorAll("video.lazyload-video");
+    lazyVideos.forEach(video => {
+      video.classList.add("blurred");
+      video.addEventListener("play", () => {
+        video.classList.remove("blurred");
+      });
+    });
+  });
+</script>
+
+<style>
+  .tekpaks-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* centers horizontally */
+    justify-content: center; /* centers vertically if there's enough height */
+    text-align: center;
+    margin: 0 auto;
+    max-width: 1200px; /* keep content nicely constrained */
+    padding: 20px;
+  }
+
+  .tekpaks-title {
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 30px;
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  .media-grid {
+    justify-content: center; /* ensures grid items center */
+  }
+
+  /* ✅ Caption under grid items */
+  .meta {
+    margin-top: 8px;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    color: var(--color-secondary);
+    font-family: Garamond, designerf;
+  }
+
+  /* ✅ Caption in popup */
+  .caption {
+    margin-top: 12px;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+    color: var(--color-primary);
+    font-family: Garamond, designerf;
+  }
+
+  /* Blur effect before full load */
+  img.lazyload {
+    filter: blur(8px);
+    transition: filter 0.5s ease;
+  }
+  img.lazyload.loaded {
+    filter: blur(0);
+  }
+
+  /* Video blur preview */
+  video.lazyload-video.blurred {
+    filter: blur(8px);
+    transition: filter 0.5s ease;
+  }
+</style>

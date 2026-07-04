@@ -1,0 +1,2 @@
+# Start PostgreSQL service
+net start postgresql-x64-15

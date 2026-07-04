@@ -1,0 +1,56 @@
+{% extends "designer_portfolio/base.html" %} {% block title %}Pending Designers
+| designer{% endblock %} {% block content %}
+<div
+  style="max-width: 800px; margin: 40px auto; padding: 20px; background: var(--color-secondary); border-radius: 8px; box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.1)"
+>
+  <h2 style="color: var(--color-primary); margin-bottom: 20px">
+    Pending Designer Approvals
+  </h2>
+
+  {% if pending_designers %}
+  <table style="width: 100%; border-collapse: collapse">
+    <thead>
+      <tr style="background: var(--color-surface)">
+        <th style="padding: 10px; border-bottom: 1px solid var(--color-border)">Username</th>
+        <th style="padding: 10px; border-bottom: 1px solid var(--color-border)">Email</th>
+        <th style="padding: 10px; border-bottom: 1px solid var(--color-border)">
+          Date Joined
+        </th>
+        <th style="padding: 10px; border-bottom: 1px solid var(--color-border)">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for designer in pending_designers %}
+      <tr>
+        <td style="padding: 10px; border-bottom: 1px solid var(--color-surface-muted)">
+          {{ designer.username }}
+        </td>
+        <td style="padding: 10px; border-bottom: 1px solid var(--color-surface-muted)">
+          {{ designer.email }}
+        </td>
+        <td style="padding: 10px; border-bottom: 1px solid var(--color-surface-muted)">
+          {{ designer.date_joined }}
+        </td>
+        <td style="padding: 10px; border-bottom: 1px solid var(--color-surface-muted)">
+          <a
+            href="{% url 'approve_designer' designer.id %}"
+            style="background: var(--color-accent); color: var(--color-secondary); padding: 6px 12px; border-radius: 4px; text-decoration: none; margin-right: 6px"
+          >
+            ✅ Approve
+          </a>
+          <a
+            href="{% url 'reject_designer_form' designer.id %}"
+            style="background: var(--color-accent); color: var(--color-secondary); padding: 6px 12px; border-radius: 4px; text-decoration: none"
+          >
+            ❌ Reject
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="text-align: center; color: gray">No pending designer accounts 🎉</p>
+  {% endif %}
+</div>
+{% endblock %}

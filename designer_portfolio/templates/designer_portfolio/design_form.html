@@ -1,0 +1,224 @@
+{% extends "designer_portfolio/base.html" %}
+{% load static %}
+
+{% block title %}
+{% if form.instance.pk %}Edit Design{% else %}Create Design{% endif %} | designer
+{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 800px; margin: 0 auto; padding: 20px">
+  
+  <!-- Page Header -->
+  <div class="page-header" style="text-align: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 2px solid var(--color-surface-muted)">
+    <h1 style="margin: 0; color: var(--color-primary); font-size: 32px; font-weight: 700">
+      {% if form.instance.pk %}Edit Design{% else %}Create New Design{% endif %}
+    </h1>
+    <p style="margin: 10px 0 0 0; color: var(--color-text-muted); font-size: 16px">
+      {% if form.instance.pk %}Update your design details{% else %}Add a new piece to your portfolio{% endif %}
+    </p>
+  </div>
+
+  <!-- Form -->
+  <div class="design-form" style="background: var(--color-secondary); padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(var(--color-primary-rgb), 0.1)">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      
+      <!-- Basic Information Section -->
+      <div class="form-section" style="margin-bottom: 30px">
+        <h3 style="margin: 0 0 20px 0; color: var(--color-text); font-size: 20px; font-weight: 600; padding-bottom: 10px; border-bottom: 1px solid var(--color-border)">
+          Basic Information
+        </h3>
+        
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px">
+          <div class="form-group">
+            <input type="text" name="title" value="{{ form.title.value|default:'' }}" 
+                   placeholder="Design Title" required
+                   style="width: 100%; padding: 15px; border: 2px solid var(--color-border); border-radius: 8px; font-size: 16px; transition: all 0.3s ease; box-sizing: border-box">
+            {% if form.title.errors %}
+              <div style="color: var(--color-accent); font-size: 14px; margin-top: 5px">{{ form.title.errors.0 }}</div>
+            {% endif %}
+          </div>
+          
+          <div class="form-group">
+            <input type="number" name="price" value="{{ form.price.value|default:'' }}" 
+                   placeholder="Price (Optional)" step="0.01"
+                   style="width: 100%; padding: 15px; border: 2px solid var(--color-border); border-radius: 8px; font-size: 16px; transition: all 0.3s ease; box-sizing: border-box">
+            {% if form.price.errors %}
+              <div style="color: var(--color-accent); font-size: 14px; margin-top: 5px">{{ form.price.errors.0 }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px">
+          <div class="form-group">
+            <select name="season" required
+                    style="width: 100%; padding: 15px; border: 2px solid var(--color-border); border-radius: 8px; font-size: 16px; transition: all 0.3s ease; box-sizing: border-box; background: var(--color-secondary)">
+              <option value="">Select Season</option>
+              <option value="Spring" {% if form.season.value == "Spring" %}selected{% endif %}>Spring</option>
+              <option value="Summer" {% if form.season.value == "Summer" %}selected{% endif %}>Summer</option>
+              <option value="Fall" {% if form.season.value == "Fall" %}selected{% endif %}>Fall</option>
+              <option value="Winter" {% if form.season.value == "Winter" %}selected{% endif %}>Winter</option>
+            </select>
+            {% if form.season.errors %}
+              <div style="color: var(--color-accent); font-size: 14px; margin-top: 5px">{{ form.season.errors.0 }}</div>
+            {% endif %}
+          </div>
+          
+          <div class="form-group">
+            <input type="number" name="year" value="{{ form.year.value|default:'' }}" 
+                   placeholder="Year" min="2020" max="2030" required
+                   style="width: 100%; padding: 15px; border: 2px solid var(--color-border); border-radius: 8px; font-size: 16px; transition: all 0.3s ease; box-sizing: border-box">
+            {% if form.year.errors %}
+              <div style="color: var(--color-accent); font-size: 14px; margin-top: 5px">{{ form.year.errors.0 }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <textarea name="description" placeholder="Design Description" rows="4"
+                    style="width: 100%; padding: 15px; border: 2px solid var(--color-border); border-radius: 8px; font-size: 16px; transition: all 0.3s ease; box-sizing: border-box; resize: vertical">{{ form.description.value|default:'' }}</textarea>
+          {% if form.description.errors %}
+            <div style="color: var(--color-accent); font-size: 14px; margin-top: 5px">{{ form.description.errors.0 }}</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Images Section -->
+      <div class="form-section" style="margin-bottom: 30px">
+        <h3 style="margin: 0 0 20px 0; color: var(--color-text); font-size: 20px; font-weight: 600; padding-bottom: 10px; border-bottom: 1px solid var(--color-border)">
+          Images
+        </h3>
+        
+        <div class="form-group" style="margin-bottom: 20px">
+          <label style="display: block; margin-bottom: 8px; color: var(--color-text); font-weight: 600">Cover Image</label>
+          <div class="file-upload" style="border: 2px dashed var(--color-border); border-radius: 8px; padding: 20px; text-align: center; transition: all 0.3s ease">
+            <input type="file" name="cover_image" accept="image/*" id="cover-image-input"
+                   style="display: none">
+            <label for="cover-image-input" style="cursor: pointer; display: block">
+              <i class="fas fa-cloud-upload-alt" style="font-size: 24px; color: var(--color-text-soft); margin-bottom: 10px"></i>
+              <div style="color: var(--color-text-muted); font-size: 14px">Click to upload cover image</div>
+              <div style="color: var(--color-text-soft); font-size: 12px; margin-top: 5px">JPG, PNG, or GIF (max 5MB)</div>
+            </label>
+          </div>
+          {% if form.cover_image.errors %}
+            <div style="color: var(--color-accent); font-size: 14px; margin-top: 5px">{{ form.cover_image.errors.0 }}</div>
+          {% endif %}
+          {% if form.instance.cover_image %}
+            <div style="margin-top: 15px; padding: 10px; background: var(--color-surface); border-radius: 6px">
+              <img src="{{ form.instance.cover_image.url }}" alt="Current cover" 
+                   style="width: 100px; height: 100px; object-fit: cover; border-radius: 6px">
+              <span style="margin-left: 15px; color: var(--color-text-muted); font-size: 14px">Current cover image</span>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Technical Details Section -->
+      <div class="form-section" style="margin-bottom: 30px">
+        <h3 style="margin: 0 0 20px 0; color: var(--color-text); font-size: 20px; font-weight: 600; padding-bottom: 10px; border-bottom: 1px solid var(--color-border)">
+          Technical Details
+        </h3>
+        
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px">
+          <div class="form-group">
+            <input type="text" name="fabric" value="{{ form.fabric.value|default:'' }}" 
+                   placeholder="Fabric Type"
+                   style="width: 100%; padding: 15px; border: 2px solid var(--color-border); border-radius: 8px; font-size: 16px; transition: all 0.3s ease; box-sizing: border-box">
+            {% if form.fabric.errors %}
+              <div style="color: var(--color-accent); font-size: 14px; margin-top: 5px">{{ form.fabric.errors.0 }}</div>
+            {% endif %}
+          </div>
+          
+          <div class="form-group">
+            <input type="text" name="color" value="{{ form.color.value|default:'' }}" 
+                   placeholder="Primary Color"
+                   style="width: 100%; padding: 15px; border: 2px solid var(--color-border); border-radius: 8px; font-size: 16px; transition: all 0.3s ease; box-sizing: border-box">
+            {% if form.color.errors %}
+              <div style="color: var(--color-accent); font-size: 14px; margin-top: 5px">{{ form.color.errors.0 }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <textarea name="care_instructions" placeholder="Care Instructions" rows="3"
+                    style="width: 100%; padding: 15px; border: 2px solid var(--color-border); border-radius: 8px; font-size: 16px; transition: all 0.3s ease; box-sizing: border-box; resize: vertical">{{ form.care_instructions.value|default:'' }}</textarea>
+          {% if form.care_instructions.errors %}
+            <div style="color: var(--color-accent); font-size: 14px; margin-top: 5px">{{ form.care_instructions.errors.0 }}</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions" style="display: flex; justify-content: space-between; align-items: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--color-border)">
+        <a href="{% url 'designer_designs' %}" style="color: var(--color-text-muted); text-decoration: none; padding: 12px 24px; border: 1px solid var(--color-border); border-radius: 6px; font-weight: 600; transition: all 0.3s ease">
+          <i class="fas fa-arrow-left" style="margin-right: 8px"></i>
+          Cancel
+        </a>
+        
+        <button type="submit" style="background: var(--color-primary); color: var(--color-secondary); padding: 12px 30px; border: none; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease">
+          <i class="fas fa-save" style="margin-right: 8px"></i>
+          {% if form.instance.pk %}Update Design{% else %}Create Design{% endif %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+  .form-group input:focus,
+  .form-group textarea:focus,
+  .form-group select:focus {
+    border-color: var(--color-primary) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1) !important;
+  }
+
+  .file-upload:hover {
+    border-color: var(--color-primary) !important;
+    background: var(--color-surface) !important;
+  }
+
+  .form-actions button:hover {
+    background: var(--color-primary) !important;
+    transform: translateY(-1px);
+  }
+
+  .form-actions a:hover {
+    border-color: var(--color-primary) !important;
+    color: var(--color-primary) !important;
+  }
+
+  @media (max-width: 768px) {
+    .form-row {
+      grid-template-columns: 1fr !important;
+    }
+    
+    .form-actions {
+      flex-direction: column !important;
+      gap: 15px;
+    }
+    
+    .form-actions a,
+    .form-actions button {
+      width: 100%;
+      text-align: center;
+    }
+  }
+</style>
+
+<script>
+  // File upload preview
+  document.getElementById('cover-image-input').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const label = document.querySelector('label[for="cover-image-input"]');
+      label.innerHTML = `
+        <i class="fas fa-check-circle" style="font-size: 24px; color: var(--color-accent); margin-bottom: 10px"></i>
+        <div style="color: var(--color-accent); font-size: 14px">${file.name}</div>
+        <div style="color: var(--color-text-soft); font-size: 12px; margin-top: 5px">Click to change</div>
+      `;
+    }
+  });
+</script>
+
+{% endblock %}

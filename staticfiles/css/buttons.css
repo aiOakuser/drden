@@ -1,0 +1,126 @@
+/* ===== Site-wide buttons — bold orange, light orange hover ===== */
+
+:root {
+  --color-button: #ea580c;
+  --color-button-rgb: 234, 88, 12;
+  --color-button-hover: #fdba74;
+  --color-button-hover-rgb: 253, 186, 116;
+  --color-accent: var(--color-button);
+  --color-accent-rgb: var(--color-button-rgb);
+}
+
+/* Primary / filled buttons */
+.btn,
+.btn-primary,
+.btn-accent,
+.submit-btn,
+.nav-trial-cta,
+.btn-submit-order,
+.neworders-submit,
+.btn-detail-continue,
+.navbar-search__btn,
+.chat-send-btn,
+.mem-upgrade__btn--primary,
+a.btn-primary,
+button.btn-primary,
+input.btn-primary,
+input[type="submit"].btn,
+main form button[type="submit"]:not(.nav-logout-btn):not(.post-action-btn):not(.chat-send-btn) {
+  font-weight: 700 !important;
+  background: var(--color-button) !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  border-color: var(--color-button) !important;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease,
+    transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-primary:hover,
+.btn-accent:hover,
+.submit-btn:hover,
+.nav-trial-cta:hover,
+.btn-submit-order:hover,
+.neworders-submit:hover,
+.btn-detail-continue:hover,
+.navbar-search__btn:hover,
+.chat-send-btn:hover,
+.mem-upgrade__btn--primary:hover,
+a.btn-primary:hover,
+button.btn-primary:hover,
+.btn:hover:not(.btn-outline):not(.btn-ghost):not(.btn-secondary):not(.btn-danger):not(.nav-logout-btn):not(.post-action-btn):not(.mobile-menu-toggle):not(.auth-modal__close):not(.arrow):not(.chat-suggestion),
+main form button[type="submit"]:not(.nav-logout-btn):not(.post-action-btn):not(.chat-send-btn):hover {
+  background: var(--color-button-hover) !important;
+  background-image: none !important;
+  border-color: var(--color-button-hover) !important;
+  color: var(--color-primary) !important;
+  filter: none !important;
+  box-shadow: 0 4px 14px rgba(var(--color-button-rgb), 0.28) !important;
+}
+
+/* Outline / secondary — orange border and text */
+.btn-outline,
+.btn-secondary:not(.danger),
+.btn-detail-ask,
+.mem-upgrade__btn--outline {
+  font-weight: 700 !important;
+  background: transparent !important;
+  background-image: none !important;
+  color: var(--color-button) !important;
+  border: 2px solid var(--color-button) !important;
+}
+
+.btn-outline:hover,
+.btn-secondary:not(.danger):hover,
+.btn-detail-ask:hover,
+.mem-upgrade__btn--outline:hover {
+  background: var(--color-button-hover) !important;
+  color: var(--color-primary) !important;
+  border-color: var(--color-button-hover) !important;
+}
+
+/* Ghost */
+.btn-ghost {
+  font-weight: 700 !important;
+  color: var(--color-button) !important;
+  border: 1px solid var(--color-border) !important;
+  background: transparent !important;
+}
+
+.btn-ghost:hover {
+  background: var(--color-button-hover) !important;
+  color: var(--color-primary) !important;
+  border-color: var(--color-button-hover) !important;
+}
+
+/* Small circular action buttons */
+.action-btn.view-btn,
+.action-btn.edit-btn {
+  font-weight: 700 !important;
+  background: var(--color-button) !important;
+  color: #ffffff !important;
+}
+
+.action-btn.view-btn:hover,
+.action-btn.edit-btn:hover {
+  background: var(--color-button-hover) !important;
+  color: var(--color-primary) !important;
+}
+
+.mem-billing-toggle__btn.is-active {
+  background: var(--color-button) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+.mem-billing-toggle__btn.is-active:hover {
+  background: var(--color-button-hover) !important;
+  color: var(--color-primary) !important;
+}
+
+/* Disabled */
+.btn[disabled],
+button[disabled].btn-primary {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}

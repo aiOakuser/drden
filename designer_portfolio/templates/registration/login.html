@@ -1,0 +1,431 @@
+{% extends "designer_portfolio/base.html" %} {% block title %}Designer Login |
+designer{% endblock %} {% block content %}
+<div
+  class="login-container"
+  style="max-width: 400px; margin: 60px auto; padding: 30px; background: var(--color-secondary); border-radius: 10px; box-shadow: 0 2px 10px rgba(var(--color-primary-rgb), 0.1)"
+>
+  <h2 style="text-align: center; margin-bottom: 20px; color: var(--color-primary)">
+    Designer Login
+  </h2>
+  <p style="text-align: center; color: var(--color-text-muted); font-size: 14px; margin-top: -10px; margin-bottom: 10px">
+    {% if google_login_mandatory %}
+    Sign in with your Gmail account to access your dashboard.
+    {% else %}
+    Sign in with your username, email, or a connected social account to access your dashboard.
+    {% endif %}
+  </p>
+
+  {% if messages %}
+  <div style="margin-bottom: 16px; padding: 12px; background: rgba(var(--color-primary-rgb), 0.08); border-radius: 8px; text-align: center; font-size: 14px">
+    {% for message in messages %}
+    <div>{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if google_login_mandatory and not google_login_available %}
+  <div style="padding: 20px; background: rgba(var(--color-accent-rgb, 220, 53, 69), 0.1); border: 1px solid var(--color-accent); border-radius: 8px; color: var(--color-accent); text-align: center">
+    Gmail login is required but not configured. Please contact the administrator to enable Google sign-in.
+  </div>
+  <p style="text-align: center; margin-top: 20px">
+    <a href="{% url 'signup' %}" style="color: var(--color-primary); text-decoration: none; font-weight: bold">Sign up</a>
+  </p>
+  {% else %}
+
+  {% if social_login_providers %}
+  <div class="social-login-section" style="margin-bottom: 20px">
+    {% include "designer_portfolio/includes/social_login_buttons.html" %}
+  </div>
+  {% if show_google_oauth_setup_hint and google_oauth_redirect_uri %}
+  <div style="margin: 0 0 16px; padding: 12px; background: rgba(var(--color-primary-rgb), 0.06); border: 1px solid var(--color-border); border-radius: 8px; font-size: 12px; line-height: 1.5; color: var(--color-text-muted);">
+    <strong style="color: var(--color-primary);">Google login setup (local dev)</strong><br>
+    If you see <em>redirect_uri_mismatch</em>, add this exact URI in
+    <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener" style="color: var(--color-primary);">Google Cloud Console</a>
+    → Credentials → Authorized redirect URIs:
+    <code style="display: block; margin-top: 8px; word-break: break-all; color: var(--color-primary);">{{ google_oauth_redirect_uri }}</code>
+  </div>
+  {% endif %}
+  {% if not google_login_mandatory %}
+  <p style="text-align: center; color: var(--color-text-muted); font-size: 13px; margin: 0 0 16px">— or sign in with username / email —</p>
+  {% endif %}
+  {% endif %}
+
+  {% if not google_login_mandatory %}
+  {% if form.errors or form.non_field_errors %}
+  <div style="color: var(--color-accent); text-align: center; margin-bottom: 20px">
+    {% for error in form.non_field_errors %}
+      <div>{{ error }}</div>
+    {% endfor %}
+    {% if form.username.errors %}
+      {% for error in form.username.errors %}
+        <div>{{ error }}</div>
+      {% endfor %}
+    {% endif %}
+    {% if form.password.errors %}
+      {% for error in form.password.errors %}
+        <div>{{ error }}</div>
+      {% endfor %}
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <form method="post" style="display: flex; flex-direction: column; gap: 15px" novalidate>
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ next }}" />
+
+    <!-- Username or Email Field -->
+    <input
+      type="text"
+      name="username"
+      id="id_username"
+      required
+      maxlength="150"
+      autocomplete="username"
+      style="width: 100%; padding: 14px; border: 2px solid var(--color-border); border-radius: 8px; font-size: 16px; transition: all 0.3s ease; box-sizing: border-box"
+      placeholder="Username or Email"
+      value="{{ form.username.value|default:'' }}"
+    />
+
+    <!-- Password Field -->
+    <div style="position: relative">
+      <input
+        type="password"
+        name="password"
+        id="id_password"
+        required
+        autocomplete="current-password"
+        style="width: 100%; padding: 14px 44px 14px 14px; border: 2px solid var(--color-border); border-radius: 8px; font-size: 16px; transition: all 0.3s ease; box-sizing: border-box"
+        placeholder="Password"
+      />
+      <button
+        type="button"
+        id="togglePassword"
+        aria-label="Show password"
+        style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: transparent; border: none; cursor: pointer; color: var(--color-text-muted); font-weight: 600"
+      >Show</button>
+    </div>
+
+    <!-- Remember Me + Face Login Row -->
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+      <label style="display: flex; align-items: center; gap: 8px; cursor: pointer">
+        <input type="checkbox" name="remember_me" id="id_remember_me" {% if form.remember_me.value %}checked{% else %}{% if form.remember_me.field.initial %}checked{% endif %}{% endif %} />
+        <span style="font-size: 14px; color: var(--color-text)">Keep me signed in</span>
+      </label>
+      <button type="button" id="faceLoginBtn" style="background: var(--color-surface); color: var(--color-primary); border: 1px solid var(--color-surface); padding: 8px 12px; border-radius: 8px; font-size: 14px; cursor: pointer">
+        Use Face/Passkey
+      </button>
+    </div>
+    <div id="passkeyStatus" style="min-height: 18px; font-size: 13px; color: var(--color-text); margin-top: -6px; margin-bottom: 4px" aria-live="polite"></div>
+
+    <button
+      type="submit"
+      style="background: linear-gradient(135deg, var(--color-primary), var(--color-primary)); color: var(--color-secondary); padding: 16px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease"
+    >
+      Login
+    </button>
+  </form>
+
+  <!-- Login Actions -->
+  <div
+    class="login-actions"
+    style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px"
+  >
+    <a
+      href="{% url 'password_reset' %}"
+      style="color: var(--color-primary); text-decoration: none; font-size: 14px"
+    >
+      Forgot your password?
+    </a>
+    <div class="new-user-link" style="text-align: right">
+      <span style="color: var(--color-text-muted); font-size: 14px">New to designrden?</span>
+      <a
+        href="{% url 'signup' %}"
+        style="color: var(--color-primary); text-decoration: none; font-weight: bold; margin-left: 8px; font-size: 14px"
+      >
+        Sign up
+      </a>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if google_login_mandatory and google_login_available %}
+  <div class="login-actions" style="margin-top: 20px; text-align: center">
+    <span style="color: var(--color-text-muted); font-size: 14px">New to designrden?</span>
+    <a href="{% url 'signup' %}" style="color: var(--color-primary); text-decoration: none; font-weight: bold; margin-left: 8px; font-size: 14px">Sign up</a>
+  </div>
+  {% endif %}
+
+  {% endif %}
+</div>
+
+<style>
+  .social-login-buttons--stacked {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .social-login-buttons--compact {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+  }
+
+  .social-login-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    border: 2px solid var(--color-border);
+    color: var(--color-primary);
+    background: var(--color-secondary);
+  }
+
+  .social-login-btn--full {
+    width: 100%;
+    gap: 12px;
+    padding: 14px 20px;
+    border-radius: 8px;
+    font-size: 15px;
+    box-sizing: border-box;
+  }
+
+  .social-login-buttons--compact .social-login-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 18px;
+  }
+
+  .social-login-btn__icon {
+    flex-shrink: 0;
+    font-size: 18px;
+  }
+
+  .social-login-btn.google .social-login-btn__icon {
+    font-size: 20px;
+  }
+
+  .social-login-btn.facebook {
+    border-color: #1877f2;
+    color: #1877f2;
+  }
+
+  .social-login-btn.linkedin {
+    border-color: #0a66c2;
+    color: #0a66c2;
+  }
+
+  .social-login-btn.instagram {
+    border-color: #e1306c;
+    color: #e1306c;
+  }
+
+  .social-login-btn--full:hover,
+  .social-login-buttons--compact .social-login-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.15);
+  }
+
+  .social-login-btn.google:hover {
+    border-color: var(--color-primary);
+    background: rgba(var(--color-primary-rgb), 0.06);
+  }
+
+  .social-login-btn.facebook:hover {
+    background: rgba(24, 119, 242, 0.08);
+  }
+
+  .social-login-btn.linkedin:hover {
+    background: rgba(10, 102, 194, 0.08);
+  }
+
+  .social-login-btn.instagram:hover {
+    background: rgba(225, 48, 108, 0.08);
+  }
+
+  /* fine-tune */
+
+  /* Login Actions Styling */
+  .login-actions a:hover {
+    text-decoration: underline !important;
+  }
+
+  .new-user-link a:hover {
+    color: var(--color-primary) !important;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 480px) {
+    .login-actions {
+      flex-direction: column !important;
+      align-items: center !important;
+      gap: 15px !important;
+    }
+
+    .new-user-link {
+      text-align: center !important;
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    const pwd = document.getElementById('id_password');
+    const toggle = document.getElementById('togglePassword');
+    if (pwd && toggle) {
+      toggle.addEventListener('click', function () {
+        const isHidden = pwd.getAttribute('type') === 'password';
+        pwd.setAttribute('type', isHidden ? 'text' : 'password');
+        toggle.textContent = isHidden ? 'Hide' : 'Show';
+        toggle.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+      });
+    }
+
+    function bufferToBase64Url(buffer) {
+      const bytes = new Uint8Array(buffer);
+      let binary = '';
+      bytes.forEach((b) => {
+        binary += String.fromCharCode(b);
+      });
+      return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    }
+
+    function base64UrlToBuffer(base64url) {
+      const padding = '='.repeat((4 - (base64url.length % 4)) % 4);
+      const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/') + padding;
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i += 1) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return bytes.buffer;
+    }
+
+    const statusEl = document.getElementById('passkeyStatus');
+    function setStatus(message, tone = 'info') {
+      if (!statusEl) {
+        return;
+      }
+      statusEl.textContent = message || '';
+      const colors = {
+        error: 'var(--color-accent)',
+        success: 'var(--color-accent)',
+        info: 'var(--color-text)',
+      };
+      statusEl.style.color = colors[tone] || colors.info;
+    }
+
+    const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+    const csrfToken = csrfInput ? csrfInput.value : null;
+
+    async function postJson(url, payload) {
+      const response = await fetch(url, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: Object.assign({ 'Content-Type': 'application/json' }, csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
+        body: JSON.stringify(payload || {}),
+      });
+      let data;
+      try {
+        data = await response.json();
+      } catch (err) {
+        data = {};
+      }
+      if (!response.ok) {
+        const error = new Error((data && (data.detail || data.error)) || response.statusText || 'Request failed');
+        error.response = data;
+        error.status = response.status;
+        throw error;
+      }
+      return data;
+    }
+
+    const faceBtn = document.getElementById('faceLoginBtn');
+    if (!faceBtn) {
+      return;
+    }
+
+    if (!window.PublicKeyCredential) {
+      faceBtn.disabled = true;
+      faceBtn.title = 'Passkeys are not supported in this browser yet';
+      setStatus('Passkeys are not supported on this browser. Please update your device or use the password form.', 'error');
+      return;
+    }
+
+    const usernameInput = document.getElementById('id_username');
+    const rememberCheckbox = document.getElementById('id_remember_me');
+    const nextInput = document.querySelector('input[name="next"]');
+
+    faceBtn.addEventListener('click', async () => {
+      const identifier = usernameInput ? usernameInput.value.trim() : '';
+      if (!identifier) {
+        setStatus('Enter your username or email before using a passkey.', 'error');
+        if (usernameInput) {
+          usernameInput.focus();
+        }
+        return;
+      }
+
+      try {
+        faceBtn.disabled = true;
+        setStatus('Preparing a secure challenge?');
+
+        const optionsResponse = await postJson('/webauthn/authenticate/options/', { username: identifier });
+        const publicKey = optionsResponse.publicKey || optionsResponse;
+
+        publicKey.challenge = base64UrlToBuffer(publicKey.challenge);
+        if (publicKey.allowCredentials) {
+          publicKey.allowCredentials = publicKey.allowCredentials.map((item) => Object.assign({}, item, { id: base64UrlToBuffer(item.id) }));
+        }
+
+        setStatus('Verify with Face ID, Touch ID, or your device security?');
+        const assertion = await navigator.credentials.get({ publicKey });
+
+        const payload = {
+          id: assertion.id,
+          rawId: bufferToBase64Url(assertion.rawId),
+          type: assertion.type,
+          response: {
+            clientDataJSON: bufferToBase64Url(assertion.response.clientDataJSON),
+            authenticatorData: bufferToBase64Url(assertion.response.authenticatorData),
+            signature: bufferToBase64Url(assertion.response.signature),
+            userHandle: assertion.response.userHandle ? bufferToBase64Url(assertion.response.userHandle) : null,
+          },
+          clientExtensionResults: assertion.getClientExtensionResults(),
+          authenticatorAttachment: assertion.authenticatorAttachment || null,
+          remember_me: rememberCheckbox ? rememberCheckbox.checked : false,
+          next: nextInput ? nextInput.value : null,
+          username: identifier,
+        };
+
+        setStatus('Verifying your passkey?');
+        const verification = await postJson('/webauthn/authenticate/verify/', payload);
+        setStatus('Success! Signing you in?', 'success');
+        window.location.assign(verification.redirect_url || '/');
+      } catch (error) {
+        if (error && error.name === 'NotAllowedError') {
+          setStatus('Passkey sign-in was cancelled.', 'info');
+        } else if (error && error.response && error.response.error) {
+          const code = error.response.error;
+          const friendly = {
+            user_not_found: 'We could not find an account for that username or email.',
+            no_passkeys: 'No passkeys are registered for this account yet. Sign in with your password, then add a passkey from your dashboard.',
+            missing_challenge: 'Please refresh the page and try again.',
+          };
+          setStatus(friendly[code] || code.replace(/_/g, ' '), 'error');
+        } else {
+          setStatus(error.message || 'Passkey sign-in failed. Please try again.', 'error');
+        }
+        console.error(error);
+      } finally {
+        faceBtn.disabled = false;
+      }
+    });
+  })();
+</script>
+
+{% endblock %}

@@ -1,0 +1,33 @@
+# Optional: regenerate social copy in CI and attach JSON (manual trigger).
+# Secrets: OPENAI_API_KEY. Uses Django sqlite after migrate; DB snapshot may be empty—evergreen copy still generates.
+name: Regenerate social content
+
+on:
+  workflow_dispatch:
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    env:
+      SECRET_KEY: ci-not-for-production
+      DEBUG: "1"
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Migrate and regenerate
+        id: regen
+        run: |
+          python manage.py migrate --noinput
+          python manage.py regenerate_social_content --no-save --output social-bundle.json --quiet
+      - name: Upload bundle
+        if: success() && steps.regen.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: social-bundle
+          path: social-bundle.json

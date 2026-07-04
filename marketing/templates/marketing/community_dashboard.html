@@ -1,0 +1,111 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Community dashboard — Global Designer Hub (staff)</title>
+    {% include "marketing/_growth_styles.html" %}
+</head>
+<body>
+<div class="drden-container">
+    <p class="drden-eyebrow">Staff dashboard</p>
+    <h1 class="drden-h1">Community program at a glance</h1>
+    <p class="drden-lead">
+        Events, Emerging Talent features and Mentorship application health.
+        Editing happens in the Django admin.
+    </p>
+
+    <h2 class="drden-h2">Events</h2>
+    <div class="drden-stat-row">
+        <div class="drden-stat">
+            <p class="drden-stat-num">{{ event_counts.upcoming }}</p>
+            <p class="drden-stat-label">Upcoming</p>
+        </div>
+        <div class="drden-stat">
+            <p class="drden-stat-num">{{ event_counts.drafts }}</p>
+            <p class="drden-stat-label">Drafts</p>
+        </div>
+        <div class="drden-stat">
+            <p class="drden-stat-num">{{ event_counts.past }}</p>
+            <p class="drden-stat-label">Past</p>
+        </div>
+    </div>
+
+    <h2 class="drden-h2">Mentorship applications</h2>
+    <div class="drden-stat-row">
+        <div class="drden-stat">
+            <p class="drden-stat-num">{{ mentorship_counts.mentors_active }}</p>
+            <p class="drden-stat-label">Active mentors</p>
+        </div>
+        <div class="drden-stat">
+            <p class="drden-stat-num">{{ mentorship_counts.mentees_active }}</p>
+            <p class="drden-stat-label">Active mentees</p>
+        </div>
+        <div class="drden-stat">
+            <p class="drden-stat-num">{{ mentorship_counts.matched }}</p>
+            <p class="drden-stat-label">Matched</p>
+        </div>
+    </div>
+
+    <p style="margin:18px 0 32px;">
+        <a class="drden-cta" href="/admin/marketing/event/">Open events admin</a>
+        <a class="drden-cta drden-cta-ghost" style="margin-left:6px;" href="/admin/marketing/emergingtalentfeature/">Emerging Talent</a>
+        <a class="drden-cta drden-cta-ghost" style="margin-left:6px;" href="/admin/marketing/mentorshipapplication/">Mentorship</a>
+    </p>
+
+    <h2 class="drden-h2">Recent events</h2>
+    {% if recent_events %}
+        <ul class="drden-event-list">
+            {% for event in recent_events %}
+                <li>
+                    <span class="drden-pill {% if event.status == 'live' %}drden-pill-live{% elif event.status == 'ended' %}drden-pill-ended{% else %}drden-pill-scheduled{% endif %}">{{ event.get_status_display }}</span>
+                    <a href="{% url 'marketing:event_detail' event.slug %}">{{ event.title }}</a>
+                    <span class="drden-event-summary">{{ event.starts_at|date:"M j, Y · g:i A" }} · {{ event.get_kind_display }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="drden-help">No events yet.</p>
+    {% endif %}
+
+    <h2 class="drden-h2">Recent Emerging Talent features</h2>
+    {% if recent_features %}
+        <ul class="drden-feature-list">
+            {% for feature in recent_features %}
+                <li>
+                    <span class="drden-pill {% if feature.is_published %}drden-pill-accent{% else %}drden-pill{% endif %}">
+                        {% if feature.is_published %}Published{% else %}Draft{% endif %}
+                    </span>
+                    {% if feature.is_published %}
+                        <a href="{% url 'marketing:emerging_talent_detail' feature.slug %}">{{ feature.display_name }} — {{ feature.title }}</a>
+                    {% else %}
+                        <span style="color:var(--drden-deep); font-weight:700;">{{ feature.display_name }} — {{ feature.title }}</span>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="drden-help">No features yet.</p>
+    {% endif %}
+
+    <h2 class="drden-h2">Recent mentorship applications</h2>
+    {% if recent_mentor_applications %}
+        <ul class="drden-feature-list">
+            {% for application in recent_mentor_applications %}
+                <li>
+                    <span class="drden-pill {% if application.role == 'mentor' %}drden-pill-accent{% else %}drden-pill{% endif %}">{{ application.get_role_display }}</span>
+                    <strong>{{ application.full_name }}</strong>
+                    <span class="drden-event-summary">
+                        {{ application.email }} · status: {{ application.get_status_display }}
+                        {% if application.headline %} · {{ application.headline }}{% endif %}
+                    </span>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="drden-help">No applications yet.</p>
+    {% endif %}
+</div>
+</body>
+</html>

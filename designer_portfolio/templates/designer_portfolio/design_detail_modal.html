@@ -1,0 +1,456 @@
+<!-- Design Detail Modal -->
+<div
+  id="designDetailModal"
+  class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50"
+>
+  <div
+    class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white"
+  >
+    <!-- Modal Header -->
+    <div class="flex justify-between items-center mb-4">
+      <h3 id="modalTitle" class="text-2xl font-bold text-gray-900"></h3>
+      <button
+        onclick="closeDesignModal()"
+        class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center"
+      >
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <path
+            fill-rule="evenodd"
+            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+            clip-rule="evenodd"
+          ></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Modal Content -->
+    <div class="max-h-96 overflow-y-auto">
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- Left Column: Image and Basic Info -->
+        <div>
+          <!-- Cover Image -->
+          <div id="modalImageContainer" class="mb-4">
+            <img
+              id="modalImage"
+              src=""
+              alt=""
+              class="w-full h-64 object-cover rounded-lg shadow-md"
+            />
+          </div>
+
+          <!-- Basic Information -->
+          <div class="bg-gray-50 p-4 rounded-lg">
+              <h4 class="font-semibold text-lg mb-3 text-gray-800">
+                Basic Information
+              </h4>
+                <div class="space-y-2 text-sm">
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Season:</span>
+                    <span id="modalSeason" class="font-medium"></span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Year:</span>
+                    <span id="modalYear" class="font-medium"></span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Category:</span>
+                    <span id="modalCategory" class="font-medium"></span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Target Market:</span>
+                    <span id="modalTargetMarket" class="font-medium"></span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Status:</span>
+                    <span id="modalStatus" class="font-medium"></span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Featured:</span>
+                    <span id="modalFeatured" class="font-medium"></span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Tech Pack:</span>
+                    <span id="modalTechpackState" class="font-medium"></span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Created:</span>
+                    <span id="modalCreated" class="font-medium"></span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Updated:</span>
+                    <span id="modalUpdated" class="font-medium"></span>
+                  </div>
+                </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Details and Specifications -->
+        <div>
+          <!-- Description -->
+          <div class="mb-4">
+            <h4 class="font-semibold text-lg mb-2 text-gray-800">
+              Description
+            </h4>
+            <p
+              id="modalDescription"
+              class="text-gray-700 text-sm leading-relaxed"
+            ></p>
+          </div>
+
+          <!-- Design Specifications -->
+            <div class="bg-blue-50 p-4 rounded-lg mb-4">
+              <h4 class="font-semibold text-lg mb-3 text-gray-800">
+                Design Specifications
+              </h4>
+                <div class="grid md:grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <span class="text-gray-600 block">Fabric Type:</span>
+                    <span id="modalFabricType" class="font-medium"></span>
+                  </div>
+                  <div>
+                    <span class="text-gray-600 block">Fabric Weight:</span>
+                    <span id="modalFabricWeight" class="font-medium"></span>
+                  </div>
+                  <div>
+                    <span class="text-gray-600 block">Fabric Details:</span>
+                    <span id="modalFabricDetails" class="font-medium"></span>
+                  </div>
+                  <div>
+                    <span class="text-gray-600 block">Target Price:</span>
+                    <span id="modalTargetPrice" class="font-medium text-green-600"></span>
+                  </div>
+                  <div>
+                    <span class="text-gray-600 block">Color Palette:</span>
+                    <span id="modalColorPalette" class="font-medium"></span>
+                  </div>
+                  <div>
+                    <span class="text-gray-600 block">Size Range:</span>
+                    <span id="modalSizeRange" class="font-medium"></span>
+                  </div>
+                </div>
+            </div>
+
+            <!-- Tech Pack Files -->
+          <div class="bg-green-50 p-4 rounded-lg mb-4">
+            <h4 class="font-semibold text-lg mb-3 text-gray-800">
+              Tech Pack Files
+            </h4>
+            <div id="modalTechPackFiles" class="space-y-2">
+              <!-- PDF File -->
+              <div id="modalPdfContainer" class="hidden">
+                <div
+                  class="flex items-center justify-between p-2 bg-white rounded border"
+                >
+                  <div class="flex items-center">
+                    <i class="fas fa-file-pdf text-red-500 mr-2"></i>
+                    <span class="text-sm font-medium">Tech Pack PDF</span>
+                  </div>
+                  <a
+                    id="modalPdfLink"
+                    href="#"
+                    target="_blank"
+                    class="text-blue-600 hover:text-blue-800 text-sm"
+                  >
+                    <i class="fas fa-download mr-1"></i>Download
+                  </a>
+                </div>
+              </div>
+
+              <!-- Excel File -->
+              <div id="modalExcelContainer" class="hidden">
+                <div
+                  class="flex items-center justify-between p-2 bg-white rounded border"
+                >
+                  <div class="flex items-center">
+                    <i class="fas fa-file-excel text-green-500 mr-2"></i>
+                    <span class="text-sm font-medium">Tech Pack Excel</span>
+                  </div>
+                  <a
+                    id="modalExcelLink"
+                    href="#"
+                    target="_blank"
+                    class="text-blue-600 hover:text-blue-800 text-sm"
+                  >
+                    <i class="fas fa-download mr-1"></i>Download
+                  </a>
+                </div>
+              </div>
+
+              <!-- No Files Message -->
+              <div id="modalNoFiles" class="text-gray-500 text-sm italic">
+                No tech pack files available
+              </div>
+            </div>
+          </div>
+
+            <!-- Production Notes -->
+            <div
+              id="modalNotesContainer"
+              class="bg-yellow-50 p-4 rounded-lg mb-4 hidden"
+            >
+              <h4 class="font-semibold text-lg mb-2 text-gray-800">
+                Production Notes
+              </h4>
+              <p
+                id="modalNotes"
+                class="text-gray-700 text-sm leading-relaxed"
+              ></p>
+            </div>
+
+              <div
+                id="modalDesignNotesContainer"
+                class="bg-purple-50 p-4 rounded-lg mb-4 hidden"
+              >
+                <h4 class="font-semibold text-lg mb-2 text-gray-800">
+                  Internal Notes
+                </h4>
+                <p
+                  id="modalDesignNotes"
+                  class="text-gray-700 text-sm leading-relaxed"
+                ></p>
+              </div>
+
+          <!-- Visibility Settings -->
+          <div class="bg-purple-50 p-4 rounded-lg">
+            <h4 class="font-semibold text-lg mb-3 text-gray-800">
+              Visibility Settings
+            </h4>
+            <div class="space-y-2 text-sm">
+              <div class="flex items-center">
+                <i
+                  id="modalPublicIcon"
+                  class="fas fa-eye mr-2 text-gray-400"
+                ></i>
+                <span id="modalPublicText">Private Design</span>
+              </div>
+                <div class="flex items-center" id="modalDetailLinkContainer">
+                  <i class="fas fa-external-link-alt mr-2 text-gray-400"></i>
+                  <a
+                    id="modalDetailLink"
+                    href="#"
+                    target="_blank"
+                    class="text-blue-600 hover:text-blue-800"
+                    >View public page</a
+                  >
+                </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="flex justify-end space-x-3 mt-6 pt-4 border-t">
+      <button
+        onclick="closeDesignModal()"
+        class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition duration-200"
+      >
+        Close
+      </button>
+      <a
+        id="modalEditLink"
+        href="#"
+        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200"
+      >
+        <i class="fas fa-edit mr-2"></i>Edit Design
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openDesignModal(designData) {
+    const modal = document.getElementById("designDetailModal");
+
+    // Populate modal with design data
+    const coverImage = document.getElementById("modalImage");
+    const titleEl = document.getElementById("modalTitle");
+      const seasonEl = document.getElementById("modalSeason");
+    const yearEl = document.getElementById("modalYear");
+      const categoryEl = document.getElementById("modalCategory");
+      const targetEl = document.getElementById("modalTargetMarket");
+      const featuredEl = document.getElementById("modalFeatured");
+    const createdEl = document.getElementById("modalCreated");
+    const updatedEl = document.getElementById("modalUpdated");
+    const statusEl = document.getElementById("modalStatus");
+    const techpackStateEl = document.getElementById("modalTechpackState");
+    const descriptionEl = document.getElementById("modalDescription");
+
+    titleEl.textContent = designData.title || "Design";
+    coverImage.src =
+      designData.cover_image || "/static/images/placehold.png";
+    coverImage.alt = designData.title || "Design cover";
+    seasonEl.textContent = formatSeason(designData.season);
+    yearEl.textContent = designData.year || "—";
+      categoryEl.textContent = formatLabel(designData.category);
+      targetEl.textContent = formatLabel(designData.target_market);
+      featuredEl.textContent = designData.featured ? "Featured" : "Standard";
+      featuredEl.classList.remove("text-green-600", "text-gray-600");
+      featuredEl.classList.add(designData.featured ? "text-green-600" : "text-gray-600");
+    createdEl.textContent = formatDate(designData.created_at);
+    updatedEl.textContent = formatDate(designData.updated_at);
+    statusEl.textContent = designData.published ? "Published" : "Draft";
+    techpackStateEl.textContent = designData.has_techpack
+      ? "Available"
+      : "Not uploaded";
+    descriptionEl.textContent =
+      designData.description?.trim() || "No description available";
+
+    // Design specifications
+      document.getElementById("modalFabricType").textContent =
+        designData.fabric_type || "Not specified";
+      document.getElementById("modalFabricWeight").textContent =
+        designData.fabric_weight || "Not specified";
+    document.getElementById("modalFabricDetails").textContent =
+      designData.fabric_details || "Not specified";
+    document.getElementById("modalTargetPrice").textContent = formatPrice(
+      designData.target_price
+    );
+    document.getElementById("modalColorPalette").textContent =
+      designData.color_palette || "Not specified";
+    document.getElementById("modalSizeRange").textContent =
+      designData.size_range || "Not specified";
+
+    // Tech pack files
+    const pdfContainer = document.getElementById("modalPdfContainer");
+    const excelContainer = document.getElementById("modalExcelContainer");
+    const noFilesMsg = document.getElementById("modalNoFiles");
+
+    let hasFiles = false;
+
+    if (designData.techpack_pdf) {
+      document.getElementById("modalPdfLink").href = designData.techpack_pdf;
+      pdfContainer.classList.remove("hidden");
+      hasFiles = true;
+    } else {
+      pdfContainer.classList.add("hidden");
+    }
+
+    if (designData.techpack_excel) {
+      document.getElementById("modalExcelLink").href =
+        designData.techpack_excel;
+      excelContainer.classList.remove("hidden");
+      hasFiles = true;
+    } else {
+      excelContainer.classList.add("hidden");
+    }
+
+    noFilesMsg.classList.toggle("hidden", hasFiles);
+
+    // Production notes
+    const notesContainer = document.getElementById("modalNotesContainer");
+    if (designData.production_notes && designData.production_notes.trim()) {
+      document.getElementById("modalNotes").textContent =
+        designData.production_notes;
+      notesContainer.classList.remove("hidden");
+    } else {
+      notesContainer.classList.add("hidden");
+    }
+
+      const designNotesContainer = document.getElementById("modalDesignNotesContainer");
+      if (designData.design_notes && designData.design_notes.trim()) {
+        document.getElementById("modalDesignNotes").textContent =
+          designData.design_notes;
+        designNotesContainer.classList.remove("hidden");
+      } else {
+        designNotesContainer.classList.add("hidden");
+      }
+
+    // Visibility settings
+    const publicIcon = document.getElementById("modalPublicIcon");
+    const publicText = document.getElementById("modalPublicText");
+    const detailLinkContainer = document.getElementById(
+      "modalDetailLinkContainer"
+    );
+    const detailLink = document.getElementById("modalDetailLink");
+
+    if (designData.published) {
+      publicIcon.className = "fas fa-eye mr-2 text-green-500";
+      publicText.textContent = "Published";
+    } else {
+      publicIcon.className = "fas fa-eye-slash mr-2 text-gray-400";
+      publicText.textContent = "Draft (hidden)";
+    }
+
+    if (designData.slug) {
+      detailLink.href = `/designs/${designData.slug}/`;
+      detailLinkContainer.classList.remove("hidden");
+    } else {
+      detailLink.href = "#";
+      detailLinkContainer.classList.add("hidden");
+    }
+
+    // Set edit link
+    document.getElementById(
+      "modalEditLink"
+    ).href = `/dashboard/designs/${designData.id}/edit/`;
+
+    // Show modal
+    modal.classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeDesignModal() {
+    const modal = document.getElementById("designDetailModal");
+    modal.classList.add("hidden");
+    document.body.style.overflow = "auto";
+  }
+
+    function formatLabel(value) {
+      if (!value) {
+        return "Not specified";
+      }
+      return value
+        .toString()
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+    }
+
+    function formatSeason(season) {
+      return formatLabel(season);
+    }
+
+  function formatDate(dateString) {
+    if (!dateString) return "Not available";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  }
+
+  function formatPrice(value) {
+    if (!value) {
+      return "Not specified";
+    }
+
+    const numberValue = Number(value);
+    if (Number.isNaN(numberValue)) {
+      return "$" + value;
+    }
+
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(numberValue);
+  }
+
+  // Close modal when clicking outside
+  document
+    .getElementById("designDetailModal")
+    .addEventListener("click", function (e) {
+      if (e.target === this) {
+        closeDesignModal();
+      }
+    });
+
+  // Close modal with Escape key
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+      closeDesignModal();
+    }
+  });
+</script>

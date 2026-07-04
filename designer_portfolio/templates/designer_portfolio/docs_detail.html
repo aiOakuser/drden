@@ -1,0 +1,158 @@
+{% extends "designer_portfolio/base.html" %}
+{% load static %}
+
+{% block title %}{{ doc.title }} | Designer Docs{% endblock %}
+
+{% block content %}
+<section class="docs-detail-hero">
+  <div class="container">
+    <a class="docs-back-link" href="{% url 'docs_category' active_category %}">← Back to {{ category_label }} guides</a>
+    <h1>{{ doc.title }}</h1>
+    <p class="docs-detail-meta">
+      {{ category_label }} &middot; Updated {{ doc.updated_at|date:"F j, Y" }}
+    </p>
+  </div>
+</section>
+
+<section class="docs-content">
+  <div class="container docs-detail-layout">
+    <aside class="docs-sidebar">
+      <h3>Browse categories</h3>
+      <ul class="docs-category-list">
+        {% for category in categories %}
+        <li>
+          <a href="{% url 'docs_category' category.slug %}"
+             class="{% if active_category == category.slug %}active{% endif %}">
+            {{ category.label }}
+            <span>{{ category.total }}</span>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+
+      {% if related_docs %}
+      <div class="docs-related">
+        <h3>Related articles</h3>
+        <ul>
+          {% for related in related_docs %}
+          {% with category_slug=related.category|default:"General"|slugify %}
+          <li>
+            <a href="{% url 'docs_detail' category_slug related.slug %}">
+              {{ related.title }}
+            </a>
+          </li>
+          {% endwith %}
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </aside>
+
+    <article class="docs-article">
+      {{ doc.content|linebreaks }}
+    </article>
+  </div>
+</section>
+
+<style>
+  .docs-detail-hero {
+    background: var(--color-surface);
+    padding: 50px 0;
+  }
+
+  .docs-back-link {
+    font-size: 14px;
+    color: var(--color-primary);
+    text-decoration: none;
+    display: inline-block;
+    margin-bottom: 12px;
+  }
+
+  .docs-detail-meta {
+    color: var(--color-text-muted);
+  }
+
+  .docs-detail-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 32px;
+  }
+
+  .docs-sidebar {
+    background: var(--color-secondary);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 10px 40px rgba(var(--color-primary-rgb), 0.08);
+    align-self: flex-start;
+    position: sticky;
+    top: 120px;
+  }
+
+  .docs-category-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .docs-category-list a {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--color-primary);
+    background: var(--color-surface);
+  }
+
+  .docs-category-list a.active {
+    background: var(--color-surface);
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+
+  .docs-related ul {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .docs-related a {
+    text-decoration: none;
+    color: var(--color-primary);
+    font-weight: 500;
+  }
+
+  .docs-article {
+    background: var(--color-secondary);
+    border-radius: 24px;
+    padding: 40px;
+    box-shadow: 0 20px 60px rgba(var(--color-primary-rgb), 0.12);
+    line-height: 1.8;
+    font-size: 18px;
+  }
+
+  .docs-article h2,
+  .docs-article h3,
+  .docs-article h4 {
+    margin-top: 32px;
+  }
+
+  @media (max-width: 960px) {
+    .docs-detail-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .docs-sidebar {
+      position: relative;
+      top: unset;
+    }
+  }
+</style>
+{% endblock %}
+

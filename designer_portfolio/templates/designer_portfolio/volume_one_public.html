@@ -1,0 +1,900 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>VolumeOne x RunVolumeOne - Live Slideshow</title>
+    <meta
+      name="description"
+      content="VolumeOne keeps the RunVolumeOne collective in sync with a live slideshow sourced from Instagram."
+    />
+    <meta property="og:title" content="VolumeOne x RunVolumeOne" />
+    <meta property="og:description" content="Live slideshow of the @{{ instagram_username }} collective." />
+    <meta property="og:image" content="{{ feed_profile.avatar_url }}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="{{ request.build_absolute_uri }}" />
+    <link rel="canonical" href="{{ request.build_absolute_uri }}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "Space Grotesk", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: radial-gradient(80% 120% at 20% 20%, #1c1523, #040509 70%);
+        color: #f9fafb;
+        min-height: 100vh;
+      }
+      a {
+        color: inherit;
+      }
+      .page-shell {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 56px 24px 72px;
+      }
+      header.hero {
+        display: grid;
+        gap: 32px;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        align-items: center;
+      }
+      .hero-card {
+        padding: 32px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 24px;
+        backdrop-filter: blur(18px);
+      }
+      .hero-eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        font-size: 12px;
+        color: #c084fc;
+        margin-bottom: 12px;
+      }
+      .hero-card h1 {
+        margin: 0 0 16px;
+        font-size: clamp(32px, 6vw, 52px);
+        line-height: 1.05;
+      }
+      .hero-card p {
+        margin: 0 0 16px;
+        color: #d1d5db;
+        font-size: 18px;
+        line-height: 1.5;
+      }
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 20px;
+      }
+      .cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 18px;
+        border-radius: 999px;
+        font-weight: 600;
+        text-decoration: none;
+        border: 1px solid transparent;
+      }
+      .cta.primary {
+        background: linear-gradient(120deg, #a855f7, #ec4899);
+        color: #fff;
+      }
+      .cta.secondary {
+        border-color: rgba(255, 255, 255, 0.25);
+      }
+      .cta.tertiary {
+        border-color: rgba(255, 255, 255, 0.15);
+        color: #e0e7ff;
+      }
+      .cta.tertiary:hover {
+        border-color: #a855f7;
+      }
+      .profile-card {
+        display: flex;
+        gap: 18px;
+        align-items: center;
+      }
+      .profile-card img {
+        width: 96px;
+        height: 96px;
+        border-radius: 32px;
+        object-fit: cover;
+        border: 3px solid rgba(255, 255, 255, 0.2);
+      }
+      .profile-meta h2 {
+        margin: 0;
+        font-size: 28px;
+      }
+      .profile-meta .handle {
+        color: #9ca3af;
+        margin: 4px 0 12px;
+      }
+      .profile-stats {
+        display: flex;
+        gap: 18px;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #9ca3af;
+      }
+      .profile-stats strong {
+        display: block;
+        font-size: 20px;
+        letter-spacing: normal;
+        color: #f9fafb;
+      }
+      .slider-section {
+        margin-top: 56px;
+      }
+      .slider-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+      .slider-wrap {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 28px;
+        padding: 24px;
+        overflow: hidden;
+      }
+      .slider {
+        position: relative;
+        overflow: hidden;
+        border-radius: 18px;
+      }
+      .slider-track {
+        display: flex;
+        width: 100%;
+        transition: transform 600ms ease;
+        transform: translateX(calc(var(--offset, 0) * -100%));
+      }
+      .slide {
+        flex: 0 0 100%;
+        display: grid;
+        gap: 18px;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        padding: 16px;
+      }
+      .media-frame {
+        position: relative;
+        border-radius: 18px;
+        overflow: hidden;
+        background: #0f172a;
+      }
+      .media-frame img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+      }
+      .media-badge {
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        background: rgba(15, 23, 42, 0.75);
+        color: #fef3c7;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 13px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .slide-body {
+        padding: 12px 4px;
+      }
+      .slide-body h3 {
+        margin: 0 0 8px;
+        font-size: 20px;
+      }
+      .slide-body p {
+        margin: 0 0 12px;
+        color: #e5e7eb;
+        line-height: 1.5;
+      }
+      .slide-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        font-size: 14px;
+        color: #a5b4fc;
+        margin-bottom: 12px;
+      }
+      .tags {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 14px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .tags li {
+        padding: 6px 10px;
+        background: rgba(165, 180, 252, 0.15);
+        border-radius: 999px;
+        font-size: 13px;
+        color: #c7d2fe;
+      }
+      .permalink {
+        text-decoration: none;
+        font-weight: 600;
+        color: #a5b4fc;
+      }
+      .slider-controls {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .slider-controls button {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(15, 23, 42, 0.5);
+        color: #fff;
+        font-size: 18px;
+        cursor: pointer;
+        transition: border-color 200ms ease, transform 200ms ease;
+      }
+      .slider-controls button:hover {
+        border-color: #a855f7;
+        transform: translateY(-1px);
+      }
+      .slider-progress {
+        font-size: 14px;
+        color: #9ca3af;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+      .design-pack-section {
+        margin-top: 56px;
+      }
+      .design-pack-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .design-pack-note {
+        max-width: 420px;
+        color: #cbd5f5;
+        margin: 0;
+      }
+      .design-pack-grid {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      }
+      .design-pack-card {
+        border-radius: 22px;
+        padding: 20px;
+        background: rgba(15, 23, 42, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .design-pack-card h3 {
+        margin: 0;
+        font-size: 22px;
+      }
+      .design-pack-subtitle {
+        margin: 0;
+        color: #cbd5f5;
+      }
+      .design-pack-badge {
+        margin: 0;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: #fef3c7;
+      }
+      .design-pack-copy {
+        margin: 0;
+        padding-left: 18px;
+        color: #e5e7eb;
+        font-size: 14px;
+      }
+      .design-pack-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        font-size: 13px;
+        color: #a5b4fc;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .design-pack-swatches {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .design-pack-swatch {
+        width: 26px;
+        height: 26px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: var(--chip-color, #fff);
+        box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.35);
+      }
+      .schema-section {
+        margin-top: 64px;
+      }
+      .schema-header {
+        max-width: 640px;
+        margin-bottom: 28px;
+      }
+      .schema-grid {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      }
+      .schema-card {
+        padding: 22px;
+        border-radius: 20px;
+        background: rgba(15, 23, 42, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .schema-card-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+      }
+      .schema-table-name {
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        font-size: 11px;
+        color: #94a3b8;
+      }
+      .schema-card h3 {
+        margin: 4px 0;
+        font-size: 20px;
+      }
+      .schema-tag {
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        color: #e0e7ff;
+      }
+      .schema-columns {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .schema-columns li {
+        padding: 10px 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .schema-columns li:first-child {
+        border-top: none;
+        padding-top: 0;
+      }
+      .schema-column-name {
+        font-weight: 600;
+      }
+      .schema-column-type {
+        font-size: 12px;
+        color: #cbd5f5;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .schema-column-notes {
+        font-size: 13px;
+        color: #a5b4fc;
+      }
+      .schema-desc {
+        margin: 0;
+        color: #cbd5f5;
+      }
+      .schema-constraints {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #fde68a;
+      }
+      .template-library {
+        margin-top: 64px;
+      }
+      .template-library-header {
+        max-width: 640px;
+        margin-bottom: 28px;
+      }
+      .template-library-grid {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+      .template-card {
+        padding: 24px;
+        border-radius: 22px;
+        background: rgba(10, 14, 25, 0.55);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .template-card-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+      }
+      .template-id {
+        margin: 0;
+        font-size: 12px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: #9ca3af;
+      }
+      .template-layout {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: #cbd5f5;
+      }
+      .template-desc {
+        margin: 0;
+        color: #d1d5db;
+      }
+      .template-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #a5b4fc;
+      }
+      .template-block-label {
+        margin: 0;
+        font-size: 13px;
+        color: #e0f2fe;
+      }
+      .template-json {
+        margin: 0;
+        border-radius: 16px;
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        padding: 16px;
+        font-size: 13px;
+        line-height: 1.5;
+        overflow: auto;
+        max-height: 360px;
+        word-break: break-word;
+        font-family: "JetBrains Mono", "SFMono-Regular", "Menlo", monospace;
+        white-space: pre-wrap;
+      }
+      .template-json code {
+        color: #d1fae5;
+      }
+      .sync-line {
+        margin-top: 16px;
+        font-size: 13px;
+        color: #94a3b8;
+      }
+      .footnotes {
+        margin-top: 48px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 18px;
+      }
+      .footnote-card {
+        padding: 20px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .page-footer {
+        margin-top: 64px;
+        text-align: center;
+        color: #94a3b8;
+        font-size: 14px;
+      }
+      @media (max-width: 640px) {
+        .hero-card,
+        .slider-wrap {
+          padding: 20px;
+        }
+        .slide {
+          padding: 0;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .slider-track {
+          transition: none;
+        }
+        .slider-controls button {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <div class="hero-card">
+          <p class="hero-eyebrow">VolumeOne Dropboard</p>
+          <h1>RunVolumeOne Collective</h1>
+          <p>
+            Global Designer Hub syncs the @{{ instagram_username }} feed into a high-fidelity slideshow so the team,
+            partners, and retail buyers have the same view of drops, pop-ups, and run club rituals.
+          </p>
+          <div class="hero-actions">
+            <a class="cta primary" href="{{ instagram_profile_url }}" target="_blank" rel="noopener">
+              View on Instagram ->
+            </a>
+            <a class="cta secondary" href="{% url 'contact' %}" target="_blank" rel="noopener">
+              Request a VolumeOne workspace
+            </a>
+          </div>
+        </div>
+
+        <div class="hero-card profile-card">
+          <img src="{{ feed_profile.avatar_url }}" alt="@{{ instagram_username }} profile picture" />
+          <div class="profile-meta">
+            <h2>{{ feed_profile.name|default:"RunVolumeOne" }}</h2>
+            <div class="handle">@{{ feed_profile.handle|default:instagram_username }}</div>
+            <div class="profile-stats">
+              <div>
+                <strong>{{ feed_profile.followers_display|default:"0" }}</strong>
+                Followers
+              </div>
+              <div>
+                <strong>{{ feed_profile.posts_display|default:"0" }}</strong>
+                Posts
+              </div>
+              <div>
+                <strong>{{ feed_profile.following_display|default:"0" }}</strong>
+                Following
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="slider-section">
+        <div class="slider-header">
+          <div>
+            <p class="hero-eyebrow">Live slideshow</p>
+            <h2 style="margin: 0">Latest drops in rotation</h2>
+          </div>
+          {% if slides %}
+          <div class="slider-controls">
+            <button type="button" aria-label="Previous slide" data-slider-prev>&larr;</button>
+            <button type="button" aria-label="Next slide" data-slider-next>&rarr;</button>
+            <div class="slider-progress" data-slider-progress>1/{{ slides|length }}</div>
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="slider-wrap" data-slider>
+          {% if slides %}
+          <div class="slider" aria-live="polite">
+            <div class="slider-track" data-slider-track style="--offset: 0">
+              {% for slide in slides %}
+              <article class="slide" data-slide data-index="{{ forloop.counter0 }}">
+                <div class="media-frame">
+                  <img
+                    src="{{ slide.image_url }}"
+                    alt="{{ slide.accessibility_caption|default:slide.caption_short|default:'RunVolumeOne post' }}"
+                    loading="lazy"
+                  />
+                  <span class="media-badge">
+                    {% if slide.is_video %}Reel{% else %}Drop {{ forloop.counter }}{% endif %}
+                  </span>
+                </div>
+                <div class="slide-body">
+                  <div class="slide-meta">
+                    <span>{{ slide.taken_at|date:"M j, Y" }}</span>
+                    <span>❤ {{ slide.like_display }}</span>
+                    <span>💬 {{ slide.comment_display }}</span>
+                  </div>
+                  <p>{{ slide.caption|default:"No caption available yet." }}</p>
+                  {% if slide.tags %}
+                  <ul class="tags">
+                    {% for tag in slide.tags %}
+                    <li>#{{ tag }}</li>
+                    {% endfor %}
+                  </ul>
+                  {% endif %}
+                  <a class="permalink" href="{{ slide.permalink }}" target="_blank" rel="noopener">
+                    Open post ->
+                  </a>
+                </div>
+              </article>
+              {% endfor %}
+            </div>
+          </div>
+          {% else %}
+          <p style="margin: 0; padding: 24px; color: #cbd5f5">
+            The feed is warming up. Check back shortly for the latest RunVolumeOne drops.
+          </p>
+          {% endif %}
+        </div>
+
+        <p class="sync-line">
+          {% if feed_timestamp %}
+          Synced <strong>{{ feed_timestamp|date:"M j, Y g:i A T" }}</strong>
+          {% else %}
+          Synced moments ago
+          {% endif %}
+          | source: {{ feed_source|default:"fallback" }} | powered by VolumeOne ingestion
+        </p>
+      </section>
+
+      {% if design_packs %}
+      <section class="design-pack-section">
+        <div class="design-pack-header">
+          <div>
+            <p class="hero-eyebrow">VolumeOne design packs</p>
+            <h2 style="margin: 0">Upload-ready TekPak blueprints</h2>
+          </div>
+          <p class="design-pack-note">
+            Ready-to-share breakdowns for Desert Shadows and the Fuel Fortress programs so the VolumeOne desk can brief factories in minutes.
+          </p>
+        </div>
+        <div class="design-pack-grid">
+          {% for pack in design_packs %}
+          <article class="design-pack-card">
+            {% if pack.badge or pack.icon %}
+            <p class="design-pack-badge">
+              {% if pack.icon %}{{ pack.icon }} {% endif %}
+              {{ pack.badge }}
+            </p>
+            {% endif %}
+            <h3>{{ pack.title }}</h3>
+            {% if pack.subtitle %}
+            <p class="design-pack-subtitle">{{ pack.subtitle }}</p>
+            {% endif %}
+            {% if pack.supporting_copy %}
+            <ul class="design-pack-copy">
+              {% for line in pack.supporting_copy %}
+              <li>{{ line }}</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+            <div class="design-pack-meta">
+              {% if pack.project_breakdown_label %}
+              <span>{{ pack.project_breakdown_label }}</span>
+              {% endif %}
+              <span>{{ pack.stage_count }} stages</span>
+            </div>
+            {% if pack.colorways %}
+            <div class="design-pack-swatches">
+              {% for swatch in pack.colorways %}
+              <span class="design-pack-swatch" style="--chip-color: {{ swatch.hex }}" title="{{ swatch.name }}"></span>
+              {% endfor %}
+            </div>
+            {% endif %}
+            <a class="cta tertiary" href="{{ pack.url }}" target="_blank" rel="noopener">
+              Open design pack ->
+            </a>
+          </article>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+      {% if db_schema_tables %}
+      <section class="schema-section">
+        <div class="schema-header">
+          <p class="hero-eyebrow">Data layer</p>
+          <h2 style="margin: 0">Postgres schema powering VolumeOne</h2>
+          <p class="design-pack-note">
+            Copy these tables into Neon, Supabase, or RDS and you can persist template scaffolding, real projects, and
+            linked assets in minutes.
+          </p>
+        </div>
+        <div class="schema-grid">
+          {% for table in db_schema_tables %}
+          <article class="schema-card">
+            <header class="schema-card-head">
+              <div>
+                <p class="schema-table-name">{{ table.name }}</p>
+                <h3>{{ table.label }}</h3>
+              </div>
+              {% if table.optional %}
+              <span class="schema-tag">Optional</span>
+              {% endif %}
+            </header>
+            <p class="schema-desc">{{ table.description }}</p>
+            <ul class="schema-columns">
+              {% for column in table.columns %}
+              <li>
+                <div class="schema-column-name">{{ column.name }}</div>
+                <div class="schema-column-type">{{ column.type }}</div>
+                <div class="schema-column-notes">{{ column.notes }}</div>
+              </li>
+              {% endfor %}
+            </ul>
+            {% if table.constraints %}
+            <div class="schema-constraints">
+              {% for constraint in table.constraints %}
+              <span>{{ constraint }}</span>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </article>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+      {% if template_library %}
+      <section class="template-library">
+        <div class="template-library-header">
+          <p class="hero-eyebrow">Template JSON library</p>
+          <h2 style="margin: 0">Starter packs for VolumeOne drop boards</h2>
+          <p class="design-pack-note">
+            Every JSON block sticks to the same shape as the Fuel Fortress template so you can seed the database or kick
+            off new packs without staring at a blank cursor.
+          </p>
+        </div>
+        <div class="template-library-grid">
+          {% for template in template_library %}
+          <article class="template-card">
+            <header class="template-card-head">
+              <div>
+                <p class="template-id">{{ template.id }}</p>
+                <h3>{{ template.name }}</h3>
+              </div>
+              {% if template.layout %}
+              <span class="template-layout">{{ template.layout }}</span>
+              {% endif %}
+            </header>
+            <p class="template-desc">{{ template.summary }}</p>
+            <div class="template-meta">
+              <span>{{ template.stage_count }} stages</span>
+              <span>{{ template.product_block_count }} product block{{ template.product_block_count|pluralize }}</span>
+              {% if template.primary_views %}
+              <span>{{ template.primary_views }}</span>
+              {% endif %}
+            </div>
+            {% if template.primary_block_title or template.primary_block_label or template.code_placeholder %}
+            <p class="template-block-label">
+              {% if template.primary_block_label %}{{ template.primary_block_label }}{% endif %}
+              {% if template.primary_block_title %}
+              {% if template.primary_block_label %} · {% endif %}{{ template.primary_block_title }}
+              {% endif %}
+              {% if template.code_placeholder %}
+              {% if template.primary_block_label or template.primary_block_title %} · {% endif %}{{ template.code_placeholder }}
+              {% endif %}
+            </p>
+            {% endif %}
+            <pre class="template-json"><code>{{ template.json|safe }}</code></pre>
+          </article>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+      <section class="footnotes">
+        <div class="footnote-card">
+          <p class="hero-eyebrow">Why it matters</p>
+          <p>
+            VolumeOne auto-refreshes the @{{ instagram_username }} archive so merch, retail, and marketing teams can
+            brief against the same visual language.
+          </p>
+        </div>
+        <div class="footnote-card">
+          <p class="hero-eyebrow">How it works</p>
+          <p>
+            We poll Instagram’s public profile endpoint, cache the response for 30 minutes, and fall back to a curated
+            snapshot if the network is unavailable.
+          </p>
+        </div>
+        <div class="footnote-card">
+          <p class="hero-eyebrow">Need this?</p>
+          <p>
+            Bring your collective, label, or event cadence into VolumeOne. We turn social drops into production-ready
+            storyboards within hours.
+          </p>
+        </div>
+      </section>
+
+      <footer class="page-footer">
+        Built by Global Designer Hub | VolumeOne slideshow engine | <a href="https://designrden.com/">designrden.com</a>
+      </footer>
+    </div>
+
+    <script>
+      (() => {
+        const slider = document.querySelector("[data-slider]");
+        const track = slider?.querySelector("[data-slider-track]");
+        const slides = track ? Array.from(track.querySelectorAll("[data-slide]")) : [];
+        if (!slider || !track || !slides.length) {
+          return;
+        }
+
+        const prevBtn = slider.querySelector("[data-slider-prev]");
+        const nextBtn = slider.querySelector("[data-slider-next]");
+        const progress = slider.querySelector("[data-slider-progress]");
+        let index = 0;
+        let timer;
+
+        const update = () => {
+          track.style.setProperty("--offset", index);
+          slides.forEach((slide, idx) => {
+            if (idx === index) {
+              slide.setAttribute("data-active", "true");
+            } else {
+              slide.removeAttribute("data-active");
+            }
+          });
+          if (progress) {
+            progress.textContent = `${index + 1}/${slides.length}`;
+          }
+        };
+
+        const goTo = (nextIndex) => {
+          index = (nextIndex + slides.length) % slides.length;
+          update();
+        };
+
+        const startAuto = () => {
+          stopAuto();
+          timer = window.setInterval(() => goTo(index + 1), 7000);
+        };
+
+        const stopAuto = () => {
+          if (timer) {
+            window.clearInterval(timer);
+            timer = undefined;
+          }
+        };
+
+        prevBtn?.addEventListener("click", () => {
+          goTo(index - 1);
+          startAuto();
+        });
+        nextBtn?.addEventListener("click", () => {
+          goTo(index + 1);
+          startAuto();
+        });
+
+        slider.addEventListener("mouseenter", stopAuto);
+        slider.addEventListener("mouseleave", startAuto);
+        slider.addEventListener("touchstart", stopAuto, { passive: true });
+        slider.addEventListener("touchend", startAuto);
+
+        update();
+        startAuto();
+      })();
+    </script>
+  </body>
+</html>

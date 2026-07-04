@@ -1,0 +1,107 @@
+{% extends "designer_portfolio/dashboard_base.html" %}
+{% load static %}
+
+{% block dashboard_title %}Order — {{ order.dress_label|default:order.dress_type|default:"Dress" }}{% endblock %}
+
+{% block header_actions %}
+<a href="{% url 'designer_orders_list' %}" style="color: var(--color-primary); text-decoration: none; font-size: 14px;">← Back to Orders</a>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="order-detail" style="max-width: 800px;">
+  <!-- Order info -->
+  <section style="background: var(--color-secondary); border: 1px solid var(--color-border); border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+    <h2 style="margin: 0 0 16px; font-size: 1.25rem;">Order details</h2>
+    <div style="display: grid; gap: 12px;">
+      <div><strong>Dress:</strong> {{ order.dress_label|default:order.dress_type|default:"—" }}{% if order.formal_subcategory %} ({{ order.formal_subcategory }}){% endif %}</div>
+      <div><strong>Fabric:</strong> {{ order.fabric_label|default:order.fabric_type|default:"—" }}{% if order.wool_type %} · {{ order.wool_type }}{% endif %}{% if order.fabric_texture %} · {{ order.fabric_texture }}{% endif %}</div>
+      {% if order.shoulder_width or order.chest or order.sleeve_short or order.sleeve_wrist %}
+      <div><strong>Measurements (cm):</strong> Shoulder {{ order.shoulder_width|default:"—" }}, Chest {{ order.chest|default:"—" }}, Sleeve short {{ order.sleeve_short|default:"—" }}, Wrist {{ order.sleeve_wrist|default:"—" }}</div>
+      {% endif %}
+      <div><strong>Customer:</strong> {{ order.customer_phone|default:"—" }}{% if order.customer_email %} · {{ order.customer_email }}{% endif %}</div>
+      <div><strong>Status:</strong> {{ order.get_status_display }} · Received {{ order.created_at|date:"M j, Y" }}</div>
+    </div>
+  </section>
+
+  <!-- Update status -->
+  <section style="background: var(--color-secondary); border: 1px solid var(--color-border); border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+    <h3 style="margin: 0 0 16px;">Update status</h3>
+    <form method="post" style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="update_status">
+      <div>
+        <label for="id_status" style="display: block; font-size: 12px; margin-bottom: 4px;">Status</label>
+        <select name="status" id="id_status" style="padding: 10px; border-radius: 8px; border: 2px solid var(--color-border);">
+          {% for val, label in status_choices %}
+          <option value="{{ val }}" {% if order.status == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div style="flex: 1; min-width: 200px;">
+        <label for="id_notes" style="display: block; font-size: 12px; margin-bottom: 4px;">Notes (optional)</label>
+        <input type="text" name="notes" id="id_notes" placeholder="e.g. Taking the order, working on it" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--color-border);">
+      </div>
+      <button type="submit" style="padding: 10px 20px; background: var(--color-primary); color: var(--color-secondary); border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Update</button>
+    </form>
+  </section>
+
+  <!-- Add update / techpack -->
+  <section style="background: var(--color-secondary); border: 1px solid var(--color-border); border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+    <h3 style="margin: 0 0 16px;">Add update or techpack</h3>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add_update">
+      <div style="margin-bottom: 16px;">
+        <label for="id_update_notes" style="display: block; font-size: 12px; margin-bottom: 4px;">Notes</label>
+        <textarea name="notes" id="id_update_notes" rows="2" placeholder="e.g. Taking the order, working on it" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--color-border);"></textarea>
+      </div>
+      <div style="margin-bottom: 16px;">
+        <label for="id_techpack_notes" style="display: block; font-size: 12px; margin-bottom: 4px;">Techpack information</label>
+        <textarea name="techpack_notes" id="id_techpack_notes" rows="4" placeholder="Add techpack details about the order..." style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid var(--color-border);"></textarea>
+      </div>
+      <div style="margin-bottom: 16px;">
+        <label for="id_techpack_pdf" style="display: block; font-size: 12px; margin-bottom: 4px;">Techpack PDF (optional)</label>
+        <input type="file" name="techpack_pdf" id="id_techpack_pdf" accept=".pdf">
+      </div>
+      <button type="submit" style="padding: 10px 20px; background: var(--color-primary); color: var(--color-secondary); border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Add update</button>
+    </form>
+  </section>
+
+  <!-- Attach design -->
+  <section style="background: var(--color-secondary); border: 1px solid var(--color-border); border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+    <h3 style="margin: 0 0 16px;">Attach design</h3>
+    <p style="font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 16px;">When you attach a design to this order, only you and the customer can view it.</p>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="attach_design">
+      <select name="design_id" style="padding: 10px; border-radius: 8px; border: 2px solid var(--color-border); margin-right: 12px;">
+        <option value="">— No design attached —</option>
+        {% for d in designer_designs %}
+        <option value="{{ d.id }}" {% if order.design_id == d.id %}selected{% endif %}>{{ d.title }} ({{ d.year }})</option>
+        {% endfor %}
+      </select>
+      <button type="submit" style="padding: 10px 20px; background: var(--color-primary); color: var(--color-secondary); border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Save</button>
+    </form>
+    {% if order.design %}
+    <p style="margin-top: 12px; font-size: 0.9rem;"><a href="{% url 'design_detail' order.design.slug %}">View attached design →</a></p>
+    {% endif %}
+  </section>
+
+  <!-- Updates history -->
+  {% if order_updates %}
+  <section style="background: var(--color-secondary); border: 1px solid var(--color-border); border-radius: 12px; padding: 24px;">
+    <h3 style="margin: 0 0 16px;">Updates</h3>
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      {% for upd in order_updates %}
+      <div style="padding: 16px; background: var(--color-surface); border-radius: 8px;">
+        <div style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 8px;">{{ upd.created_at|date:"M j, Y g:i A" }}{% if upd.status %} · {{ upd.get_status_display }}{% endif %}</div>
+        {% if upd.notes %}<p style="margin: 0 0 8px;">{{ upd.notes }}</p>{% endif %}
+        {% if upd.techpack_notes %}<p style="margin: 0 0 8px; white-space: pre-wrap;">{{ upd.techpack_notes }}</p>{% endif %}
+        {% if upd.techpack_pdf %}<p style="margin: 0;"><a href="{{ upd.techpack_pdf.url }}">📄 Techpack PDF</a></p>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

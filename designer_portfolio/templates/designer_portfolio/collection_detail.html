@@ -1,0 +1,326 @@
+{% extends "designer_portfolio/base.html" %} {% load static %} {% load
+text_filters %} {% block content %}
+<main class="collection-grid">
+  <!-- LEFT -->
+  <div class="collection-text">
+    <h1>{{ collection.title }}</h1>
+    {% if collection.year %}
+    <h2>{{ collection.year }}</h2>
+    {% endif %} {% for para in collection.text %}
+    <p>{{ para|linebreaks }}</p>
+    {% endfor %}
+  </div>
+
+  <!-- RIGHT -->
+  <div class="collection-images">
+    {% for file in media %}
+    <button
+      type="button"
+      class="thumb-icon"
+      onclick="openPopup({{ forloop.counter0 }})"
+      aria-label="Open {{ file.name|default:'media' }}"
+    >
+      {% if file.type == "image" %}
+      <img
+        src="{{ file.url }}"
+        alt="{{ file.name|default:'image' }}"
+        loading="lazy"
+      />
+      {% else %}
+      <video muted preload="none" poster="{{ file.url }}">
+        <source src="{{ file.url }}" type="video/mp4" />
+      </video>
+      <span class="play-overlay">&#9658;</span>
+      {% endif %}
+    </button>
+    {% endfor %}
+  </div>
+</main>
+
+{% include "designer_portfolio/includes/detail_actions.html" with detail_type="collection" next_url=request.get_full_path %}
+
+<!-- POPUP -->
+<div id="popup" class="popup">
+  <button
+    type="button"
+    class="close"
+    onclick="closePopup()"
+    aria-label="Close popup"
+  >
+    &times;
+  </button>
+  <button
+    type="button"
+    class="arrow left"
+    onclick="changePopup(-1)"
+    aria-label="Previous"
+  >
+    &#10094;
+  </button>
+  <button
+    type="button"
+    class="arrow right"
+    onclick="changePopup(1)"
+    aria-label="Next"
+  >
+    &#10095;
+  </button>
+
+  <div class="popup-inner">
+    <img
+      id="popup-img"
+      class="popup-content"
+      src=""
+      alt=""
+      style="display: none"
+    />
+    <video
+      id="popup-video"
+      class="popup-content"
+      controls
+      style="display: none"
+    ></video>
+  </div>
+</div>
+
+{% endblock %} {% block scripts %}
+<script>
+  // Media list for popup
+  let mediaItems = [
+    {% for file in media %}
+      {url: "{{ file.url }}", type: "{{ file.type }}"}{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ];
+  let currentIndex = 0;
+
+
+
+  // Popup controls
+  function openPopup(index){
+    currentIndex = index;
+    const popup = document.getElementById("popup");
+    const img = document.getElementById("popup-img");
+    const video = document.getElementById("popup-video");
+    const item = mediaItems[index];
+
+    if(item.type === "image"){
+      img.src = item.url; img.style.display = "block";
+      video.style.display = "none"; video.pause();
+    } else {
+      video.src = item.url; video.style.display = "block";
+      img.style.display = "none"; video.play();
+    }
+    popup.classList.add("show");
+  }
+
+  function closePopup(){
+    document.getElementById("popup").classList.remove("show");
+    document.getElementById("popup-video").pause();
+  }
+
+  function changePopup(delta){
+    currentIndex = (currentIndex + delta + mediaItems.length) % mediaItems.length;
+    openPopup(currentIndex);
+  }
+
+
+
+  // Loading overlay controls
+  function showLoadingOverlay(message="Loading...") {
+    const overlay = document.getElementById("loadingOverlay");
+    overlay.querySelector("p").innerText = message;
+    overlay.classList.add("show");
+  }
+
+  function hideLoadingOverlay() {
+    document.getElementById("loadingOverlay").classList.remove("show");
+  }
+
+  // Login modal controls
+  function openLoginModal(){ document.getElementById("loginModal").classList.add("show"); }
+  function closeLoginModal(){ document.getElementById("loginModal").classList.remove("show"); }
+</script>
+{% endblock %}
+
+<style>
+  /* ===== Layout ===== */
+  .collection-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 2rem;
+    padding: 2rem;
+  }
+
+  .collection-text h1 {
+    font-size: 2.2rem;
+    color: var(--color-primary);
+  }
+
+  .collection-images {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+  }
+
+  .thumb-icon img,
+  .thumb-icon video {
+    width: 100%;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  .thumb-icon:hover img {
+    transform: scale(1.05);
+  }
+
+  /* ===== Popup ===== */
+  .popup {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(var(--color-primary-rgb), 0.9);
+    z-index: 9999;
+  }
+  .popup.show {
+    display: block;
+  }
+  .popup-inner {
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+    text-align: center;
+  }
+  .popup-content {
+    max-height: 80vh;
+    max-width: 90vw;
+  }
+  .popup .close,
+  .popup .arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--color-secondary);
+    font-size: 32px;
+    cursor: pointer;
+    padding: 10px;
+  }
+  .popup .close {
+    top: 16px;
+    right: 16px;
+    transform: none;
+    font-size: 40px;
+  }
+  .popup .arrow.left {
+    left: 20px;
+  }
+  .popup .arrow.right {
+    right: 20px;
+  }
+
+  .popup-actions {
+    margin-top: 16px;
+    display: flex;
+    justify-content: center;
+  }
+  .btn-primary {
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background: var(--color-primary);
+    color: var(--color-secondary);
+    font-weight: 700;
+  }
+  .btn-primary:hover {
+    filter: brightness(1.1);
+  }
+
+  /* ===== Login modal ===== */
+  .modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(var(--color-primary-rgb), 0.6);
+    z-index: 10000;
+  }
+  .modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-card {
+    width: min(420px, 92vw);
+    background: var(--color-secondary);
+    border-radius: 12px;
+    padding: 22px;
+    position: relative;
+    box-shadow: 0 12px 32px rgba(var(--color-primary-rgb), 0.25);
+  }
+  .modal-close {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+  }
+  .modal-card h3 {
+    margin: 0 0 12px;
+    color: var(--color-primary);
+  }
+  .modal-card label {
+    display: block;
+    font-weight: 600;
+    margin: 10px 0 6px;
+  }
+  .modal-card input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
+  .modal-note {
+    margin-top: 10px;
+    font-size: 14px;
+  }
+
+  /* ===== Loading overlay ===== */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(var(--color-primary-rgb), 0.7);
+    z-index: 11000;
+    color: var(--color-secondary);
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 16px;
+    font-family: "Inter", sans-serif;
+  }
+  .loading-overlay.show {
+    display: flex;
+  }
+  .loading-overlay p {
+    font-size: 1.2rem;
+    letter-spacing: 0.5px;
+    margin-top: 10px;
+  }
+  .spinner {
+    border: 4px solid rgba(var(--color-secondary-rgb), 0.3);
+    border-top-color: var(--color-secondary);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+</style>

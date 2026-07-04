@@ -1,0 +1,540 @@
+{% extends "designer_portfolio/base.html" %}
+
+{% block title %}Community Forum | designrden{% endblock %}
+
+{% block extra_css %}
+<style>
+  .forum-page {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+    padding: 2rem 0 4rem;
+  }
+
+  .forum-hero {
+    background: linear-gradient(135deg, rgba(255, 168, 0, 0.12), rgba(255, 255, 255, 0));
+    border: 1px solid rgba(255, 168, 0, 0.35);
+    border-radius: 28px;
+    padding: 2.5rem;
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .forum-hero__eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-size: 0.85rem;
+    color: var(--color-accent);
+    font-weight: 700;
+  }
+
+  .forum-hero__title {
+    font-size: clamp(2rem, 4vw, 3rem);
+    margin: 0;
+  }
+
+  .forum-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .forum-btn {
+    border-radius: 999px;
+    padding: 0.85rem 1.75rem;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    border: 1px solid transparent;
+  }
+
+  .forum-btn i {
+    font-size: 1rem;
+  }
+
+  .forum-btn--primary {
+    background: var(--color-accent);
+    color: var(--color-primary);
+    box-shadow: 0 12px 24px rgba(255, 168, 0, 0.35);
+  }
+
+  .forum-btn--ghost {
+    border-color: rgba(255, 255, 255, 0.4);
+    color: var(--color-secondary);
+  }
+
+  .forum-btn:hover {
+    transform: translateY(-1px);
+  }
+
+  .forum-hero__stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+  }
+
+  .forum-hero__stat {
+    background: rgba(255, 255, 255, 0.65);
+    border-radius: 20px;
+    padding: 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .forum-hero__stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-primary);
+  }
+
+  .forum-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .forum-search {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .forum-search form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .forum-search input {
+    padding: 0.95rem 1.25rem;
+    border-radius: 16px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    font-size: 1rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .forum-search input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(255, 168, 0, 0.2);
+  }
+
+  .forum-filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .forum-filter {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 18px;
+    padding: 0.9rem 1rem;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    gap: 0.85rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    color: inherit;
+    font: inherit;
+    align-items: center;
+  }
+
+  .forum-filter i {
+    font-size: 1.2rem;
+    color: var(--color-accent);
+  }
+
+  .forum-filter.active {
+    border-color: var(--color-accent);
+    box-shadow: 0 8px 14px rgba(255, 168, 0, 0.2);
+    background: rgba(255, 168, 0, 0.08);
+  }
+
+  .forum-filter small {
+    display: block;
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 0.8rem;
+    margin-top: 0.15rem;
+  }
+
+  .forum-faqs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.2rem;
+  }
+
+  .forum-faq-card {
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 24px;
+    padding: 1.5rem;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  .forum-faq-card:hover {
+    box-shadow: 0 20px 30px rgba(0, 0, 0, 0.05);
+    transform: translateY(-3px);
+  }
+
+  .forum-chip {
+    display: inline-flex;
+    gap: 0.4rem;
+    align-items: center;
+    padding: 0.2rem 0.8rem;
+    border-radius: 999px;
+    background: rgba(255, 168, 0, 0.15);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-primary);
+  }
+
+  .forum-updated {
+    font-size: 0.85rem;
+    color: rgba(0, 0, 0, 0.5);
+  }
+
+  .forum-tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0.25rem 0 0;
+  }
+
+  .forum-tag-list li {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 999px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .forum-empty-state {
+    text-align: center;
+    border: 1px dashed rgba(0, 0, 0, 0.2);
+    padding: 2rem;
+    border-radius: 24px;
+    background: rgba(0, 0, 0, 0.02);
+  }
+
+  .forum-cta {
+    border-radius: 28px;
+    padding: 2rem;
+    background: var(--color-primary);
+    color: var(--color-secondary);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .forum-cta__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  @media (max-width: 768px) {
+    .forum-page {
+      padding: 1rem 0 3rem;
+    }
+
+    .forum-hero {
+      padding: 1.75rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="forum-page">
+    <div class="forum-hero">
+    <p class="forum-hero__eyebrow">designrden Community</p>
+    <h1 class="forum-hero__title">Community Forum</h1>
+      <p>
+      Tap into designer-to-designer knowledge, get unstuck faster with Designer AI summaries,
+      and follow topic filters tailored for fashion entrepreneurs. Use the search and category filters below to explore our most requested FAQs.
+    </p>
+
+      <div class="forum-hero__actions">
+        <a
+          href="{{ community_forum_url }}"
+          target="_blank"
+          rel="noopener"
+          class="forum-btn forum-btn--primary"
+          data-testid="VisitCommunityForum"
+          aria-label="Open the designrden community forum in a new tab"
+        >
+          <i class="fa-solid fa-comments"></i>
+          Visit Community Forum
+        </a>
+        <a href="{% url 'docs_index' %}" class="forum-btn forum-btn--ghost">
+          <i class="fa-solid fa-book-open"></i>
+          Explore documentation
+        </a>
+      </div>
+
+    <div class="forum-hero__stats">
+      <div class="forum-hero__stat">
+        <p class="forum-hero__stat-value">2.4K+</p>
+        <p>Designers swap build-in-public updates every week.</p>
+      </div>
+      <div class="forum-hero__stat">
+        <p class="forum-hero__stat-value">120</p>
+        <p>Topic filters covering onboarding, workflow, events, and AI.</p>
+      </div>
+      <div class="forum-hero__stat">
+        <p class="forum-hero__stat-value">24/7</p>
+        <p>Trust & Safety support for urgent IP or abuse concerns.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="forum-toolbar">
+    <div class="forum-search">
+      <form method="get" id="faq-search-form">
+        <label for="faq-search">Search FAQs</label>
+        <input
+          id="faq-search"
+          type="search"
+          name="q"
+          placeholder="Search by keyword, tag, or question…"
+          autocomplete="off"
+          aria-label="Search designrden forum FAQs"
+          value="{{ search_query|default_if_none:'' }}"
+        />
+        {% if active_faq_filter != "all" %}
+        <input type="hidden" name="topic" value="{{ active_faq_filter }}" />
+        {% endif %}
+        <button type="submit" class="visually-hidden">Search FAQs</button>
+      </form>
+    </div>
+
+    <div class="forum-filters" role="group" aria-label="FAQ categories">
+      <a
+        href="{{ all_filter_url }}"
+        class="forum-filter{% if active_faq_filter == 'all' %} active{% endif %}"
+        data-filter="all"
+        role="button"
+        aria-pressed="{% if active_faq_filter == 'all' %}true{% else %}false{% endif %}"
+      >
+        <i class="fa-solid fa-layer-group"></i>
+        <div>
+          <span>All topics</span>
+          <small>Every designrden FAQ</small>
+        </div>
+      </a>
+      {% for filter in faq_filters %}
+      <a
+        href="{{ filter.url }}"
+        class="forum-filter{% if filter.is_active %} active{% endif %}"
+        data-filter="{{ filter.key }}"
+        role="button"
+        aria-pressed="{{ filter.is_active|yesno:'true,false' }}"
+      >
+        <i class="{{ filter.icon }}"></i>
+        <div>
+          <span>{{ filter.label }}</span>
+          <small>{{ filter.description }}</small>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div
+    class="forum-faqs"
+    id="forum-faq-grid"
+    data-initial-filter="{{ active_faq_filter|default:'all' }}"
+    data-initial-search="{{ search_query|default_if_none:''|escape }}"
+  >
+    {% for faq in faq_entries %}
+    <article
+      id="{{ faq.html_id }}"
+      class="forum-faq-card"
+      data-category="{{ faq.category }}"
+      data-searchable="{{ faq.search_blob|escape }}"
+      {% if not faq.should_show %}style="display: none;"{% endif %}
+    >
+      <header>
+        <span class="forum-chip">
+          <i class="{{ faq.category_icon }}"></i>
+          {{ faq.category_label }}
+        </span>
+        <span class="forum-updated">Updated {{ faq.updated }}</span>
+      </header>
+      <h3>{{ faq.question }}</h3>
+      <p>{{ faq.answer }}</p>
+      {% if faq.tags %}
+      <ul class="forum-tag-list">
+        {% for tag in faq.tags %}
+        <li>{{ tag }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+
+  <div class="forum-empty-state" {% if has_visible_faqs %}hidden{% endif %}>
+    <p>
+      No FAQs match this filter yet. Try another topic or jump straight into the live community experience.
+    </p>
+    <a href="{{ community_forum_url }}" target="_blank" rel="noopener" class="forum-btn forum-btn--primary">
+      Go to the Community Forum
+    </a>
+  </div>
+
+  <div class="forum-cta">
+    <div>
+      <p class="forum-hero__eyebrow">Need more?</p>
+      <h2>Keep shipping with the designrden community</h2>
+      <p>
+        Share work-in-progress updates, answer polls, follow event recaps, or tag @DesignerAI in any thread for a real-time summary.
+      </p>
+    </div>
+    <div class="forum-cta__actions">
+      <a href="{{ community_forum_url }}" target="_blank" rel="noopener" class="forum-btn forum-btn--primary">
+        Join the conversation
+      </a>
+      <a href="mailto:support@designrden.com" class="forum-btn forum-btn--ghost">
+        Contact support
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const searchInput = document.getElementById("faq-search");
+    const searchForm = document.getElementById("faq-search-form");
+    const filterButtons = Array.from(document.querySelectorAll(".forum-filter"));
+    const cards = Array.from(document.querySelectorAll(".forum-faq-card"));
+    const emptyState = document.querySelector(".forum-empty-state");
+    const faqGrid = document.getElementById("forum-faq-grid");
+
+    if (!searchInput || !faqGrid || !cards.length) {
+      return;
+    }
+
+    let activeFilter = (faqGrid.dataset.initialFilter || "all").toLowerCase();
+    const initialSearch = faqGrid.dataset.initialSearch || "";
+    if (!searchInput.value) {
+      searchInput.value = initialSearch;
+    }
+
+    const syncSearchForm = () => {
+      if (!searchForm) {
+        return;
+      }
+      let topicField = searchForm.querySelector('input[name="topic"]');
+      if (activeFilter !== "all") {
+        if (!topicField) {
+          topicField = document.createElement("input");
+          topicField.type = "hidden";
+          topicField.name = "topic";
+          searchForm.appendChild(topicField);
+        }
+        topicField.value = activeFilter;
+      } else if (topicField) {
+        topicField.remove();
+      }
+    };
+
+    const updateUrl = (term) => {
+      const params = new URLSearchParams();
+      if (activeFilter && activeFilter !== "all") {
+        params.set("topic", activeFilter);
+      }
+      if (term) {
+        params.set("q", term);
+      }
+      const query = params.toString();
+      const newUrl = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+      if (newUrl !== window.location.pathname + window.location.search) {
+        window.history.replaceState({}, "", newUrl);
+      }
+    };
+
+    const applyFilters = () => {
+      const term = (searchInput.value || "").trim().toLowerCase();
+      let visibleCount = 0;
+
+      cards.forEach((card) => {
+        const matchesFilter = activeFilter === "all" || (card.dataset.category || "") === activeFilter;
+        const searchable = (card.dataset.searchable || "").toLowerCase();
+        const matchesSearch = !term || searchable.includes(term);
+        const shouldShow = matchesFilter && matchesSearch;
+        card.style.display = shouldShow ? "" : "none";
+        if (shouldShow) {
+          visibleCount += 1;
+        }
+      });
+
+      if (emptyState) {
+        emptyState.hidden = visibleCount !== 0;
+      }
+
+      syncSearchForm();
+      updateUrl(term);
+    };
+
+    const setActiveButton = (target) => {
+      filterButtons.forEach((btn) => {
+        const isActive = btn === target;
+        btn.classList.toggle("active", isActive);
+        btn.setAttribute("aria-pressed", isActive ? "true" : "false");
+      });
+    };
+
+    filterButtons.forEach((button) => {
+      button.addEventListener("click", (event) => {
+        const isModifiedClick =
+          event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button === 1;
+        if (isModifiedClick) {
+          return;
+        }
+        event.preventDefault();
+        const newFilter = (button.dataset.filter || "all").toLowerCase();
+        if (newFilter === activeFilter) {
+          setActiveButton(button);
+          updateUrl((searchInput.value || "").trim().toLowerCase());
+          return;
+        }
+        activeFilter = newFilter;
+        setActiveButton(button);
+        applyFilters();
+      });
+    });
+
+    if (searchForm) {
+      searchForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        applyFilters();
+      });
+    }
+
+    searchInput.addEventListener("input", applyFilters);
+
+    const initialButton = filterButtons.find(
+      (btn) => (btn.dataset.filter || "all").toLowerCase() === activeFilter
+    );
+    if (initialButton) {
+      setActiveButton(initialButton);
+    }
+
+    syncSearchForm();
+    applyFilters();
+  });
+</script>
+{% endblock %}

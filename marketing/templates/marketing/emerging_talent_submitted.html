@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Application received — Emerging Talent · Global Designer Hub</title>
+    {% include "marketing/_growth_styles.html" %}
+</head>
+<body>
+<div class="drden-container">
+    <p class="drden-eyebrow">Application received</p>
+    <h1 class="drden-h1">Thanks — we're reviewing your work.</h1>
+    <p class="drden-lead">
+        Our editorial team reads every application personally. If your
+        portfolio fits an upcoming Emerging Talent slot, we'll reach out by
+        email about a feature interview before publishing anything.
+    </p>
+    <p class="drden-lead" style="font-size:15px;">
+        While you wait — sharpen your portfolio, subscribe to the digest,
+        or grab a spot at our next live event.
+    </p>
+    <a class="drden-cta" href="{% url 'marketing:grads_landing' %}">Back to grads hub</a>
+    <a class="drden-cta drden-cta-ghost" style="margin-left:6px;" href="{% url 'marketing:events_list' %}">Browse events</a>
+    <a class="drden-cta drden-cta-ghost" style="margin-left:6px;" href="{% url 'marketing:newsletter' %}?source=student_hub">Subscribe to digest</a>
+</div>
+</body>
+</html>

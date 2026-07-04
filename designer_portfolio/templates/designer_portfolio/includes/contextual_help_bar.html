@@ -1,0 +1,12 @@
+{% load static %}
+{% if help_text %}
+<div class="contextual-help-bar">
+  <div class="contextual-help-text">
+    {{ help_text }}
+  </div>
+  <button class="contextual-help-btn" onclick="openDesignerAI()">
+    Ask Designer AI
+  </button>
+</div>
+{% endif %}
+

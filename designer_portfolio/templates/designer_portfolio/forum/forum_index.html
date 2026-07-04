@@ -1,0 +1,240 @@
+{% extends "designer_portfolio/base.html" %}
+{% load static %}
+
+{% block title %}Community Forum | designrden{% endblock %}
+
+{% block extra_css %}
+<style>
+  .forum-page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .forum-hero {
+    background: linear-gradient(135deg, rgba(255, 168, 0, 0.12), rgba(255, 255, 255, 0));
+    border: 1px solid rgba(255, 168, 0, 0.35);
+    border-radius: 16px;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .forum-hero h1 {
+    color: var(--color-primary);
+    margin-bottom: 1rem;
+  }
+
+  .forum-hero p {
+    color: #666;
+    font-size: 1.1rem;
+  }
+
+  .forum-stats {
+    display: flex;
+    gap: 2rem;
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+  }
+
+  .stat-item {
+    text-align: center;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--color-primary);
+  }
+
+  .stat-label {
+    font-size: 0.9rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+  }
+
+  .category-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+
+  .category-card:hover {
+    border-color: var(--color-accent);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+
+  .category-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--color-primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .category-name {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: var(--color-primary);
+    margin-bottom: 0.5rem;
+  }
+
+  .category-description {
+    color: #666;
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+  }
+
+  .category-stats {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.85rem;
+    color: #999;
+  }
+
+  .category-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .forum-actions {
+    margin: 2rem 0;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .btn-primary {
+    background: var(--color-accent);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .btn-primary:hover {
+    background: darkorange;
+    transform: translateY(-1px);
+  }
+
+  .search-box {
+    flex: 1;
+    max-width: 400px;
+  }
+
+  .search-box input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: #666;
+  }
+
+  .empty-state-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    color: #ddd;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="forum-page">
+  <div class="forum-hero">
+    <h1>🎨 designrden Community Forum</h1>
+    <p>Connect with designers, share insights, and collaborate on creative projects</p>
+  </div>
+
+  <div class="forum-stats">
+    <div class="stat-item">
+      <div class="stat-value">{{ total_topics }}</div>
+      <div class="stat-label">Topics</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value">{{ total_posts }}</div>
+      <div class="stat-label">Posts</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value">{{ total_members }}</div>
+      <div class="stat-label">Members</div>
+    </div>
+  </div>
+
+  <div class="forum-actions">
+    {% if user.is_authenticated %}
+      <a href="{% url 'forum_create_topic' %}" class="btn-primary">
+        ✏️ New Topic
+      </a>
+    {% else %}
+      <a href="{% url 'login' %}?next={% url 'forum_create_topic' %}" class="btn-primary">
+        Login to Post
+      </a>
+    {% endif %}
+    
+    <div class="search-box">
+      <form action="{% url 'forum_search' %}" method="get">
+        <input type="text" name="q" placeholder="Search forum..." value="{{ request.GET.q }}">
+      </form>
+    </div>
+  </div>
+
+  {% if categories %}
+    <div class="categories-grid">
+      {% for category in categories %}
+        <a href="{% url 'forum_category' category.slug %}" class="category-card">
+          <div class="category-icon">{{ category.icon|default:"📁" }}</div>
+          <div class="category-name">{{ category.name }}</div>
+          <div class="category-description">{{ category.description }}</div>
+          <div class="category-stats">
+            <span class="category-stat">
+              💬 {{ category.topic_count }} topics
+            </span>
+            <span class="category-stat">
+              📝 {{ category.post_count }} posts
+            </span>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon">📭</div>
+      <h2>No Categories Yet</h2>
+      <p>Forum categories will appear here once they are created by administrators.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

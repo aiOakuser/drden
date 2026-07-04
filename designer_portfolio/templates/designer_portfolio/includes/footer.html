@@ -1,0 +1,154 @@
+<!-- Footer Promo Bar -->
+{% if not user.is_authenticated %}
+{% include "designer_portfolio/includes/promo_bars.html" %}
+{% endif %}
+
+<footer class="site-footer-light">
+  <p class="footer-app">
+    <span class="footer-app__label">Get the app:</span>
+    {% for dl in mobile_app_downloads %}
+    <a
+      class="footer-app__link"
+      href="{{ dl.url }}"
+      {% if dl.external %}target="_blank" rel="noopener"{% endif %}
+    >
+      <i class="{{ dl.icon }}" aria-hidden="true"></i>
+      <span>{{ dl.label }}</span>
+    </a>
+    {% endfor %}
+  </p>
+  <p>
+    © designer · 2025 designrden. All rights reserved.
+      <span class="legal-links">
+        <a href="{% url 'terms_of_service' %}">Terms of Service</a>
+        <span aria-hidden="true"> · </span>
+        <a href="{% url 'privacy_policy' %}">Privacy Policy</a>
+        <span aria-hidden="true"> · </span>
+        <a href="{% url 'security_policy' %}">Security Policy</a>
+        <span aria-hidden="true"> · </span>
+        <a href="{% url 'refund_policy' %}">Refund Policy</a>
+        <span aria-hidden="true"> · </span>
+        <a href="{% url 'data_rights_policy' %}">Data Rights</a>
+        <span aria-hidden="true"> · </span>
+        <a href="{% url 'accessibility_statement' %}">Accessibility</a>
+        <span aria-hidden="true"> · </span>
+        <a href="{% url 'grievance_policy' %}">Grievance Policy</a>
+        <span aria-hidden="true"> · </span>
+        <a href="{% url 'report_problem' %}">Report a problem</a>
+      </span>
+  </p>
+</footer>
+<footer class="site-footer-dark">
+  <p class="footer-app">
+    <span class="footer-app__label">Get the app:</span>
+    {% for dl in mobile_app_downloads %}
+    <a
+      class="footer-app__link"
+      href="{{ dl.url }}"
+      {% if dl.external %}target="_blank" rel="noopener"{% endif %}
+    >
+      <i class="{{ dl.icon }}" aria-hidden="true"></i>
+      <span>{{ dl.label }}</span>
+    </a>
+    {% endfor %}
+  </p>
+  <p>
+    © designer · 2025 designrden. All rights reserved.
+    <span class="legal-links">
+      <a href="{% url 'terms_of_service' %}">Terms of Service</a>
+      <span aria-hidden="true"> · </span>
+      <a href="{% url 'privacy_policy' %}">Privacy Policy</a>
+      <span aria-hidden="true"> · </span>
+      <a href="{% url 'security_policy' %}">Security Policy</a>
+      <span aria-hidden="true"> · </span>
+      <a href="{% url 'refund_policy' %}">Refund Policy</a>
+      <span aria-hidden="true"> · </span>
+      <a href="{% url 'data_rights_policy' %}">Data Rights</a>
+      <span aria-hidden="true"> · </span>
+      <a href="{% url 'accessibility_statement' %}">Accessibility</a>
+      <span aria-hidden="true"> · </span>
+      <a href="{% url 'grievance_policy' %}">Grievance Policy</a>
+      <span aria-hidden="true"> · </span>
+      <a href="{% url 'report_problem' %}">Report a problem</a>
+    </span>
+  </p>
+</footer>
+
+<style>
+    .site-footer-light {
+    background: var(--color-secondary);
+    color: var(--color-primary);
+    text-align: center;
+    padding: 5px 0;
+    font-size: 14px;
+    font-family: var(--font-body);
+  }
+  .site-footer-dark {
+    background: var(--color-primary);
+    color: var(--color-secondary);
+    text-align: center;
+    padding: 5px 0;
+    font-size: 14px;
+    font-family: var(--font-body);
+  }
+
+    .site-footer-light .legal-links a,
+    .site-footer-dark .legal-links a {
+      color: inherit;
+      text-decoration: underline;
+    }
+
+    .footer-app {
+      margin: 2px 0 8px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .footer-app__label {
+      font-weight: 600;
+      opacity: 0.85;
+    }
+    .footer-app__link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 16px;
+      border-radius: 999px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: filter 0.2s ease, background 0.2s ease;
+    }
+    .site-footer-light .footer-app__link {
+      background: var(--color-primary);
+      color: var(--color-secondary);
+    }
+    .site-footer-dark .footer-app__link {
+      background: var(--color-secondary);
+      color: var(--color-primary);
+    }
+    .footer-app__link:hover {
+      filter: brightness(1.08);
+    }
+    .footer-app__link i {
+      font-size: 1.05em;
+    }
+
+    /* Larger screens - improve footer legibility */
+    @media (min-width: 1200px) {
+      .site-footer-light,
+      .site-footer-dark {
+        font-size: 15px;
+        padding: 6px 0;
+      }
+    }
+
+  @media (min-width: 1440px) {
+    .site-footer-light,
+    .site-footer-dark {
+      font-size: 16px;
+      padding: 8px 0;
+    }
+  }
+</style>

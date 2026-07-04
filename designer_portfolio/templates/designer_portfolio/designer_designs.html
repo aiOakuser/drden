@@ -1,0 +1,639 @@
+{% extends "designer_portfolio/dashboard_base.html" %}
+{% block dashboard_title %}My Designs{% endblock %}
+{% block header_actions %}
+<a href="{% url 'designer_design_create' %}" class="btn btn-primary">
+  <i class="icon">➕</i>
+  Upload New Design
+</a>
+{% endblock %} {% block dashboard_content %}
+{% include "designer_portfolio/includes/contextual_help_bar.html" with help_text="Need help with layout, captions, or image order? Ask Designer AI about your portfolio." %}
+<div class="designs-page">
+  <!-- Filter and Search Bar -->
+  <div class="designs-header">
+    <div class="search-filter">
+      <div class="search-box">
+        <input
+          type="text"
+          id="designSearch"
+          placeholder="Search designs..."
+          onkeyup="filterDesigns()"
+        />
+        <i class="search-icon">🔍</i>
+      </div>
+
+      <div class="filter-options">
+        <select id="seasonFilter" onchange="filterDesigns()">
+          <option value="">All Seasons</option>
+          <option value="Spring">Spring</option>
+          <option value="Summer">Summer</option>
+          <option value="Fall">Fall</option>
+          <option value="Winter">Winter</option>
+        </select>
+
+        <select id="yearFilter" onchange="filterDesigns()">
+          <option value="">All Years</option>
+          {% for year in available_years %}
+          <option value="{{ year }}">{{ year }}</option>
+          {% endfor %}
+        </select>
+
+        <select id="statusFilter" onchange="filterDesigns()">
+          <option value="">All Status</option>
+          <option value="published">Published</option>
+          <option value="draft">Draft</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Designs Grid -->
+  <div class="designs-grid" id="designsGrid">
+    {% for design in designs %}
+      <div
+        class="design-card"
+        data-title="{{ design.title|lower }}"
+        data-season="{{ design.season }}"
+        data-year="{{ design.year }}"
+        data-status="{% if design.published %}published{% else %}draft{% endif %}"
+        data-id="{{ design.id }}"
+        data-design-title="{{ design.title|escapejs }}"
+        data-description="{{ design.description|default_if_none:''|escapejs }}"
+        data-published="{{ design.published|yesno:'true,false' }}"
+        data-season-display="{{ design.season|default_if_none:''|escapejs }}"
+        data-year-display="{{ design.year }}"
+          data-category="{{ design.category|default_if_none:''|escapejs }}"
+          data-target-market="{{ design.target_market|default_if_none:''|escapejs }}"
+        data-fabric-details="{{ design.fabric_details|default_if_none:''|escapejs }}"
+          data-fabric-type="{{ design.fabric_type|default_if_none:''|escapejs }}"
+          data-fabric-weight="{{ design.fabric_weight|default_if_none:''|escapejs }}"
+        data-color-palette="{{ design.color_palette|default_if_none:''|escapejs }}"
+        data-size-range="{{ design.size_range|default_if_none:''|escapejs }}"
+        data-target-price="{{ design.target_price|default_if_none:'' }}"
+        data-production-notes="{{ design.production_notes|default_if_none:''|escapejs }}"
+          data-design-notes="{{ design.design_notes|default_if_none:''|escapejs }}"
+          data-featured="{{ design.featured|yesno:'true,false' }}"
+        data-techpack-pdf="{% if design.techpack_pdf %}{{ design.techpack_pdf.url }}{% endif %}"
+        data-techpack-excel="{% if design.techpack_excel %}{{ design.techpack_excel.url }}{% endif %}"
+        data-has-techpack="{{ design.has_techpack|yesno:'true,false' }}"
+        data-cover="{% if design.cover_image %}{{ design.cover_image.url }}{% endif %}"
+        data-created="{{ design.created_at|date:'c' }}"
+        data-updated="{{ design.updated_at|date:'c' }}"
+        data-slug="{{ design.slug }}"
+      >
+      <!-- Design Image -->
+      <div class="design-image-container">
+        {% if design.cover_image %}
+        <img
+          src="{{ design.cover_image.url }}"
+          alt="{{ design.title }}"
+          class="design-image"
+        />
+        {% else %}
+        <div class="design-placeholder">
+          <i class="icon">🎨</i>
+        </div>
+        {% endif %}
+
+        <!-- Status Badge -->
+        <div
+          class="status-badge {% if design.published %}published{% else %}draft{% endif %}"
+        >
+          {% if design.published %} ✓ Published {% else %} 📝 Draft {% endif %}
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="design-actions">
+            <button
+              onclick="handleDesignModal(this)"
+            class="action-btn view-btn"
+            title="View Details"
+          >
+            👁️
+          </button>
+          <a
+            href="{% url 'designer_design_edit' design.id %}"
+            class="action-btn edit-btn"
+            title="Edit"
+          >
+            ✏️
+          </a>
+            <button
+              onclick="handleDeleteDesign(this)"
+            class="action-btn delete-btn"
+            title="Delete"
+          >
+            🗑️
+          </button>
+        </div>
+      </div>
+
+      <!-- Design Info -->
+      <div class="design-info">
+        <h4>{{ design.title }}</h4>
+        <p class="design-meta">{{ design.season }} {{ design.year }}</p>
+
+          {% if design.description %}
+          <p class="design-summary">{{ design.description|truncatechars:110 }}</p>
+          {% endif %}
+
+          <div class="design-details">
+            {% if design.has_techpack %}
+            <span class="detail-badge techpack" title="Tech pack uploaded">📋 Tech Pack</span>
+            {% endif %}
+            {% if design.target_price %}
+            <span class="detail-badge price" title="Target price">${{ design.target_price }}</span>
+            {% endif %}
+            {% if design.size_range %}
+            <span class="detail-badge size" title="Size range">{{ design.size_range }}</span>
+            {% endif %}
+            {% if design.color_palette %}
+            <span class="detail-badge palette" title="Color palette">{{ design.color_palette|truncatechars:24 }}</span>
+            {% endif %}
+          </div>
+
+          <div class="design-tags">
+            {% if design.fabric_details %}
+            <span class="tag" title="Fabric details">{{ design.fabric_details|truncatechars:32 }}</span>
+            {% endif %}
+            {% if design.production_notes %}
+            <span class="tag" title="Production notes">Notes</span>
+            {% endif %}
+          </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+      <div class="empty-icon">🎨</div>
+      <h3>No designs found</h3>
+      <p>Start building your portfolio by uploading your first design!</p>
+      <a href="{% url 'designer_design_create' %}" class="btn btn-primary"
+        >Upload Design</a
+      >
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Pagination -->
+  {% if is_paginated %}
+  <div class="pagination-container">
+    <div class="pagination">
+      {% if page_obj.has_previous %}
+      <a href="?page=1" class="page-link">First</a>
+      <a href="?page={{ page_obj.previous_page_number }}" class="page-link"
+        >Previous</a
+      >
+      {% endif %}
+
+      <span class="page-info">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+      </span>
+
+      {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}" class="page-link">Next</a>
+      <a href="?page={{ page_obj.paginator.num_pages }}" class="page-link"
+        >Last</a
+      >
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Include Design Detail Modal -->
+{% include 'designer_portfolio/design_detail_modal.html' %}
+
+<style>
+  .designs-page {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .designs-header {
+    margin-bottom: 30px;
+  }
+
+  .search-filter {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .search-box {
+    position: relative;
+    flex: 1;
+    min-width: 300px;
+  }
+
+  .search-box input {
+    width: 100%;
+    padding: 12px 40px 12px 15px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+  }
+
+  .search-box input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+  }
+
+  .search-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-muted);
+  }
+
+  .filter-options {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+  }
+
+  .filter-options select {
+    padding: 10px 15px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-secondary);
+    font-size: 14px;
+  }
+
+  .designs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+  }
+
+  .design-card {
+    background: var(--color-secondary);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(var(--color-primary-rgb), 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .design-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(var(--color-primary-rgb), 0.15);
+  }
+
+  .design-image-container {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .design-image {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  .design-card:hover .design-image {
+    transform: scale(1.05);
+  }
+
+  .design-placeholder {
+    width: 100%;
+    height: 220px;
+    background: var(--color-surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    color: var(--color-border);
+  }
+
+  .status-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .status-badge.published {
+    background: rgba(var(--color-accent-rgb), 0.9);
+    color: var(--color-secondary);
+  }
+
+  .status-badge.draft {
+    background: rgba(var(--color-accent-rgb), 0.9);
+    color: var(--color-primary);
+  }
+
+  .design-actions {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    gap: 8px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .design-card:hover .design-actions {
+    opacity: 1;
+  }
+
+  .action-btn {
+    width: 35px;
+    height: 35px;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-size: 14px;
+  }
+
+  .view-btn {
+    background: rgba(var(--color-primary-rgb), 0.9);
+    color: var(--color-secondary);
+  }
+
+  .edit-btn {
+    background: rgba(var(--color-accent-rgb), 0.9);
+    color: var(--color-primary);
+  }
+
+  .delete-btn {
+    background: rgba(var(--color-accent-rgb), 0.9);
+    color: var(--color-secondary);
+  }
+
+  .action-btn:hover {
+    transform: scale(1.1);
+  }
+
+  .design-info {
+    padding: 20px;
+  }
+
+  .design-info h4 {
+    margin: 0 0 8px 0;
+    color: var(--color-primary);
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .design-meta {
+    margin: 0 0 15px 0;
+    color: var(--color-text-muted);
+    font-size: 14px;
+  }
+
+  .design-summary {
+    margin: 0 0 12px 0;
+    color: var(--color-text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .design-details {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  .detail-badge {
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .detail-badge.techpack {
+    background: rgba(var(--color-primary-rgb), 0.1);
+    color: var(--color-primary);
+  }
+
+  .detail-badge.price {
+    background: rgba(var(--color-accent-rgb), 0.1);
+    color: var(--color-accent);
+  }
+
+  .detail-badge.size {
+    background: rgba(var(--color-accent-rgb), 0.12);
+    color: var(--color-accent);
+  }
+
+  .detail-badge.palette {
+    background: rgba(var(--color-primary-rgb), 0.12);
+    color: var(--color-primary);
+  }
+
+  .design-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    padding: 3px 8px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    font-size: 11px;
+    color: var(--color-text-muted);
+  }
+
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    background: var(--color-secondary);
+    border-radius: 12px;
+  }
+
+  .empty-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    opacity: 0.5;
+  }
+
+  .empty-state h3 {
+    margin: 0 0 10px 0;
+    color: var(--color-primary);
+    font-size: 24px;
+  }
+
+  .empty-state p {
+    margin: 0 0 25px 0;
+    color: var(--color-text-muted);
+  }
+
+  .pagination-container {
+    margin-top: 40px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .pagination {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .page-link {
+    padding: 8px 16px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--color-primary);
+    transition: all 0.3s ease;
+  }
+
+  .page-link:hover {
+    background: var(--color-primary);
+    color: var(--color-secondary);
+  }
+
+  .page-info {
+    padding: 8px 16px;
+    color: var(--color-text-muted);
+    font-weight: 500;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .search-filter {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .filter-options {
+      justify-content: space-between;
+    }
+
+    .designs-grid {
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 15px;
+    }
+
+    .design-actions {
+      opacity: 1;
+    }
+  }
+</style>
+
+<script>
+  function filterDesigns() {
+    const searchTerm = document
+      .getElementById("designSearch")
+      .value.toLowerCase();
+    const seasonFilter = document.getElementById("seasonFilter").value;
+    const yearFilter = document.getElementById("yearFilter").value;
+    const statusFilter = document.getElementById("statusFilter").value;
+
+    const designCards = document.querySelectorAll(".design-card");
+
+    designCards.forEach((card) => {
+      const title = card.getAttribute("data-title");
+      const season = card.getAttribute("data-season");
+      const year = card.getAttribute("data-year");
+      const status = card.getAttribute("data-status");
+
+      const matchesSearch = title.includes(searchTerm);
+      const matchesSeason = !seasonFilter || season === seasonFilter;
+      const matchesYear = !yearFilter || year === yearFilter;
+      const matchesStatus = !statusFilter || status === statusFilter;
+
+      if (matchesSearch && matchesSeason && matchesYear && matchesStatus) {
+        card.style.display = "block";
+      } else {
+        card.style.display = "none";
+      }
+    });
+  }
+
+function handleDesignModal(trigger) {
+  const card = trigger?.closest(".design-card");
+  if (!card) {
+    return;
+  }
+
+  const data = card.dataset;
+  const designData = {
+    id: data.id || "",
+    title: data.designTitle || card.querySelector("h4")?.textContent?.trim() || "",
+    description: data.description || card.querySelector(".design-summary")?.textContent?.trim() || "",
+    season: data.seasonDisplay || data.season || "",
+    year: data.yearDisplay || data.year || "",
+    published: data.published === "true",
+    featured: data.featured === "true",
+    category: data.category || "",
+    target_market: data.targetMarket || "",
+    fabric_details: data.fabricDetails || "",
+    fabric_type: data.fabricType || "",
+    fabric_weight: data.fabricWeight || "",
+    color_palette: data.colorPalette || "",
+    size_range: data.sizeRange || "",
+    target_price: data.targetPrice || "",
+    production_notes: data.productionNotes || "",
+    design_notes: data.designNotes || "",
+    techpack_pdf: data.techpackPdf || "",
+    techpack_excel: data.techpackExcel || "",
+    has_techpack: data.hasTechpack === "true",
+    cover_image: data.cover || "",
+    created_at: data.created || "",
+    updated_at: data.updated || "",
+    slug: data.slug || "",
+  };
+
+  if (typeof window.openDesignModal === "function") {
+    window.openDesignModal(designData);
+  }
+}
+
+function handleDeleteDesign(trigger) {
+  const card = trigger?.closest(".design-card");
+  if (!card) {
+    return;
+  }
+
+  const designId = card.dataset.id;
+  if (!designId) {
+    return;
+  }
+
+  if (
+    confirm(
+      "Are you sure you want to delete this design? This action cannot be undone."
+    )
+  ) {
+    // Create a form and submit it
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = `/dashboard/designs/${designId}/delete/`;
+
+    const csrfEl = document.querySelector("[name=csrfmiddlewaretoken]");
+    const csrfToken = csrfEl ? csrfEl.value : null;
+    if (!csrfToken) {
+      alert("Unable to locate CSRF token for deletion request.");
+      return;
+    }
+
+    const csrfInput = document.createElement("input");
+    csrfInput.type = "hidden";
+    csrfInput.name = "csrfmiddlewaretoken";
+    csrfInput.value = csrfToken;
+
+    form.appendChild(csrfInput);
+    document.body.appendChild(form);
+    form.submit();
+  }
+}
+</script>
+{% endblock %}

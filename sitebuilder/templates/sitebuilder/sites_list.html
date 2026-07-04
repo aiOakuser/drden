@@ -1,0 +1,40 @@
+{% extends "designer_portfolio/base.html" %}
+{% block title %}Site Builder | designrden{% endblock %}
+{% block content %}
+<section class="builder-sites">
+  <div class="builder-sites__container">
+    <h1>Site Builder</h1>
+    <p>Build responsive sites, portfolios, and landing pages with drag-and-drop. No developers needed.</p>
+    <form method="post" action="{% url 'builder_site_create' %}">
+      {% csrf_token %}
+      <input type="text" name="name" placeholder="My Portfolio" maxlength="120" />
+      <button type="submit" class="btn btn-primary">Create new site</button>
+    </form>
+    {% if sites %}
+    <ul class="builder-sites__list">
+      {% for site in sites %}
+      <li>
+        <a href="{% url 'builder_editor' site.slug %}">{{ site.name }}</a>
+        <span class="badge">{{ site.published|yesno:"Published,Draft" }}</span>
+        {% if site.published %}
+        <a href="{% url 'builder_public_page' site.slug 'index' %}" target="_blank">View live</a>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p>No sites yet. Create your first site above.</p>
+    {% endif %}
+  </div>
+</section>
+<style>
+.builder-sites { padding: 48px 24px; }
+.builder-sites__container { max-width: 640px; margin: 0 auto; }
+.builder-sites h1 { margin: 0 0 8px; }
+.builder-sites form { display: flex; gap: 12px; margin: 24px 0; }
+.builder-sites form input { flex: 1; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; }
+.builder-sites__list { list-style: none; padding: 0; margin: 0; }
+.builder-sites__list li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--color-border); }
+.builder-sites__list .badge { font-size: 0.8rem; padding: 4px 8px; background: var(--color-surface); border-radius: 6px; }
+</style>
+{% endblock %}

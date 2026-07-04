@@ -1,0 +1,734 @@
+{% load static %}
+<div class="header__apphub-banner">
+  <a href="{% url 'home' %}" class="header__apphub-home" aria-label="Global Designer Hub home">
+    <img
+      class="header__apphub-logo"
+      src="{% static 'images/brand/drden-logo.png' %}"
+      width="32"
+      height="32"
+      alt=""
+    />
+  </a>
+  <span class="header__apphub-divider" aria-hidden="true">|</span>
+  <a href="{% url 'contact' %}">Contact</a>
+  <span class="header__apphub-divider" aria-hidden="true">|</span>
+  <a href="{% url 'volume_one' %}">VolumeOne</a>
+</div>
+<!-- HEADER -->
+<header class="header">
+    <div class="header__inner">
+    <!-- Logo -->
+    <a class="brand" href="{% url 'home' %}" aria-label="Global Designer Hub home">
+      <img
+        class="brand__mark"
+        src="{% static 'images/brand/drden-logo.png' %}"
+        width="52"
+        height="52"
+        alt="Global Designer Hub"
+      />
+    </a>
+
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" aria-label="Toggle navigation">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
+    <!-- Navigation -->
+    <nav class="nav">
+      {% with un=request.resolver_match.url_name %}
+      <a href="{% url 'builder_sites_list' %}" class="{% if un == 'builder_sites_list' or un == 'builder_site_create' or un == 'builder_editor' or un == 'builder_editor_page' %}active{% endif %}">Product</a>
+      <div class="nav-dropdown">
+        <a href="{% url 'designers_list' %}" class="nav-dropdown__trigger{% if un == 'designers_list' or un == 'designer_public_detail' or un == 'emerging_talent_list' or un == 'emerging_talent_detail' or un == 'agencies' or un == 'brand_partner' or un == 'brand_partner_thanks' %} active{% endif %}" aria-haspopup="true" aria-expanded="false" id="nav-teams-trigger">
+          Teams <i class="fas fa-chevron-down" aria-hidden="true"></i>
+        </a>
+        <div class="nav-dropdown__menu" role="menu" aria-labelledby="nav-teams-trigger">
+          <a href="{% url 'designers_list' %}" role="menuitem"><i class="fas fa-rocket nav-dropdown__icon" aria-hidden="true"></i> Startups</a>
+          <a href="{% url 'marketing:agencies' %}" role="menuitem"><i class="fas fa-briefcase nav-dropdown__icon" aria-hidden="true"></i> Agencies</a>
+          <a href="{% url 'signup' %}" role="menuitem"><i class="fas fa-right-left nav-dropdown__icon" aria-hidden="true"></i> Switch</a>
+          <a href="{% url 'volume_one_public' %}" role="menuitem"><i class="fas fa-heart nav-dropdown__icon" aria-hidden="true"></i> Stories</a>
+        </div>
+      </div>
+      <div class="nav-dropdown">
+        <a href="{% url 'docs_index' %}" class="nav-dropdown__trigger{% if un == 'docs_index' or un == 'docs_category' or un == 'docs_detail' or un == 'collections' or un == 'collection_detail' or un == 'student_page' or un == 'events_list' or un == 'event_list' or un == 'event_detail' or un == 'volume_one_public' %} active{% endif %}" aria-haspopup="true" aria-expanded="false" id="nav-resources-trigger">
+          Resources <i class="fas fa-chevron-down" aria-hidden="true"></i>
+        </a>
+        <div class="nav-dropdown__menu" role="menu" aria-labelledby="nav-resources-trigger">
+          <a href="{% url 'collections' %}" role="menuitem"><i class="fas fa-store nav-dropdown__icon" aria-hidden="true"></i> Marketplace</a>
+          <a href="{% url 'neworders_dresses' %}" role="menuitem"><i class="fas fa-shirt nav-dropdown__icon" aria-hidden="true"></i> Custom Orders</a>
+          <a href="{% url 'student_page' %}" role="menuitem"><i class="fas fa-circle-play nav-dropdown__icon" aria-hidden="true"></i> Academy</a>
+          <a href="{% url 'marketing:events_list' %}" role="menuitem"><i class="fas fa-square nav-dropdown__icon" aria-hidden="true"></i> Updates</a>
+          <a href="{% url 'volume_one_public' %}" role="menuitem"><i class="fas fa-newspaper nav-dropdown__icon" aria-hidden="true"></i> Blog</a>
+        </div>
+      </div>
+      <a href="{% url 'forum_index' %}" class="{% if un == 'forum_index' or un == 'forum_category' or un == 'forum_topic' or un == 'forum_create_topic' or un == 'forum_create_post' or un == 'forum_search' or un == 'community_forum' %}active{% endif %}">Community</a>
+      <a href="{% url 'marketing:agencies' %}" class="{% if un == 'agencies' or un == 'brand_partner' or un == 'brand_partner_thanks' %}active{% endif %}">Enterprise</a>
+      <a href="{% url 'membership_upgrade' %}" class="{% if un == 'membership_upgrade' or un == 'student_portfolio_pricing' or un == 'subscription_dashboard' or un == 'change_subscription_plan' %}active{% endif %}">Pricing</a>
+      {% if user.is_authenticated %}
+      <a href="{% url 'designer_dashboard' %}" class="{% if un == 'designer_dashboard' %}active{% endif %}">Dashboard</a>
+      <form action="{% url 'logout' %}" method="post" class="nav-logout-form">
+        {% csrf_token %}
+        <button type="submit" class="nav-logout-btn">Logout</button>
+      </form>
+      <!-- Mobile: same icons as desktop (Notifications, Messages, Help) -->
+      <div class="header__nav-icons header__nav-icons--mobile">
+        <a href="{% url 'designer_dashboard' %}#notifications" class="header__nav-icon header__nav-icon--bell" aria-label="Notifications"><i class="fa-regular fa-bell"></i><span class="header__nav-icon-dot" aria-hidden="true"></span></a>
+        <a href="{% url 'messenger_list' %}" class="header__nav-icon header__nav-icon--envelope" aria-label="Messages"><i class="fa-regular fa-envelope"></i><span class="header__nav-icon-dot" aria-hidden="true"></span></a>
+        <a href="{% url 'contact' %}" class="header__nav-icon header__nav-icon--help" aria-label="Help"><i class="fa-regular fa-circle-question"></i></a>
+      </div>
+      {% else %}
+      <a href="{% url 'login' %}" class="{% if un == 'login' %}active{% endif %}">Log in</a>
+      <a href="{% url 'signup' %}" class="nav-trial-cta{% if un == 'signup' %} active{% endif %}" aria-label="Sign up for Global Designer Hub">Sign up</a>
+      {% endif %}
+      {% endwith %}
+    </nav>
+
+    <!-- Designer nav bar icons: Notifications, Messages, Help (authenticated users) -->
+    {% if user.is_authenticated %}
+    <div class="header__nav-icons" aria-label="Notifications, messages, and help">
+      <a href="{% url 'designer_dashboard' %}#notifications" class="header__nav-icon header__nav-icon--bell" aria-label="Notifications">
+        <i class="fa-regular fa-bell"></i>
+        <span class="header__nav-icon-dot" aria-hidden="true"></span>
+      </a>
+      <a href="{% url 'messenger_list' %}" class="header__nav-icon header__nav-icon--envelope" aria-label="Messages">
+        <i class="fa-regular fa-envelope"></i>
+        <span class="header__nav-icon-dot" aria-hidden="true"></span>
+      </a>
+      <a href="{% url 'about_site' %}#help" class="header__nav-icon header__nav-icon--help" aria-label="Help">
+        <i class="fa-regular fa-circle-question"></i>
+      </a>
+    </div>
+    {% endif %}
+
+    <!-- Social Links -->
+    <div class="header__social">
+      <a
+        href="https://www.linkedin.com/in/manya-marri-8b434917a/"
+        target="_blank"
+        rel="noopener"
+        aria-label="LinkedIn"
+        ><i class="fab fa-linkedin-in"></i
+      ></a>
+        <a
+          href="{{ drden_instagram_url }}"
+          target="_blank"
+          rel="noopener"
+          aria-label="Instagram"
+          ><i class="fab fa-instagram"></i
+        ></a>
+      <a
+        href="https://mail.google.com/mail/?view=cm&fs=1&to=manya.marri@gmail.com"
+        aria-label="Gmail"
+        ><i class="fa-regular fa-envelope"></i
+      ></a>
+    </div>
+  </div>
+</header>
+
+<!-- Header interactions -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Mobile menu toggle
+    const mobileToggle = document.querySelector(".mobile-menu-toggle");
+    const nav = document.querySelector(".nav");
+
+    if (mobileToggle && nav) {
+      mobileToggle.addEventListener("click", function () {
+        mobileToggle.classList.toggle("active");
+        nav.classList.toggle("active");
+      });
+
+      const dropdownTriggers = nav.querySelectorAll(".nav-dropdown__trigger");
+      dropdownTriggers.forEach((trigger) => {
+        trigger.addEventListener("click", function (event) {
+          if (!window.matchMedia("(max-width: 768px)").matches) {
+            return;
+          }
+
+          event.preventDefault();
+          const dropdown = trigger.closest(".nav-dropdown");
+          const shouldOpen = !dropdown.classList.contains("is-open");
+          nav.querySelectorAll(".nav-dropdown.is-open").forEach((openDropdown) => {
+            openDropdown.classList.remove("is-open");
+            const openTrigger = openDropdown.querySelector(".nav-dropdown__trigger");
+            if (openTrigger) {
+              openTrigger.setAttribute("aria-expanded", "false");
+            }
+          });
+          dropdown.classList.toggle("is-open", shouldOpen);
+          trigger.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
+        });
+      });
+
+      // Close mobile menu when clicking regular nav links
+      const navLinks = nav.querySelectorAll("a:not(.nav-dropdown__trigger), .nav-dropdown__menu a");
+      navLinks.forEach((link) => {
+        link.addEventListener("click", () => {
+          mobileToggle.classList.remove("active");
+          nav.classList.remove("active");
+          nav.querySelectorAll(".nav-dropdown.is-open").forEach((dropdown) => {
+            dropdown.classList.remove("is-open");
+            const trigger = dropdown.querySelector(".nav-dropdown__trigger");
+            if (trigger) {
+              trigger.setAttribute("aria-expanded", "false");
+            }
+          });
+        });
+      });
+
+      // Close mobile menu when clicking outside
+      document.addEventListener("click", function (event) {
+        if (
+          !mobileToggle.contains(event.target) &&
+          !nav.contains(event.target)
+        ) {
+          mobileToggle.classList.remove("active");
+          nav.classList.remove("active");
+          nav.querySelectorAll(".nav-dropdown.is-open").forEach((dropdown) => {
+            dropdown.classList.remove("is-open");
+            const trigger = dropdown.querySelector(".nav-dropdown__trigger");
+            if (trigger) {
+              trigger.setAttribute("aria-expanded", "false");
+            }
+          });
+        }
+      });
+    }
+  });
+</script>
+
+  <style>
+  .header__apphub-banner {
+    background: linear-gradient(
+      100deg,
+      rgba(var(--color-secondary-rgb), 1) 0%,
+      rgba(var(--color-highlight-rgb), 0.55) 48%,
+      rgba(var(--color-accent-rgb), 0.22) 100%
+    );
+    color: var(--color-primary);
+    padding: 10px 30px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    text-align: center;
+    border-bottom: 1px solid rgba(var(--color-primary-rgb), 0.08);
+  }
+
+  .header__apphub-home {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .header__apphub-logo {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    display: block;
+    transition: transform 0.2s ease;
+  }
+
+    .header__apphub-banner a:not(.header__apphub-home) {
+      color: inherit;
+      text-decoration: none;
+      transition: opacity 0.2s ease;
+      display: inline-block;
+    }
+
+  .header__apphub-divider {
+    font-size: 14px;
+    opacity: 0.7;
+  }
+
+    .header__apphub-banner a:not(.header__apphub-home):hover {
+      opacity: 0.8;
+    }
+
+    .header__apphub-home:hover .header__apphub-logo {
+      transform: scale(1.05);
+    }
+
+    /* ===== Header Base Styles ===== */
+    .header {
+      background: var(--color-primary);
+      padding: 15px 30px;
+      color: var(--color-secondary);
+      position: relative;
+    }
+
+    .header__inner {
+      max-width: 1800px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      position: relative;
+    }
+
+  /* ===== Brand / Logo ===== */
+  .brand {
+    flex-shrink: 0;
+  }
+
+  /* ===== Mobile Menu Toggle ===== */
+  .mobile-menu-toggle {
+    display: none;
+    flex-direction: column;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    z-index: 1001;
+  }
+
+  .mobile-menu-toggle span {
+    width: 25px;
+    height: 3px;
+    background: var(--color-secondary);
+    margin: 3px 0;
+    transition: 0.3s;
+    border-radius: 2px;
+  }
+
+  .mobile-menu-toggle.active span:nth-child(1) {
+    transform: rotate(-45deg) translate(-5px, 6px);
+  }
+
+  .mobile-menu-toggle.active span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .mobile-menu-toggle.active span:nth-child(3) {
+    transform: rotate(45deg) translate(-5px, -6px);
+  }
+
+  /* ===== Navigation Styles ===== */
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .nav a {
+    color: var(--color-secondary);
+    text-decoration: none;
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: 14.9px;
+    letter-spacing: 0.5px;
+    padding: 8px 12px;
+    transition: color 0.3s ease;
+    white-space: nowrap;
+  }
+
+  .nav a:hover {
+    color: var(--color-accent);
+  }
+
+  /* Active/selected nav item — orange highlight */
+  .nav > a.active,
+  .nav > a.active:hover,
+  .nav .nav-dropdown__trigger.active,
+  .nav .nav-dropdown__trigger.active:hover {
+    background: rgba(249, 115, 22, 0.16);
+    color: #f97316;
+    border-radius: 8px;
+    box-shadow: inset 0 -2px 0 0 #f97316;
+  }
+
+  /* Nav dropdowns */
+  .nav-dropdown {
+    position: relative;
+    display: inline-block;
+  }
+  .nav-dropdown__trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .nav-dropdown__trigger .fa-chevron-down {
+    font-size: 10px;
+    opacity: 0.9;
+  }
+  .nav-dropdown__menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 220px;
+    margin-top: 6px;
+    padding: 8px 0;
+    background: var(--color-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+    z-index: 1000;
+    list-style: none;
+  }
+  .nav-dropdown:hover .nav-dropdown__menu,
+  .nav-dropdown.is-open .nav-dropdown__menu,
+  .nav-dropdown__menu:focus-within {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+  .nav-dropdown__menu a {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    color: var(--color-primary) !important;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: 0;
+    border: none;
+    white-space: nowrap;
+  }
+  .nav-dropdown__menu a:hover {
+    background: rgba(var(--color-primary-rgb, 30, 30, 30), 0.06);
+    color: var(--color-accent) !important;
+  }
+  .nav-dropdown__icon {
+    width: 18px;
+    margin-right: 10px;
+    text-align: center;
+  }
+  .nav-dropdown__divider {
+    height: 1px;
+    margin: 6px 12px;
+    background: var(--color-border);
+  }
+
+  /* Free Trial CTA in nav */
+  .nav-trial-cta {
+    padding: 8px 12px;
+    border-radius: 16px;
+    border: 1px solid rgba(var(--color-button-rgb), 0.2);
+  }
+
+  /* Logout button styling to match nav links */
+  .nav-logout-form {
+    display: inline;
+    margin: 0;
+  }
+
+  .nav-logout-btn {
+    background: none;
+    border: none;
+    color: var(--color-secondary);
+    text-decoration: none;
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: 14.9px;
+    letter-spacing: 0.5px;
+    padding: 8px 12px;
+    transition: color 0.3s ease;
+    white-space: nowrap;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .nav-logout-btn:hover {
+    color: var(--color-accent);
+  }
+
+  /* ===== Designer nav bar icons (bell, envelope, help) ===== */
+  .header__nav-icons {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-right: 12px;
+    flex-shrink: 0;
+  }
+  .header__nav-icon {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-secondary);
+    border-radius: 50%;
+    color: var(--color-secondary);
+    font-size: 18px;
+    transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    text-decoration: none;
+  }
+  .header__nav-icon:hover {
+    background: rgba(var(--color-secondary-rgb), 0.1);
+    color: var(--color-secondary);
+    border-color: var(--color-secondary);
+  }
+  .header__nav-icon-dot {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ec4899;
+    pointer-events: none;
+  }
+  .header__nav-icon--help .header__nav-icon-dot {
+    display: none;
+  }
+  /* Mobile-only icon row (inside nav): hidden on desktop */
+  .header__nav-icons--mobile {
+    display: none;
+  }
+
+  /* ===== Social Icons Styling ===== */
+  .header__social {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+  }
+
+  .header__social a {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-secondary);
+    border-radius: 50%;
+    color: var(--color-secondary);
+    font-size: 18px;
+    transition: all 0.3s ease;
+  }
+
+  .header__social a:hover {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-secondary);
+  }
+
+  /* ===== Responsive Design ===== */
+
+  /* Large screens - reduce nav spacing */
+  @media (max-width: 1200px) {
+    .nav {
+      gap: 10px;
+    }
+
+    .nav a {
+      font-size: 13px;
+      padding: 6px 8px;
+    }
+
+    .nav-logout-btn {
+      font-size: 13px;
+      padding: 6px 8px;
+    }
+
+    .header__social {
+      gap: 12px;
+    }
+
+    .header__social a {
+      width: 38px;
+      height: 38px;
+      font-size: 16px;
+    }
+  }
+
+    /* Medium screens - further reduce spacing */
+    @media (max-width: 1000px) {
+      .header {
+        padding: 15px 20px;
+      }
+
+      .nav {
+        gap: 8px;
+      }
+
+      .nav a {
+        font-size: 12px;
+        padding: 5px 6px;
+      }
+
+      .nav-logout-btn {
+        font-size: 12px;
+        padding: 5px 6px;
+      }
+
+      .header__social {
+        gap: 10px;
+      }
+
+      .header__social a {
+        width: 35px;
+        height: 35px;
+        font-size: 15px;
+      }
+    }
+
+  /* Tablet and mobile screens */
+  @media (max-width: 768px) {
+      .header__apphub-banner {
+        padding: 8px 15px;
+        font-size: 13px;
+      }
+
+    .header {
+      padding: 15px;
+    }
+
+    .header__nav-icons {
+      display: none;
+    }
+    .header__nav-icons--mobile {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      padding: 16px 0;
+      margin-top: 8px;
+      border-top: 1px solid rgba(var(--color-secondary-rgb), 0.15);
+    }
+    .header__nav-icons--mobile .header__nav-icon {
+      width: 44px;
+      height: 44px;
+      font-size: 20px;
+    }
+
+    .mobile-menu-toggle {
+      display: flex;
+      order: 2;
+    }
+
+    .brand {
+      order: 1;
+    }
+
+    .header__social {
+      order: 3;
+      gap: 8px;
+    }
+
+    .header__social a {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+
+    .nav {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: var(--color-primary);
+      flex-direction: column;
+      padding: 20px;
+      gap: 15px;
+      border-top: 1px solid rgba(var(--color-secondary-rgb), 0.2);
+      transform: translateY(-100%);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .nav.active {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+    .nav.active .nav-dropdown__menu {
+      position: static;
+      margin-top: 8px;
+      margin-left: 12px;
+      padding: 8px 0;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+      border: 1px solid rgba(var(--color-secondary-rgb), 0.18);
+      border-radius: 12px;
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+      background: rgba(var(--color-primary-rgb), 0.96);
+      display: none;
+    }
+    .nav.active .nav-dropdown.is-open .nav-dropdown__menu {
+      display: block;
+    }
+    .nav.active .nav-dropdown__menu a {
+      color: rgba(var(--color-secondary-rgb), 0.9) !important;
+      font-size: 14px;
+    }
+    .nav.active .nav-dropdown__label {
+      color: rgba(var(--color-secondary-rgb), 0.7) !important;
+    }
+    .nav.active .nav-dropdown__divider {
+      background: rgba(var(--color-secondary-rgb), 0.2);
+    }
+
+    .nav a {
+      font-size: 16px;
+      padding: 10px 0;
+      text-align: center;
+      border-bottom: 1px solid rgba(var(--color-secondary-rgb), 0.1);
+    }
+
+    .nav-logout-btn {
+      font-size: 16px;
+      padding: 10px 0;
+      text-align: center;
+      border-bottom: 1px solid rgba(var(--color-secondary-rgb), 0.1);
+      width: 100%;
+    }
+
+    .nav a:last-child {
+      border-bottom: none;
+    }
+
+  }
+
+  /* Small mobile screens */
+  @media (max-width: 480px) {
+      .header__apphub-banner {
+        font-size: 12px;
+      }
+
+    .header {
+      padding: 10px 15px;
+    }
+
+    .header__social {
+      gap: 6px;
+    }
+
+    .header__social a {
+      width: 30px;
+      height: 30px;
+      font-size: 13px;
+    }
+
+  }
+
+  /* Desktop and large screens - increase nav readability */
+  @media (min-width: 1200px) {
+    .nav a,
+    .nav-logout-btn {
+      font-size: 16px;
+    }
+  }
+
+  @media (min-width: 1440px) {
+    .nav a,
+    .nav-logout-btn {
+      font-size: 17px;
+    }
+  }
+</style>

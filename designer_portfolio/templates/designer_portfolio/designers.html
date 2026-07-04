@@ -1,0 +1,866 @@
+{% extends "designer_portfolio/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="designers-hero">
+  <div class="hero-content">
+    <h1 class="hero-title">
+      <span class="hero-accent">Meet Our</span>
+      <span class="hero-main">Talented Designers</span>
+    </h1>
+      <p class="hero-subtitle">
+        Discover the creative minds shaping the future of fashion. Connect with
+        innovative designers who bring unique perspectives and exceptional
+        craftsmanship to the industry.
+      </p>
+      <p class="hero-note">
+        Note: New designer portfolio websites stay restricted to approved viewers until the designer chooses to share them publicly.
+      </p>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat-item">
+      <span class="stat-number">{{ designer_result_count }}</span>
+      <span class="stat-label">Active Designers</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-number">50+</span>
+      <span class="stat-label">Collections</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-number">12</span>
+      <span class="stat-label">Countries</span>
+    </div>
+  </div>
+</div>
+
+<!-- Google Review Trust Badge -->
+<section class="google-review-banner" aria-label="Google Reviews">
+  <div class="google-review-inner">
+    <div class="google-review-card">
+      <div class="google-review-logo" aria-hidden="true">
+        <span class="google-letter g-blue">G</span><span class="google-letter g-red">o</span><span class="google-letter g-yellow">o</span><span class="google-letter g-blue">g</span><span class="google-letter g-green">l</span><span class="google-letter g-red">e</span>
+      </div>
+      <div class="google-review-rating">
+        <span class="google-rating-number">4.8</span>
+        <div class="google-stars" aria-label="4.8 out of 5 stars">
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star-half-alt"></i>
+        </div>
+      </div>
+      <p class="google-review-subtitle">Based on designer &amp; client reviews</p>
+      {% if user.is_authenticated %}
+      <a href="{% url 'google_review' %}" class="google-review-write-btn">
+        <i class="fas fa-pen"></i> Write a Review
+      </a>
+      {% endif %}
+    </div>
+
+    <div class="google-review-card best-of-card">
+      <div class="best-of-badge" aria-label="Best of 2023 Award">
+        <div class="best-of-badge-inner">
+          <span class="best-of-text">BEST OF</span>
+          <div class="best-of-trophy"><i class="fas fa-trophy"></i></div>
+          <span class="best-of-year">2023</span>
+        </div>
+      </div>
+      <p class="best-of-region">USA</p>
+    </div>
+
+    <div class="google-review-card highlights-card">
+      <h3 class="highlights-title">Why designers trust us</h3>
+      <ul class="highlights-list">
+        <li><i class="fas fa-check-circle"></i> Verified designer profiles</li>
+        <li><i class="fas fa-check-circle"></i> Secure portfolio hosting</li>
+        <li><i class="fas fa-check-circle"></i> Direct client connections</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="designers-section">
+  <div class="container">
+
+    <!-- Filters -->
+    <div class="filters-container">
+      <form id="designerLocationFilters"
+            method="get"
+            class="location-filter-form"
+            data-filter-order="{{ location_filters.order }}">
+        <div class="filter-grid">
+          {% for field in location_filters.fields %}
+          <div class="filter-field">
+            <label for="id_filter_{{ field.name }}">{{ field.label }}</label>
+            <select id="id_filter_{{ field.name }}"
+                    name="{{ field.name }}"
+                    data-auto-submit>
+              <option value="">
+                Any {{ field.label|lower }}
+              </option>
+              {% for option in field.options %}
+              <option value="{{ option.value }}"
+                      {% if option.value == field.selected %}selected{% endif %}>
+                {{ option.label }}{% if option.count %} ({{ option.count }}){% endif %}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="filter-form-footer">
+          <button type="submit" class="btn btn-primary apply-filters-btn">
+            <i class="fas fa-filter"></i> Apply filters
+          </button>
+          <div class="filter-form-meta">
+            <span class="filter-result-pill">
+              {{ location_filters.result_count }} match{{ location_filters.result_count|pluralize }}
+            </span>
+            {% if location_filters.has_active %}
+            <a href="{{ location_filters.clear_url }}" class="clear-filters-link" data-reset-filters>
+              <i class="fas fa-times-circle"></i> Reset filters
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      </form>
+
+      <div class="filters-sidebar">
+        <div class="filters-header">
+          <div>
+            <p class="filters-label">Active location filters</p>
+            <p class="filters-count">{{ location_filters.result_count }} live profile{{ location_filters.result_count|pluralize }}</p>
+          </div>
+          <div class="view-toggle">
+            <button class="view-btn grid-view active" aria-label="Grid view">
+              <i class="fas fa-th"></i>
+            </button>
+            <button class="view-btn list-view" aria-label="List view">
+              <i class="fas fa-list"></i>
+            </button>
+          </div>
+        </div>
+        <div class="active-filters">
+          {% if location_filters.active_chips %}
+            {% for chip in location_filters.active_chips %}
+            <a href="{{ chip.remove_url }}" class="filter-chip">
+              <span class="chip-label">{{ chip.label }}</span>
+              <span class="chip-value">{{ chip.value }}</span>
+              <span class="chip-close" aria-hidden="true">&times;</span>
+            </a>
+            {% endfor %}
+          {% else %}
+            <span class="chip-placeholder">No location filters applied</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+      <!-- Designers Grid -->
+      <div class="designers-grid" id="designersGrid">
+        {% for designer in designers %}
+          {% with contact_email=designer.public_contact_email %}
+          <article class="designer-card{% if designer.portfolio_website %} clickable-card{% endif %}"
+                   data-category="{{ designer.specialization|lower|slugify }}"
+                   {% if designer.portfolio_website %}data-website="{{ designer.portfolio_website }}"{% endif %}>
+          <div class="card-image">
+          {% if designer.profile_image %}
+          <img src="{{ designer.profile_image.url }}" alt="{{ designer.user.get_full_name }}" class="designer-photo" loading="lazy" />
+          {% else %}
+          <div class="designer-initials">
+            {{ designer.user.first_name|first|upper }}{{ designer.user.last_name|first|upper }}
+          </div>
+          {% endif %}
+
+          <div class="card-overlay">
+            <div class="quick-actions">
+                {% if contact_email %}
+                <a href="mailto:{{ contact_email }}" class="action-btn" title="Send Email">
+                <i class="fas fa-envelope"></i>
+              </a>
+              {% endif %}
+              {% if designer.portfolio_website %}
+              <a href="{{ designer.portfolio_website }}" target="_blank" rel="noopener" class="action-btn" title="View Portfolio">
+                <i class="fas fa-external-link-alt"></i>
+              </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+          <div class="card-content">
+          <div class="designer-header">
+            <h3 class="designer-name">
+              <a href="{% url 'designer_public_detail' user_id=designer.user_id %}" style="color: inherit; text-decoration: none;">{{ designer.user.get_full_name|default:designer.user.username }}</a>
+            </h3>
+            {% if designer.available_for_collaborations %}
+            <span class="availability-badge available">
+              <i class="fas fa-circle"></i> Available
+            </span>
+            {% else %}
+            <span class="availability-badge busy">
+              <i class="fas fa-circle"></i> Busy
+            </span>
+            {% endif %}
+          </div>
+
+          <div class="designer-specialty">
+            {{ designer.specialization|default:"Fashion Designer" }}
+          </div>
+
+            <div class="designer-meta">
+              {% with location_label=designer.location_display|default:designer.location %}
+              {% if location_label %}
+              <span class="meta-item">
+                <i class="fas fa-map-marker-alt"></i> {{ location_label }}
+              </span>
+              {% endif %}
+              {% endwith %}
+              {% if designer.years_of_experience > 0 %}
+              <span class="meta-item">
+                <i class="fas fa-award"></i> {{ designer.years_of_experience }} years
+              </span>
+              {% endif %}
+            </div>
+
+            {% if not designer.portfolio_website %}
+            <div class="portfolio-notice">
+              Portfolio website available on request once the designer makes it public.
+            </div>
+            {% endif %}
+
+          {% if designer.bio %}
+          <p class="designer-bio">{{ designer.bio|truncatewords:25 }}</p>
+          {% endif %}
+
+          <div class="social-links">
+            {% if designer.instagram_handle %}
+            <a href="https://instagram.com/{{ designer.instagram_handle }}" target="_blank" rel="noopener" class="social-link instagram">
+              <i class="fab fa-instagram"></i>
+            </a>
+            {% endif %}
+            {% if designer.linkedin_profile %}
+            <a href="{{ designer.linkedin_profile }}" target="_blank" rel="noopener" class="social-link linkedin">
+              <i class="fab fa-linkedin-in"></i>
+            </a>
+            {% endif %}
+            {% if designer.portfolio_website %}
+            <a href="{{ designer.portfolio_website }}" target="_blank" rel="noopener" class="social-link portfolio">
+              <i class="fas fa-globe"></i>
+            </a>
+            {% endif %}
+          </div>
+
+            <div class="card-actions">
+                <a href="{% url 'designer_public_detail' user_id=designer.user_id %}" class="btn btn-secondary">
+                  <i class="fas fa-user"></i> View profile
+                </a>
+                {% if user.is_authenticated and user.id != designer.user_id %}
+                <a href="{% url 'messenger_start' user_id=designer.user_id %}" class="btn btn-primary">
+                  <i class="fas fa-comment"></i> Message
+                </a>
+                {% elif contact_email %}
+                <a href="mailto:{{ contact_email }}" class="btn btn-primary">
+                <i class="fas fa-paper-plane"></i> Get In Touch
+              </a>
+              {% endif %}
+              <button
+                class="btn btn-secondary follow-btn"
+                type="button"
+                data-follow-button
+                data-designer-id="{{ designer.user_id }}"
+                data-designer-name="{{ designer.user.get_full_name|default:designer.user.username }}"
+                aria-pressed="false"
+              >
+                <i class="far fa-heart" aria-hidden="true"></i>
+                <span data-follow-text>Follow</span>
+              </button>
+            </div>
+            <div class="follow-status" data-follow-status aria-live="polite" hidden></div>
+        </div>
+        </article>
+          {% endwith %}
+      {% empty %}
+      <div class="empty-state">
+        <div class="empty-icon">
+          <i class="fas fa-users"></i>
+        </div>
+        <h3>No Designers Found</h3>
+        <p>Be the first to join our creative community!</p>
+        <a href="{% url 'signup' %}" class="btn btn-primary">Join as Designer</a>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Load More Button -->
+    {% if is_paginated %}
+    <div class="load-more-container">
+      <button class="btn btn-outline load-more-btn">
+        <i class="fas fa-plus"></i> Load More Designers
+      </button>
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+{% endblock %}
+
+
+{% block scripts %}
+<style>
+/* ===== Hero Section ===== */
+.designers-hero {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary) 100%);
+  color: var(--color-secondary);
+  padding: 120px 0 80px;
+  position: relative;
+  overflow: hidden;
+}
+.designers-hero::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, rgba(var(--color-secondary-rgb), 0.12) 1px, transparent 1px),
+    radial-gradient(circle, rgba(var(--color-accent-rgb), 0.08) 1px, transparent 1px),
+    linear-gradient(130deg, rgba(var(--color-primary-rgb), 0.15), rgba(var(--color-primary-rgb), 0.03));
+  background-size: 4px 4px, 6px 6px, 100% 100%;
+  background-position: 0 0, 18px 18px, 0 0;
+  opacity: 0.2;
+}
+.hero-content { max-width: 1200px; margin: 0 auto; padding: 0 20px; text-align: center; position: relative; z-index: 2; }
+.hero-title { font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 900; margin-bottom: 24px; line-height: 1.1; }
+.hero-accent { display: block; font-size: 0.6em; color: var(--color-accent); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+.hero-main { display: block; background: linear-gradient(45deg, var(--color-secondary), var(--color-accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.hero-subtitle { font-size: 1.2rem; color: rgba(var(--color-secondary-rgb), 0.9); max-width: 600px; margin: 0 auto 40px; line-height: 1.6; }
+  .hero-note { font-size: 1rem; color: rgba(var(--color-secondary-rgb), 0.85); max-width: 620px; margin: -20px auto 40px; line-height: 1.5; background: rgba(var(--color-primary-rgb), 0.15); padding: 12px 18px; border-radius: 12px; backdrop-filter: blur(4px); }
+.hero-stats { display: flex; justify-content: center; gap: 60px; margin-top: 60px; }
+.stat-number { display: block; font-size: 2.5rem; font-weight: 900; color: var(--color-accent); }
+
+/* ===== Google Review Banner ===== */
+.google-review-banner {
+  background: var(--color-secondary);
+  padding: 40px 20px;
+  border-bottom: 1px solid rgba(var(--color-primary-rgb), 0.08);
+}
+.google-review-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  align-items: stretch;
+}
+.google-review-card {
+  background: var(--color-surface);
+  border-radius: 20px;
+  padding: 32px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(var(--color-primary-rgb), 0.07);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.google-review-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 48px rgba(var(--color-primary-rgb), 0.12);
+}
+.google-review-logo {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -1px;
+  font-family: 'Product Sans', Arial, sans-serif;
+  line-height: 1;
+}
+.google-letter { display: inline-block; }
+.g-blue { color: #4285F4; }
+.g-red { color: #EA4335; }
+.g-yellow { color: #FBBC05; }
+.g-green { color: #34A853; }
+.google-review-rating {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.google-rating-number {
+  font-size: 2.4rem;
+  font-weight: 900;
+  color: var(--color-primary);
+  line-height: 1;
+}
+.google-stars {
+  display: flex;
+  gap: 3px;
+  color: #FBBC05;
+  font-size: 1.2rem;
+}
+.google-review-subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+.google-review-write-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 8px 18px;
+  background: #4285F4;
+  color: #fff;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.google-review-write-btn:hover {
+  background: #3367D6;
+  transform: translateY(-1px);
+}
+
+.best-of-card { background: linear-gradient(135deg, var(--color-surface), rgba(var(--color-primary-rgb), 0.04)); }
+.best-of-badge {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2b4c7e 0%, #3a6db5 50%, #2b4c7e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(43, 76, 126, 0.3);
+}
+.best-of-badge::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #d4a84b, #f0d78c, #d4a84b, #b8922e, #d4a84b, #f0d78c, #d4a84b);
+  z-index: -1;
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 6px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 6px));
+}
+.best-of-badge-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: #fff;
+}
+.best-of-text {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.best-of-trophy {
+  font-size: 1.8rem;
+  color: #d4a84b;
+  line-height: 1;
+}
+.best-of-year {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #d4a84b;
+}
+.best-of-region {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #5b21b6;
+  letter-spacing: 1px;
+}
+
+.highlights-card { text-align: left; align-items: flex-start; }
+.highlights-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+.highlights-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.highlights-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.highlights-list li i {
+  color: #34A853;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .google-review-inner { grid-template-columns: 1fr; gap: 16px; }
+  .google-review-card { padding: 24px; }
+}
+
+/* ===== Main Section ===== */
+.designers-section { padding: 80px 0; background: var(--color-surface); }
+.container { max-width: 1400px; margin: 0 auto; padding: 0 20px; }
+
+/* ===== Filters ===== */
+.filters-container { display: flex; flex-wrap: wrap; gap: 24px; margin-bottom: 50px; }
+.location-filter-form,
+.filters-sidebar { flex: 1 1 340px; background: var(--color-secondary); border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(var(--color-primary-rgb), 0.08); }
+.filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+.filter-field label { display: block; font-weight: 600; margin-bottom: 6px; color: var(--color-text); }
+.filter-field select { width: 100%; padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(var(--color-primary-rgb), 0.15); background: var(--color-surface); font-weight: 600; color: var(--color-text); }
+.filter-form-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.filter-form-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.filter-result-pill { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; background: rgba(var(--color-primary-rgb), 0.08); font-weight: 600; color: var(--color-primary); }
+.clear-filters-link { color: var(--color-accent); font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+.apply-filters-btn { display: inline-flex; align-items: center; gap: 8px; }
+.filters-sidebar { min-width: 260px; display: flex; flex-direction: column; gap: 16px; }
+.filters-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.filters-label { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; color: var(--color-text-muted); margin: 0; }
+.filters-count { font-size: 1.2rem; font-weight: 800; margin: 4px 0 0; }
+.active-filters { display: flex; flex-wrap: wrap; gap: 10px; }
+.filter-chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(var(--color-primary-rgb), 0.15); background: rgba(var(--color-primary-rgb), 0.05); font-weight: 600; color: var(--color-text); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.filter-chip:hover { transform: translateY(-1px); box-shadow: 0 6px 12px rgba(var(--color-primary-rgb), 0.1); }
+.chip-label { text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; color: var(--color-text-muted); }
+.chip-value { font-weight: 700; color: var(--color-primary); }
+.chip-close { font-size: 1rem; color: var(--color-text-muted); }
+.chip-placeholder { color: var(--color-text-muted); font-style: italic; }
+
+/* ===== Designers Grid ===== */
+.designers-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; }
+.designer-card { position: relative; background: var(--color-secondary); border-radius: 20px; overflow: hidden; box-shadow: 0 8px 32px rgba(var(--color-primary-rgb), 0.1); transition: all 0.4s cubic-bezier(0.4,0,0.2,1); }
+.designer-card:hover { transform: translateY(-12px); box-shadow: 0 20px 60px rgba(var(--color-primary-rgb), 0.2); }
+
+/* Increase typography for better readability on designers page */
+.designer-name { font-size: clamp(1.25rem, 2.2vw, 1.6rem); font-weight: 800; line-height: 1.25; }
+.designer-specialty { font-size: clamp(1rem, 1.8vw, 1.2rem); color: var(--color-text); font-weight: 600; margin-top: 2px; }
+.designer-bio { font-size: clamp(0.98rem, 1.6vw, 1.12rem); line-height: 1.6; color: var(--color-text); }
+.designer-meta .meta-item { font-size: clamp(0.95rem, 1.5vw, 1.05rem); color: var(--color-text); }
+  .portfolio-notice { margin-top: 16px; padding: 12px 14px; background: var(--color-accent-soft); border: 1px solid var(--color-accent-soft); border-radius: 10px; font-size: 0.95rem; color: var(--color-primary); line-height: 1.5; }
+  .card-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .follow-btn { display: inline-flex; align-items: center; gap: 8px; transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease; }
+  .follow-btn.is-following { background: var(--color-accent); color: var(--color-primary); transform: translateY(-1px); }
+  .follow-btn.is-following i { color: inherit; }
+  .follow-status { margin-top: 12px; min-height: 24px; font-size: 0.95rem; color: var(--color-text); }
+  .follow-status.active .follow-pill { animation: pulse-follow 0.3s ease-in; }
+  .follow-pill { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; font-weight: 600; background: rgba(var(--color-primary-rgb), 0.08); border: 1px solid rgba(var(--color-primary-rgb), 0.15); color: var(--color-primary); }
+  .follow-pill i { color: var(--color-accent); }
+  @keyframes pulse-follow {
+    from { transform: scale(0.96); opacity: 0.5; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+/* Make entire card feel clickable when website exists */
+.clickable-card { cursor: pointer; }
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .filters-container { flex-direction: column; gap: 20px; }
+  .location-filter-form,
+  .filters-sidebar { width: 100%; }
+  .designers-grid { grid-template-columns: 1fr; }
+}
+</style>
+
+<script>
+window.drden_FOLLOW_VIEWER = {
+  name: "{{ viewer_name|default_if_none:''|escapejs }}",
+  isAuthenticated: {{ viewer_is_authenticated|yesno:"true,false" }},
+};
+
+document.addEventListener("DOMContentLoaded", function () {
+  const gridViewBtn = document.querySelector(".grid-view");
+  const listViewBtn = document.querySelector(".list-view");
+  const designersGrid = document.getElementById("designersGrid");
+  const filterForm = document.getElementById("designerLocationFilters");
+
+  if (filterForm) {
+    const orderSequence = (filterForm.dataset.filterOrder || "")
+      .split(",")
+      .map((name) => name.trim())
+      .filter(Boolean);
+    const downstreamMap = new Map();
+    orderSequence.forEach((name, index) => {
+      downstreamMap.set(name, orderSequence.slice(index + 1));
+    });
+
+    const FOCUS_STORAGE_KEY = "designerFiltersFocusNext";
+
+    function rememberNextFocus(fieldName) {
+      try {
+        if (fieldName) {
+          window.sessionStorage.setItem(FOCUS_STORAGE_KEY, fieldName);
+        } else {
+          window.sessionStorage.removeItem(FOCUS_STORAGE_KEY);
+        }
+      } catch (err) {
+        // Ignore storage access issues
+      }
+    }
+
+    function focusStoredFilterField() {
+      let storedName = null;
+      try {
+        storedName = window.sessionStorage.getItem(FOCUS_STORAGE_KEY);
+        if (storedName) {
+          window.sessionStorage.removeItem(FOCUS_STORAGE_KEY);
+        }
+      } catch (err) {
+        storedName = null;
+      }
+      if (!storedName) {
+        return;
+      }
+      const target = filterForm.querySelector(`[name="${storedName}"]`);
+      if (target && typeof target.focus === "function") {
+        target.focus();
+      }
+    }
+
+    focusStoredFilterField();
+
+    const selects = filterForm.querySelectorAll("select[data-auto-submit]");
+    selects.forEach((select) => {
+      select.addEventListener("change", () => {
+        const downstream = downstreamMap.get(select.name) || [];
+        downstream.forEach((childName) => {
+          const child = filterForm.querySelector(`[name="${childName}"]`);
+          if (child) {
+            child.value = "";
+          }
+        });
+
+        if (select.value) {
+          const nextFieldName =
+            downstream.find((childName) =>
+              Boolean(filterForm.querySelector(`[name="${childName}"]`))
+            ) || null;
+          rememberNextFocus(nextFieldName);
+        } else {
+          rememberNextFocus(null);
+        }
+
+        filterForm.submit();
+      });
+    });
+  }
+
+  if (gridViewBtn && listViewBtn && designersGrid) {
+    gridViewBtn.addEventListener("click", () => {
+      gridViewBtn.classList.add("active");
+      listViewBtn.classList.remove("active");
+      designersGrid.classList.remove("list-view");
+    });
+
+    listViewBtn.addEventListener("click", () => {
+      listViewBtn.classList.add("active");
+      gridViewBtn.classList.remove("active");
+      designersGrid.classList.add("list-view");
+    });
+  }
+
+  // Make entire designer cards open portfolio site when clicked (if available)
+  if (designersGrid) {
+    designersGrid.addEventListener("click", (event) => {
+      const target = event.target;
+      // Ignore clicks on explicit interactive elements
+      if (target.closest && target.closest("a, button, .action-btn, .btn")) {
+        return;
+      }
+      const card = target.closest ? target.closest(".designer-card") : null;
+      if (!card) return;
+      const website = card.getAttribute("data-website");
+      if (website) {
+        window.open(website, "_blank", "noopener");
+      }
+    });
+  }
+});
+
+(function activateDesignerFollowButtons() {
+  const FOLLOW_STATE_KEY = "drden_designer_follow_state";
+  const VIEWER_NAME_KEY = "drden_follow_viewer_name";
+  const viewerBootstrap = window.drden_FOLLOW_VIEWER || {};
+  let viewerName = (viewerBootstrap.name || "").trim();
+  let followState = loadFollowState();
+
+  if (!viewerName) {
+    viewerName = (safeGet(VIEWER_NAME_KEY) || "").trim();
+  } else {
+    safeSet(VIEWER_NAME_KEY, viewerName);
+  }
+
+  function safeGet(key) {
+    try {
+      return window.localStorage.getItem(key);
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function safeSet(key, value) {
+    try {
+      window.localStorage.setItem(key, value);
+    } catch (err) {
+      // Ignore storage restrictions (private mode, quota exceeded, etc.)
+    }
+  }
+
+  function loadFollowState() {
+    const raw = safeGet(FOLLOW_STATE_KEY);
+    if (!raw) return {};
+    try {
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (err) {
+      return {};
+    }
+  }
+
+  function persistFollowState() {
+    safeSet(FOLLOW_STATE_KEY, JSON.stringify(followState));
+  }
+
+  function escapeHtml(value) {
+    return (value || "").replace(/[&<>"']/g, function (character) {
+      switch (character) {
+        case "&":
+          return "&amp;";
+        case "<":
+          return "&lt;";
+        case ">":
+          return "&gt;";
+        case '"':
+          return "&quot;";
+        case "'":
+          return "&#39;";
+        default:
+          return character;
+      }
+    });
+  }
+
+  function updateButtonVisuals(button, isFollowing) {
+    if (!button) return;
+    button.classList.toggle("is-following", isFollowing);
+    button.setAttribute("aria-pressed", isFollowing ? "true" : "false");
+    const icon = button.querySelector("i");
+    if (icon) {
+      icon.classList.toggle("far", !isFollowing);
+      icon.classList.toggle("fas", isFollowing);
+    }
+    const label = button.querySelector("[data-follow-text]");
+    if (label) {
+      label.textContent = isFollowing ? "Following" : "Follow";
+    }
+  }
+
+  function updateStatus(element, isFollowing, designerName, followerName) {
+    if (!element) return;
+    if (!isFollowing) {
+      element.innerHTML = "";
+      element.hidden = true;
+      element.classList.remove("active");
+      return;
+    }
+    const safeDesigner = escapeHtml(designerName || "this designer");
+    const safeFollower = escapeHtml(followerName || viewerName || "You");
+    element.innerHTML =
+      '<span class="follow-pill">' +
+      '<i class="fas fa-heart" aria-hidden="true"></i>' +
+      " Following " + safeDesigner + " as <strong>" + safeFollower + "</strong>" +
+      "</span>";
+    element.hidden = false;
+    element.classList.add("active");
+  }
+
+  function promptForViewerName() {
+    const response = window.prompt("Add your name so designers see who followed them:", "");
+    if (!response) return "";
+    return response.trim();
+  }
+
+  function handleFollowClick(event) {
+    const button = event.currentTarget;
+    const designerId = button.dataset.designerId;
+    if (!designerId) return;
+    const designerName = button.dataset.designerName || "this designer";
+    const card = button.closest(".designer-card");
+    const statusElement = card ? card.querySelector("[data-follow-status]") : null;
+    let followerName = viewerName;
+    if (!followerName) {
+      followerName = promptForViewerName();
+      if (!followerName) {
+        button.blur();
+        return;
+      }
+      viewerName = followerName;
+      safeSet(VIEWER_NAME_KEY, viewerName);
+    }
+
+    const isFollowing = button.classList.contains("is-following");
+    if (isFollowing) {
+      delete followState[designerId];
+      persistFollowState();
+      updateButtonVisuals(button, false);
+      updateStatus(statusElement, false);
+    } else {
+      followState[designerId] = {
+        designerName: designerName,
+        viewerName: followerName,
+        followedAt: new Date().toISOString(),
+      };
+      persistFollowState();
+      updateButtonVisuals(button, true);
+      updateStatus(statusElement, true, designerName, followerName);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const buttons = document.querySelectorAll("[data-follow-button]");
+    if (!buttons.length) {
+      return;
+    }
+
+    buttons.forEach(function (button) {
+      const designerId = button.dataset.designerId;
+      const card = button.closest(".designer-card");
+      const statusElement = card ? card.querySelector("[data-follow-status]") : null;
+      const savedState = designerId ? followState[designerId] : null;
+      if (savedState) {
+        viewerName = viewerName || savedState.viewerName || "";
+        updateButtonVisuals(button, true);
+        updateStatus(
+          statusElement,
+          true,
+          savedState.designerName || button.dataset.designerName,
+          savedState.viewerName || viewerName
+        );
+      } else {
+        updateButtonVisuals(button, false);
+        updateStatus(statusElement, false);
+      }
+      button.addEventListener("click", handleFollowClick);
+    });
+  });
+})();
+</script>
+{% endblock %}

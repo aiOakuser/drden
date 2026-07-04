@@ -1,0 +1,369 @@
+{% extends "designer_portfolio/dashboard_base.html" %}
+
+{% block dashboard_title %}Write a Google Review{% endblock %}
+
+{% block dashboard_content %}
+<div class="review-page">
+  <div class="review-hero">
+    <div class="review-hero-icon">
+      <span class="google-letter g-blue">G</span><span class="google-letter g-red">o</span><span class="google-letter g-yellow">o</span><span class="google-letter g-blue">g</span><span class="google-letter g-green">l</span><span class="google-letter g-red">e</span>
+    </div>
+    <h2>Share Your Experience on Google</h2>
+    <p>Your review helps other designers discover designrden and builds trust in our community.</p>
+  </div>
+
+  <div class="review-content-grid">
+    <div class="review-main">
+      <div class="review-cta-card">
+        <div class="review-stars" aria-label="5 stars">
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+        </div>
+        <h3>Ready to leave a review?</h3>
+        <p>Click the button below to open our Google Business page where you can rate and review designrden.</p>
+        {% if google_review_url %}
+        <a href="{{ google_review_url }}" target="_blank" rel="noopener noreferrer" class="btn-write-review">
+          <i class="fas fa-external-link-alt"></i>
+          Write a Google Review
+        </a>
+        {% else %}
+        <div class="review-search-fallback">
+          <p>Search for <strong>"designrden"</strong> on Google and click <em>"Write a review"</em> on our business listing.</p>
+          <a href="https://www.google.com/search?q=designrden+reviews" target="_blank" rel="noopener noreferrer" class="btn-write-review btn-secondary-review">
+            <i class="fas fa-search"></i>
+            Search on Google
+          </a>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="review-tips-card">
+        <h3><i class="fas fa-lightbulb"></i> Tips for a great review</h3>
+        <ul class="review-tips-list">
+          <li>
+            <i class="fas fa-check-circle"></i>
+            <span>Mention which features you find most useful (portfolio, tech packs, site builder, etc.)</span>
+          </li>
+          <li>
+            <i class="fas fa-check-circle"></i>
+            <span>Share how designrden has helped your design career or business</span>
+          </li>
+          <li>
+            <i class="fas fa-check-circle"></i>
+            <span>Be honest and specific about your experience</span>
+          </li>
+          <li>
+            <i class="fas fa-check-circle"></i>
+            <span>Keep it concise — a few sentences go a long way</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="review-sidebar">
+      <div class="review-why-card">
+        <h3>Why your review matters</h3>
+        <div class="why-item">
+          <div class="why-icon"><i class="fas fa-users"></i></div>
+          <div class="why-text">
+            <strong>Help fellow designers</strong>
+            <p>Your experience guides other creatives looking for portfolio and tech pack tools.</p>
+          </div>
+        </div>
+        <div class="why-item">
+          <div class="why-icon"><i class="fas fa-chart-line"></i></div>
+          <div class="why-text">
+            <strong>Grow the community</strong>
+            <p>Positive reviews help us reach more designers and improve our platform.</p>
+          </div>
+        </div>
+        <div class="why-item">
+          <div class="why-icon"><i class="fas fa-hand-holding-heart"></i></div>
+          <div class="why-text">
+            <strong>Shape our future</strong>
+            <p>Feedback in reviews helps us prioritize the features that matter most to you.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="review-steps-card">
+        <h3>How it works</h3>
+        <ol class="review-steps">
+          <li>
+            <span class="step-number">1</span>
+            <span>Click the "Write a Google Review" button</span>
+          </li>
+          <li>
+            <span class="step-number">2</span>
+            <span>Sign in to your Google account if prompted</span>
+          </li>
+          <li>
+            <span class="step-number">3</span>
+            <span>Select your star rating (1–5)</span>
+          </li>
+          <li>
+            <span class="step-number">4</span>
+            <span>Write a brief review and submit</span>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .review-page {
+    max-width: 960px;
+  }
+
+  .review-hero {
+    text-align: center;
+    padding: 30px 20px;
+    margin-bottom: 30px;
+    background: var(--color-secondary);
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(var(--color-primary-rgb), 0.08);
+  }
+
+  .review-hero-icon {
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    letter-spacing: -1px;
+  }
+
+  .google-letter {
+    font-family: 'Product Sans', Arial, sans-serif;
+    font-weight: 700;
+  }
+  .g-blue { color: #4285F4; }
+  .g-red { color: #EA4335; }
+  .g-yellow { color: #FBBC05; }
+  .g-green { color: #34A853; }
+
+  .review-hero h2 {
+    margin: 0 0 8px 0;
+    font-size: 24px;
+    color: var(--color-text);
+  }
+
+  .review-hero p {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 16px;
+    max-width: 520px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+
+  .review-content-grid {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 24px;
+  }
+
+  .review-cta-card,
+  .review-tips-card,
+  .review-why-card,
+  .review-steps-card {
+    background: var(--color-secondary);
+    border-radius: 12px;
+    padding: 28px;
+    box-shadow: 0 2px 10px rgba(var(--color-primary-rgb), 0.08);
+  }
+
+  .review-cta-card {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .review-stars {
+    font-size: 32px;
+    color: #FBBC05;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .review-cta-card h3 {
+    margin: 0 0 10px 0;
+    font-size: 20px;
+    color: var(--color-text);
+  }
+
+  .review-cta-card p {
+    margin: 0 0 20px 0;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+  }
+
+  .btn-write-review {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 32px;
+    background: #4285F4;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .btn-write-review:hover {
+    background: #3367D6;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(66, 133, 244, 0.35);
+  }
+
+  .btn-secondary-review {
+    background: var(--color-primary);
+  }
+
+  .btn-secondary-review:hover {
+    background: var(--color-primary);
+    opacity: 0.9;
+  }
+
+  .review-search-fallback p {
+    margin: 0 0 16px 0;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+  }
+
+  .review-tips-card h3 {
+    margin: 0 0 16px 0;
+    font-size: 18px;
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .review-tips-card h3 i {
+    color: #FBBC05;
+  }
+
+  .review-tips-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .review-tips-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text);
+    line-height: 1.5;
+  }
+
+  .review-tips-list li:last-child {
+    border-bottom: none;
+  }
+
+  .review-tips-list li i {
+    color: #34A853;
+    margin-top: 3px;
+    flex-shrink: 0;
+  }
+
+  .review-why-card {
+    margin-bottom: 24px;
+  }
+
+  .review-why-card h3,
+  .review-steps-card h3 {
+    margin: 0 0 18px 0;
+    font-size: 18px;
+    color: var(--color-text);
+  }
+
+  .why-item {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+
+  .why-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .why-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(var(--color-primary-rgb), 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--color-primary);
+    font-size: 16px;
+  }
+
+  .why-text strong {
+    display: block;
+    color: var(--color-text);
+    margin-bottom: 4px;
+    font-size: 14px;
+  }
+
+  .why-text p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--color-text-muted);
+    line-height: 1.4;
+  }
+
+  .review-steps {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    counter-reset: none;
+  }
+
+  .review-steps li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text);
+    font-size: 14px;
+  }
+
+  .review-steps li:last-child {
+    border-bottom: none;
+  }
+
+  .step-number {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: var(--color-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 768px) {
+    .review-content-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}

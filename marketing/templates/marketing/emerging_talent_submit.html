@@ -1,0 +1,53 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Apply to Emerging Talent — Global Designer Hub</title>
+    <meta name="description" content="Apply to be featured in the Global Designer Hub Emerging Talent section.">
+    {% include "marketing/_growth_styles.html" %}
+</head>
+<body>
+<div class="drden-container">
+    <a class="drden-back" href="{% url 'marketing:emerging_talent_list' %}">&larr; See current Emerging Talent cohort</a>
+
+    <p class="drden-eyebrow">Emerging Talent · Apply</p>
+    <h1 class="drden-h1">Get featured. Reach brands.</h1>
+    <p class="drden-lead">
+        Tell us about your work. Our editorial team curates each Emerging
+        Talent feature personally — if your work is a fit for an upcoming
+        slot, we'll reach out about a feature interview and content review
+        before publishing anything.
+    </p>
+
+    <form class="drden-form drden-card" method="post" novalidate style="max-width:680px;">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="drden-error">{{ form.non_field_errors|join:" " }}</div>
+        {% endif %}
+
+        {% for field in form %}
+            {% if field.field.widget.input_type == 'checkbox' %}
+                <div class="drden-field" style="display:flex; align-items:flex-start; gap:10px;">
+                    <div style="margin-top:3px;">{{ field }}</div>
+                    <div style="flex:1;">
+                        <label for="{{ field.id_for_label }}" style="margin-bottom:0;">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+                        {% if field.help_text %}
+                            <div class="drden-help">{{ field.help_text }}</div>
+                        {% endif %}
+                        {% if field.errors %}
+                            <div class="drden-error">{{ field.errors|join:" " }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% else %}
+                {% include "marketing/_growth_form_field.html" with field=field %}
+            {% endif %}
+        {% endfor %}
+
+        <button type="submit" class="drden-cta">Submit my application</button>
+    </form>
+</div>
+</body>
+</html>

@@ -1,0 +1,63 @@
+{% extends "designer_portfolio/dashboard_base.html" %}
+{% load static %}
+
+{% block dashboard_title %}My Orders{% endblock %}
+
+{% block header_actions %}
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="orders-page" style="max-width: 900px;">
+  <div class="orders-header" style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-bottom: 24px;">
+    <div class="status-tabs" style="display: flex; gap: 8px; flex-wrap: wrap;">
+      <a href="?status=new" class="status-tab {% if status_filter == 'new' %}active{% endif %}"
+         style="padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; background: var(--color-surface); color: var(--color-primary); border: 2px solid var(--color-border);">
+        New {% if new_count %}({{ new_count }}){% endif %}
+      </a>
+      <a href="?status=in_progress" class="status-tab {% if status_filter == 'in_progress' %}active{% endif %}"
+         style="padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; background: var(--color-surface); color: var(--color-primary); border: 2px solid var(--color-border);">
+        In Progress {% if in_progress_count %}({{ in_progress_count }}){% endif %}
+      </a>
+      <a href="?status=completed" class="status-tab {% if status_filter == 'completed' %}active{% endif %}"
+         style="padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; background: var(--color-surface); color: var(--color-primary); border: 2px solid var(--color-border);">
+        Completed
+      </a>
+      <a href="?status=canceled" class="status-tab {% if status_filter == 'canceled' %}active{% endif %}"
+         style="padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; background: var(--color-surface); color: var(--color-primary); border: 2px solid var(--color-border);">
+        Canceled
+      </a>
+    </div>
+  </div>
+
+  {% if orders %}
+  <div class="orders-list" style="display: flex; flex-direction: column; gap: 12px;">
+    {% for order in orders %}
+    <a href="{% url 'designer_order_detail' order.id %}" class="order-card"
+       style="display: block; padding: 20px; background: var(--color-secondary); border: 1px solid var(--color-border); border-radius: 12px; text-decoration: none; color: inherit; transition: box-shadow 0.2s;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+        <div>
+          <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">{{ order.dress_label|default:order.dress_type|default:"Dress" }}</div>
+          <div style="font-size: 0.9rem; color: var(--color-text-muted);">
+            {{ order.fabric_label|default:order.fabric_type|default:"—" }}
+            {% if order.formal_subcategory %} · {{ order.formal_subcategory }}{% endif %}
+          </div>
+          <div style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: 8px;">
+            Received {{ order.created_at|date:"M j, Y" }}{% if order.customer_phone %} · {{ order.customer_phone }}{% endif %}
+          </div>
+        </div>
+        <span class="status-badge" style="padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap;
+          background: {% if order.status == 'new' %}rgba(59, 130, 246, 0.15); color: rgb(59, 130, 246);{% elif order.status == 'in_progress' %}rgba(245, 158, 11, 0.15); color: rgb(245, 158, 11);{% elif order.status == 'completed' %}rgba(34, 197, 94, 0.15); color: rgb(34, 197, 94);{% else %}rgba(107, 114, 128, 0.15); color: rgb(107, 114, 128);{% endif %};">
+          {{ order.get_status_display }}
+        </span>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div style="text-align: center; padding: 48px 24px; background: var(--color-surface); border-radius: 12px; color: var(--color-text-muted);">
+    <p style="font-size: 1.1rem; margin: 0 0 8px;">No {{ status_filter|default:"new" }} orders yet.</p>
+    <p style="font-size: 0.9rem; margin: 0;">New custom dress orders appear here for designer review and updates.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

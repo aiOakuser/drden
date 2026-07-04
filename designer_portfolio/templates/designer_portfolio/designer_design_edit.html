@@ -1,0 +1,493 @@
+{% extends 'designer_portfolio/dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Edit Design - Dashboard{% endblock %}
+
+{% block dashboard_content %}
+{% include "designer_portfolio/includes/contextual_help_bar.html" with help_text="Need help with layout, captions, or image order? Ask Designer AI about this portfolio." %}
+<div class="bg-white shadow-lg rounded-lg p-6">
+  <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-800">Edit Design</h1>
+      <p class="text-sm text-gray-500 mt-1">
+        Update details before sharing with clients or publishing to your portfolio.
+      </p>
+    </div>
+    <a href="{% url 'designer_designs' %}"
+       class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition duration-200">
+      <i class="fas fa-arrow-left mr-2"></i>Back to Designs
+    </a>
+  </div>
+
+  {% if form_errors %}
+    <div class="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">
+      <h2 class="font-semibold text-red-800 mb-2">Please correct the issues below:</h2>
+      <ul class="list-disc pl-5 space-y-1">
+        {% for field, error in form_errors.items %}
+          <li><span class="font-medium">{{ field|title }}</span>: {{ error }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" class="space-y-8">
+    {% csrf_token %}
+
+    <!-- Basic Information -->
+    <section class="space-y-6">
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Design Title *</label>
+          <input
+            type="text"
+            id="title"
+            name="title"
+            value="{{ design.title }}"
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            placeholder="Enter a descriptive title"
+          />
+        </div>
+        <div>
+          <label for="slug" class="block text-sm font-medium text-gray-700 mb-2">URL Slug</label>
+          <div class="flex items-center gap-2">
+            <input
+              type="text"
+              id="slug"
+              name="slug"
+              value="{{ design.slug }}"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              placeholder="auto-generated-from-title"
+            />
+            <button
+              type="button"
+              id="resetSlug"
+              class="px-3 py-2 text-sm border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-100 transition"
+            >
+              Reset
+            </button>
+          </div>
+          <p class="text-xs text-gray-500 mt-1">
+            This controls the public URL for the design detail page.
+          </p>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <label for="category" class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+          <select
+            id="category"
+            name="category"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          >
+            <option value="">Select Category</option>
+            {% with design.category as cat %}
+              <option value="tops" {% if cat == 'tops' %}selected{% endif %}>Tops</option>
+              <option value="bottoms" {% if cat == 'bottoms' %}selected{% endif %}>Bottoms</option>
+              <option value="dresses" {% if cat == 'dresses' %}selected{% endif %}>Dresses</option>
+              <option value="outerwear" {% if cat == 'outerwear' %}selected{% endif %}>Outerwear</option>
+              <option value="accessories" {% if cat == 'accessories' %}selected{% endif %}>Accessories</option>
+              <option value="footwear" {% if cat == 'footwear' %}selected{% endif %}>Footwear</option>
+              <option value="swimwear" {% if cat == 'swimwear' %}selected{% endif %}>Swimwear</option>
+              <option value="activewear" {% if cat == 'activewear' %}selected{% endif %}>Activewear</option>
+              <option value="lingerie" {% if cat == 'lingerie' %}selected{% endif %}>Lingerie</option>
+              <option value="other" {% if cat == 'other' %}selected{% endif %}>Other</option>
+            {% endwith %}
+          </select>
+        </div>
+        <div>
+          <label for="target_market" class="block text-sm font-medium text-gray-700 mb-2">Target Market</label>
+          <select
+            id="target_market"
+            name="target_market"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          >
+            <option value="">Select Target Market</option>
+            {% with design.target_market as tm %}
+              <option value="womens" {% if tm == 'womens' %}selected{% endif %}>Women's</option>
+              <option value="mens" {% if tm == 'mens' %}selected{% endif %}>Men's</option>
+              <option value="unisex" {% if tm == 'unisex' %}selected{% endif %}>Unisex</option>
+              <option value="kids" {% if tm == 'kids' %}selected{% endif %}>Kids</option>
+              <option value="teen" {% if tm == 'teen' %}selected{% endif %}>Teen</option>
+              <option value="plus_size" {% if tm == 'plus_size' %}selected{% endif %}>Plus Size</option>
+              <option value="petite" {% if tm == 'petite' %}selected{% endif %}>Petite</option>
+              <option value="maternity" {% if tm == 'maternity' %}selected{% endif %}>Maternity</option>
+            {% endwith %}
+          </select>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <label for="season" class="block text-sm font-medium text-gray-700 mb-2">Season *</label>
+          <select
+            id="season"
+            name="season"
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          >
+            <option value="">Select Season</option>
+            {% with design.season as season %}
+              <option value="Spring" {% if season == 'Spring' %}selected{% endif %}>Spring</option>
+              <option value="Summer" {% if season == 'Summer' %}selected{% endif %}>Summer</option>
+              <option value="Fall" {% if season == 'Fall' %}selected{% endif %}>Fall</option>
+              <option value="Winter" {% if season == 'Winter' %}selected{% endif %}>Winter</option>
+              <option value="Resort" {% if season == 'Resort' %}selected{% endif %}>Resort</option>
+              <option value="Pre-Fall" {% if season == 'Pre-Fall' %}selected{% endif %}>Pre-Fall</option>
+            {% endwith %}
+          </select>
+        </div>
+        <div>
+          <label for="year" class="block text-sm font-medium text-gray-700 mb-2">Year *</label>
+          <input
+            type="number"
+            id="year"
+            name="year"
+            value="{{ design.year }}"
+            min="2020"
+            max="2035"
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Description *</label>
+        <textarea
+          id="description"
+          name="description"
+          rows="4"
+          required
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          placeholder="Describe your design concept, inspiration, and key features..."
+        >{{ design.description }}</textarea>
+      </div>
+    </section>
+
+    <!-- Cover Image -->
+    <section class="space-y-4">
+      <label for="cover_image" class="block text-sm font-medium text-gray-700">Cover Image</label>
+      {% if design.cover_image %}
+        <div class="flex items-center gap-4">
+          <img
+            src="{{ design.cover_image.url }}"
+            alt="{{ design.title }}"
+            class="w-32 h-32 object-cover rounded-lg shadow-sm"
+          />
+          <div class="text-sm text-gray-600">
+            <p class="font-medium text-gray-800">Current cover image</p>
+            <p>Upload a new file to replace it. Leave blank to keep the current cover.</p>
+          </div>
+        </div>
+      {% endif %}
+      <input
+        type="file"
+        id="cover_image"
+        name="cover_image"
+        accept="image/*"
+        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+      />
+      <p class="text-xs text-gray-500">
+        Supported formats: JPG, PNG, GIF (Max 5MB). Square images look best in the dashboard.
+      </p>
+    </section>
+
+    <!-- Specifications -->
+    <section class="bg-gray-50 border border-gray-100 rounded-lg p-5 space-y-6">
+      <h2 class="text-lg font-semibold text-gray-800">Design Specifications</h2>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <label for="fabric_type" class="block text-sm font-medium text-gray-700 mb-2">Primary Fabric</label>
+          <input
+            type="text"
+            id="fabric_type"
+            name="fabric_type"
+            value="{{ design.fabric_type }}"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            placeholder="e.g., Cotton, Silk, Polyester, Denim"
+          />
+        </div>
+        <div>
+          <label for="fabric_weight" class="block text-sm font-medium text-gray-700 mb-2">Fabric Weight</label>
+          <input
+            type="text"
+            id="fabric_weight"
+            name="fabric_weight"
+            value="{{ design.fabric_weight }}"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            placeholder="e.g., Lightweight, Medium, Heavy"
+          />
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6">
+        <div>
+          <label for="color_palette" class="block text-sm font-medium text-gray-700 mb-2">Color Palette</label>
+          <input
+            type="text"
+            id="color_palette"
+            name="color_palette"
+            value="{{ design.color_palette }}"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            placeholder="e.g., Navy, White, Gold accents"
+          />
+        </div>
+        <div>
+          <label for="size_range" class="block text-sm font-medium text-gray-700 mb-2">Size Range</label>
+          <input
+            type="text"
+            id="size_range"
+            name="size_range"
+            value="{{ design.size_range }}"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            placeholder="e.g., XS-XL, One Size"
+          />
+        </div>
+        <div>
+          <label for="target_price" class="block text-sm font-medium text-gray-700 mb-2">Target Price (USD)</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            id="target_price"
+            name="target_price"
+            value="{{ design.target_price|default_if_none:'' }}"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            placeholder="0.00"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label for="technical_notes" class="block text-sm font-medium text-gray-700 mb-2">Technical Notes</label>
+        <textarea
+          id="technical_notes"
+          name="technical_notes"
+          rows="4"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          placeholder="Measurements, construction details, special requirements..."
+        >{{ design.production_notes }}</textarea>
+      </div>
+
+      <div>
+        <label for="design_notes" class="block text-sm font-medium text-gray-700 mb-2">Internal Review Notes</label>
+        <textarea
+          id="design_notes"
+          name="design_notes"
+          rows="3"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          placeholder="Optional notes to share with your team before publishing."
+        >{{ design.design_notes }}</textarea>
+      </div>
+    </section>
+
+    <!-- Gallery Images -->
+    <section class="space-y-4">
+      <h2 class="text-lg font-semibold text-gray-800">Gallery Images</h2>
+      <p class="text-sm text-gray-600">
+        Upload additional angles or detail shots. Existing images remain unless you remove them from the media manager.
+      </p>
+      <input
+        type="file"
+        id="additional_images"
+        name="additional_images"
+        accept="image/*"
+        multiple
+        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+      />
+      {% if gallery_images %}
+        <div class="grid sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+          {% for image in gallery_images %}
+            <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+              <img src="{{ image.image.url }}" alt="{{ design.title }} image {{ forloop.counter }}"
+                   class="w-full h-32 object-cover" />
+              {% if image.caption %}
+                <div class="px-2 py-1 text-xs text-gray-600 border-t border-gray-100">
+                  {{ image.caption }}
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </section>
+
+    <!-- Tech Pack -->
+    <section class="bg-blue-50 border border-blue-100 rounded-lg p-5 space-y-5">
+      <h2 class="text-lg font-semibold text-blue-900">Tech Pack Files</h2>
+
+      {% if design.has_techpack %}
+        <div class="grid sm:grid-cols-2 gap-4">
+          {% if design.techpack_pdf %}
+            <div class="flex items-center justify-between bg-white border border-blue-100 rounded-lg px-4 py-3">
+              <div class="flex items-center gap-2 text-sm text-gray-700">
+                <i class="fas fa-file-pdf text-red-500"></i>
+                <span>Current PDF Tech Pack</span>
+              </div>
+              <a href="{{ design.techpack_pdf.url }}" target="_blank"
+                 class="text-blue-600 hover:text-blue-800 text-sm">Download</a>
+            </div>
+          {% endif %}
+          {% if design.techpack_excel %}
+            <div class="flex items-center justify-between bg-white border border-blue-100 rounded-lg px-4 py-3">
+              <div class="flex items-center gap-2 text-sm text-gray-700">
+                <i class="fas fa-file-excel text-green-500"></i>
+                <span>Current Excel Tech Pack</span>
+              </div>
+              <a href="{{ design.techpack_excel.url }}" target="_blank"
+                 class="text-blue-600 hover:text-blue-800 text-sm">Download</a>
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label for="techpack_pdf" class="block text-sm font-medium text-gray-700 mb-2">Upload PDF</label>
+          <input
+            type="file"
+            id="techpack_pdf"
+            name="techpack_pdf"
+            accept=".pdf"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          />
+          <p class="text-xs text-gray-500 mt-1">PDF files up to 10MB.</p>
+        </div>
+        <div>
+          <label for="techpack_excel" class="block text-sm font-medium text-gray-700 mb-2">Upload Excel</label>
+          <input
+            type="file"
+            id="techpack_excel"
+            name="techpack_excel"
+            accept=".xlsx,.xls"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          />
+          <p class="text-xs text-gray-500 mt-1">Excel files up to 10MB.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Visibility -->
+    <section class="bg-yellow-50 border border-yellow-100 rounded-lg p-5 space-y-4">
+      <h2 class="text-lg font-semibold text-yellow-900">Visibility Settings</h2>
+      <p class="text-sm text-yellow-800">
+        Use these toggles to control when and how the design appears to clients.
+      </p>
+      <div class="space-y-3">
+        <label class="flex items-start gap-3 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            name="is_public"
+            {% if design.published %}checked{% endif %}
+            class="mt-1 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+          />
+          <span>
+            <span class="font-medium text-gray-900">Publish this design</span><br />
+            <span class="text-xs text-gray-600">When published, the design becomes visible in your public portfolio.</span>
+          </span>
+        </label>
+        <label class="flex items-start gap-3 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            name="is_featured"
+            {% if design.featured %}checked{% endif %}
+            class="mt-1 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+          />
+          <span>
+            <span class="font-medium text-gray-900">Feature this design</span><br />
+            <span class="text-xs text-gray-600">Featured designs are highlighted in your showcase areas.</span>
+          </span>
+        </label>
+      </div>
+    </section>
+
+    <!-- Form Actions -->
+    <div class="flex justify-end gap-4 pt-6 border-t border-gray-100">
+      <a
+        href="{% url 'designer_designs' %}"
+        class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition duration-200"
+      >
+        Cancel
+      </a>
+      <button
+        type="submit"
+        class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition duration-200"
+      >
+        <i class="fas fa-save mr-2"></i>Update Design
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Progress Indicator for File Uploads -->
+<div id="upload-progress" class="hidden fixed top-4 right-4 bg-white shadow-lg rounded-lg p-4 z-50">
+  <div class="flex items-center gap-3">
+    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+    <span class="text-sm text-gray-700">Updating design...</span>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.querySelector("form");
+  const progressIndicator = document.getElementById("upload-progress");
+  const slugInput = document.getElementById("slug");
+  const titleInput = document.getElementById("title");
+  const resetSlugButton = document.getElementById("resetSlug");
+  let slugManuallyEdited = false;
+
+  function slugify(value) {
+    return value
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+
+  if (slugInput && titleInput) {
+    titleInput.addEventListener("input", function () {
+      if (!slugManuallyEdited) {
+        slugInput.value = slugify(this.value);
+      }
+    });
+
+    slugInput.addEventListener("input", function () {
+      slugManuallyEdited = true;
+    });
+
+    resetSlugButton?.addEventListener("click", function (event) {
+      event.preventDefault();
+      slugManuallyEdited = false;
+      slugInput.value = slugify(titleInput.value);
+    });
+  }
+
+  if (form && progressIndicator) {
+    form.addEventListener("submit", function () {
+      progressIndicator.classList.remove("hidden");
+    });
+  }
+
+  const fileInputs = document.querySelectorAll('input[type="file"]');
+  fileInputs.forEach((input) => {
+    input.addEventListener("change", function () {
+      const file = this.files[0];
+      if (!file) {
+        return;
+      }
+      const isPdf = this.accept.includes("pdf");
+      const maxSize = isPdf ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        const sizeInMb = (maxSize / (1024 * 1024)).toFixed(0);
+        alert(`File size must be less than ${sizeInMb}MB`);
+        this.value = "";
+      }
+    });
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ feature.display_name }} — Emerging Talent · Global Designer Hub</title>
+    {% include "marketing/_growth_styles.html" %}
+</head>
+<body>
+<div class="drden-container">
+    <a class="drden-back" href="{% url 'marketing:emerging_talent_list' %}">&larr; Back to Emerging Talent</a>
+    <p class="drden-eyebrow">Emerging Talent · Featured</p>
+    <h1 class="drden-h1">{{ feature.title }}</h1>
+    <p class="drden-lead" style="margin-bottom:18px;"><strong>{{ feature.display_name }}</strong></p>
+
+    {% if feature.hero_image_url %}
+        <img class="drden-feature-card-img" src="{{ feature.hero_image_url }}" alt="Work by {{ feature.display_name }}" style="max-height:480px; margin-bottom:32px;">
+    {% endif %}
+
+    {% if feature.bio_html %}
+        <article class="drden-card drden-prose" style="margin-bottom:24px;">
+            {{ feature.bio_html|safe }}
+        </article>
+    {% endif %}
+
+    {% if feature.success_story_html %}
+        <article class="drden-card drden-prose" style="margin-bottom:24px;">
+            <h2 class="drden-h2" style="font-size:22px;">How they got noticed</h2>
+            {{ feature.success_story_html|safe }}
+        </article>
+    {% endif %}
+
+    {% if feature.designer_portfolio_url %}
+        <a class="drden-cta" href="{{ feature.designer_portfolio_url }}" target="_blank" rel="noopener">View full portfolio</a>
+    {% endif %}
+    <a class="drden-cta drden-cta-ghost" style="margin-left:6px;" href="{% url 'marketing:brand_partner' %}">Brands: collaborate with our designers</a>
+</div>
+</body>
+</html>

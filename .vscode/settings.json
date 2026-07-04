@@ -1,0 +1,28 @@
+{
+  "cSpell.words": [
+    "Canva",
+    "collectstatic",
+    "corsheaders",
+    "jewellery",
+    "pagesizes",
+    "photoshoot",
+    "designer",
+    "techpack",
+    "tekpak",
+    "tekpaks",
+    "Thom",
+    "viewsets",
+    "VOLUMEONE",
+    "Zimmermann"
+  ],
+  "editor.formatOnSave": false,
+  "[html]": {
+    "editor.formatOnSave": false
+  },
+  "[django-html]": {
+    "editor.formatOnSave": false
+  },
+  "files.associations": {
+    "*.html": "django-html"
+  }
+}

@@ -1,0 +1,207 @@
+{% extends "designer_portfolio/base.html" %} {% block title %}Contact —
+designer{% endblock %} {% block content %}
+<div class="contact-container">
+  <h1>Contact</h1>
+  <p class="contact-subtitle">
+    Reach the designrden studio for partnerships, production support, or product questions.
+  </p>
+
+  <!-- Social icons -->
+    <div class="social">
+      <a href="{{ drden_instagram_url }}" target="_blank" aria-label="Instagram"
+        >Instagram</a
+      >
+    <a
+      href="https://www.linkedin.com/in/manya-marri-8b434917a/"
+      target="_blank"
+      aria-label="LinkedIn"
+      >LinkedIn</a
+    >
+    <a
+      href="https://mail.google.com/mail/?view=cm&fs=1&to=manya.marri@gmail.com"
+      target="_blank"
+    >
+      Email
+    </a>
+  </div>
+
+  <!-- Contact form -->
+  <form method="post" action="{% url 'contact' %}" class="contact-form">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+    <div class="form-errors">
+      {% for error in form.non_field_errors %}
+      <p>{{ error }}</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% for field in form %}
+    <div class="form-group">
+      {% if field.errors %}
+      <ul class="errorlist">
+        {% for error in field.errors %}
+        <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+      {{ field }}
+    </div>
+    {% endfor %}
+    <button type="submit">Send →</button>
+    <p class="contact-note">
+      Prefer email? <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>
+    </p>
+  </form>
+
+  {% if messages %}
+  <div class="messages">
+    {% for message in messages %}
+    <p class="{{ message.tags }}">{{ message }}</p>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+<style>
+  /* ===== Fonts ===== */
+  :root {
+    --font-head: "EB Garamond", designerf;
+    --font-body: "Inter", sans-designerf;
+    --maroon: var(--color-primary);
+  }
+
+  /* ===== Container ===== */
+  .contact-container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    font-family: var(--font-body);
+    color: var(--color-primary);
+  }
+
+  .contact-container h1 {
+    font-family: var(--font-head);
+    font-size: 32px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .contact-subtitle {
+    text-align: center;
+    color: var(--color-muted, #666);
+    margin-bottom: 24px;
+    font-size: 16px;
+    line-height: 1.4;
+  }
+
+  /* ===== Social ===== */
+  .social {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 30px;
+  }
+
+  .social a {
+    font-family: var(--font-body);
+    text-decoration: none;
+    color: var(--maroon);
+    font-weight: 500;
+    transition: color 0.3s ease;
+  }
+
+  .social a:hover {
+    text-decoration: underline;
+  }
+
+  /* ===== Form ===== */
+  .contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .contact-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .contact-form input,
+  .contact-form textarea {
+    font-family: var(--font-body);
+    padding: 12px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    font-size: 15px;
+    transition: border-color 0.3s ease;
+  }
+
+  .contact-form input:focus,
+  .contact-form textarea:focus {
+    border-color: var(--maroon);
+    outline: none;
+  }
+
+  .contact-form button {
+    font-family: var(--font-body);
+    background: var(--maroon);
+    color: var(--color-secondary);
+    border: none;
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+
+  .contact-form button:hover {
+    background: var(--color-accent);
+  }
+
+  .form-errors {
+    background: rgba(255, 99, 132, 0.08);
+    border: 1px solid rgba(255, 99, 132, 0.4);
+    color: var(--color-accent);
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 14px;
+  }
+
+  .errorlist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    color: var(--color-accent);
+    font-size: 13px;
+  }
+
+  /* ===== Messages ===== */
+  .messages {
+    margin-top: 20px;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .messages .success {
+    color: var(--color-primary);
+  }
+
+  .messages .error {
+    color: var(--color-accent);
+  }
+
+  .contact-note {
+    text-align: center;
+    font-size: 14px;
+    margin-top: -5px;
+    color: var(--color-primary);
+  }
+
+  .contact-note a {
+    color: var(--maroon);
+    font-weight: 600;
+  }
+</style>
+{% endblock %}

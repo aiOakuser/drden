@@ -1,0 +1,627 @@
+{
+  "templates": [
+    {
+      "id": "urban_radius",
+      "name": "Urban Radius",
+      "category": "Streetwear Collection",
+      "layoutKey": "twoRow_breakdown_plus_specs",
+      "thumbnail": {
+        "background": "#0f1116",
+        "panels": ["#2f3547", "#1b1f2a", "#3a3f55"]
+      },
+      "summary": [
+        "Streetwear merch development from sketch to city shoot.",
+        "Style Sheet: Radius Tech Hoodie – 380gsm brushed fleece / OVERSIZED.",
+        "Colors: Charcoal, Ice Grey, Sand, Olive, Black."
+      ],
+      "cover": {
+        "titlePlaceholder": "URBAN RADIUS – STREETWEAR COLLECTION",
+        "subtitle": "MERCH DEVELOPMENT · designrden CREATIVE STUDIO"
+      },
+      "stages": [
+        {
+          "stageNumber": 1,
+          "title": "STAGE 01 / DESIGN & TECH DEVELOPMENT",
+          "defaultBullets": [
+            "Technical flats, silhouettes, style numbers",
+            "Fabric & trim sourcing, palette development",
+            "Print placement & measurement specs",
+            "Vendor catalog & embroidery map"
+          ]
+        },
+        {
+          "stageNumber": 2,
+          "title": "STAGE 02 / PRE-PRODUCTION",
+          "defaultBullets": [
+            "Fabric tests, hand-feel, shrinkage, wash results",
+            "In-house pattern dev, DXF files, fit samples",
+            "Trims & care label confirmation",
+            "BOM + costing"
+          ]
+        },
+        {
+          "stageNumber": 3,
+          "title": "STAGE 03 / PRODUCTION",
+          "defaultBullets": [
+            "Fabric PO, markers, size-set approvals",
+            "Fit rounds, bulk QC, finishing QC",
+            "Packing list + freight"
+          ]
+        },
+        {
+          "stageNumber": 4,
+          "title": "STAGE 04 / MEDIA DIRECTION",
+          "defaultBullets": [
+            "Urban shoot, model casting, storyboards",
+            "Product close-ups, reels, social assets"
+          ]
+        }
+      ],
+      "productSpec": {
+        "title": "Radius Tech Hoodie",
+        "layoutHint": "single_column_specs",
+        "fields": [
+          {"key": "styleNumber", "label": "Style Number"},
+          {"key": "fabricWeight", "label": "Fabric / Weight"},
+          {"key": "fit", "label": "Fit"},
+          {"key": "trimPlan", "label": "Trim & Embroidery Plan"},
+          {"key": "colorways", "label": "Colorways"}
+        ]
+      }
+    },
+    {
+      "id": "desert_shadows",
+      "name": "Desert Shadows",
+      "category": "Activewear Capsule",
+      "layoutKey": "twoRow_breakdown_plus_specs",
+      "thumbnail": {
+        "background": "#21150f",
+        "panels": ["#5a3a1d", "#a86e3f", "#352217"]
+      },
+      "summary": [
+        "Heat-tested performance line for activewear capsules.",
+        "Style Sheet: ShadowFlex Jogger – Nylon/Elastane athletic fit.",
+        "Colors: Stone, Taupe, Earth, Cactus Green."
+      ],
+      "cover": {
+        "titlePlaceholder": "DESERT SHADOWS – ACTIVEWEAR CAPSULE",
+        "subtitle": "PERFORMANCE LINE · designrden ATHLETICA"
+      },
+      "stages": [
+        {
+          "stageNumber": 1,
+          "title": "STAGE 01 – DESIGN",
+          "defaultBullets": [
+            "Activewear performance mapping",
+            "Seamline engineering",
+            "Tech sketches + compression zoning"
+          ]
+        },
+        {
+          "stageNumber": 2,
+          "title": "STAGE 02 – PRE-PRODUCTION",
+          "defaultBullets": [
+            "Fabric weight testing, reflective trims",
+            "Pattern development, prototypes",
+            "BOM + costing"
+          ]
+        },
+        {
+          "stageNumber": 3,
+          "title": "STAGE 03 – PRODUCTION",
+          "defaultBullets": [
+            "Pattern grading, flatlock QC",
+            "Fit sessions, bulk cutting",
+            "Final QC and packing"
+          ]
+        },
+        {
+          "stageNumber": 4,
+          "title": "STAGE 04 – MEDIA",
+          "defaultBullets": [
+            "Desert outdoor photoshoot",
+            "Motion videos, influencer seeding"
+          ]
+        }
+      ],
+      "productSpec": {
+        "title": "ShadowFlex Jogger",
+        "layoutHint": "single_column_specs",
+        "fields": [
+          {"key": "styleNumber", "label": "Style Number"},
+          {"key": "fabricBlend", "label": "Fabric"},
+          {"key": "compressionZones", "label": "Compression / Seam Zones"},
+          {"key": "fit", "label": "Fit"},
+          {"key": "colorways", "label": "Colorways"}
+        ]
+      }
+    },
+    {
+      "id": "noir_essentials",
+      "name": "Noir Essentials",
+      "category": "Minimal Capsule",
+      "layoutKey": "twoRow_breakdown_plus_specs",
+      "thumbnail": {
+        "background": "#080808",
+        "panels": ["#1a1a1a", "#2a2a2a", "#111111"]
+      },
+      "summary": [
+        "Monochrome capsule anchored in French terry sourcing.",
+        "Style Sheet: Noir Overcoat Tee – 240gsm sueded cotton.",
+        "Colors: Jet Black, Smokey Ash, Frost Grey."
+      ],
+      "cover": {
+        "titlePlaceholder": "NOIR ESSENTIALS – MINIMAL CAPSULE",
+        "subtitle": "CURATED MINIMAL LINE · designrden STUDIO"
+      },
+      "stages": [
+        {
+          "stageNumber": 1,
+          "title": "STAGE 01 – DESIGN",
+          "defaultBullets": [
+            "Monochrome palette, French terry sourcing",
+            "Minimalist logo design, tech packs"
+          ]
+        },
+        {
+          "stageNumber": 2,
+          "title": "STAGE 02 – PRE-PROD",
+          "defaultBullets": [
+            "Swatches, DXF files, trims, BOM",
+            "Initial fit samples"
+          ]
+        },
+        {
+          "stageNumber": 3,
+          "title": "STAGE 03 – PRODUCTION",
+          "defaultBullets": [
+            "Fit revisions, bulk sewing, QC",
+            "Packing & finishing"
+          ]
+        },
+        {
+          "stageNumber": 4,
+          "title": "STAGE 04 – MEDIA",
+          "defaultBullets": [
+            "Black/white editorial shoot",
+            "Flat-lay e-commerce shots"
+          ]
+        }
+      ],
+      "productSpec": {
+        "title": "Noir Overcoat Tee",
+        "layoutHint": "single_column_specs",
+        "fields": [
+          {"key": "styleNumber", "label": "Style Number"},
+          {"key": "fabricWeight", "label": "Fabric / Weight"},
+          {"key": "silhouette", "label": "Silhouette / Notes"},
+          {"key": "branding", "label": "Logo & Trim Direction"},
+          {"key": "colorways", "label": "Colorways"}
+        ]
+      }
+    },
+    {
+      "id": "horizon_tech",
+      "name": "Horizon Tech",
+      "category": "Future-Body Collection",
+      "layoutKey": "twoRow_breakdown_plus_specs",
+      "thumbnail": {
+        "background": "#050713",
+        "panels": ["#11235a", "#1a2f7a", "#0f1834"]
+      },
+      "summary": [
+        "Futuristic body program with bonded seams and CGI media.",
+        "Style Sheet: Horizon Compression Top – Poly-Elastane.",
+        "Colors: Slate, Midnight, Laser Blue, Infrared."
+      ],
+      "cover": {
+        "titlePlaceholder": "HORIZON TECH – FUTURE-BODY COLLECTION",
+        "subtitle": "TECH LINE · designrden × TAILORHUB"
+      },
+      "stages": [
+        {
+          "stageNumber": 1,
+          "title": "STAGE 01 – DESIGN",
+          "defaultBullets": [
+            "Laser-cut panels, bonded seam tests",
+            "Tech CADs, performance sourcing"
+          ]
+        },
+        {
+          "stageNumber": 2,
+          "title": "STAGE 02 – PRE-PROD",
+          "defaultBullets": [
+            "3D patterning, compression tests",
+            "Wear tests, BOM, costing"
+          ]
+        },
+        {
+          "stageNumber": 3,
+          "title": "STAGE 03 – PRODUCTION",
+          "defaultBullets": [
+            "Precision cutting, reflective print QC",
+            "Size-set, batch finishing"
+          ]
+        },
+        {
+          "stageNumber": 4,
+          "title": "STAGE 04 – MEDIA",
+          "defaultBullets": [
+            "Futuristic CGI shoot",
+            "Motion capture video"
+          ]
+        }
+      ],
+      "productSpec": {
+        "title": "Horizon Compression Top",
+        "layoutHint": "single_column_specs",
+        "fields": [
+          {"key": "styleNumber", "label": "Style Number"},
+          {"key": "fabricBlend", "label": "Fabric"},
+          {"key": "compression", "label": "Compression Zones"},
+          {"key": "seamConstruction", "label": "Seam / Bonding Notes"},
+          {"key": "colorways", "label": "Colorways"}
+        ]
+      }
+    },
+    {
+      "id": "coastline_comfort",
+      "name": "Coastline Comfort",
+      "category": "Resort Set",
+      "layoutKey": "twoRow_breakdown_plus_specs",
+      "thumbnail": {
+        "background": "#f4f1ea",
+        "panels": ["#b7d4e0", "#f7e2c3", "#d1c1b3"]
+      },
+      "summary": [
+        "Relaxed resort capsule with knit sourcing and eco-packaging.",
+        "Style Sheet: Coastal Lounge Top – Cotton Modal Blend.",
+        "Colors: Sky, Cream, Driftwood, Pebble."
+      ],
+      "cover": {
+        "titlePlaceholder": "COASTLINE COMFORT – RESORT SET",
+        "subtitle": "COASTAL CAPSULE · designrden DESIGNS"
+      },
+      "stages": [
+        {
+          "stageNumber": 1,
+          "title": "STAGE 01 – DESIGN",
+          "defaultBullets": [
+            "Resortwear moodboard, knit sourcing",
+            "Embroidery placement, relaxed silhouettes"
+          ]
+        },
+        {
+          "stageNumber": 2,
+          "title": "STAGE 02 – PRE-PROD",
+          "defaultBullets": [
+            "Lab dips, knit testing, fit samples",
+            "Final spec sheets"
+          ]
+        },
+        {
+          "stageNumber": 3,
+          "title": "STAGE 03 – PRODUCTION",
+          "defaultBullets": [
+            "Bulk fabric approval, eco-packaging",
+            "Softness QC, finishing QC"
+          ]
+        },
+        {
+          "stageNumber": 4,
+          "title": "STAGE 04 – MEDIA",
+          "defaultBullets": [
+            "Beach photoshoot, sunlit imagery",
+            "Travel lookbook"
+          ]
+        }
+      ],
+      "productSpec": {
+        "title": "Coastal Lounge Top",
+        "layoutHint": "single_column_specs",
+        "fields": [
+          {"key": "styleNumber", "label": "Style Number"},
+          {"key": "fabricBlend", "label": "Fabric"},
+          {"key": "drape", "label": "Drape / Feel Notes"},
+          {"key": "packaging", "label": "Eco Packaging Plan"},
+          {"key": "colorways", "label": "Colorways"}
+        ]
+      }
+    },
+    {
+      "id": "street_circuit",
+      "name": "Street Circuit",
+      "category": "Run Volume One Capsule",
+      "layoutKey": "fuel_fortress",
+      "thumbnail": {
+        "background": "#0b0f1c",
+        "panels": ["#1e2435", "#2c3148", "#f97316"]
+      },
+      "summary": [
+        "City circuit merch development with reflective trims baked in.",
+        "Stage copy mirrors the VolumeOne drop cadence end-to-end.",
+        "Product block: Street Circuit Anorak with Front/Back/Detail views."
+      ],
+      "cover": {
+        "titlePlaceholder": "STREET CIRCUIT PROJECT BREAKDOWN",
+        "subtitle": "MERCH DEVELOPMENT LINE · RUN VOLUME ONE"
+      },
+      "stages": [
+        {
+          "stageNumber": 1,
+          "title": "STAGE 01 / DESIGN & TECH DEV.",
+          "defaultBullets": [
+            "Concept boards & reference pulls",
+            "Technical flats / line art",
+            "Style number creation & naming",
+            "Fabric & trim sourcing shortlist",
+            "Graphics / logo lockup exploration"
+          ]
+        },
+        {
+          "stageNumber": 2,
+          "title": "STAGE 02 / PRE-PRODUCTION",
+          "defaultBullets": [
+            "Fabric yardage cards & lab dips",
+            "Shrink / wash testing",
+            "Pattern draft & graded size set",
+            "Tech pack v1 (measurements + BOM)",
+            "Fit sample request to factory"
+          ]
+        },
+        {
+          "stageNumber": 3,
+          "title": "STAGE 03 / PRODUCTION",
+          "defaultBullets": [
+            "Fit sample try-on & notes",
+            "Pattern revision & spec update",
+            "TOP sample request & approval",
+            "Bulk PO confirmation & timeline",
+            "Final bulk QC checklist"
+          ]
+        },
+        {
+          "stageNumber": 4,
+          "title": "STAGE 04 / MEDIA DIRECTION",
+          "defaultBullets": [
+            "Shoot brief & reference deck",
+            "Location + model casting",
+            "Shot list / storyboard layout",
+            "Launch calendar & asset delivery"
+          ]
+        }
+      ],
+      "productSpec": {
+        "title": "Street Circuit Anorak",
+        "layoutHint": "single_column_specs",
+        "fields": [
+          {"key": "styleNumber", "label": "Style #"},
+          {"key": "description", "label": "Description"},
+          {"key": "fabricShell", "label": "Fabric (Shell)"},
+          {"key": "fabricContent", "label": "Fabric Content"},
+          {"key": "sizeRange", "label": "Size Range"},
+          {"key": "colorways", "label": "Colorways"}
+        ]
+      }
+    },
+    {
+      "id": "midnight_relay",
+      "name": "Midnight Relay",
+      "category": "Night Run Capsule",
+      "layoutKey": "fuel_fortress",
+      "thumbnail": {
+        "background": "#05060d",
+        "panels": ["#111426", "#1b1f3c", "#facc15"]
+      },
+      "summary": [
+        "Night-run ready silhouettes with reflectivity baked into every stage.",
+        "Copiable bullets for safety reviews, proto loops, and content drops.",
+        "Product block: Midnight Relay Shell Pant (Front/Back/Side)."
+      ],
+      "cover": {
+        "titlePlaceholder": "MIDNIGHT RELAY NIGHT RUN CAPSULE",
+        "subtitle": "PRESENTED BY RUN VOLUME ONE"
+      },
+      "stages": [
+        {
+          "stageNumber": 1,
+          "title": "STAGE 01 / DESIGN & TECH DEV.",
+          "defaultBullets": [
+            "Night-run theme & silhouette selection",
+            "Reflectivity map & safety requirements",
+            "Tech sketches: top, bottom, outerwear",
+            "Material callouts: reflective, mesh, jersey"
+          ]
+        },
+        {
+          "stageNumber": 2,
+          "title": "STAGE 02 / PRE-PRODUCTION",
+          "defaultBullets": [
+            "Vendor outreach for reflective trims",
+            "Lab tests: visibility & wash fastness",
+            "Pattern build & seam placement review",
+            "First proto sample order & costing targets"
+          ]
+        },
+        {
+          "stageNumber": 3,
+          "title": "STAGE 03 / PRODUCTION",
+          "defaultBullets": [
+            "Proto fit session & feedback",
+            "Grading & spec lock",
+            "Pre-production samples (PPS) approval",
+            "Bulk fabric & trim booking"
+          ]
+        },
+        {
+          "stageNumber": 4,
+          "title": "STAGE 04 / MEDIA DIRECTION",
+          "defaultBullets": [
+            "Night city location scout",
+            "Motion blur / long-exposure test shots",
+            "Social teaser plan",
+            "Product feature video outline"
+          ]
+        }
+      ],
+      "productSpec": {
+        "title": "Midnight Relay Shell Pant",
+        "layoutHint": "single_column_specs",
+        "fields": [
+          {"key": "styleNumber", "label": "Style #"},
+          {"key": "description", "label": "Description"},
+          {"key": "fabricShell", "label": "Fabric (Shell)"},
+          {"key": "fabricContent", "label": "Fabric Content"},
+          {"key": "sizeRange", "label": "Size Range"},
+          {"key": "colorways", "label": "Colorways"}
+        ]
+      }
+    },
+    {
+      "id": "desert_pace",
+      "name": "Desert Pace",
+      "category": "Heat-Ready Pack",
+      "layoutKey": "fuel_fortress",
+      "thumbnail": {
+        "background": "#1d1108",
+        "panels": ["#4f2c14", "#c57335", "#f0c987"]
+      },
+      "summary": [
+        "Heat-tested essentials for on-foot drops in extreme climates.",
+        "Stage bullets focus on ventilation, UV targets, and sun-lit shoots.",
+        "Product block: Desert Pace Aero Short with three standard views."
+      ],
+      "cover": {
+        "titlePlaceholder": "DESERT PACE HEAT-READY PACK",
+        "subtitle": "PRESENTED BY RUN VOLUME ONE"
+      },
+      "stages": [
+        {
+          "stageNumber": 1,
+          "title": "STAGE 01 / DESIGN & TECH DEV.",
+          "defaultBullets": [
+            "Hot-weather use-case notes",
+            "Ventilation panel strategy",
+            "Tech flats: singlet, short, cap",
+            "Fabric shortlist: mesh, micro-pique, ripstop"
+          ]
+        },
+        {
+          "stageNumber": 2,
+          "title": "STAGE 02 / PRE-PRODUCTION",
+          "defaultBullets": [
+            "Breathability & wicking lab tests",
+            "UV protection rating target",
+            "Prototype patterns & sample cutting",
+            "Updated tech pack + BOM"
+          ]
+        },
+        {
+          "stageNumber": 3,
+          "title": "STAGE 03 / PRODUCTION",
+          "defaultBullets": [
+            "Size run fit test in motion",
+            "Measurement fine-tuning",
+            "PPS approval & comments to factory",
+            "Inline inspection checklist"
+          ]
+        },
+        {
+          "stageNumber": 4,
+          "title": "STAGE 04 / MEDIA DIRECTION",
+          "defaultBullets": [
+            "Desert / trail location shortlist",
+            "Lighting plan for harsh sun",
+            "Editorial vs e-comm shot mix",
+            "Launch email + landing page wireframe"
+          ]
+        }
+      ],
+      "productSpec": {
+        "title": "Desert Pace Aero Short",
+        "layoutHint": "single_column_specs",
+        "fields": [
+          {"key": "styleNumber", "label": "Style #"},
+          {"key": "description", "label": "Description"},
+          {"key": "fabricShell", "label": "Fabric (Shell)"},
+          {"key": "fabricContent", "label": "Fabric Content"},
+          {"key": "sizeRange", "label": "Size Range"},
+          {"key": "colorways", "label": "Colorways"}
+        ]
+      }
+    },
+    {
+      "id": "metro_interval",
+      "name": "Metro Interval",
+      "category": "City Commute Line",
+      "layoutKey": "fuel_fortress",
+      "thumbnail": {
+        "background": "#050708",
+        "panels": ["#1f2a33", "#34424f", "#38bdf8"]
+      },
+      "summary": [
+        "Commute-to-run layering set with modular hardware callouts.",
+        "Stage playbooks include commuter testing + transit content beats.",
+        "Product block: Metro Interval Commuter Jacket (Front/Back/Side)."
+      ],
+      "cover": {
+        "titlePlaceholder": "METRO INTERVAL CITY COMMUTE LINE",
+        "subtitle": "PRESENTED BY RUN VOLUME ONE"
+      },
+      "stages": [
+        {
+          "stageNumber": 1,
+          "title": "STAGE 01 / DESIGN & TECH DEV.",
+          "defaultBullets": [
+            "Commute-to-run scenario mapping",
+            "Convertible feature ideation",
+            "Tech sketches: jacket, pant, packable layer",
+            "Fabric matrix: weather-resistant vs stretch"
+          ]
+        },
+        {
+          "stageNumber": 2,
+          "title": "STAGE 02 / PRE-PRODUCTION",
+          "defaultBullets": [
+            "Fabric handfeel & drape review",
+            "Water-repellency and seam sealing tests",
+            "Pattern draft for convertible features",
+            "Hardware selection: snaps, zips, cords"
+          ]
+        },
+        {
+          "stageNumber": 3,
+          "title": "STAGE 03 / PRODUCTION",
+          "defaultBullets": [
+            "Function test on prototypes (bike/train/run)",
+            "Pattern and spec modifications logged",
+            "Final TOP sample approval",
+            "Bulk PO + ex-factory timeline"
+          ]
+        },
+        {
+          "stageNumber": 4,
+          "title": "STAGE 04 / MEDIA DIRECTION",
+          "defaultBullets": [
+            "Transit-focused shot list",
+            "BTS content plan for social",
+            "Short-form video storyboard",
+            "Campaign asset delivery schedule"
+          ]
+        }
+      ],
+      "productSpec": {
+        "title": "Metro Interval Commuter Jacket",
+        "layoutHint": "single_column_specs",
+        "fields": [
+          {"key": "styleNumber", "label": "Style #"},
+          {"key": "description", "label": "Description"},
+          {"key": "fabricShell", "label": "Fabric (Shell)"},
+          {"key": "fabricContent", "label": "Fabric Content"},
+          {"key": "sizeRange", "label": "Size Range"},
+          {"key": "colorways", "label": "Colorways"}
+        ]
+      }
+    }
+  ]
+}

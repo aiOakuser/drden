@@ -1,0 +1,223 @@
+{% comment %}
+Self-contained CSS partial for the community feature pack (events,
+emerging talent, mentorship, brand partnerships, forum interest). Kept
+inline so the routes work even when the static pipeline has not been
+collected yet.
+{% endcomment %}
+<style>
+    :root {
+        --drden-bg: #f7f4ee;
+        --drden-bg-soft: #ebe4d8;
+        --drden-accent: #c76b4a;
+        --drden-deep: #3c1458;
+        --drden-text: #14121a;
+        --drden-text-soft: #4f4561;
+        --drden-card: #ffffff;
+        --drden-border: #e3e3e3;
+    }
+    * { box-sizing: border-box; }
+    body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Source Sans 3", sans-serif;
+        margin: 0;
+        background: linear-gradient(165deg, var(--drden-bg) 0%, var(--drden-bg-soft) 55%, rgba(199, 107, 74, 0.12) 100%);
+        color: var(--drden-text);
+        min-height: 100vh;
+    }
+    .drden-container {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 56px 24px 96px;
+    }
+    .drden-eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        font-size: 12px;
+        color: var(--drden-accent);
+        font-weight: 700;
+        margin-bottom: 12px;
+    }
+    h1.drden-h1 {
+        font-size: 42px;
+        line-height: 1.05;
+        letter-spacing: -0.02em;
+        margin: 0 0 16px;
+    }
+    h2.drden-h2 {
+        font-size: 26px;
+        margin: 0 0 12px;
+        letter-spacing: -0.01em;
+    }
+    p.drden-lead {
+        max-width: 700px;
+        font-size: 17px;
+        color: var(--drden-text-soft);
+        line-height: 1.55;
+        margin: 0 0 24px;
+    }
+    .drden-cta {
+        display: inline-block;
+        background: var(--drden-deep);
+        color: #fff;
+        border: none;
+        border-radius: 999px;
+        padding: 12px 26px;
+        font-weight: 600;
+        font-size: 15px;
+        text-decoration: none;
+        cursor: pointer;
+        box-shadow: 0 12px 28px rgba(60, 20, 88, 0.18);
+    }
+    .drden-cta.drden-cta-ghost {
+        background: transparent;
+        color: var(--drden-deep);
+        border: 1px solid var(--drden-deep);
+        box-shadow: none;
+    }
+    .drden-cta.drden-cta-accent { background: var(--drden-accent); }
+    .drden-cta:hover { opacity: 0.92; }
+    .drden-card {
+        background: var(--drden-card);
+        border-radius: 18px;
+        padding: 24px 22px;
+        box-shadow: 0 14px 30px rgba(20, 18, 26, 0.06);
+    }
+    .drden-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 20px;
+    }
+    .drden-section { margin-top: 48px; }
+    .drden-back {
+        display: inline-block;
+        margin-bottom: 24px;
+        color: var(--drden-deep);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+    }
+    .drden-form .drden-field { margin-bottom: 14px; }
+    .drden-form label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--drden-deep);
+        margin-bottom: 6px;
+    }
+    .drden-form .drden-input,
+    .drden-form input,
+    .drden-form select,
+    .drden-form textarea {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid var(--drden-border);
+        padding: 11px 14px;
+        font-size: 14px;
+        font-family: inherit;
+        outline: none;
+        background: #fff;
+    }
+    .drden-form .drden-input:focus,
+    .drden-form input:focus,
+    .drden-form select:focus,
+    .drden-form textarea:focus {
+        border-color: var(--drden-deep);
+        box-shadow: 0 0 0 2px rgba(60, 20, 88, 0.15);
+    }
+    .drden-help {
+        font-size: 12px;
+        color: var(--drden-text-soft);
+        margin-top: 4px;
+    }
+    .drden-error {
+        color: #c62828;
+        font-size: 12px;
+        margin-top: 4px;
+    }
+    .drden-pill {
+        display: inline-block;
+        padding: 3px 12px;
+        border-radius: 999px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: 700;
+        background: #f0ebf6;
+        color: var(--drden-deep);
+    }
+    .drden-pill-accent { background: rgba(199, 107, 74, 0.15); color: #8a3914; }
+    .drden-pill-live { background: #ffe6e6; color: #b53030; }
+    .drden-pill-ended { background: #ececec; color: #555; }
+    .drden-pill-scheduled { background: #e8f1ff; color: #1f3d8a; }
+    .drden-meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        font-size: 13px;
+        color: var(--drden-text-soft);
+        margin: 8px 0 14px;
+    }
+    .drden-event-list, .drden-feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .drden-event-list li, .drden-feature-list li {
+        background: var(--drden-card);
+        border-radius: 16px;
+        padding: 18px 22px;
+        margin-bottom: 14px;
+        box-shadow: 0 8px 18px rgba(20, 18, 26, 0.05);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .drden-event-list a, .drden-feature-list a {
+        color: var(--drden-deep);
+        font-weight: 700;
+        text-decoration: none;
+        font-size: 18px;
+    }
+    .drden-event-list a:hover, .drden-feature-list a:hover { text-decoration: underline; }
+    .drden-event-summary { color: var(--drden-text-soft); font-size: 14px; line-height: 1.5; }
+    .drden-stat-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 14px;
+        margin: 18px 0 28px;
+    }
+    .drden-stat {
+        background: #fff;
+        border-radius: 14px;
+        padding: 14px 18px;
+        box-shadow: 0 8px 18px rgba(20, 18, 26, 0.05);
+    }
+    .drden-stat .drden-stat-num {
+        font-size: 26px;
+        font-weight: 700;
+        color: var(--drden-deep);
+        margin: 0;
+    }
+    .drden-stat .drden-stat-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--drden-text-soft);
+        margin: 4px 0 0;
+    }
+    .drden-feature-card-img {
+        width: 100%;
+        max-height: 260px;
+        object-fit: cover;
+        border-radius: 14px;
+        margin-bottom: 14px;
+    }
+    .drden-prose { font-size: 16px; line-height: 1.65; }
+    .drden-prose h2, .drden-prose h3 { color: var(--drden-deep); }
+    .drden-prose a { color: var(--drden-accent); }
+    .drden-toggle-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin: 12px 0 24px;
+    }
+</style>

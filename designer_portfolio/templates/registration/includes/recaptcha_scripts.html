@@ -1,0 +1,27 @@
+{% if recaptcha_enabled %}
+  {% if recaptcha_version == 'v3' %}
+<script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
+<script>
+  (function () {
+    var form = document.querySelector("form.signup-form");
+    if (!form || typeof grecaptcha === "undefined") return;
+
+    form.addEventListener("submit", function (event) {
+      var tokenInput = document.getElementById("recaptcha-response-token");
+      if (!tokenInput) return;
+      if (tokenInput.value) return;
+
+      event.preventDefault();
+      grecaptcha.ready(function () {
+        grecaptcha.execute("{{ recaptcha_site_key|escapejs }}", { action: "signup" }).then(function (token) {
+          tokenInput.value = token;
+          form.submit();
+        });
+      });
+    });
+  })();
+</script>
+  {% else %}
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  {% endif %}
+{% endif %}

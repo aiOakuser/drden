@@ -1,0 +1,1853 @@
+{% extends "designer_portfolio/base.html" %}
+{% load static %}
+{% block content %}
+
+{% include "designer_portfolio/includes/slideshow.html" %}
+
+<!-- Search Hero: filter exclusively designers, collections, events (fashion shows, popup events) -->
+<section class="search-hero" aria-label="Filter exclusively: designers, collections, events (fashion shows, popup events)">
+  <div class="search-hero__inner container">
+    <p class="search-hero__eyebrow">Global Designer Hub</p>
+    <h2 class="search-hero__title">Find the mind behind the moodboard</h2>
+    <p class="search-hero__lede">
+      Whether you are booking your next collaborator or simply exploring how style is being made right now, start with
+      the people, the collections, and the moments that turn fabric into feeling.
+    </p>
+    <p class="search-hero__filter-label">Filter exclusively: Designers · Collections · Events (fashion shows, popup events)</p>
+    <div class="search-hero__pills">
+      <a href="{% url 'unified_search' %}?type=designers" class="search-hero__pill">Designers</a>
+      <a href="{% url 'unified_search' %}?type=collections" class="search-hero__pill">Collections</a>
+      <a href="{% url 'unified_search' %}?type=events" class="search-hero__pill">Events</a>
+    </div>
+    <form method="get" action="{% url 'unified_search' %}" class="search-hero__form" role="search">
+      <input type="hidden" name="type" value="all" />
+      <label for="search-hero-input" class="visually-hidden">Search within designers, collections, or events (fashion shows, popup events)</label>
+      <input type="search" id="search-hero-input" name="q" value="{{ request.GET.q }}" placeholder="Search designers, collections, events (fashion shows, popups)…" class="search-hero__input" autocomplete="off" />
+      <button type="submit" class="search-hero__btn" aria-label="Search">
+        <i class="fas fa-search" aria-hidden="true"></i>
+      </button>
+    </form>
+  </div>
+</section>
+<style>
+  .search-hero {
+    background: linear-gradient(135deg, var(--color-primary) 0%, rgba(var(--color-primary-rgb), 0.92) 100%);
+    color: var(--color-secondary);
+    padding: 48px 20px 56px;
+    text-align: center;
+  }
+  .search-hero__inner.container { max-width: 720px; margin: 0 auto; }
+  .search-hero__eyebrow {
+    margin: 0 0 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    opacity: 0.88;
+  }
+  .search-hero__title {
+    margin: 0 0 12px;
+    font-family: var(--font-head);
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .search-hero__lede {
+    margin: 0 auto 18px;
+    max-width: 36em;
+    font-size: clamp(0.95rem, 2.2vw, 1.05rem);
+    line-height: 1.55;
+    opacity: 0.92;
+  }
+  .search-hero__filter-label {
+    margin: 0 0 16px;
+    font-size: 14px;
+    font-weight: 600;
+    opacity: 0.95;
+  }
+  .search-hero__pills {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .search-hero__form {
+    display: flex;
+    align-items: stretch;
+    background: var(--color-secondary);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    margin-bottom: 20px;
+  }
+  .search-hero__input {
+    flex: 1;
+    padding: 16px 20px;
+    border: none;
+    font-size: 16px;
+    color: var(--color-primary);
+    background: transparent;
+  }
+  .search-hero__input::placeholder { color: var(--color-text-muted); }
+  .search-hero__input:focus { outline: none; }
+  .search-hero__btn {
+    padding: 16px 24px;
+    background: var(--color-primary);
+    color: var(--color-secondary);
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+  }
+  .search-hero__btn:hover { opacity: 0.9; }
+  .search-hero__pill {
+    display: inline-block;
+    padding: 10px 18px;
+    background: rgba(var(--color-secondary-rgb), 0.15);
+    color: var(--color-secondary);
+    border-radius: 999px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background 0.2s ease;
+  }
+  .search-hero__pill:hover {
+    background: rgba(var(--color-secondary-rgb), 0.3);
+  }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+</style>
+
+<!-- Collections Slideshow -->
+{% if collections %}
+<section class="featured-collections" aria-label="Featured Collections">
+  <div class="container">
+    <h2 class="section-title">All Collections</h2>
+    <div class="collections-slideshow">
+      <div class="collections-slideshow-container">
+        {% for col in collections %}
+        <div class="collection-slide {% if forloop.first %}active{% endif %}">
+          <a href="{% url 'collection_detail' slug=col.slug %}" class="collection-slide-link">
+            <div class="collection-slide-card">
+              <div class="collection-slide-image">
+                {% if col.cover_image %}
+                <img
+                  src="{{ col.cover_image.url }}"
+                  alt="{{ col.name }}"
+                  onerror="this.src='{% static 'images/placehold.png' %}'"
+                />
+                {% else %}
+                <img
+                  src="{% static 'images/placehold.png' %}"
+                  alt="{{ col.name }}"
+                />
+                {% endif %}
+              </div>
+              <div class="collection-slide-info">
+                <h3 class="collection-slide-title">{{ col.name }}</h3>
+                {% if col.year %}
+                <p class="collection-slide-year">{{ col.year }}</p>
+                {% endif %}
+                {% if col.description %}
+                <p class="collection-slide-description">{{ col.description|truncatewords:20 }}</p>
+                {% endif %}
+              </div>
+            </div>
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+
+      {% if collections|length > 1 %}
+      <div class="collections-slideshow-nav">
+        <button class="collections-nav-btn prev" onclick="changeCollectionSlide(-1)">❮</button>
+        <button class="collections-nav-btn next" onclick="changeCollectionSlide(1)">❯</button>
+      </div>
+      <div class="collections-slideshow-dots">
+        {% for col in collections %}
+        <span
+          class="collections-dot {% if forloop.first %}active{% endif %}"
+          onclick="currentCollectionSlide({{ forloop.counter }})"
+        ></span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="hero-content">
+    <h1 class="hero-title">Where portfolios become partnerships</h1>
+    <p class="hero-subtitle">
+      Upload work, invite feedback, and keep the whole conversation in one studio-grade space—secure messaging,
+      DesignerBot when you want a guide, and a free trial that stays with you until you are genuinely satisfied with
+      what you see.
+    </p>
+    <div class="hero-cta">
+      <a href="{% url 'signup' %}" class="btn btn-accent" aria-label="Start free trial with designer collaboration">Start free trial</a>
+      <a href="{% url 'designers_list' %}" class="btn btn-primary"
+        >Explore Designers</a
+      >
+      <a href="{% url 'collections' %}" class="btn btn-secondary"
+        >View Collections</a
+      >
+    </div>
+    </div>
+  </section>
+
+  {% if lead_generation_tools %}
+  <section class="lead-generation" aria-label="Lead generation tools">
+    <div class="container lead-generation__inner">
+      <div class="lead-generation__header">
+        <p class="section-eyebrow">Lead generation tools</p>
+        <h2 class="section-title">Turn profile visitors into client projects</h2>
+        <p class="lead-generation__lede">
+          Lead Generation Tools help designers attract potential clients, receive project inquiries, collect contact
+          information, and convert visitors into paying customers.
+        </p>
+        <p class="lead-generation__summary">
+          Built to turn profile visitors into real business opportunities.
+        </p>
+      </div>
+      <div class="lead-generation__grid">
+        {% for tool in lead_generation_tools %}
+        <article class="lead-generation-card">
+          <div class="lead-generation-card__icon" aria-hidden="true">
+            <i class="{{ tool.icon }}"></i>
+          </div>
+          <div>
+            <h3>{{ tool.title }}</h3>
+            <p>{{ tool.description }}</p>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+      <div class="lead-generation__actions">
+        <a href="{% url 'signup' %}" class="btn btn-accent">Start capturing leads</a>
+        <a href="{% url 'designers_list' %}" class="btn btn-outline">See designer profiles</a>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="media-highlights" aria-label="Homepage highlights">
+    <div class="container">
+      <div class="media-highlights__header">
+        <p class="media-highlights__eyebrow">Inside the hub</p>
+        <h2 class="section-title">Latest studio moments</h2>
+        <p class="media-highlights__intro">
+          A living pulse of what makers are shipping right now—so you can feel the energy of the community before you
+          ever send a first message.
+        </p>
+      </div>
+      <div class="media-highlights__grid">
+        <figure class="media-highlight-card">
+          <video
+            class="media-highlight-video"
+            autoplay
+            muted
+            loop
+            playsinline
+            controls
+            preload="metadata"
+          >
+            <source src="{% static 'videos/nyk-prep.mp4' %}" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+          <div class="media-highlight-card__body">
+            <h3 class="media-highlight-card__title">NYK Prep Clip</h3>
+            <p class="media-highlight-card__caption">
+              Behind-the-scenes prep footage from the latest studio session.
+            </p>
+          </div>
+        </figure>
+        <figure class="media-highlight-card">
+          <video
+            class="media-highlight-video"
+            autoplay
+            muted
+            loop
+            playsinline
+            controls
+            preload="metadata"
+          >
+            <source src="{% static 'videos/volumeonefashion_desings.mp4' %}" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+          <div class="media-highlight-card__body">
+            <h3 class="media-highlight-card__title">Volume One Fashion Designs</h3>
+            <p class="media-highlight-card__caption">
+              Runway-ready clip from the latest Volume One fashion design showcase.
+            </p>
+          </div>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  {% if global_designer_features %}
+  <section class="global-features" aria-label="designrden platform features">
+    <div class="container">
+      <div class="global-features__header">
+        <p class="section-eyebrow">designrden Platform</p>
+        <h2 class="section-title">Build, launch, and grow with one toolkit</h2>
+        <p class="global-features__intro">
+          Showcase verified profiles, publish collections with tech packs, tap Designer AI, and visit the community forum without leaving your workspace.
+        </p>
+      </div>
+      <div class="global-feature-grid">
+        {% for feature in global_designer_features %}
+        <article class="global-feature-card">
+          <div class="global-feature-card__icon" aria-hidden="true">
+            <i class="{{ feature.icon }}"></i>
+          </div>
+          <div class="global-feature-card__body">
+            <h3>{{ feature.title }}</h3>
+            <p>{{ feature.description }}</p>
+            {% if feature.bullets %}
+            <ul>
+              {% for bullet in feature.bullets %}
+              <li>{{ bullet }}</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </div>
+          {% if feature.cta %}
+          <a
+            href="{{ feature.cta.href }}"
+            class="global-feature-card__cta"
+            {% if feature.cta.target %}target="{{ feature.cta.target }}"{% endif %}
+            {% if feature.cta.rel %}rel="{{ feature.cta.rel }}"{% endif %}
+            {% if feature.cta.data_qa %}data-testid="{{ feature.cta.data_qa }}"{% endif %}
+          >
+            {% if feature.cta.icon %}
+            <i class="{{ feature.cta.icon }}"></i>
+            {% endif %}
+            {{ feature.cta.label }}
+          </a>
+          {% endif %}
+        </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if global_fashion_cities %}
+  <!-- Global Cities Section -->
+  <section class="global-cities" aria-label="Global designer cities">
+  <div class="container">
+    <div class="global-cities-header">
+      <p class="section-eyebrow">Global network</p>
+      <h2 class="section-title">Designers across iconic cities</h2>
+      <p class="global-cities-description">
+        Our community stretches from historic ateliers in Paris to cinematic studios in Los Angeles,
+        showcasing fashion voices across every major creative capital.
+      </p>
+    </div>
+
+    <div class="cities-grid">
+      {% for city in global_fashion_cities %}
+      <article class="city-card">
+        <div class="city-card-header">
+          <div class="city-identity">
+            <span class="city-flag" aria-hidden="true">{{ city.flag }}</span>
+            <div>
+              <h3 class="city-name">{{ city.name }}</h3>
+              <p class="city-region">{{ city.region }}</p>
+            </div>
+          </div>
+          <div class="city-spotlight">
+            <span class="spotlight-label">Spotlight</span>
+            <span class="spotlight-event">{{ city.spotlight_event }}</span>
+          </div>
+        </div>
+        <p class="city-tagline">{{ city.tagline }}</p>
+        <div class="city-meta">
+          <div class="meta-block">
+            <span class="meta-label">Signature style</span>
+            <p class="meta-value">{{ city.signature_style }}</p>
+          </div>
+          <div class="meta-block">
+            <span class="meta-label">Focus areas</span>
+            <p class="meta-value">
+                {% with focus_list=city.specialties|slice:":2" %}
+                  {{ focus_list|join:", " }}
+                {% endwith %}
+                {% with extra_focus=city.specialties|slice:"2:" %}
+                  {% if extra_focus %}+{{ extra_focus|length }} more{% endif %}
+                {% endwith %}
+            </p>
+          </div>
+        </div>
+        <div class="city-chips" aria-label="Key specialties">
+          {% for specialty in city.specialties %}
+          <span class="chip">{{ specialty }}</span>
+          {% endfor %}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if regional_hiring_areas %}
+<section class="regional-hiring" aria-label="Hire designers by region">
+  <div class="container">
+    <div class="regional-hiring-header">
+      <p class="section-eyebrow">United States coverage</p>
+      <h2 class="section-title">Hire designers for every household</h2>
+      <p class="regional-hiring-description">
+        designrden.com keeps the West Coast as the default focus while making it simple for any family,
+        friend group, or individual to hire designers in other regions. Book one creative director for everyone
+        or match each person with their own specialist.
+      </p>
+    </div>
+    <div class="regional-hiring-grid">
+      {% for area in regional_hiring_areas %}
+      <article class="regional-card">
+        <div class="regional-card-headline">
+          <div>
+            <h3 class="regional-card-title">{{ area.name }}</h3>
+            <p class="regional-card-tagline">{{ area.tagline }}</p>
+          </div>
+          {% if area.default %}
+          <span class="regional-default-chip">Default focus</span>
+          {% endif %}
+        </div>
+        <p class="regional-card-description">{{ area.description }}</p>
+        <p class="regional-card-cta">{{ area.cta }}</p>
+        <div class="regional-card-states" aria-label="{{ area.name }} states">
+          {% for state in area.states %}
+          <span class="state-chip">{{ state }}</span>
+          {% endfor %}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- Featured Designers Slideshow -->
+<section class="featured-designers" aria-label="Featured Fashion Designers">
+  <div class="container">
+    <h2 class="section-title">Featured Designers</h2>
+    <div class="designers-slideshow">
+      <div class="slideshow-container">
+        {% for profile in designers %}
+        <div class="designer-slide {% if forloop.first %}active{% endif %}">
+          <div class="designer-card-large">
+            {% if profile.profile_image %}
+            <div class="designer-image">
+              <img
+                src="{{ profile.profile_image.url }}"
+                alt="{{ profile.user.get_full_name|default:profile.user.username }}"
+              />
+            </div>
+            {% endif %}
+            <div class="designer-info">
+              <h3 class="designer-name">
+                {{ profile.user.get_full_name|default:profile.user.username }}
+              </h3>
+              <p class="designer-specialty">
+                {{ profile.specialization|default:"Fashion Designer" }}
+              </p>
+              {% with location_label=profile.location_display|default:profile.location %}
+              <p class="designer-location">
+                📍 {{ location_label|default:"Location not set" }}
+              </p>
+              {% endwith %}
+              <p class="designer-experience">
+                🧵 {{ profile.years_of_experience|default:0 }} years experience
+              </p>
+              {% if profile.bio %}
+              <p class="designer-bio">{{ profile.bio|truncatewords:20 }}</p>
+              {% endif %}
+              <a href="{% url 'designers_list' %}" class="btn btn-outline"
+                >View Profile</a
+              >
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="designer-slide active">
+          <div class="empty-state">
+            <h3>No designers featured yet</h3>
+            <p>Check back soon for amazing designer profiles!</p>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      {% if designers %}
+      <div class="slideshow-nav">
+        <button class="nav-btn prev" onclick="changeSlide(-1)">❮</button>
+        <button class="nav-btn next" onclick="changeSlide(1)">❯</button>
+      </div>
+      <div class="slideshow-dots">
+        {% for profile in designers %}
+        <span
+          class="dot {% if forloop.first %}active{% endif %}"
+          onclick="currentSlide({{ forloop.counter }})"
+        ></span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- Events Slideshow -->
+<section class="featured-events" aria-label="Featured Events">
+  <div class="container">
+    <h2 class="section-title">Upcoming Events</h2>
+    <div class="events-slideshow">
+      <div class="events-grid">
+        <!-- Static event cards for now - will be dynamic when events are added -->
+        <div class="event-card">
+          <div class="event-image">
+            <img
+              src="{% static 'images/events/popup/1.png' %}"
+              alt="New York Fashion Week 2026"
+              onerror="this.onerror=null;this.src='{% static 'images/placehold.png' %}';"
+            />
+          </div>
+          <div class="event-info">
+            <h3>New York Fashion Week (NYFW)</h3>
+            <p class="event-date">Feb 11-16, 2026</p>
+            <p class="event-description">
+              Fall/Winter 2026 runway calendar with over 60 shows and
+              presentations across New York City.
+            </p>
+          </div>
+        </div>
+
+        <div class="event-card">
+          <div class="event-image">
+            <img
+              src="{% static 'images/events/popup/2.png' %}"
+              alt="Designer Showcase"
+              onerror="this.onerror=null;this.src='{% static 'images/placehold.png' %}';"
+            />
+          </div>
+          <div class="event-info">
+            <h3>Designer Showcase</h3>
+            <p class="event-date">April 5, 2025</p>
+            <p class="event-description">
+              Exclusive showcase featuring the latest collections from our
+              talented designers.
+            </p>
+          </div>
+        </div>
+
+        <div class="event-card">
+          <div class="event-image">
+            <img
+              src="{% static 'images/events/popup/3.png' %}"
+              alt="Sustainable Fashion Summit"
+              onerror="this.onerror=null;this.src='{% static 'images/placehold.png' %}';"
+            />
+          </div>
+          <div class="event-info">
+            <h3>Sustainable Fashion Summit</h3>
+            <p class="event-date">May 12, 2025</p>
+            <p class="event-description">
+              Exploring eco-friendly fashion and sustainable design practices.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="events-cta">
+        <a href="{% url 'event_list' %}" class="btn btn-primary"
+          >View All Events</a
+        >
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- About Section -->
+<section class="about-highlight">
+  <div class="container">
+    <div class="about-content">
+      <div class="about-text">
+        <h2 class="section-title">About designer</h2>
+        <p class="about-description">
+          designer is a premier platform connecting fashion enthusiasts with
+          exceptional designers from around the world. We showcase innovative
+          talent, cutting-edge collections, and the stories behind each creative
+          mind.
+        </p>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <span class="stat-number"
+              >{{ designers|length|default:"50+" }}</span
+            >
+            <span class="stat-label">Talented Designers</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">100+</span>
+            <span class="stat-label">Collections</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">25+</span>
+            <span class="stat-label">Countries</span>
+          </div>
+        </div>
+        <a href="{% url 'about' %}" class="btn btn-outline">Learn More</a>
+      </div>
+      <div class="about-image">
+        <img
+          src="{% static 'images/collection/covers/1.png' %}"
+          alt="Fashion Design Studio"
+          onerror="this.onerror=null;this.src='{% static 'images/placehold.png' %}';"
+        />
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- iPhone App Download CTA -->
+<section class="app-download" aria-label="Download the designrden iPhone app">
+  <div class="container app-download__inner">
+    <div class="app-download__text">
+      <p class="section-eyebrow">On the go</p>
+      <h2 class="app-download__title">Take {{ mobile_app_name }} with you</h2>
+      <p class="app-download__lede">
+        Review tech packs, approve updates, message designers, and track collections and events—on iPhone, iPad, and Android.
+      </p>
+      <div class="app-download__actions">
+        {% for dl in mobile_app_downloads %}
+        <a
+          class="btn btn-accent app-download__cta"
+          href="{{ dl.url }}"
+          {% if dl.external %}target="_blank" rel="noopener"{% endif %}
+        >
+          <i class="{{ dl.icon }}" aria-hidden="true"></i>
+          {{ dl.label }}
+        </a>
+        {% endfor %}
+        <a class="btn app-download__ghost" href="{{ mobile_app_details_url }}">Learn more</a>
+      </div>
+    </div>
+    <div class="app-download__visual" aria-hidden="true">
+      <i class="fa-solid fa-mobile-screen-button"></i>
+    </div>
+  </div>
+</section>
+
+  <style>
+    /* Hero Section */
+  .hero-section {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary) 100%);
+    color: var(--color-secondary);
+    padding: 100px 0;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-section::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    background-image:
+      radial-gradient(circle, rgba(var(--color-secondary-rgb), 0.12) 1px, transparent 1px),
+      radial-gradient(circle, rgba(var(--color-accent-rgb), 0.08) 1px, transparent 1px),
+      linear-gradient(120deg, rgba(var(--color-primary-rgb), 0.12), rgba(var(--color-primary-rgb), 0.02));
+    background-size: 4px 4px, 6px 6px, 100% 100%;
+    background-position: 0 0, 20px 20px, 0 0;
+    opacity: 0.22;
+  }
+
+  .hero-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 20px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .hero-title {
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 900;
+    margin-bottom: 20px;
+    background: linear-gradient(45deg, var(--color-secondary), var(--color-accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-subtitle {
+    font-size: 1.3rem;
+    margin-bottom: 30px;
+    opacity: 0.9;
+  }
+
+  .hero-cta {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+    }
+
+    /* Lead Generation Section */
+    .lead-generation {
+      padding: 85px 0;
+      background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-secondary) 100%);
+    }
+
+    .lead-generation__inner {
+      max-width: 1180px;
+    }
+
+    .lead-generation__header {
+      max-width: 820px;
+      margin: 0 auto 45px;
+      text-align: center;
+    }
+
+    .lead-generation__lede {
+      margin: 14px auto 0;
+      color: var(--color-text);
+      font-size: 1.1rem;
+      line-height: 1.7;
+    }
+
+    .lead-generation__summary {
+      display: inline-flex;
+      margin: 18px auto 0;
+      padding: 10px 18px;
+      border-radius: 999px;
+      background: rgba(var(--color-accent-rgb), 0.12);
+      color: var(--color-primary);
+      font-weight: 700;
+    }
+
+    .lead-generation__grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 22px;
+    }
+
+    .lead-generation-card {
+      display: flex;
+      gap: 18px;
+      padding: 26px;
+      border: 1px solid rgba(var(--color-primary-rgb), 0.08);
+      border-radius: 22px;
+      background: var(--color-secondary);
+      box-shadow: 0 18px 36px rgba(var(--color-primary-rgb), 0.08);
+    }
+
+    .lead-generation-card__icon {
+      flex: 0 0 auto;
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(var(--color-primary-rgb), 0.08);
+      color: var(--color-primary);
+      font-size: 1.2rem;
+    }
+
+    .lead-generation-card h3 {
+      margin: 0 0 8px;
+      color: var(--color-primary);
+      font-size: 1.15rem;
+    }
+
+    .lead-generation-card p {
+      margin: 0;
+      color: var(--color-text);
+      line-height: 1.55;
+    }
+
+    .lead-generation__actions {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 38px;
+    }
+
+    /* Global Features Section */
+    .global-features {
+      padding: 80px 0;
+      background: var(--color-secondary);
+    }
+
+    .global-features__header {
+      text-align: center;
+      max-width: 850px;
+      margin: 0 auto 50px;
+    }
+
+    .global-features__intro {
+      font-size: 1.1rem;
+      color: var(--color-text);
+      line-height: 1.7;
+      margin-top: 15px;
+    }
+
+    .global-feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 25px;
+    }
+
+    .global-feature-card {
+      background: var(--color-surface);
+      border-radius: 22px;
+      padding: 30px;
+      border: 1px solid rgba(var(--color-primary-rgb), 0.08);
+      box-shadow: 0 20px 40px rgba(var(--color-primary-rgb), 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      min-height: 100%;
+    }
+
+    .global-feature-card__icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: rgba(var(--color-primary-rgb), 0.08);
+      color: var(--color-primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+    }
+
+    .global-feature-card__body h3 {
+      margin: 0;
+      font-size: 1.35rem;
+      color: var(--color-primary);
+    }
+
+    .global-feature-card__body p {
+      margin: 0;
+      color: var(--color-text);
+      line-height: 1.6;
+    }
+
+    .global-feature-card__body ul {
+      margin: 12px 0 0;
+      padding-left: 20px;
+      color: var(--color-text);
+      line-height: 1.5;
+    }
+
+    .global-feature-card__body li + li {
+      margin-top: 6px;
+    }
+
+    .global-feature-card__cta {
+      margin-top: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      text-decoration: none;
+      color: var(--color-primary);
+      padding: 10px 0;
+      transition: color 0.3s ease;
+    }
+
+    .global-feature-card__cta:hover {
+      color: var(--color-accent);
+    }
+
+    @media (max-width: 768px) {
+      .lead-generation {
+        padding: 60px 0;
+      }
+
+      .lead-generation-card {
+        flex-direction: column;
+      }
+
+      .global-features {
+        padding: 60px 0;
+      }
+    }
+
+    /* Global Cities Section */
+    .global-cities {
+      padding: 80px 0;
+      background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-border) 100%);
+    }
+
+    .global-cities-header {
+      text-align: center;
+      max-width: 780px;
+      margin: 0 auto 50px;
+    }
+
+    .section-eyebrow {
+      display: inline-block;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      font-size: 0.85rem;
+      color: var(--color-accent);
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+
+    .global-cities-description {
+      font-size: 1.1rem;
+      color: var(--color-text);
+      line-height: 1.7;
+      margin-top: 15px;
+    }
+
+    .cities-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+    }
+
+    .city-card {
+      background: var(--color-secondary);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 20px 40px rgba(var(--color-primary-rgb), 0.1);
+      border: 1px solid rgba(var(--color-primary-rgb), 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .city-card-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .city-identity {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .city-flag {
+      font-size: 2rem;
+    }
+
+    .city-name {
+      margin: 0;
+      font-size: 1.3rem;
+      color: var(--color-primary);
+    }
+
+    .city-region {
+      margin: 4px 0 0;
+      font-size: 0.95rem;
+      color: var(--color-text-muted);
+    }
+
+    .city-spotlight {
+      text-align: right;
+    }
+
+    .spotlight-label {
+      display: block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--color-text-muted);
+    }
+
+    .spotlight-event {
+      display: block;
+      font-weight: 700;
+      color: var(--color-accent);
+      white-space: nowrap;
+    }
+
+    .city-tagline {
+      margin: 0;
+      font-size: 1rem;
+      color: var(--color-text);
+      line-height: 1.5;
+    }
+
+    .city-meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .meta-block {
+      background: var(--color-surface);
+      border-radius: 14px;
+      padding: 16px;
+      border: 1px solid rgba(var(--color-primary-rgb), 0.06);
+    }
+
+    .meta-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--color-text-muted);
+      font-weight: 600;
+    }
+
+    .meta-value {
+      margin: 6px 0 0;
+      font-weight: 600;
+      color: var(--color-primary);
+    }
+
+    .city-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .chip {
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(var(--color-primary-rgb), 0.08);
+      color: var(--color-primary);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    /* Regional hiring section */
+    .regional-hiring {
+      padding: 90px 0;
+      background: var(--color-surface);
+    }
+
+    .regional-hiring-header {
+      text-align: center;
+      max-width: 860px;
+      margin: 0 auto 60px;
+    }
+
+    .regional-hiring-description {
+      font-size: 1.1rem;
+      color: var(--color-text);
+      line-height: 1.7;
+      margin-top: 12px;
+    }
+
+    .regional-hiring-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 28px;
+    }
+
+    .regional-card {
+      background: var(--color-secondary);
+      border-radius: 24px;
+      padding: 32px;
+      border: 1px solid rgba(var(--color-primary-rgb), 0.08);
+      box-shadow: 0 24px 40px rgba(var(--color-primary-rgb), 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 100%;
+    }
+
+    .regional-card-headline {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .regional-card-title {
+      font-size: 1.5rem;
+      margin: 0;
+      color: var(--color-primary);
+    }
+
+    .regional-card-tagline {
+      margin: 4px 0 0;
+      font-size: 0.95rem;
+      color: var(--color-text-muted);
+    }
+
+    .regional-card-description,
+    .regional-card-cta {
+      margin: 0;
+      color: var(--color-text);
+      line-height: 1.6;
+    }
+
+    .regional-card-cta {
+      font-weight: 600;
+      color: var(--color-primary);
+    }
+
+    .regional-card-states {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .state-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(var(--color-primary-rgb), 0.12);
+      color: var(--color-primary);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .regional-default-chip {
+      background: var(--color-accent);
+      color: var(--color-primary);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      padding: 6px 12px;
+      border-radius: 999px;
+    }
+
+  /* Container */
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  /* Section Titles */
+  .section-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 50px;
+    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* Buttons */
+  .btn {
+    padding: 15px 30px;
+    border-radius: 25px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: none;
+    font-size: 1rem;
+  }
+
+  .btn-accent {
+    background: var(--color-accent);
+    color: var(--color-primary);
+  }
+
+  .btn-accent:hover {
+    filter: brightness(0.95);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(var(--color-accent-rgb), 0.35);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary));
+    color: var(--color-secondary);
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary));
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(var(--color-primary-rgb), 0.3);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--color-secondary);
+    border: 2px solid var(--color-secondary);
+  }
+
+  .btn-secondary:hover {
+    background: var(--color-secondary);
+    color: var(--color-primary);
+  }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--color-primary);
+    border: 2px solid var(--color-primary);
+  }
+
+  .btn-outline:hover {
+    background: var(--color-primary);
+    color: var(--color-secondary);
+  }
+
+  /* Featured Collections */
+  .featured-collections {
+    padding: 80px 0;
+    background: var(--color-secondary);
+  }
+
+  .collections-slideshow {
+    position: relative;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .collections-slideshow-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(var(--color-primary-rgb), 0.1);
+  }
+
+  .collection-slide {
+    display: none;
+    animation: slideIn 0.5s ease-in-out;
+  }
+
+  .collection-slide.active {
+    display: block;
+  }
+
+  .collection-slide-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+
+  .collection-slide-card {
+    display: flex;
+    background: var(--color-secondary);
+    min-height: 400px;
+    align-items: center;
+  }
+
+  .collection-slide-image {
+    flex: 1;
+    height: 400px;
+    overflow: hidden;
+  }
+
+  .collection-slide-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  .collection-slide-card:hover .collection-slide-image img {
+    transform: scale(1.05);
+  }
+
+  .collection-slide-info {
+    flex: 1;
+    padding: 40px;
+  }
+
+  .collection-slide-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: 10px;
+  }
+
+  .collection-slide-year {
+    font-size: 1.2rem;
+    color: var(--color-accent);
+    font-weight: 600;
+    margin-bottom: 15px;
+  }
+
+  .collection-slide-description {
+    margin: 20px 0;
+    line-height: 1.6;
+    color: var(--color-text);
+  }
+
+  /* Collections Slideshow Navigation */
+  .collections-slideshow-nav {
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20px;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+
+  .collections-nav-btn {
+    background: rgba(var(--color-primary-rgb), 0.8);
+    color: var(--color-secondary);
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    pointer-events: all;
+  }
+
+  .collections-nav-btn:hover {
+    background: rgba(var(--color-primary-rgb), 1);
+    transform: scale(1.1);
+  }
+
+  .collections-slideshow-dots {
+    text-align: center;
+    margin-top: 20px;
+  }
+
+  .collections-dot {
+    height: 15px;
+    width: 15px;
+    margin: 0 5px;
+    background-color: var(--color-border);
+    border-radius: 50%;
+    display: inline-block;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .collections-dot.active,
+  .collections-dot:hover {
+    background-color: var(--color-primary);
+  }
+
+  /* Featured Designers */
+  .featured-designers {
+    padding: 80px 0;
+    background: var(--color-surface);
+  }
+
+  .designers-slideshow {
+    position: relative;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .slideshow-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(var(--color-primary-rgb), 0.1);
+  }
+
+  .designer-slide {
+    display: none;
+    animation: slideIn 0.5s ease-in-out;
+  }
+
+  .designer-slide.active {
+    display: block;
+  }
+
+  .designer-card-large {
+    display: flex;
+    background: var(--color-secondary);
+    min-height: 400px;
+    align-items: center;
+  }
+
+  .designer-image {
+    flex: 1;
+    height: 400px;
+  }
+
+  .designer-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .designer-info {
+    flex: 1;
+    padding: 40px;
+  }
+
+  .designer-name {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: 10px;
+  }
+
+  .designer-specialty {
+    font-size: 1.2rem;
+    color: var(--color-accent);
+    font-weight: 600;
+    margin-bottom: 15px;
+  }
+
+  .designer-location,
+  .designer-experience {
+    margin-bottom: 10px;
+    color: var(--color-text-muted);
+  }
+
+  .designer-bio {
+    margin: 20px 0;
+    line-height: 1.6;
+    color: var(--color-text);
+  }
+
+  /* Slideshow Navigation */
+  .slideshow-nav {
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20px;
+    transform: translateY(-50%);
+  }
+
+  .nav-btn {
+    background: rgba(var(--color-primary-rgb), 0.8);
+    color: var(--color-secondary);
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .nav-btn:hover {
+    background: rgba(var(--color-primary-rgb), 1);
+    transform: scale(1.1);
+  }
+
+  .slideshow-dots {
+    text-align: center;
+    margin-top: 20px;
+  }
+
+  .dot {
+    height: 15px;
+    width: 15px;
+    margin: 0 5px;
+    background-color: var(--color-border);
+    border-radius: 50%;
+    display: inline-block;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .dot.active,
+  .dot:hover {
+    background-color: var(--color-primary);
+  }
+
+  /* Events Section */
+  .featured-events {
+    padding: 80px 0;
+    background: var(--color-secondary);
+  }
+
+  .events-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 30px;
+    margin-bottom: 40px;
+  }
+
+  .event-card {
+    background: var(--color-secondary);
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(var(--color-primary-rgb), 0.1);
+    transition: transform 0.3s ease;
+  }
+
+  .event-card:hover {
+    transform: translateY(-10px);
+  }
+
+  .event-image {
+    height: 200px;
+    overflow: hidden;
+  }
+
+  .event-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  .event-card:hover .event-image img {
+    transform: scale(1.1);
+  }
+
+  .event-info {
+    padding: 25px;
+  }
+
+  .event-info h3 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: 10px;
+  }
+
+  .event-date {
+    color: var(--color-accent);
+    font-weight: 600;
+    margin-bottom: 15px;
+  }
+
+  .event-description {
+    color: var(--color-text-muted);
+    line-height: 1.6;
+  }
+
+  .events-cta {
+    text-align: center;
+  }
+
+  /* About Section */
+  .about-highlight {
+    padding: 80px 0;
+    background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-border) 100%);
+  }
+
+  .about-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+  }
+
+  .about-text {
+    padding-right: 20px;
+  }
+
+  .about-description {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--color-text);
+    margin-bottom: 40px;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    margin-bottom: 40px;
+  }
+
+  .stat-item {
+    text-align: center;
+  }
+
+  .stat-number {
+    display: block;
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--color-primary);
+    line-height: 1;
+  }
+
+  .stat-label {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 8px;
+  }
+
+  .about-image {
+    position: relative;
+  }
+
+  .about-image img {
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(var(--color-primary-rgb), 0.15);
+  }
+
+  /* iPhone App Download CTA */
+  .app-download {
+    padding: 80px 0;
+    background: linear-gradient(135deg, var(--color-primary) 0%, rgba(var(--color-primary-rgb), 0.92) 100%);
+    color: var(--color-secondary);
+  }
+  .app-download__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 40px;
+  }
+  .app-download__text {
+    max-width: 620px;
+  }
+  .app-download .section-eyebrow {
+    color: var(--color-accent);
+  }
+  .app-download__title {
+    font-family: var(--font-head);
+    font-size: clamp(1.75rem, 4vw, 2.6rem);
+    font-weight: 700;
+    margin: 0 0 14px;
+  }
+  .app-download__lede {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    opacity: 0.92;
+    margin: 0 0 26px;
+  }
+  .app-download__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .app-download__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .app-download__ghost {
+    background: transparent;
+    color: var(--color-secondary);
+    border: 2px solid rgba(var(--color-secondary-rgb), 0.6);
+  }
+  .app-download__ghost:hover {
+    background: var(--color-secondary);
+    color: var(--color-primary);
+  }
+  .app-download__visual {
+    flex-shrink: 0;
+    width: 140px;
+    height: 140px;
+    border-radius: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(var(--color-secondary-rgb), 0.1);
+    border: 1px solid rgba(var(--color-secondary-rgb), 0.18);
+  }
+  .app-download__visual i {
+    font-size: 4rem;
+    color: var(--color-secondary);
+  }
+  @media (max-width: 768px) {
+    .app-download {
+      padding: 60px 0;
+    }
+    .app-download__inner {
+      flex-direction: column-reverse;
+      text-align: center;
+    }
+    .app-download__actions {
+      justify-content: center;
+    }
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--color-text-muted);
+  }
+
+  .empty-state h3 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+  }
+
+  /* Animations */
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+      .global-cities {
+        padding: 60px 0;
+      }
+
+      .city-card {
+        padding: 22px;
+      }
+
+      .city-meta {
+        grid-template-columns: 1fr;
+      }
+
+      .spotlight-event {
+        white-space: normal;
+      }
+
+    .hero-cta {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .collection-slide-card {
+      flex-direction: column;
+    }
+
+    .collection-slide-image {
+      height: 250px;
+    }
+
+    .designer-card-large {
+      flex-direction: column;
+    }
+
+    .designer-image {
+      height: 250px;
+    }
+
+    .about-content {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+
+    .stats-grid {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    .events-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .section-title {
+      font-size: 2rem;
+    }
+
+    .designer-info {
+      padding: 25px;
+    }
+
+    .designer-name {
+      font-size: 1.5rem;
+    }
+  }
+</style>
+
+<script>
+  let slideIndex = 1;
+  let collectionSlideIndex = 1;
+
+  function changeSlide(n) {
+    showSlide((slideIndex += n));
+  }
+
+  function currentSlide(n) {
+    showSlide((slideIndex = n));
+  }
+
+  function showSlide(n) {
+    const slides = document.getElementsByClassName("designer-slide");
+    const dots = document.getElementsByClassName("dot");
+
+    if (n > slides.length) {
+      slideIndex = 1;
+    }
+    if (n < 1) {
+      slideIndex = slides.length;
+    }
+
+    for (let i = 0; i < slides.length; i++) {
+      slides[i].classList.remove("active");
+    }
+
+    for (let i = 0; i < dots.length; i++) {
+      dots[i].classList.remove("active");
+    }
+
+    if (slides[slideIndex - 1]) {
+      slides[slideIndex - 1].classList.add("active");
+    }
+
+    if (dots[slideIndex - 1]) {
+      dots[slideIndex - 1].classList.add("active");
+    }
+  }
+
+  // Collections slideshow functions
+  function changeCollectionSlide(n) {
+    showCollectionSlide((collectionSlideIndex += n));
+  }
+
+  function currentCollectionSlide(n) {
+    showCollectionSlide((collectionSlideIndex = n));
+  }
+
+  function showCollectionSlide(n) {
+    const slides = document.getElementsByClassName("collection-slide");
+    const dots = document.getElementsByClassName("collections-dot");
+
+    if (slides.length === 0) return;
+
+    if (n > slides.length) {
+      collectionSlideIndex = 1;
+    }
+    if (n < 1) {
+      collectionSlideIndex = slides.length;
+    }
+
+    for (let i = 0; i < slides.length; i++) {
+      slides[i].classList.remove("active");
+    }
+
+    for (let i = 0; i < dots.length; i++) {
+      dots[i].classList.remove("active");
+    }
+
+    if (slides[collectionSlideIndex - 1]) {
+      slides[collectionSlideIndex - 1].classList.add("active");
+    }
+
+    if (dots[collectionSlideIndex - 1]) {
+      dots[collectionSlideIndex - 1].classList.add("active");
+    }
+  }
+
+  // Auto slide every 5 seconds
+  setInterval(() => {
+    changeSlide(1);
+  }, 5000);
+
+  // Auto slide collections every 5 seconds
+  setInterval(() => {
+    if (document.getElementsByClassName("collection-slide").length > 0) {
+      changeCollectionSlide(1);
+    }
+  }, 5000);
+</script>
+{% endblock %}

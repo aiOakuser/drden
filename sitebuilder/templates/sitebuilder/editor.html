@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editor — {{ page.title }} | {{ site.name }}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/grapesjs@0.22.13/dist/css/grapes.min.css">
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; }
+    .builder-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 24px; background: #1a1a2e; color: #fff;
+    }
+    .builder-header h1 { margin: 0; font-size: 1.1rem; }
+    .builder-header a { color: #c9a227; text-decoration: none; margin-right: 16px; }
+    .builder-header a:hover { text-decoration: underline; }
+    .builder-toolbar { display: flex; gap: 12px; align-items: center; }
+    .builder-toolbar button {
+      padding: 8px 16px; border-radius: 8px; border: none;
+      background: #c9a227; color: #1a1a2e; font-weight: 600; cursor: pointer;
+    }
+    .builder-toolbar button.secondary { background: transparent; border: 1px solid rgba(255,255,255,0.5); color: #fff; }
+    .builder-toolbar button:hover { opacity: 0.9; }
+    #gjs { height: calc(100vh - 52px); border: none; }
+  </style>
+</head>
+<body>
+  <header class="builder-header">
+    <div>
+      <a href="{% url 'builder_sites_list' %}">← Sites</a>
+      <span> | </span>
+      <span>{{ site.name }}</span>
+      <span> · </span>
+      <span>{{ page.title }}</span>
+    </div>
+    <div class="builder-toolbar">
+      <button type="button" id="seoBtn" class="secondary">SEO</button>
+      <button type="button" id="aiGenerate" class="secondary">✨ AI Generate</button>
+      <button type="button" id="saveBtn">Save</button>
+      <form method="post" action="{% url 'builder_publish' site.slug %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit">{{ site.published|yesno:"Unpublish,Publish" }}</button>
+      </form>
+      {% if site.published %}
+      <a href="{{ public_url }}" target="_blank">View live ↗</a>
+      {% endif %}
+    </div>
+  </header>
+  <script id="page-data" type="application/json">{{ page_data_json }}</script>
+  <div id="gjs"></div>
+
+  <div id="seoModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:#fff; padding:24px; border-radius:12px; max-width:500px; width:90%;">
+      <h3 style="margin:0 0 16px;">SEO</h3>
+      <label style="display:block; margin-bottom:8px; font-weight:600;">Meta title (max 70 chars)</label>
+      <input type="text" id="seoTitle" maxlength="70" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; margin-bottom:16px;" />
+      <label style="display:block; margin-bottom:8px; font-weight:600;">Meta description (max 160 chars)</label>
+      <textarea id="seoDesc" maxlength="160" rows="3" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; margin-bottom:16px;"></textarea>
+      <button id="seoClose" style="padding:10px 20px; background:#1a1a2e; color:#fff; border:none; border-radius:8px; cursor:pointer;">Close</button>
+    </div>
+  </div>
+
+  <div id="aiModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:#fff; padding:24px; border-radius:12px; max-width:500px; width:90%;">
+      <h3 style="margin:0 0 16px;">AI-assisted layout</h3>
+      <p style="color:#666; font-size:0.9rem; margin-bottom:16px;">Describe the layout you want, e.g. "Fashion portfolio hero with headline, subheadline and CTA button"</p>
+      <textarea id="aiPrompt" rows="4" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; font-family:inherit; margin-bottom:16px;" placeholder="e.g. Create a hero section for a womenswear design portfolio with a large headline and gradient background"></textarea>
+      <div style="display:flex; gap:12px;">
+        <button id="aiSubmit" style="padding:10px 20px; background:#c9a227; color:#1a1a2e; border:none; border-radius:8px; font-weight:600; cursor:pointer;">Generate</button>
+        <button id="aiCancel" class="secondary" style="background:#eee; color:#333;">Cancel</button>
+      </div>
+      <div id="aiStatus" style="margin-top:12px; font-size:0.9rem; color:#666;"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/grapesjs@0.22.13/dist/js/grapes.min.js"></script>
+  <script>
+    const SAVE_URL = "{% url 'builder_save_page' site.slug page.id %}";
+    const AI_URL = "{% url 'builder_ai_generate' site.slug %}";
+    const CSRFToken = "{{ csrf_token }}";
+
+    const editor = grapesjs.init({
+      container: "#gjs",
+      storageManager: false,
+      fromElement: false,
+      height: "100%",
+      width: "auto",
+      deviceManager: {
+        devices: [
+          { name: "Desktop", width: "" },
+          { name: "Tablet", width: "768px" },
+          { name: "Mobile", width: "320px" },
+        ],
+      },
+    });
+
+    const pageData = JSON.parse(document.getElementById("page-data").textContent);
+    document.getElementById("seoTitle").value = pageData.meta_title || "";
+    document.getElementById("seoDesc").value = pageData.meta_description || "";
+    document.getElementById("seoBtn").addEventListener("click", () => {
+      document.getElementById("seoModal").style.display = "flex";
+    });
+    document.getElementById("seoClose").addEventListener("click", () => {
+      pageData.meta_title = document.getElementById("seoTitle").value;
+      pageData.meta_description = document.getElementById("seoDesc").value;
+      document.getElementById("seoModal").style.display = "none";
+    });
+
+    const initialHtml = pageData.html || "";
+    const initialCss = pageData.css || "";
+    if (initialHtml) {
+      editor.setComponents(initialHtml);
+    }
+    if (initialCss) {
+      editor.setStyle(initialCss);
+    }
+
+    editor.on("load", function () {
+      const blocks = editor.BlockManager;
+      blocks.add("hero", {
+        label: "Hero",
+        content: '<section class="hero" style="padding:80px 24px;text-align:center;background:linear-gradient(135deg,#1a1a2e,#2d2d44);"><h1 style="color:#fff;font-size:2.5rem;">Your Headline</h1><p style="color:rgba(255,255,255,0.9);font-size:1.2rem;">Subheadline</p><a href="#" style="display:inline-block;padding:14px 28px;background:#c9a227;color:#1a1a2e;border-radius:8px;text-decoration:none;font-weight:700;margin-top:16px;">Get started</a></section>',
+      });
+      blocks.add("text", {
+        label: "Text",
+        content: '<section style="padding:48px 24px;"><div class="container" style="max-width:720px;margin:0 auto;"><h2>Section Title</h2><p>Your content here. Edit this block to add your text.</p></div></section>',
+      });
+      blocks.add("image", {
+        label: "Image",
+        content: '<section style="padding:24px;"><img src="https://via.placeholder.com/800x400" alt="Image" style="max-width:100%;height:auto;" /></section>',
+      });
+      blocks.add("gallery", {
+        label: "Gallery",
+        content: '<section style="padding:24px;"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;"><img src="https://via.placeholder.com/300" alt="1" style="width:100%;height:200px;object-fit:cover;" /><img src="https://via.placeholder.com/300" alt="2" style="width:100%;height:200px;object-fit:cover;" /><img src="https://via.placeholder.com/300" alt="3" style="width:100%;height:200px;object-fit:cover;" /></div></section>',
+      });
+      blocks.add("cta", {
+        label: "CTA",
+        content: '<section style="padding:64px 24px;text-align:center;background:#f5f5f5;"><h2>Ready to get started?</h2><p>Join hundreds of designers.</p><a href="#" style="display:inline-block;padding:14px 28px;background:#1a1a2e;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Sign up</a></section>',
+      });
+    });
+
+    document.getElementById("saveBtn").addEventListener("click", function () {
+      const html = editor.getHtml();
+      const css = editor.getCss();
+      fetch(SAVE_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": CSRFToken,
+        },
+        body: JSON.stringify({
+          html,
+          css,
+          blockData: (typeof editor.getProjectData === "function" ? editor.getProjectData() : {}),
+          meta: {
+            title: document.getElementById("seoTitle").value,
+            description: document.getElementById("seoDesc").value,
+          },
+        }),
+      })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.status === "ok") alert("Saved!");
+          else alert(d.error || "Save failed");
+        })
+        .catch(() => alert("Save failed"));
+    });
+
+    const aiModal = document.getElementById("aiModal");
+    const aiPrompt = document.getElementById("aiPrompt");
+    const aiStatus = document.getElementById("aiStatus");
+
+    document.getElementById("aiGenerate").addEventListener("click", () => {
+      aiModal.style.display = "flex";
+    });
+    document.getElementById("aiCancel").addEventListener("click", () => {
+      aiModal.style.display = "none";
+    });
+    document.getElementById("aiSubmit").addEventListener("click", async () => {
+      const prompt = aiPrompt.value.trim();
+      if (!prompt) return;
+      aiStatus.textContent = "Generating...";
+      try {
+        const res = await fetch(AI_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-CSRFToken": CSRFToken },
+          body: JSON.stringify({ prompt }),
+        });
+        const data = await res.json();
+        if (data.blocks && data.blocks.length) {
+          let html = "";
+          for (const b of data.blocks) {
+            if (b.type === "hero") {
+              html += `<section class="hero" style="padding:80px 24px;text-align:center;background:linear-gradient(135deg,#1a1a2e,#2d2d44);"><h1 style="color:#fff;font-size:2.5rem;">${(b.data && b.data.headline) || "Headline"}</h1><p style="color:rgba(255,255,255,0.9);font-size:1.2rem;">${(b.data && b.data.subheadline) || ""}</p></section>`;
+            } else if (b.type === "text") {
+              html += `<section style="padding:48px 24px;"><div style="max-width:720px;margin:0 auto;"><p>${(b.data && b.data.content) || ""}</p></div></section>`;
+            } else if (b.type === "cta") {
+              html += `<section style="padding:64px 24px;text-align:center;background:#f5f5f5;"><h2>${(b.data && b.data.headline) || "Get started"}</h2><a href="${(b.data && b.data.buttonUrl) || "#"}" style="display:inline-block;padding:14px 28px;background:#1a1a2e;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">${(b.data && b.data.buttonText) || "Click"}</a></section>`;
+            }
+          }
+          if (html) editor.setComponents(html);
+          aiModal.style.display = "none";
+          aiStatus.textContent = "";
+        } else {
+          aiStatus.textContent = data.error || "Generation failed";
+        }
+      } catch (e) {
+        aiStatus.textContent = "Error: " + e.message;
+      }
+    });
+  </script>
+</body>
+</html>

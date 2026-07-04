@@ -1,0 +1,84 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Global Designer Hub{% endblock %}</title>
+    <link rel="icon" href="{% static 'images/brand/drden-logo.png' %}" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Source+Sans+3:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+    {# Portfolio template stylesheet (default for all designers) #}
+    <link rel="stylesheet" href="{% static portfolio_template_css|default:'css/templates/classic.css' %}" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+      integrity="sha512-xh6giXq...snipped..."
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    {% block extra_css %}{% endblock %}
+  </head>
+  <body>
+    <!-- Free Trial Promo Bars (top of all pages) -->
+    {% if not user.is_authenticated %}
+    {% include "designer_portfolio/includes/promo_bars.html" %}
+    {% endif %}
+    <!-- Navbar -->
+    {% include "designer_portfolio/includes/navbar.html" %}
+
+    <!-- Search bar below navbar -->
+    {% include "designer_portfolio/includes/navbar_search.html" %}
+
+    <!-- Main content -->
+    <main class="main-content">{% block content %}{% endblock %}</main>
+
+    <!-- Footer -->
+    {% include "designer_portfolio/includes/footer.html" %}
+
+    <!-- Shared popup (for images/videos) -->
+    <div id="popup" class="popup">
+      <span class="close" onclick="closePopup()">&times;</span>
+      <span class="arrow left" onclick="changePopup(-1)">&#10094;</span>
+      <span class="arrow right" onclick="changePopup(1)">&#10095;</span>
+      <div class="popup-inner">
+        <img
+          id="popup-img"
+          class="popup-content"
+          src=""
+          alt=""
+          style="display: none"
+        />
+        <video
+          id="popup-video"
+          class="popup-content"
+          controls
+          style="display: none"
+        ></video>
+        <div id="popup-caption" class="caption"></div>
+      </div>
+    </div>
+
+    <!-- Auth modal (login/signup) for anonymous users - opened by Continue / Ask a question -->
+    {% if not user.is_authenticated %}
+    {% include "designer_portfolio/includes/auth_modal.html" %}
+    {% endif %}
+
+    <!-- Designer AI Chat Widget (Tailwind Version) -->
+    {% include "designer_portfolio/includes/designer_ai_chat_tailwind.html" %}
+
+    <link rel="stylesheet" href="{% static 'css/buttons.css' %}" />
+
+    <!-- Global scripts -->
+    <script src="{% static 'js/main.js' %}"></script>
+
+    <!-- Page-specific scripts -->
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

@@ -1,0 +1,80 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ event.title }} — Global Designer Hub</title>
+    {% if event.summary %}<meta name="description" content="{{ event.summary }}">{% endif %}
+    {% include "marketing/_growth_styles.html" %}
+</head>
+<body>
+<div class="drden-container">
+    <a class="drden-back" href="{% url 'marketing:events_list' %}">&larr; All events</a>
+
+    <div>
+        <span class="drden-pill {% if event.status == 'live' %}drden-pill-live{% elif event.status == 'ended' %}drden-pill-ended{% else %}drden-pill-scheduled{% endif %}">
+            {{ event.get_status_display }}
+        </span>
+        <span class="drden-pill drden-pill-accent" style="margin-left:6px;">{{ event.get_kind_display }}</span>
+    </div>
+    <h1 class="drden-h1" style="margin-top:14px;">{{ event.title }}</h1>
+    {% if event.summary %}<p class="drden-lead">{{ event.summary }}</p>{% endif %}
+
+    <div class="drden-meta-row" style="font-size:14px;">
+        <span>📅 {{ event.starts_at|date:"l M j, Y · g:i A" }}{% if event.timezone_label %} · {{ event.timezone_label }}{% endif %}</span>
+        {% if event.ends_at %}<span>⏱️ Ends {{ event.ends_at|date:"g:i A" }}</span>{% endif %}
+        {% if event.host_name %}<span>🎤 {{ event.host_name }}</span>{% endif %}
+        {% if event.is_virtual %}
+            <span>💻 {{ event.location|default:"Virtual" }}</span>
+        {% else %}
+            <span>📍 {{ event.location }}</span>
+        {% endif %}
+        {% if event.capacity %}<span>👥 Capacity {{ event.capacity }}</span>{% endif %}
+    </div>
+
+    {% if event.status == 'live' and event.join_url %}
+        <p style="margin:8px 0 24px;">
+            <a class="drden-cta drden-cta-accent" href="{{ event.join_url }}" target="_blank" rel="noopener">Join live →</a>
+        </p>
+    {% endif %}
+
+    {% if event.description_html %}
+        <article class="drden-card drden-prose" style="margin-bottom:32px;">
+            {{ event.description_html|safe }}
+        </article>
+    {% endif %}
+
+    {% if event.host_bio %}
+        <section class="drden-card" style="margin-bottom:32px;">
+            <h2 class="drden-h2" style="font-size:20px;">About the host</h2>
+            <div class="drden-prose">{{ event.host_bio|safe }}</div>
+        </section>
+    {% endif %}
+
+    <section class="drden-card" id="rsvp">
+        <h2 class="drden-h2" style="font-size:22px;">Save your spot</h2>
+        {% if event.status == 'ended' %}
+            <p class="drden-lead" style="margin:0;">This event has ended. Watch the
+                <a href="{% url 'marketing:newsletter' %}">newsletter</a> for the recap and the next session.</p>
+        {% elif event.status == 'cancelled' %}
+            <p class="drden-lead" style="margin:0;">This event was cancelled.</p>
+        {% elif event.is_full %}
+            <p class="drden-lead" style="margin:0;">We're at capacity. Subscribe to the
+                <a href="{% url 'marketing:newsletter' %}">newsletter</a> and you'll hear about the next session first.</p>
+        {% else %}
+            <form method="post" class="drden-form" novalidate>
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div class="drden-error">{{ form.non_field_errors|join:" " }}</div>
+                {% endif %}
+                {% for field in form %}
+                    {% include "marketing/_growth_form_field.html" with field=field %}
+                {% endfor %}
+                <button type="submit" class="drden-cta">Reserve my spot</button>
+            </form>
+        {% endif %}
+    </section>
+</div>
+</body>
+</html>

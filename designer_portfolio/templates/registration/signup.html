@@ -1,0 +1,740 @@
+{% extends "designer_portfolio/base.html" %} {% load static %}  
+{% block content %}
+<div class="signup-container">
+  <!-- Welcome Header -->
+  <div class="welcome-section">
+    <h1>Welcome to designer</h1>
+    <p>Join our community of innovative fashion designers</p>
+    <div class="benefits">
+      <p>✨ Showcase your designs to a global audience</p>
+      <p>🎨 Connect with fellow designers and fashion enthusiasts</p>
+      <p>📈 Build your professional portfolio</p>
+      <p>🌟 Get featured in exclusive collections</p>
+    </div>
+  </div>
+
+  <h2>Create Your Designer Account</h2>
+
+  <form method="post" class="signup-form">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+    <div class="error non-field-error">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <!-- Account Information -->
+    <div class="form-section">
+      <h3>Account Information</h3>
+
+      <div class="form-group">
+        <label for="id_username">Username</label>
+        {{ form.username }} {% if form.username.errors %}
+        <div class="error">{{ form.username.errors }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="id_email">Email Address</label>
+        {{ form.email }} {% if form.email.errors %}
+        <div class="error">{{ form.email.errors }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="id_website_url">Portfolio Website <span class="optional">(optional – shared privately)</span></label>
+        {{ form.website_url }}
+        <p class="field-note">Sharing a portfolio link helps our team review your work. We keep new designer websites restricted until you choose to make them public.</p>
+        {% if form.website_url.errors %}
+        <div class="error">{{ form.website_url.errors }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="id_password1">Password</label>
+        {{ form.password1 }} {% if form.password1.errors %}
+        <div class="error">{{ form.password1.errors }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="id_password2">Confirm Password</label>
+        {{ form.password2 }} {% if form.password2.errors %}
+        <div class="error">{{ form.password2.errors }}</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Free Trial Offer -->
+    <div class="form-section trial-offer">
+      <h3>🎉 Start Your Free Trial</h3>
+      <div class="trial-banner">
+        <h4>Unlimited FREE Access</h4>
+        <p>Explore every feature with no commitment and no deadlines.</p>
+        <ul>
+          <li>Full access to design tools</li>
+          <li>Portfolio creation and management</li>
+          <li>Community features</li>
+          <li>Premium templates</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Subscription Plans -->
+    <div class="form-section">
+      <h3>Choose Your Plan <span class="optional">(after free trial)</span></h3>
+
+      <div class="subscription-plans">
+        <!-- Free Trial Option -->
+        <div class="plan-option trial-option">
+          <input
+            type="radio"
+            name="subscription_plan"
+            value=""
+            id="free_trial"
+            checked
+          />
+          <label for="free_trial" class="plan-card trial-card">
+            <div class="plan-header">
+              <h4>Free Trial</h4>
+              <div class="price">FREE</div>
+              <div class="duration">Until you're satisfied</div>
+            </div>
+            <div class="plan-features">
+              <p>Perfect to get started!</p>
+            </div>
+          </label>
+        </div>
+
+        <!-- Weekly Plan -->
+        <div class="plan-option">
+          <input
+            type="radio"
+            name="subscription_plan"
+            value="weekly"
+            id="plan_weekly"
+          />
+          <label for="plan_weekly" class="plan-card">
+            <div class="plan-header">
+              <h4>Weekly</h4>
+              <div class="price">$2.99</div>
+              <div class="duration">per week</div>
+            </div>
+            <div class="plan-features">
+              <p>All premium features</p>
+            </div>
+          </label>
+        </div>
+
+        <!-- Bi-Weekly Plan -->
+        <div class="plan-option">
+          <input
+            type="radio"
+            name="subscription_plan"
+            value="biweekly"
+            id="plan_biweekly"
+          />
+          <label for="plan_biweekly" class="plan-card">
+            <div class="plan-header">
+              <h4>Bi-Weekly</h4>
+              <div class="price">$3.99</div>
+              <div class="duration">every 2 weeks</div>
+            </div>
+            <div class="plan-features">
+              <p>All premium features</p>
+            </div>
+          </label>
+        </div>
+
+        <!-- Monthly Plan -->
+        <div class="plan-option">
+          <input
+            type="radio"
+            name="subscription_plan"
+            value="monthly"
+            id="plan_monthly"
+          />
+          <label for="plan_monthly" class="plan-card">
+            <div class="plan-header">
+              <h4>Monthly</h4>
+              <div class="price">$4.99</div>
+              <div class="duration">per month</div>
+            </div>
+            <div class="plan-features">
+              <p>All premium features</p>
+            </div>
+          </label>
+        </div>
+
+        <!-- 6 Months Plan -->
+        <div class="plan-option">
+          <input
+            type="radio"
+            name="subscription_plan"
+            value="6months"
+            id="plan_6months"
+          />
+          <label for="plan_6months" class="plan-card">
+            <div class="plan-header">
+              <h4>6 Months</h4>
+              <div class="price">$23.99</div>
+              <div class="duration">for 6 months</div>
+              <div class="badge save">Save 20%!</div>
+            </div>
+            <div class="plan-features">
+              <p>All premium features</p>
+            </div>
+          </label>
+        </div>
+
+        <!-- Yearly Plan -->
+        <div class="plan-option">
+          <input
+            type="radio"
+            name="subscription_plan"
+            value="yearly"
+            id="plan_yearly"
+          />
+          <label for="plan_yearly" class="plan-card">
+            <div class="plan-header">
+              <h4>Yearly</h4>
+              <div class="price">$49.99</div>
+              <div class="duration">per year</div>
+              <div class="badge best-value">Best Value - Save 58%!</div>
+            </div>
+            <div class="plan-features">
+              <p>All premium features</p>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Methods -->
+    <div class="form-section payment-section" style="display: none">
+      <h3>Payment Method</h3>
+      <div class="payment-methods">
+        <div class="payment-option">
+          <input
+            type="radio"
+            name="payment_method"
+            value=""
+            id="payment_later"
+            checked
+          />
+          <label for="payment_later" class="payment-card">
+            <div class="payment-info">
+              <h4>Choose Later</h4>
+              <p>Select payment method after trial</p>
+            </div>
+          </label>
+        </div>
+
+        <div class="payment-option">
+          <input
+            type="radio"
+            name="payment_method"
+            value="stripe"
+            id="payment_stripe"
+          />
+          <label for="payment_stripe" class="payment-card">
+            <div class="payment-icon">💳</div>
+            <div class="payment-info">
+              <h4>Credit/Debit Card</h4>
+              <p>Visa, Mastercard, Amex</p>
+            </div>
+          </label>
+        </div>
+
+        <div class="payment-option">
+          <input
+            type="radio"
+            name="payment_method"
+            value="paypal"
+            id="payment_paypal"
+          />
+          <label for="payment_paypal" class="payment-card">
+            <div class="payment-icon">🅿️</div>
+            <div class="payment-info">
+              <h4>PayPal</h4>
+              <p>Pay with PayPal account</p>
+            </div>
+          </label>
+        </div>
+
+        <div class="payment-option">
+          <input
+            type="radio"
+            name="payment_method"
+            value="applepay"
+            id="payment_applepay"
+          />
+          <label for="payment_applepay" class="payment-card">
+            <div class="payment-icon">🍎</div>
+            <div class="payment-info">
+              <h4>Apple Pay</h4>
+              <p>Quick and secure</p>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Terms and Newsletter -->
+    <div class="form-section">
+      <div class="checkbox-group">
+        <div class="checkbox-item">
+          <input
+            type="checkbox"
+            name="agree_to_terms"
+            id="id_agree_to_terms"
+            required
+          />
+            <label for="id_agree_to_terms">
+              I agree to the <a href="{% url 'terms_of_service' %}" target="_blank">Terms of Service</a>,
+              <a href="{% url 'privacy_policy' %}" target="_blank">Privacy Policy</a>, and
+              <a href="{% url 'security_policy' %}" target="_blank">Security Policy</a>
+          </label>
+        </div>
+
+        <div class="checkbox-item">
+          <input
+            type="checkbox"
+            name="subscribe_newsletter"
+            id="id_subscribe_newsletter"
+            checked
+          />
+          <label for="id_subscribe_newsletter">
+            Subscribe to our newsletter for updates and special offers
+          </label>
+        </div>
+      </div>
+    </div>
+
+    {% include "registration/includes/recaptcha.html" %}
+
+    <button type="submit" class="submit-btn">🚀 Start My Free Trial</button>
+  </form>
+
+  <p class="login-link">
+    Already have an account?
+    <a href="{% url 'login' %}">Login here</a>
+  </p>
+
+  <p class="review-notice">
+    After signing up, you'll be redirected to your dashboard and can start
+    showcasing your designs immediately.
+  </p>
+</div>
+
+<style>
+  .signup-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 30px;
+    background: var(--color-secondary);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(var(--color-primary-rgb), 0.1);
+  }
+
+  .welcome-section {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 25px;
+    border-bottom: 2px solid var(--color-surface-muted);
+  }
+
+  .welcome-section h1 {
+    color: var(--color-primary);
+    margin-bottom: 10px;
+    font-size: 32px;
+    font-weight: 700;
+  }
+
+  .welcome-section p {
+    color: var(--color-text-muted);
+    font-size: 18px;
+    margin-bottom: 20px;
+  }
+
+  .benefits {
+    color: var(--color-text);
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+  .benefits p {
+    margin: 8px 0;
+  }
+
+  .signup-form h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: var(--color-primary);
+    font-size: 24px;
+  }
+
+  .form-section {
+    margin-bottom: 30px;
+    padding: 25px;
+    background: var(--color-surface);
+    border-radius: 10px;
+    border: 1px solid var(--color-border);
+  }
+
+  .form-section h3 {
+    color: var(--color-primary);
+    margin-bottom: 20px;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .optional {
+    font-size: 14px;
+    color: var(--color-text-muted);
+    font-weight: normal;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--color-text);
+    font-weight: 600;
+  }
+
+  .form-group input {
+    width: 100%;
+    padding: 14px;
+    border: 2px solid var(--color-border);
+    border-radius: 8px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+  }
+
+  .form-group input:focus {
+    border-color: var(--color-primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+  }
+
+  .trial-offer {
+    background: linear-gradient(135deg, var(--color-surface), var(--color-surface));
+    border: 2px solid var(--color-accent);
+  }
+
+  .trial-banner {
+    text-align: center;
+  }
+
+  .trial-banner h4 {
+    color: var(--color-accent);
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+
+  .trial-banner p {
+    color: var(--color-text);
+    margin-bottom: 15px;
+  }
+
+  .trial-banner ul {
+    list-style: none;
+    padding: 0;
+    color: var(--color-text);
+  }
+
+  .trial-banner li {
+    margin: 8px 0;
+    padding-left: 20px;
+    position: relative;
+  }
+
+  .trial-banner li:before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: var(--color-accent);
+    font-weight: bold;
+  }
+
+  .subscription-plans {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+  }
+
+  .plan-option {
+    position: relative;
+  }
+
+  .plan-option input[type="radio"] {
+    display: none;
+  }
+
+  .plan-card {
+    display: block;
+    padding: 20px;
+    border: 2px solid var(--color-border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--color-secondary);
+    text-align: center;
+  }
+
+  .plan-card:hover {
+    border-color: var(--color-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(var(--color-primary-rgb), 0.1);
+  }
+
+  .plan-option input:checked + .plan-card {
+    border-color: var(--color-primary);
+    background: rgba(var(--color-primary-rgb), 0.05);
+  }
+
+  .trial-card {
+    border-color: var(--color-accent) !important;
+    background: rgba(var(--color-accent-rgb), 0.05) !important;
+  }
+
+  .plan-header h4 {
+    margin: 0 0 10px 0;
+    color: var(--color-primary);
+    font-size: 18px;
+  }
+
+  .price {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--color-primary);
+    margin-bottom: 5px;
+  }
+
+  .duration {
+    color: var(--color-text-muted);
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    margin-top: 8px;
+  }
+
+  .best-value {
+    background: var(--color-accent);
+    color: var(--color-secondary);
+  }
+
+  .save {
+    background: var(--color-accent);
+    color: var(--color-secondary);
+  }
+
+  .payment-methods {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+  }
+
+  .payment-option input[type="radio"] {
+    display: none;
+  }
+
+  .payment-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    border: 2px solid var(--color-border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--color-secondary);
+  }
+
+  .payment-card:hover {
+    border-color: var(--color-primary);
+  }
+
+  .payment-option input:checked + .payment-card {
+    border-color: var(--color-primary);
+    background: rgba(var(--color-primary-rgb), 0.05);
+  }
+
+  .payment-icon {
+    font-size: 24px;
+  }
+
+  .payment-info h4 {
+    margin: 0;
+    color: var(--color-primary);
+  }
+
+  .payment-info p {
+    margin: 4px 0 0 0;
+    color: var(--color-text-muted);
+    font-size: 14px;
+  }
+
+  .checkbox-group {
+    margin-top: 20px;
+  }
+
+  .checkbox-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .checkbox-item input[type="checkbox"] {
+    margin-top: 4px;
+  }
+
+  .checkbox-item label {
+    color: var(--color-text);
+    line-height: 1.5;
+  }
+
+  .checkbox-item a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .checkbox-item a:hover {
+    text-decoration: underline;
+  }
+
+  .submit-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary));
+    color: var(--color-secondary);
+    padding: 18px;
+    border: none;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 20px;
+  }
+
+  .submit-btn:hover {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary));
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(var(--color-primary-rgb), 0.3);
+  }
+
+  .login-link {
+    margin-top: 20px;
+    text-align: center;
+    color: var(--color-text-muted);
+  }
+
+  .login-link a {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .login-link a:hover {
+    text-decoration: underline;
+  }
+
+  .review-notice {
+    margin-top: 15px;
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 14px;
+    font-style: italic;
+  }
+
+  .error {
+    color: var(--color-accent);
+    font-size: 14px;
+    margin-top: 5px;
+  }
+
+  .non-field-error {
+    margin-bottom: 15px;
+  }
+
+  .captcha-section {
+    display: flex;
+    justify-content: center;
+  }
+
+  .recaptcha-v3-note {
+    margin: 0;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    text-align: center;
+  }
+
+  @media (max-width: 768px) {
+    .signup-container {
+      margin: 20px;
+      padding: 25px;
+    }
+
+    .field-note {
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--color-text-muted);
+      line-height: 1.5;
+    }
+
+    .subscription-plans {
+      grid-template-columns: 1fr;
+    }
+
+    .payment-methods {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const planInputs = document.querySelectorAll(
+      'input[name="subscription_plan"]'
+    );
+    const paymentSection = document.querySelector(".payment-section");
+    const submitBtn = document.querySelector(".submit-btn");
+
+    function updatePaymentSection() {
+      const selectedPlan = document.querySelector(
+        'input[name="subscription_plan"]:checked'
+      );
+      if (selectedPlan && selectedPlan.value !== "") {
+        paymentSection.style.display = "block";
+        submitBtn.innerHTML = "🚀 Start Free Trial & Setup Payment";
+      } else {
+        paymentSection.style.display = "none";
+        submitBtn.innerHTML = "🚀 Start My Free Trial";
+      }
+    }
+
+    planInputs.forEach((input) => {
+      input.addEventListener("change", updatePaymentSection);
+    });
+
+    // Initial check
+    updatePaymentSection();
+  });
+</script>
+{% include "registration/includes/recaptcha_scripts.html" %}
+
+{% endblock %}

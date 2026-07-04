@@ -1,0 +1,67 @@
+{% extends "designer_portfolio/dashboard_base.html" %}
+
+{% block dashboard_title %}Volume-One{% endblock %}
+
+{% block dashboard_content %}
+<div class="embedded-page">
+  <div class="embedded-header">
+    <h2>Volume-One Desk Pack</h2>
+    <p>
+      Streaming the public <strong>RunVolumeOne</strong> drop board from
+      <a href="{{ volume_one_url }}" target="_blank" rel="noopener">designrden.com/volumeone</a>.
+    </p>
+  </div>
+  <iframe
+    src="{{ volume_one_url }}"
+    title="Volume-One"
+    loading="lazy"
+    referrerpolicy="no-referrer"
+    sandbox="allow-scripts allow-same-origin allow-forms"
+  ></iframe>
+  <p class="embedded-note">
+    Having trouble? <a href="{{ volume_one_url }}" target="_blank" rel="noopener">Open the showcase in a new tab</a>
+    to explore the @runvolumeone slideshow directly.
+  </p>
+</div>
+
+<style>
+  .embedded-page {
+    background: var(--color-secondary);
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  }
+
+  .embedded-header {
+    margin-bottom: 16px;
+  }
+
+  .embedded-header h2 {
+    margin: 0;
+    font-size: 24px;
+  }
+
+  .embedded-header p a {
+    color: var(--color-primary);
+    text-decoration: underline;
+  }
+
+  .embedded-page iframe {
+    width: 100%;
+    min-height: 80vh;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: #fff;
+  }
+
+  .embedded-note {
+    margin-top: 12px;
+    font-size: 14px;
+    color: var(--color-text-muted);
+  }
+
+  .embedded-note a {
+    color: var(--color-primary);
+  }
+</style>
+{% endblock %}

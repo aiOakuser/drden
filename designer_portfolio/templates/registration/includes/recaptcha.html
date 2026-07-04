@@ -1,0 +1,10 @@
+{% if recaptcha_enabled %}
+<div class="form-section captcha-section">
+  {% if recaptcha_version == 'v3' %}
+  <input type="hidden" name="g-recaptcha-response" id="recaptcha-response-token" value="" />
+  <p class="recaptcha-v3-note">Protected by reCAPTCHA.</p>
+  {% else %}
+  <div class="g-recaptcha" data-sitekey="{{ recaptcha_site_key }}"></div>
+  {% endif %}
+</div>
+{% endif %}

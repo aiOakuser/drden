@@ -1,0 +1,89 @@
+{% extends "designer_portfolio/dashboard_base.html" %}
+{% load static %}
+
+{% block title %}Billing History - {{ user.username }} | designer{% endblock %}
+
+{% block dashboard_title %}Billing History{% endblock %}
+
+{% block dashboard_content %}
+<div class="bh-page">
+  <section class="bh-card">
+    <p class="bh-eyebrow">Billing</p>
+    <h2 class="bh-title">Billing history</h2>
+
+    {% if billing_history_error %}
+    <div class="bh-alert" role="alert">
+      Stripe invoice history is temporarily unavailable. Showing the latest local billing record.
+    </div>
+    {% endif %}
+
+    {% if invoices %}
+    <table class="bh-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Plan</th>
+          <th>Amount</th>
+          <th>Method</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for invoice in invoices %}
+        <tr>
+          <td>{% if invoice.date %}{{ invoice.date|date:"M j, Y" }}{% else %}-{% endif %}</td>
+          <td>{{ invoice.plan }}</td>
+          <td>{{ invoice.amount }}</td>
+          <td>{{ invoice.method }}</td>
+          <td>
+            <span class="bh-status">{{ invoice.status }}</span>
+            {% if invoice.hosted_invoice_url %}
+            <a href="{{ invoice.hosted_invoice_url }}" class="bh-link" target="_blank" rel="noopener">View</a>
+            {% elif invoice.invoice_pdf %}
+            <a href="{{ invoice.invoice_pdf }}" class="bh-link" target="_blank" rel="noopener">PDF</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="bh-empty">
+      <div class="bh-empty__icon">🧾</div>
+      <h3>No billing history yet</h3>
+      <p>Once you start a paid plan, your invoices and payments will appear here.</p>
+      <a href="{% url 'subscription_dashboard' %}" class="btn btn-primary">View plans</a>
+    </div>
+    {% endif %}
+
+    <a href="{% url 'subscription_dashboard' %}" class="btn btn-ghost bh-back">← Back to subscription</a>
+  </section>
+</div>
+
+<style>
+  .bh-page { max-width: 860px; }
+  .bh-card {
+    background: var(--color-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    padding: 28px;
+    box-shadow: 0 2px 10px rgba(var(--color-primary-rgb), 0.1);
+  }
+  .bh-eyebrow { margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.08em; font-size: 12px; font-weight: 700; color: var(--color-text-muted); }
+  .bh-title { margin: 0 0 20px; color: var(--color-primary); }
+  .bh-table { width: 100%; border-collapse: collapse; }
+  .bh-table th, .bh-table td { text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--color-border); }
+  .bh-table th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-muted); }
+  .bh-table td { color: var(--color-primary); }
+  .bh-status { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; background: rgba(34, 197, 94, 0.15); color: #15803d; }
+  .bh-link { margin-left: 8px; color: var(--color-accent); font-size: 13px; font-weight: 600; }
+  .bh-alert { margin: 0 0 18px; padding: 12px 14px; border-radius: 10px; background: rgba(234, 179, 8, 0.14); color: #92400e; font-size: 14px; }
+  .bh-empty { text-align: center; padding: 50px 20px; }
+  .bh-empty__icon { font-size: 56px; opacity: 0.5; margin-bottom: 16px; }
+  .bh-empty h3 { margin: 0 0 8px; color: var(--color-primary); }
+  .bh-empty p { margin: 0 0 22px; color: var(--color-text-muted); }
+  .bh-back { margin-top: 22px; }
+  .btn-ghost { background: transparent; color: var(--color-primary); border: 1px solid var(--color-border); }
+  .btn-ghost:hover { background: rgba(var(--color-primary-rgb), 0.06); }
+</style>
+{% endblock %}

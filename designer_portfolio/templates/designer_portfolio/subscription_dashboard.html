@@ -1,0 +1,545 @@
+{% extends "designer_portfolio/dashboard_base.html" %}
+{% load static %}
+
+{% block title %}Membership Plans - {{ user.username }} | designer{% endblock %}
+
+{% block dashboard_title %}Membership Plans{% endblock %}
+
+{% block dashboard_content %}
+<div class="subscription-page">
+  {% if checkout_success and checkout_summary %}
+  <div class="sub-alert sub-alert--success" role="status">
+    Payment confirmed — <strong>{{ checkout_summary.plan_name }}</strong>
+    {% if checkout_summary.interval == 'yearly' %}
+      (1-year membership{% if checkout_summary.amount %}, {{ checkout_summary.amount }}/year{% endif %})
+    {% else %}
+      ({{ checkout_summary.interval }} billing{% if checkout_summary.amount %}, {{ checkout_summary.amount }}/month{% endif %})
+    {% endif %}
+    {% if checkout_summary.renewal_date %}
+      Renews on {{ checkout_summary.renewal_date }}.
+    {% endif %}
+  </div>
+  {% elif checkout_success %}
+  <div class="sub-alert sub-alert--success" role="status">
+    Payment received — your membership is active. See Step 4 below for what unlocked.
+  </div>
+  {% endif %}
+
+  <!-- Upgrade process -->
+  <section class="sub-card sub-process">
+    <p class="sub-eyebrow">Membership upgrade process</p>
+    <h2 class="sub-section-title">Get started in four steps</h2>
+    <ol class="sub-steps">
+      {% for step in upgrade_steps %}
+      <li class="sub-step {% if step.number == '1' or step.number == '2' %}sub-step--done{% elif step.number == '4' and show_activation %}sub-step--done{% endif %}">
+        <span class="sub-step__number">{{ step.number }}</span>
+        <div class="sub-step__body">
+          <h3>{{ step.title }}</h3>
+          <p>{{ step.description }}</p>
+          {% if step.number == '1' %}
+          <p class="sub-step__links">
+            New? <a href="{{ register_url }}">Register</a> ·
+            Returning? <a href="{{ login_url }}">Log in</a>
+          </p>
+          {% elif step.number == '3' %}
+          <ul class="sub-payment-methods">
+            {% for method in payment_methods_list %}
+            <li>{{ method }}</li>
+            {% endfor %}
+          </ul>
+          <p class="sub-step__note">
+            <a href="{% url 'payment_methods' %}">Manage payment methods</a>
+            — credit/debit cards, Stripe Link, Apple Pay, and Google Pay via secure checkout.
+          </p>
+          {% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+
+  <!-- Current plan summary -->
+  <section class="sub-card sub-current">
+    <div class="sub-current__info">
+      <p class="sub-eyebrow">Your plan</p>
+      {% if subscription %}
+        <h2 class="sub-current__title">{{ subscription.membership_display_name }}</h2>
+        <p class="sub-current__meta">
+          <span class="sub-status sub-status--{{ subscription.status }}">
+            {{ subscription.get_status_display }}
+          </span>
+          {% if subscription.status == 'free_trial' and subscription.days_left_in_trial %}
+          <span class="sub-current__trial">{{ subscription.days_left_in_trial }} day{{ subscription.days_left_in_trial|pluralize }} left in trial</span>
+          {% endif %}
+        </p>
+        <ul class="sub-detail-list">
+          {% if subscription.membership_tier and subscription.billing_interval %}
+          <li><span>Billing</span><strong>{{ subscription.billing_interval|title }}</strong></li>
+          {% elif subscription.plan %}
+          <li><span>Price</span><strong>${{ subscription.plan.price }}</strong></li>
+          {% endif %}
+          {% if subscription.next_billing_date %}
+          <li><span>Next billing</span><strong>{{ subscription.next_billing_date|date:"M j, Y" }}</strong></li>
+          {% endif %}
+          {% if subscription.subscription_end_date %}
+          <li><span>Renews / ends</span><strong>{{ subscription.subscription_end_date|date:"M j, Y" }}</strong></li>
+          {% endif %}
+          {% if subscription.payment_method %}
+          <li><span>Payment method</span><strong>{{ subscription.get_payment_method_display }}</strong></li>
+          {% endif %}
+          <li><span>Auto-renewal</span><strong>{% if subscription.auto_renewal %}On{% else %}Off{% endif %}</strong></li>
+        </ul>
+      {% else %}
+        <h2 class="sub-current__title">No active membership</h2>
+        <p class="sub-empty-text">Choose a plan below to unlock your professional designer website and premium hub features.</p>
+      {% endif %}
+    </div>
+    <div class="sub-current__actions">
+      <a href="{% url 'payment_methods' %}" class="btn btn-primary"><i class="icon">💳</i> Payment methods</a>
+      <a href="{% url 'billing_history' %}" class="btn btn-ghost"><i class="icon">🧾</i> Billing history</a>
+      {% if billing_portal_available %}
+      <button type="button" class="btn btn-ghost" id="stripe-portal-btn"><i class="icon">↗</i> Manage in Stripe</button>
+      {% endif %}
+      {% if subscription and subscription.status == 'active' %}
+      <button type="button" class="btn btn-danger" id="cancel-subscription-btn"><i class="icon">✖</i> Cancel plan</button>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- Step 2: Choose plan -->
+  <section class="sub-plans">
+    <div class="sub-plans__header">
+      <p class="sub-eyebrow">Step 2</p>
+      <h2 class="sub-section-title">Choose your membership plan</h2>
+      <p class="sub-plans__intro">Unlock premium features and launch your professional designer website.</p>
+    </div>
+
+    <div class="sub-billing-toggle" role="group" aria-label="Billing interval">
+      <button type="button" class="sub-billing-toggle__btn" data-interval="monthly">Monthly</button>
+      <button type="button" class="sub-billing-toggle__btn is-active" data-interval="yearly">Yearly <span class="sub-billing-toggle__save">Save ~17%</span></button>
+    </div>
+
+    <div class="sub-plan-grid">
+      {% for plan in membership_plans %}
+      <article class="sub-card sub-plan {% if plan.is_recommended %}sub-plan--recommended{% endif %} {% if subscription.membership_tier == plan.slug %}sub-plan--current{% endif %}">
+        {% if plan.is_recommended %}
+        <span class="sub-plan__badge">Recommended</span>
+        {% elif subscription.membership_tier == plan.slug %}
+        <span class="sub-plan__badge sub-plan__badge--current">Current</span>
+        {% endif %}
+        <h3 class="sub-plan__name">{{ plan.name }}</h3>
+        <p class="sub-plan__price" data-monthly="${{ plan.monthly_price|floatformat:0 }}" data-yearly="${{ plan.yearly_price|floatformat:0 }}">
+          <span class="sub-plan__amount">${{ plan.yearly_price|floatformat:0 }}</span>
+          <span class="sub-plan__period">/year</span>
+        </p>
+        <p class="sub-plan__alt-price" data-monthly-alt="or ${{ plan.yearly_price|floatformat:0 }}/year" data-yearly-alt="or ${{ plan.monthly_price|floatformat:0 }}/month">
+          or ${{ plan.monthly_price|floatformat:0 }}/month
+        </p>
+        <ul class="sub-plan__benefits">
+          {% for benefit in plan.benefits %}
+          <li>{{ benefit }}</li>
+          {% endfor %}
+        </ul>
+        {% if subscription.membership_tier == plan.slug and subscription.status == 'active' %}
+        <button type="button" class="btn btn-ghost" disabled>Your current plan</button>
+        {% else %}
+        <button
+          type="button"
+          class="btn btn-primary sub-plan__pay"
+          data-plan="{{ plan.slug }}"
+          {% if not stripe_enabled %}disabled title="Stripe is not configured yet"{% endif %}
+        >Select Plan</button>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+
+    {% if not stripe_enabled %}
+    <p class="sub-stripe-note">
+      Secure checkout (credit/debit card, Stripe Link, Apple Pay, Google Pay) will appear once Stripe keys are configured.
+      To upgrade now, email <a href="mailto:admin@designrden.com">admin@designrden.com</a>.
+    </p>
+    {% else %}
+    <p class="sub-stripe-note">
+      Step 3: Pay securely with credit card, debit card, Link by Stripe, Apple Pay, or Google Pay.
+      <a href="{% url 'payment_methods' %}">Manage saved payment methods</a>.
+    </p>
+    {% endif %}
+  </section>
+
+  <!-- Step 4: Activation -->
+  {% if show_activation %}
+  <section class="sub-card sub-activation">
+    <p class="sub-eyebrow">Step 4</p>
+    <h2 class="sub-section-title">Account activation</h2>
+    <p class="sub-plans__intro">Once payment is successfully processed:</p>
+    <ul class="sub-activation__list">
+      {% for item in activation_checklist %}
+      <li><span class="sub-activation__check" aria-hidden="true">✅</span> {{ item }}</li>
+      {% endfor %}
+    </ul>
+    <div class="sub-activation__cta">
+      <a href="{% url 'designer_dashboard' %}" class="btn btn-primary">Go to dashboard</a>
+      <a href="{% url 'designer_designs' %}" class="btn btn-ghost">Upload portfolio</a>
+    </div>
+  </section>
+  {% endif %}
+</div>
+
+<style>
+  .subscription-page { display: grid; gap: 30px; }
+
+  .sub-alert {
+    padding: 14px 18px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .sub-alert--success {
+    background: rgba(34, 197, 94, 0.12);
+    color: #15803d;
+    border: 1px solid rgba(34, 197, 94, 0.25);
+  }
+
+  .sub-card {
+    background: var(--color-secondary);
+    border-radius: 14px;
+    padding: 28px;
+    box-shadow: 0 2px 10px rgba(var(--color-primary-rgb), 0.1);
+    border: 1px solid var(--color-border);
+  }
+
+  .sub-eyebrow {
+    margin: 0 0 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-text-muted);
+  }
+
+  .sub-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 16px;
+  }
+  .sub-step {
+    display: flex;
+    gap: 16px;
+    padding: 18px;
+    border-radius: 12px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+  }
+  .sub-step--done {
+    border-color: rgba(34, 197, 94, 0.35);
+    background: rgba(34, 197, 94, 0.06);
+  }
+  .sub-step__number {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    background: var(--color-primary);
+    color: var(--color-secondary);
+    font-size: 14px;
+  }
+  .sub-step--done .sub-step__number {
+    background: #15803d;
+  }
+  .sub-step__body h3 {
+    margin: 0 0 6px;
+    font-size: 16px;
+    color: var(--color-primary);
+  }
+  .sub-step__body p {
+    margin: 0;
+    color: var(--color-text-muted);
+    line-height: 1.55;
+    font-size: 14px;
+  }
+  .sub-step__links { margin-top: 8px !important; }
+  .sub-step__links a { color: var(--color-accent); font-weight: 600; }
+  .sub-step__note { margin-top: 10px !important; font-size: 13px !important; }
+  .sub-payment-methods {
+    margin: 10px 0 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .sub-payment-methods li {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(var(--color-primary-rgb), 0.08);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-primary);
+  }
+
+  .sub-current {
+    display: flex;
+    justify-content: space-between;
+    gap: 30px;
+    flex-wrap: wrap;
+  }
+  .sub-current__info { flex: 1 1 320px; }
+  .sub-current__title { margin: 0 0 10px; font-size: 26px; color: var(--color-primary); }
+  .sub-current__meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0 0 18px; }
+  .sub-current__trial { color: var(--color-text-muted); font-size: 14px; }
+
+  .sub-status {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: rgba(var(--color-primary-rgb), 0.08);
+    color: var(--color-primary);
+  }
+  .sub-status--active { background: rgba(34, 197, 94, 0.15); color: #15803d; }
+  .sub-status--free_trial { background: rgba(var(--color-accent-rgb), 0.18); color: var(--color-accent); }
+  .sub-status--past_due, .sub-status--frozen { background: rgba(234, 179, 8, 0.18); color: #a16207; }
+  .sub-status--canceled, .sub-status--expired { background: rgba(239, 68, 68, 0.15); color: #b91c1c; }
+
+  .sub-detail-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; max-width: 420px; }
+  .sub-detail-list li { display: flex; justify-content: space-between; gap: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--color-border); }
+  .sub-detail-list li:last-child { border-bottom: none; padding-bottom: 0; }
+  .sub-detail-list span { color: var(--color-text-muted); }
+  .sub-detail-list strong { color: var(--color-primary); }
+
+  .sub-empty-text { color: var(--color-text-muted); max-width: 520px; line-height: 1.6; }
+
+  .sub-current__actions { display: flex; flex-direction: column; gap: 12px; align-items: stretch; min-width: 200px; }
+
+  .btn-ghost { background: transparent; color: var(--color-primary); border: 1px solid var(--color-border); }
+  .btn-ghost:hover { background: rgba(var(--color-primary-rgb), 0.06); }
+  .btn-danger { background: rgba(239, 68, 68, 0.1); color: #b91c1c; border: 1px solid rgba(239, 68, 68, 0.3); }
+  .btn-danger:hover { background: rgba(239, 68, 68, 0.18); }
+  .btn[disabled] { opacity: 0.6; cursor: not-allowed; }
+
+  .sub-section-title { margin: 0 0 10px; color: var(--color-primary); font-size: 22px; }
+  .sub-plans__intro { margin: 0 0 20px; color: var(--color-text-muted); line-height: 1.6; }
+
+  .sub-billing-toggle {
+    display: inline-flex;
+    gap: 6px;
+    padding: 4px;
+    border-radius: 999px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    margin-bottom: 22px;
+  }
+  .sub-billing-toggle__btn {
+    border: none;
+    background: transparent;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+  .sub-billing-toggle__btn.is-active {
+    background: var(--color-primary);
+    color: var(--color-secondary);
+  }
+  .sub-billing-toggle__save {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--color-accent);
+    margin-left: 4px;
+  }
+
+  .sub-plan-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+  .sub-plan { position: relative; display: flex; flex-direction: column; gap: 6px; min-height: 100%; }
+  .sub-plan--recommended {
+    border-color: var(--color-accent);
+    box-shadow: 0 8px 28px rgba(var(--color-accent-rgb), 0.2);
+  }
+  .sub-plan--current { border-color: var(--color-accent); }
+  .sub-plan__badge {
+    position: absolute; top: 16px; right: 16px;
+    background: var(--color-accent); color: var(--color-primary);
+    font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px; text-transform: uppercase;
+  }
+  .sub-plan__badge--current { background: var(--color-primary); color: var(--color-secondary); }
+  .sub-plan__name { margin: 28px 0 0; font-size: 18px; color: var(--color-primary); }
+  .sub-plan__price { margin: 0; font-size: 30px; font-weight: 800; color: var(--color-primary); }
+  .sub-plan__period { font-size: 14px; font-weight: 500; color: var(--color-text-muted); }
+  .sub-plan__alt-price { margin: 0 0 12px; font-size: 13px; color: var(--color-text-muted); }
+  .sub-plan__benefits {
+    list-style: none;
+    margin: 0 0 16px;
+    padding: 0;
+    flex: 1;
+    display: grid;
+    gap: 8px;
+  }
+  .sub-plan__benefits li {
+    position: relative;
+    padding-left: 18px;
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--color-text);
+  }
+  .sub-plan__benefits li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: var(--color-accent);
+    font-weight: 700;
+  }
+  .sub-plan .btn { margin-top: auto; justify-content: center; width: 100%; }
+
+  .sub-stripe-note {
+    margin: 20px 0 0;
+    color: var(--color-text-muted);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .sub-activation__list {
+    list-style: none;
+    margin: 0 0 22px;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+  }
+  .sub-activation__list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    color: var(--color-text);
+  }
+  .sub-activation__cta { display: flex; gap: 12px; flex-wrap: wrap; }
+
+  @media (max-width: 768px) {
+    .sub-current { flex-direction: column; }
+    .sub-current__actions { min-width: 0; }
+  }
+</style>
+
+<script>
+  (function () {
+    var selectedInterval = "yearly";
+    updatePriceLabels();
+
+    function getCsrfToken() {
+      var m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]*)/);
+      return m ? decodeURIComponent(m[1]) : "";
+    }
+
+    function updatePriceLabels() {
+      document.querySelectorAll(".sub-plan__price").forEach(function (priceEl) {
+        var amount = priceEl.getAttribute("data-" + selectedInterval) || "";
+        var amountEl = priceEl.querySelector(".sub-plan__amount");
+        var periodEl = priceEl.querySelector(".sub-plan__period");
+        if (amountEl) amountEl.textContent = amount;
+        if (periodEl) periodEl.textContent = selectedInterval === "yearly" ? "/year" : "/month";
+      });
+      document.querySelectorAll(".sub-plan__alt-price").forEach(function (altEl) {
+        var alt = altEl.getAttribute("data-" + selectedInterval + "-alt") || "";
+        altEl.textContent = alt;
+      });
+    }
+
+    document.querySelectorAll(".sub-billing-toggle__btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        selectedInterval = btn.getAttribute("data-interval") || "monthly";
+        document.querySelectorAll(".sub-billing-toggle__btn").forEach(function (b) {
+          b.classList.toggle("is-active", b === btn);
+        });
+        updatePriceLabels();
+      });
+    });
+
+    document.querySelectorAll(".sub-plan__pay").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var plan = btn.getAttribute("data-plan");
+        btn.disabled = true;
+        var original = btn.textContent;
+        btn.textContent = "Redirecting…";
+        fetch("{% url 'change_subscription_plan' %}", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrfToken() },
+          body: JSON.stringify({ plan: plan, interval: selectedInterval }),
+        })
+          .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+          .then(function (result) {
+            if (result.ok && result.data.checkout_url) {
+              window.location.href = result.data.checkout_url;
+              return;
+            }
+            if (result.ok && result.data.status === "updated") {
+              window.location.href = result.data.redirect_url || "{% url 'subscription_dashboard' %}";
+              return;
+            }
+            throw new Error((result.data && result.data.error) || "Checkout failed.");
+          })
+          .catch(function (err) {
+            btn.disabled = false;
+            btn.textContent = original;
+            alert(err.message || "Could not start checkout. Please try again.");
+          });
+      });
+    });
+
+    var cancelBtn = document.getElementById("cancel-subscription-btn");
+    if (cancelBtn) {
+      cancelBtn.addEventListener("click", function () {
+        if (!confirm("Cancel your subscription? You'll keep access until the end of your billing period.")) return;
+        cancelBtn.disabled = true;
+        fetch("{% url 'cancel_subscription' %}", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrfToken() },
+        })
+          .then(function (r) { return r.json(); })
+          .then(function () { window.location.reload(); })
+          .catch(function () {
+            cancelBtn.disabled = false;
+            alert("Could not cancel right now. Please try again.");
+          });
+      });
+    }
+
+    var portalBtn = document.getElementById("stripe-portal-btn");
+    if (portalBtn) {
+      portalBtn.addEventListener("click", function () {
+        portalBtn.disabled = true;
+        var original = portalBtn.textContent;
+        portalBtn.textContent = "Opening Stripe…";
+        fetch("{% url 'stripe_billing_portal' %}", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrfToken() },
+        })
+          .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+          .then(function (result) {
+            if (result.ok && result.data.portal_url) {
+              window.location.href = result.data.portal_url;
+              return;
+            }
+            throw new Error((result.data && result.data.error) || "Could not open Stripe billing.");
+          })
+          .catch(function (err) {
+            portalBtn.disabled = false;
+            portalBtn.textContent = original;
+            alert(err.message || "Could not open Stripe billing. Please try again.");
+          });
+      });
+    }
+  })();
+</script>
+{% endblock %}

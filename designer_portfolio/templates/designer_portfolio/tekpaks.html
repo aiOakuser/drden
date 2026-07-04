@@ -1,0 +1,87 @@
+{% extends "designer_portfolio/base.html" %} {% load static %} {% load
+text_filters %} {% block content %}
+<main class="section">
+  <h1 class="tekpaks-title">tekpaks</h1>
+  {% include "designer_portfolio/includes/media_grid.html" with media=media
+  title="tekpak" %}
+</main>
+
+<!-- Popup -->
+<div id="popup" class="popup">
+  <span class="close" onclick="closePopup()" aria-label="Close popup"
+    >&times;</span
+  >
+  <span class="arrow left" onclick="changePopup(-1)" aria-label="Previous media"
+    >&#10094;</span
+  >
+  <span class="arrow right" onclick="changePopup(1)" aria-label="Next media"
+    >&#10095;</span
+  >
+
+  <div class="popup-inner">
+    <img
+      id="popup-img"
+      class="popup-content"
+      src=""
+      alt=""
+      style="display: none"
+    />
+    <video
+      id="popup-video"
+      class="popup-content"
+      controls
+      style="display: none"
+    ></video>
+    <!-- ✅ Decoded label -->
+    <div id="popup-caption" class="popup-caption"></div>
+  </div>
+</div>
+
+<script>
+  let mediaItems = [
+    {% for file in media %}
+      {
+        url: "{{ file.url }}",
+        type: "{{ file.type }}",
+        caption: "{{ file.name|prettify }}"
+      }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ];
+  let currentIndex = 0;
+
+  function openPopup(index) {
+    currentIndex = index;
+    const popup = document.getElementById("popup");
+    const img = document.getElementById("popup-img");
+    const video = document.getElementById("popup-video");
+    const caption = document.getElementById("popup-caption");
+    const item = mediaItems[index];
+
+    if (item.type === "image") {
+      img.src = item.url;
+      img.style.display = "block";
+      video.style.display = "none";
+      video.pause();
+    } else {
+      video.src = item.url;
+      video.style.display = "block";
+      img.style.display = "none";
+    }
+
+    caption.textContent = item.caption || "";
+    popup.classList.add("show");
+  }
+
+  function closePopup() {
+    const popup = document.getElementById("popup");
+    const video = document.getElementById("popup-video");
+    video.pause();
+    popup.classList.remove("show");
+  }
+
+  function changePopup(direction) {
+    currentIndex = (currentIndex + direction + mediaItems.length) % mediaItems.length;
+    openPopup(currentIndex);
+  }
+</script>
+{% endblock %}

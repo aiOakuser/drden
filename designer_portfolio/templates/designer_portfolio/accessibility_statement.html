@@ -1,0 +1,101 @@
+{% extends "designer_portfolio/base.html" %}
+
+{% block content %}
+<section class="legal-page">
+  <div class="legal-container">
+    <p class="legal-eyebrow">Effective {{ effective_date }}</p>
+    <h1>F. {{ company_name }} &mdash; Accessibility Statement (ADA + WCAG 2.1)</h1>
+    <p>
+      {{ company_name }} is committed to delivering inclusive, accessible experiences across
+      {{ service_brands|join:", " }} and every other service we operate. Accessibility is a continuous
+      effort that guides our design, engineering, and content decisions.
+    </p>
+
+    <h2>Standards We Follow</h2>
+    <ul>
+      <li>WCAG 2.1 AA success criteria.</li>
+      <li>Americans with Disabilities Act (ADA) requirements.</li>
+      <li>Screen-reader compatibility, semantic markup, and ARIA best practices.</li>
+    </ul>
+
+    <h2>Recent &amp; Ongoing Improvements</h2>
+    <ul>
+      <li>Alt text coverage for designer imagery and marketing assets.</li>
+      <li>Keyboard navigability across forms, dialogs, and galleries.</li>
+      <li>Accessible forms with labels, inline guidance, and error summaries.</li>
+      <li>Color-contrast checks for buttons, typography, and key UI states.</li>
+    </ul>
+
+    <h2>Need Assistance?</h2>
+    <p>
+      If you encounter an accessibility issue or need support using any platform experience, please email
+      <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>. Include the page URL, assistive
+      technology (if applicable), and a brief description so we can address it quickly.
+    </p>
+
+    <p class="legal-updated">Last updated on {{ effective_date }}.</p>
+  </div>
+</section>
+
+<style>
+  .legal-page {
+    background: var(--color-surface, #f9f9fb);
+    padding: 60px 20px;
+  }
+
+  .legal-container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: var(--color-secondary, #fff);
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+    padding: 48px;
+    line-height: 1.7;
+    color: var(--color-primary, #0f172a);
+  }
+
+  .legal-eyebrow {
+    font-size: 0.9rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted, #6b7280);
+    margin-bottom: 0.5rem;
+  }
+
+  .legal-container h1 {
+    font-size: clamp(2rem, 3vw, 2.6rem);
+    margin-bottom: 1.5rem;
+  }
+
+  .legal-container h2 {
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 1.4rem;
+  }
+
+  .legal-container p {
+    margin-bottom: 1rem;
+  }
+
+  .legal-container ul {
+    padding-left: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .legal-container ul li {
+    margin-bottom: 0.5rem;
+  }
+
+  .legal-updated {
+    margin-top: 3rem;
+    font-style: italic;
+    color: var(--color-muted, #6b7280);
+  }
+
+  @media (max-width: 640px) {
+    .legal-container {
+      padding: 32px 24px;
+    }
+  }
+</style>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends "designer_portfolio/base.html" %}
+{% load static %}
+
+{% block title %}My AI Conversations - designrden{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto py-8 px-4">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">My AI Conversations</h1>
+    <p class="text-gray-600 dark:text-gray-400">View and manage your Designer AI chat history</p>
+  </div>
+
+  {% if sessions %}
+    <div class="space-y-4">
+      {% for session in sessions %}
+      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm p-6">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+              Session #{{ session.id }}
+            </h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              {{ session.created_at|date:"F d, Y g:i A" }}
+              {% if session.language != "en" %}
+                <span class="ml-2 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs">
+                  {{ session.language|upper }}
+                </span>
+              {% endif %}
+            </p>
+          </div>
+          <span class="text-sm text-gray-500 dark:text-gray-400">
+            {{ session.messages.count }} messages
+          </span>
+        </div>
+
+        <div class="space-y-3 max-h-96 overflow-y-auto">
+          {% for message in session.messages.all %}
+          <div class="flex {% if message.role == 'user' %}justify-end{% else %}justify-start{% endif %}">
+            <div class="max-w-3xl {% if message.role == 'user' %}bg-blue-500 text-white{% else %}bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white{% endif %} rounded-lg px-4 py-2">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs font-semibold opacity-75">
+                  {% if message.role == 'user' %}
+                    You
+                  {% else %}
+                    Designer AI
+                  {% endif %}
+                </span>
+                <span class="text-xs opacity-50">
+                  {{ message.created_at|date:"g:i A" }}
+                </span>
+              </div>
+              <div class="text-sm whitespace-pre-wrap">{{ message.content }}</div>
+              {% if message.metadata.rag_sources %}
+              <div class="mt-2 pt-2 border-t border-opacity-20">
+                <p class="text-xs opacity-75">Sources:</p>
+                <ul class="text-xs opacity-75 list-disc list-inside">
+                  {% for source in message.metadata.rag_sources %}
+                  <li>{{ source }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm p-12 text-center">
+      <div class="text-6xl mb-4">💬</div>
+      <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No conversations yet</h3>
+      <p class="text-gray-600 dark:text-gray-400 mb-6">
+        Start chatting with Designer AI to see your conversation history here.
+      </p>
+      <a href="{% url 'home' %}" class="inline-block bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
+        Start Chatting
+      </a>
+    </div>
+  {% endif %}
+</div>
+
+<style>
+  /* Dark mode support */
+  @media (prefers-color-scheme: dark) {
+    .dark\:bg-gray-800 {
+      background-color: var(--color-primary);
+    }
+    .dark\:text-white {
+      color: var(--color-secondary);
+    }
+    .dark\:text-gray-400 {
+      color: var(--color-text-soft);
+    }
+    .dark\:border-gray-700 {
+      border-color: var(--color-primary);
+    }
+    .dark\:bg-gray-700 {
+      background-color: var(--color-primary);
+    }
+  }
+</style>
+{% endblock %}
+

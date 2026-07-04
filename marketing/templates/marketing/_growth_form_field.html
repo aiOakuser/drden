@@ -1,0 +1,11 @@
+{% comment %}Single form field with label + widget + help + errors.{% endcomment %}
+<div class="drden-field">
+    <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+    {{ field }}
+    {% if field.help_text %}
+        <div class="drden-help">{{ field.help_text }}</div>
+    {% endif %}
+    {% if field.errors %}
+        <div class="drden-error">{{ field.errors|join:" " }}</div>
+    {% endif %}
+</div>

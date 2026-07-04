@@ -1,0 +1,40 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% if is_mentor %}Apply to mentor{% else %}Apply for a mentor{% endif %} — Global Designer Hub</title>
+    {% include "marketing/_growth_styles.html" %}
+</head>
+<body>
+<div class="drden-container">
+    <a class="drden-back" href="{% url 'marketing:mentorship_landing' %}">&larr; Back to mentorship</a>
+    <p class="drden-eyebrow">{% if is_mentor %}For pros{% else %}For students{% endif %}</p>
+    <h1 class="drden-h1">{% if is_mentor %}Mentor an emerging designer.{% else %}Get matched with a mentor.{% endif %}</h1>
+    <p class="drden-lead">
+        {% if is_mentor %}
+            Tell us about your practice and the kind of mentee you'd love to
+            work with. We'll review and reach out about scheduling.
+        {% else %}
+            Tell us where you are in your fashion journey and what kind of
+            guidance you're looking for. We'll match you with a working pro
+            whose practice fits.
+        {% endif %}
+    </p>
+
+    <form class="drden-form drden-card" method="post" novalidate style="max-width:640px;">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="drden-error">{{ form.non_field_errors|join:" " }}</div>
+        {% endif %}
+        {% for field in form %}
+            {% include "marketing/_growth_form_field.html" with field=field %}
+        {% endfor %}
+        <button type="submit" class="drden-cta">
+            {% if is_mentor %}Submit mentor application{% else %}Submit mentee application{% endif %}
+        </button>
+    </form>
+</div>
+</body>
+</html>

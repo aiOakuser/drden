@@ -1,0 +1,225 @@
+{% load static %}
+<div id="auth-modal" class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title" aria-hidden="true">
+  <div class="auth-modal__backdrop" data-close-auth-modal aria-label="Close"></div>
+  <div class="auth-modal__box">
+    <button type="button" class="auth-modal__close" data-close-auth-modal aria-label="Close">&times;</button>
+    <div class="auth-modal__grid">
+      <div class="auth-modal__promo">
+        <h2 class="auth-modal__promo-title">Success starts here</h2>
+        <ul class="auth-modal__promo-list">
+          <li>Over 700+ designers and creatives</li>
+          <li>Quality work done faster</li>
+          <li>Access to talent and businesses across the globe</li>
+        </ul>
+        <div class="auth-modal__promo-image">
+          <img src="{% static 'images/placehold.png' %}" alt="" style="max-width: 100%; height: auto; border-radius: 8px;" />
+        </div>
+      </div>
+      <div class="auth-modal__form-column">
+        <h3 id="auth-modal-title" class="auth-modal__form-title">Create a new account</h3>
+        <p class="auth-modal__signin-prompt">
+          Already have an account? <a href="{% url 'login' %}?next=" id="auth-modal-signin-link" class="auth-modal__link">Sign in</a>
+        </p>
+        {% if social_login_providers %}
+        <div class="auth-modal__social-buttons">
+          {% include "designer_portfolio/includes/social_login_buttons.html" %}
+        </div>
+        {% endif %}
+        <a href="{% url 'signup' %}?next=" id="auth-modal-email-link" class="auth-modal__btn auth-modal__btn--email">
+          <i class="fas fa-envelope" aria-hidden="true"></i> Continue with email
+        </a>
+        <p class="auth-modal__terms">
+          By joining, you agree to the <a href="{% url 'terms_of_service' %}" class="auth-modal__link">Terms of Service</a>, <a href="{% url 'privacy_policy' %}" class="auth-modal__link">Privacy Policy</a>, and <a href="{% url 'security_policy' %}" class="auth-modal__link">Security Policy</a>, and to occasionally receive emails from us.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+  .auth-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0.2s ease, opacity 0.2s ease;
+  }
+  .auth-modal.is-open {
+    visibility: visible;
+    opacity: 1;
+  }
+  .auth-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    cursor: pointer;
+  }
+  .auth-modal__box {
+    position: relative;
+    max-width: 900px;
+    width: 100%;
+    max-height: 90vh;
+    overflow: auto;
+    background: var(--color-secondary);
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .auth-modal__close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: transparent;
+    font-size: 28px;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    z-index: 1;
+    line-height: 1;
+  }
+  .auth-modal__close:hover { color: var(--color-primary); }
+  .auth-modal__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 400px;
+  }
+  .auth-modal__promo {
+    padding: 48px 40px;
+    background: var(--color-primary);
+    color: var(--color-secondary);
+    border-radius: 16px 0 0 16px;
+  }
+  .auth-modal__promo-title {
+    margin: 0 0 24px;
+    font-size: 28px;
+    font-weight: 700;
+  }
+  .auth-modal__promo-list {
+    margin: 0 0 24px;
+    padding-left: 20px;
+    list-style: none;
+  }
+  .auth-modal__promo-list li {
+    margin-bottom: 12px;
+    padding-left: 24px;
+    position: relative;
+  }
+  .auth-modal__promo-list li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    font-weight: bold;
+  }
+  .auth-modal__form-column {
+    padding: 48px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .auth-modal__form-title {
+    margin: 0;
+    font-size: 22px;
+    color: var(--color-primary);
+  }
+  .auth-modal__signin-prompt {
+    margin: 0;
+    font-size: 14px;
+    color: var(--color-text-muted);
+  }
+  .auth-modal__link { color: var(--color-primary); text-decoration: none; font-weight: 600; }
+  .auth-modal__link:hover { text-decoration: underline; }
+  .auth-modal__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 14px 20px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    border: 2px solid var(--color-border);
+    background: var(--color-secondary);
+    color: var(--color-primary);
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+  .auth-modal__btn--google { border-color: var(--color-primary); }
+  .auth-modal__btn--google:hover { background: rgba(var(--color-primary-rgb), 0.08); }
+  .auth-modal__btn-icon.google-g-icon { flex-shrink: 0; }
+  .auth-modal__social-buttons .social-login-buttons--stacked {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .auth-modal__social-buttons .social-login-btn--full {
+    width: 100%;
+    gap: 12px;
+    padding: 14px 20px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--color-border);
+    color: var(--color-primary);
+    background: var(--color-secondary);
+  }
+  .auth-modal__social-buttons .social-login-btn.facebook { border-color: #1877f2; color: #1877f2; }
+  .auth-modal__social-buttons .social-login-btn.linkedin { border-color: #0a66c2; color: #0a66c2; }
+  .auth-modal__social-buttons .social-login-btn.instagram { border-color: #e1306c; color: #e1306c; }
+  .auth-modal__btn--email:hover { background: var(--color-surface); }
+  .auth-modal__terms {
+    margin: 16px 0 0;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+  }
+  @media (max-width: 700px) {
+    .auth-modal__grid { grid-template-columns: 1fr; }
+    .auth-modal__promo { border-radius: 16px 16px 0 0; }
+  }
+</style>
+<script>
+(function() {
+  var modal = document.getElementById('auth-modal');
+  function openModal(triggerEl) {
+    var nextVal = (triggerEl && triggerEl.getAttribute('data-next')) || window.location.pathname || '/';
+    var enc = encodeURIComponent(nextVal);
+    var signin = document.getElementById('auth-modal-signin-link');
+    var email = document.getElementById('auth-modal-email-link');
+    var socialLinks = modal ? modal.querySelectorAll('.auth-modal__social-buttons a[href*="/auth/login/"]') : [];
+    if (signin) signin.href = signin.href.split('?')[0] + '?next=' + enc;
+    socialLinks.forEach(function(link) {
+      link.href = link.href.split('?')[0] + '?next=' + enc;
+    });
+    if (email) email.href = email.href.split('?')[0] + '?next=' + enc;
+    if (modal) modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal() {
+    if (modal) modal.classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest('.js-open-auth-modal');
+    if (btn) {
+      e.preventDefault();
+      openModal(btn);
+    }
+    if (e.target.matches('[data-close-auth-modal]')) {
+      closeModal();
+    }
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && modal && modal.classList.contains('is-open')) closeModal();
+  });
+})();
+</script>

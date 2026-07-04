@@ -1,0 +1,797 @@
+{% extends "designer_portfolio/dashboard_base.html" %}
+
+{% block dashboard_title %}Contact Information{% endblock %}
+
+{% block dashboard_content %}
+<div class="contact-page">
+  <!-- Success/Error Messages -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="contact-container">
+    <!-- Contact Overview -->
+    <div class="contact-overview">
+      <div class="contact-header">
+        <div class="contact-icon">📧</div>
+        <div class="contact-info">
+          <h2>Contact & Collaboration</h2>
+          <p>Manage how potential clients and collaborators can reach you</p>
+        </div>
+      </div>
+
+      <div class="contact-stats">
+        <div class="stat-card">
+          <div class="stat-icon">📱</div>
+          <div class="stat-content">
+            <h3>{{ designer_profile.preferred_contact_method|default:"Not Set"|capfirst }}</h3>
+            <p>Preferred Method</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">🤝</div>
+          <div class="stat-content">
+            <h3>{% if designer_profile.available_for_collaboration %}Open{% else %}Closed{% endif %}</h3>
+            <p>Collaboration Status</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">🌐</div>
+          <div class="stat-content">
+            <h3>{{ social_links_count }}</h3>
+            <p>Social Platforms</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Form -->
+    <form method="post" class="contact-form">
+      {% csrf_token %}
+      
+      <!-- Primary Contact Information -->
+      <div class="form-section">
+        <h3 class="section-title">
+          <span class="section-icon">📞</span>
+          Primary Contact Information
+        </h3>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="id_email">Email Address</label>
+            <input type="email" id="id_email" name="email" 
+                   value="{{ user.email }}" class="form-control" required>
+            <small class="form-text">Main email for professional inquiries</small>
+          </div>
+          <div class="form-group">
+            <label for="id_phone">Phone Number</label>
+            <input type="tel" id="id_phone" name="phone" 
+                   value="{{ designer_profile.phone|default:'' }}" class="form-control">
+            <small class="form-text">Optional, for urgent communications</small>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="id_preferred_contact_method">Preferred Contact Method</label>
+          <select id="id_preferred_contact_method" name="preferred_contact_method" class="form-control">
+            <option value="">Select your preferred method</option>
+            <option value="email" {% if designer_profile.preferred_contact_method == 'email' %}selected{% endif %}>Email</option>
+            <option value="phone" {% if designer_profile.preferred_contact_method == 'phone' %}selected{% endif %}>Phone</option>
+            <option value="linkedin" {% if designer_profile.preferred_contact_method == 'linkedin' %}selected{% endif %}>LinkedIn</option>
+            <option value="instagram" {% if designer_profile.preferred_contact_method == 'instagram' %}selected{% endif %}>Instagram DM</option>
+            <option value="portfolio" {% if designer_profile.preferred_contact_method == 'portfolio' %}selected{% endif %}>Portfolio Contact Form</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="id_location">Public Location Label</label>
+          <input type="text" id="id_location" name="location" 
+                 value="{{ designer_profile.location|default:'' }}" 
+                 placeholder="Los Angeles, CA, USA" class="form-control">
+          <small class="form-text">Displayed when structured area/country/city fields are not set.</small>
+        </div>
+      </div>
+
+      <!-- Professional Platforms -->
+      <div class="form-section">
+        <h3 class="section-title">
+          <span class="section-icon">🌐</span>
+          Professional Platforms
+        </h3>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="id_website">Personal Website</label>
+            <div class="input-with-icon">
+              <span class="input-icon">🌐</span>
+              <input type="url" id="id_website" name="website" 
+                     value="{{ designer_profile.website|default:'' }}" 
+                     placeholder="https://yourportfolio.com" class="form-control">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="id_portfolio_url">Portfolio URL</label>
+            <div class="input-with-icon">
+              <span class="input-icon">🎨</span>
+              <input type="url" id="id_portfolio_url" name="portfolio_url" 
+                     value="{{ designer_profile.portfolio_url|default:'' }}" 
+                     placeholder="https://behance.net/yourprofile" class="form-control">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="id_linkedin">LinkedIn Profile</label>
+            <div class="input-with-icon">
+              <span class="input-icon">💼</span>
+              <input type="url" id="id_linkedin" name="linkedin" 
+                     value="{{ designer_profile.linkedin|default:'' }}" 
+                     placeholder="https://linkedin.com/in/yourprofile" class="form-control">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="id_instagram">Instagram</label>
+            <div class="input-with-icon">
+              <span class="input-icon">📸</span>
+              <input type="text" id="id_instagram" name="instagram" 
+                     value="{{ designer_profile.instagram|default:'' }}" 
+                     placeholder="@yourusername" class="form-control">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Collaboration Preferences -->
+      <div class="form-section">
+        <h3 class="section-title">
+          <span class="section-icon">🤝</span>
+          Collaboration Preferences
+        </h3>
+        
+        <div class="collaboration-status">
+          <div class="form-group">
+            <label class="toggle-label">
+              <input type="checkbox" name="available_for_collaboration" value="true" 
+                     {% if designer_profile.available_for_collaboration %}checked{% endif %} 
+                     class="toggle-input">
+              <span class="toggle-slider"></span>
+              <span class="toggle-text">Available for Collaborations</span>
+            </label>
+            <small class="form-text">When enabled, your profile will show that you're open to new opportunities</small>
+          </div>
+        </div>
+
+        <div class="collaboration-types">
+          <label class="collaboration-label">Types of Opportunities I'm Interested In:</label>
+          <div class="checkbox-grid">
+            <label class="checkbox-card">
+              <input type="checkbox" name="freelance_work" value="true" 
+                     {% if designer_profile.freelance_work %}checked{% endif %}>
+              <div class="card-content">
+                <div class="card-icon">💼</div>
+                <div class="card-text">
+                  <strong>Freelance Projects</strong>
+                  <small>Short-term design work</small>
+                </div>
+              </div>
+            </label>
+
+            <label class="checkbox-card">
+              <input type="checkbox" name="full_time_opportunities" value="true" 
+                     {% if designer_profile.full_time_opportunities %}checked{% endif %}>
+              <div class="card-content">
+                <div class="card-icon">🏢</div>
+                <div class="card-text">
+                  <strong>Full-time Positions</strong>
+                  <small>Permanent employment</small>
+                </div>
+              </div>
+            </label>
+
+            <label class="checkbox-card">
+              <input type="checkbox" name="consulting" value="true" 
+                     {% if designer_profile.consulting %}checked{% endif %}>
+              <div class="card-content">
+                <div class="card-icon">🎯</div>
+                <div class="card-text">
+                  <strong>Consulting</strong>
+                  <small>Advisory & strategy work</small>
+                </div>
+              </div>
+            </label>
+
+            <label class="checkbox-card">
+              <input type="checkbox" name="partnerships" value="true" 
+                     {% if designer_profile.partnerships %}checked{% endif %}>
+              <div class="card-content">
+                <div class="card-icon">🤝</div>
+                <div class="card-text">
+                  <strong>Partnerships</strong>
+                  <small>Long-term collaborations</small>
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="id_collaboration_note">Additional Information</label>
+          <textarea id="id_collaboration_note" name="collaboration_note" rows="3" class="form-control" 
+                    placeholder="Any specific requirements, rates, or additional information for potential collaborators...">{{ designer_profile.collaboration_note|default:'' }}</textarea>
+        </div>
+      </div>
+
+      <!-- Response Time & Availability -->
+      <div class="form-section">
+        <h3 class="section-title">
+          <span class="section-icon">⏰</span>
+          Response Time & Availability
+        </h3>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="id_response_time">Typical Response Time</label>
+            <select id="id_response_time" name="response_time" class="form-control">
+              <option value="">Select response time</option>
+              <option value="within_hour" {% if designer_profile.response_time == 'within_hour' %}selected{% endif %}>Within 1 hour</option>
+              <option value="within_day" {% if designer_profile.response_time == 'within_day' %}selected{% endif %}>Within 24 hours</option>
+              <option value="within_2days" {% if designer_profile.response_time == 'within_2days' %}selected{% endif %}>Within 2-3 days</option>
+              <option value="within_week" {% if designer_profile.response_time == 'within_week' %}selected{% endif %}>Within a week</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="id_working_hours">Working Hours</label>
+            <input type="text" id="id_working_hours" name="working_hours" 
+                   value="{{ designer_profile.working_hours|default:'' }}" 
+                   placeholder="9 AM - 6 PM EST, Monday - Friday" class="form-control">
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+          💾 Save Contact Information
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="resetForm()">
+          🔄 Reset Changes
+        </button>
+      </div>
+    </form>
+
+    <!-- Contact Preview -->
+    <div class="contact-preview">
+      <h3>Public Contact Card Preview</h3>
+      <div class="preview-card">
+        <div class="preview-header">
+          <div class="preview-avatar">
+            {% if designer_profile.profile_image %}
+              <img src="{{ designer_profile.profile_image.url }}" alt="Profile">
+            {% else %}
+              <div class="avatar-placeholder">{{ user.username|first|upper }}</div>
+            {% endif %}
+          </div>
+          <div class="preview-info">
+            <h4>{{ user.get_full_name|default:user.username }}</h4>
+            <p>{{ designer_profile.professional_title|default:"Fashion Designer" }}</p>
+            {% with location_label=designer_profile.location_display|default:designer_profile.location %}
+            {% if location_label %}
+              <p class="preview-location">📍 {{ location_label }}</p>
+            {% endif %}
+            {% endwith %}
+          </div>
+        </div>
+        
+        <div class="preview-contact">
+          {% if designer_profile.available_for_collaboration %}
+            <div class="collaboration-badge">🟢 Available for Collaboration</div>
+          {% else %}
+            <div class="collaboration-badge unavailable">🔴 Not Available</div>
+          {% endif %}
+          
+          {% if designer_profile.preferred_contact_method %}
+            <p><strong>Preferred Contact:</strong> {{ designer_profile.get_preferred_contact_method_display }}</p>
+          {% endif %}
+          
+          {% if designer_profile.response_time %}
+            <p><strong>Response Time:</strong> {{ designer_profile.get_response_time_display }}</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.contact-page {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.alert {
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+}
+
+.alert-success {
+  color: var(--color-accent);
+  background-color: var(--color-accent-soft);
+  border-color: var(--color-accent-soft);
+}
+
+.alert-error {
+  color: var(--color-primary);
+  background-color: var(--color-accent-soft);
+  border-color: var(--color-accent-soft);
+}
+
+.contact-overview {
+  background: var(--color-secondary);
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(var(--color-primary-rgb), 0.1);
+  margin-bottom: 30px;
+}
+
+.contact-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.contact-icon {
+  font-size: 48px;
+  width: 80px;
+  height: 80px;
+  background: rgba(var(--color-primary-rgb), 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.contact-info h2 {
+  margin: 0 0 8px 0;
+  color: var(--color-primary);
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.contact-info p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 16px;
+}
+
+.contact-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 20px;
+  background: var(--color-surface);
+  border-radius: 10px;
+}
+
+.stat-icon {
+  font-size: 24px;
+  width: 50px;
+  height: 50px;
+  background: rgba(var(--color-primary-rgb), 0.1);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-content h3 {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.stat-content p {
+  margin: 4px 0 0 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.contact-form {
+  background: var(--color-secondary);
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(var(--color-primary-rgb), 0.1);
+  margin-bottom: 30px;
+}
+
+.form-section {
+  margin-bottom: 40px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.form-section:last-of-type {
+  border-bottom: none;
+  margin-bottom: 30px;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 25px 0;
+  color: var(--color-primary);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.section-icon {
+  font-size: 24px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--color-text);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.form-control {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+  background: var(--color-secondary);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+}
+
+.input-with-icon {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  color: var(--color-text-muted);
+}
+
+.input-with-icon .form-control {
+  padding-left: 45px;
+}
+
+.form-text {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* Toggle Switch */
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  cursor: pointer;
+  font-weight: normal;
+  margin-bottom: 0;
+}
+
+.toggle-input {
+  display: none;
+}
+
+.toggle-slider {
+  position: relative;
+  width: 50px;
+  height: 26px;
+  background: var(--color-border);
+  border-radius: 26px;
+  transition: background 0.3s ease;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--color-secondary);
+  top: 2px;
+  left: 2px;
+  transition: transform 0.3s ease;
+}
+
+.toggle-input:checked + .toggle-slider {
+  background: var(--color-primary);
+}
+
+.toggle-input:checked + .toggle-slider::before {
+  transform: translateX(24px);
+}
+
+.toggle-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* Collaboration Types */
+.collaboration-status {
+  margin-bottom: 25px;
+}
+
+.collaboration-label {
+  display: block;
+  margin-bottom: 15px;
+  color: var(--color-text);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.checkbox-card {
+  border: 2px solid var(--color-border);
+  border-radius: 10px;
+  padding: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: var(--color-secondary);
+}
+
+.checkbox-card:hover {
+  border-color: var(--color-primary);
+  background: rgba(var(--color-primary-rgb), 0.02);
+}
+
+.checkbox-card input[type="checkbox"] {
+  display: none;
+}
+
+.checkbox-card input[type="checkbox"]:checked + .card-content {
+  color: var(--color-primary);
+}
+
+.checkbox-card:has(input:checked) {
+  border-color: var(--color-primary);
+  background: rgba(var(--color-primary-rgb), 0.05);
+}
+
+.card-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.card-icon {
+  font-size: 24px;
+  width: 40px;
+  flex-shrink: 0;
+}
+
+.card-text strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.card-text small {
+  display: block;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.form-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary));
+  color: var(--color-secondary);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(var(--color-primary-rgb), 0.3);
+}
+
+.btn-secondary {
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+
+.btn-secondary:hover {
+  background: var(--color-border);
+  color: var(--color-text);
+}
+
+/* Contact Preview */
+.contact-preview {
+  background: var(--color-secondary);
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(var(--color-primary-rgb), 0.1);
+}
+
+.contact-preview h3 {
+  margin: 0 0 20px 0;
+  color: var(--color-primary);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.preview-card {
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 20px;
+  background: var(--color-surface);
+}
+
+.preview-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.preview-avatar img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--color-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.preview-info h4 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 16px;
+}
+
+.preview-info p {
+  margin: 2px 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.preview-location {
+  font-size: 12px !important;
+}
+
+.collaboration-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  background: rgba(var(--color-accent-rgb), 0.1);
+  color: var(--color-accent);
+}
+
+.collaboration-badge.unavailable {
+  background: rgba(var(--color-accent-rgb), 0.1);
+  color: var(--color-accent);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .contact-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .checkbox-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .preview-header {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+</style>
+
+<script>
+function resetForm() {
+  if (confirm('Are you sure you want to reset all changes?')) {
+    document.querySelector('.contact-form').reset();
+  }
+}
+
+// Update preview in real-time
+function updatePreview() {
+  // This could be enhanced to show live preview updates
+  console.log('Updating preview...');
+}
+
+// Add event listeners for real-time preview updates
+document.querySelectorAll('.form-control').forEach(input => {
+  input.addEventListener('input', updatePreview);
+});
+</script>
+{% endblock %}
