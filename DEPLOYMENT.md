@@ -540,9 +540,9 @@ R2_MEDIA_LIST_CACHE_TIMEOUT=300
 
 # --- Database ---
 DB_ENGINE=django.db.backends.postgresql
-DB_NAME=drden_db
-DB_USER=drden_user
-DB_PASSWORD=<your-database-password>
+DB_NAME=designer_db
+DB_USER=designer_user
+DB_PASSWORD=oakoak@123
 DB_HOST=localhost
 DB_PORT=5432
 
