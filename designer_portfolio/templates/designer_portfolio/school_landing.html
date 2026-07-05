@@ -1,0 +1,69 @@
+{% extends "designer_portfolio/base.html" %}
+
+{% block title %}{{ school_name }} Fashion Designers | designrden{% endblock %}
+
+{% block content %}
+<section class="student-hero">
+  <div class="student-container">
+    <p class="student-eyebrow">designrden for {{ school_name }}</p>
+    <h1>{{ hero_heading }}</h1>
+    <p class="student-lead">{{ hero_lead }}</p>
+    <div class="student-hero__actions">
+      <a href="{{ signup_url }}" class="btn btn-accent">Start free trial</a>
+      <a href="{{ designers_url }}" class="btn btn-outline">Explore designers</a>
+      {% if user.is_authenticated %}
+      <a href="{% url 'student_portfolio_dashboard' %}" class="btn btn-primary">Open student workspace</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="student-section">
+  <div class="student-container">
+    <div class="student-section__header">
+      <p class="student-eyebrow">Fashion design tracks</p>
+      <h2>Learn by shipping real collections</h2>
+    </div>
+    <div class="student-grid">
+      {% for track in focus_tracks %}
+      <article class="student-card">
+        <h3>{{ track.title }}</h3>
+        <p>{{ track.description }}</p>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="student-section student-section--muted">
+  <div class="student-container">
+    <div class="student-section__header">
+      <p class="student-eyebrow">Launch checklist</p>
+      <h2>Your first week on designrden</h2>
+    </div>
+    <ol class="student-checklist">
+      {% for item in launch_checklist %}
+      <li>
+        <h3>{{ item.title }}</h3>
+        <p>{{ item.description }}</p>
+      </li>
+      {% endfor %}
+    </ol>
+  </div>
+</section>
+
+<section class="student-cta">
+  <div class="student-container">
+    <h2>Ready to launch your fashion portfolio?</h2>
+    <p>Start free, then keep building with events, community support, and Designer AI guidance.</p>
+    <div class="student-hero__actions">
+      <a href="{{ signup_url }}" class="btn btn-accent">Create student account</a>
+      {% if user.is_authenticated %}
+      <a href="{% url 'student_portfolio_dashboard' %}" class="btn btn-primary">Open workspace</a>
+      {% endif %}
+      <a href="{% url 'event_list' %}" class="btn btn-primary">View events</a>
+      <a href="{% url 'community_redirect' %}" class="btn btn-outline">Visit community</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

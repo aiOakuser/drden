@@ -22,6 +22,7 @@ from .views import (
     reject_designer,
     reinstate_designer,
     StudentPageView,
+    ScadLandingPageView,
     neworders_dresses_view,
     neworders_dresses_submit_view,
     AboutView,
@@ -114,6 +115,7 @@ urlpatterns = [
     path("events/<slug:slug>/", EventDetailView.as_view(), name="event_detail"),
     
     re_path(r"^student/?$", StudentPageView.as_view(), name="student_page"),
+    path("students/scad/", ScadLandingPageView.as_view(), name="scad_landing"),
     path("neworders/dresses/", neworders_dresses_view, name="neworders_dresses"),
     path("neworders/dresses/submit/", neworders_dresses_submit_view, name="neworders_dresses_submit"),
     path("orders/<str:token>/", views.viewer_order_detail, name="viewer_order_detail"),

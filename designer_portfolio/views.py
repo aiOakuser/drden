@@ -1601,6 +1601,22 @@ def _signup_template_context(form: DesignerSignUpForm) -> dict:
     return {"form": form, **recaptcha_template_context()}
 
 
+def _apply_campaign_attribution(request, user) -> None:
+    """Attach campaign-landing session attribution (set by e.g. SchoolLandingPageView) to the new UserSubscription."""
+    source = request.session.pop("campaign_source", None)
+    medium = request.session.pop("campaign_medium", None)
+    campaign = request.session.pop("campaign_name", None)
+    landing_page = request.session.pop("campaign_landing_page", None)
+    if not any([source, medium, campaign, landing_page]):
+        return
+    UserSubscription.objects.filter(user=user).update(
+        acquisition_source=source,
+        acquisition_medium=medium,
+        acquisition_campaign=campaign,
+        acquisition_landing_page=landing_page,
+    )
+
+
 def signup_view(request):
     if getattr(settings, "GOOGLE_LOGIN_MANDATORY", False):
         messages.info(
@@ -1680,6 +1696,7 @@ def signup_view(request):
                     )
                 except Exception:
                     pass
+                _apply_campaign_attribution(request, inactive_user)
 
                 # Log the user in using identifier they provided (email or username)
                 user_identifier = email_input or desired_username
@@ -1708,6 +1725,7 @@ def signup_view(request):
                 )
             except Exception:
                 pass
+            _apply_campaign_attribution(request, user)
             transaction.on_commit(
                 lambda: send_registration_notifications(user, request=request, source="ui")
             )
@@ -2048,6 +2066,97 @@ class StudentPageView(TemplateView):
             }
         )
         return context
+
+
+class SchoolLandingPageView(TemplateView):
+    """Base for school-specific outreach landing pages.
+
+    Records campaign attribution in the session on GET so signup_view can
+    attach it to the new UserSubscription (see _apply_campaign_attribution).
+    Subclass and override the class attributes for a new school.
+    """
+
+    template_name = "designer_portfolio/school_landing.html"
+    school_slug = ""
+    school_name = ""
+    hero_heading = "Build your fashion design career before graduation"
+    hero_lead = (
+        "designrden helps fashion design students publish polished portfolios, document their "
+        "process, and get discovered by recruiters."
+    )
+
+    def get(self, request, *args, **kwargs):
+        request.session["campaign_source"] = request.GET.get("utm_source") or self.school_slug
+        request.session["campaign_medium"] = request.GET.get("utm_medium") or "campaign"
+        request.session["campaign_name"] = (
+            request.GET.get("utm_campaign") or f"{self.school_slug}-fashion-design"
+        )
+        request.session["campaign_landing_page"] = request.build_absolute_uri(request.path)
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            {
+                "school_name": self.school_name,
+                "hero_heading": self.hero_heading,
+                "hero_lead": self.hero_lead,
+                "signup_url": reverse("signup"),
+                "designers_url": reverse("designers_list"),
+                "focus_tracks": [
+                    {
+                        "title": "Fashion portfolio launch plan",
+                        "description": (
+                            "Build collections, lookbooks, and techpacks with process documentation "
+                            "ready to share with recruiters."
+                        ),
+                    },
+                    {
+                        "title": "Mentor-style feedback loop",
+                        "description": (
+                            "Ask Designer AI for critique prompts and shape your next collection with "
+                            "structured guidance."
+                        ),
+                    },
+                    {
+                        "title": "Career-ready visibility",
+                        "description": (
+                            "Get listed in the designer directory and connect with studios and "
+                            "collaborators before you graduate."
+                        ),
+                    },
+                ],
+                "launch_checklist": [
+                    {
+                        "title": "1. Create your free account",
+                        "description": "Sign up with email or Google and choose the Fashion Design track.",
+                    },
+                    {
+                        "title": "2. Upload your strongest collection",
+                        "description": "Start with one polished lookbook, then add process and runway visuals.",
+                    },
+                    {
+                        "title": "3. Refine with Designer AI",
+                        "description": "Use guided prompts to improve storytelling and presentation.",
+                    },
+                    {
+                        "title": "4. Share your portfolio link",
+                        "description": "Send it to recruiters, mentors, and classmates as you build momentum.",
+                    },
+                ],
+            }
+        )
+        return context
+
+
+class ScadLandingPageView(SchoolLandingPageView):
+    school_slug = "scad"
+    school_name = "SCAD (Savannah College of Art and Design)"
+    hero_heading = "SCAD fashion designers: launch your portfolio before graduation"
+    hero_lead = (
+        "designrden helps SCAD fashion design students publish polished portfolios, document their "
+        "collections, and get discovered by recruiters — free to start."
+    )
 
 
 # Dress types for the viewer custom orders page.
