@@ -16,6 +16,11 @@ from django.utils import timezone
 
 User = get_user_model()
 
+# Advertised bonus per successful referral. There is no automated payout in
+# this codebase yet — crediting only increments referral_count/points/tier.
+# Actual disbursement is handled manually until a payout flow is built.
+REFERRAL_BONUS_USD = 100
+
 
 def generate_referral_code(prefix: str = "drden") -> str:
     alphabet = string.ascii_lowercase + string.digits

@@ -3,26 +3,14 @@ from designer_portfolio.models import SubscriptionPlan
 
 
 class Command(BaseCommand):
-    help = 'Create default subscription plans'
+    help = 'Create or update default subscription plans'
 
     def handle(self, *args, **options):
         plans = [
             {
-                'name': 'weekly',
-                'display_name': 'Weekly Plan',
-                'price': 2.99,
-                'duration_days': 7,
-            },
-            {
-                'name': 'biweekly',
-                'display_name': 'Bi-Weekly Plan',
-                'price': 3.99,
-                'duration_days': 14,
-            },
-            {
                 'name': 'monthly',
                 'display_name': 'Monthly Plan',
-                'price': 4.99,
+                'price': 19.99,
                 'duration_days': 30,
             },
             {
@@ -34,24 +22,30 @@ class Command(BaseCommand):
             {
                 'name': 'yearly',
                 'display_name': 'Yearly Plan',
-                'price': 49.99,
+                'price': 199.99,
                 'duration_days': 365,
             },
         ]
 
         for plan_data in plans:
-            plan, created = SubscriptionPlan.objects.get_or_create(
+            plan, created = SubscriptionPlan.objects.update_or_create(
                 name=plan_data['name'],
-                defaults=plan_data
+                defaults=plan_data,
             )
-            if created:
-                self.stdout.write(
-                    self.style.SUCCESS(f'Created subscription plan: {plan.display_name}')
-                )
-            else:
-                self.stdout.write(
-                    self.style.WARNING(f'Subscription plan already exists: {plan.display_name}')
-                )
+            action = 'Created' if created else 'Updated'
+            self.stdout.write(
+                self.style.SUCCESS(f'{action} subscription plan: {plan.display_name} (${plan.price})')
+            )
+
+        # Weekly/bi-weekly are discontinued. Deactivate rather than delete so any
+        # existing UserSubscription rows pointing at them don't break with a
+        # dangling foreign key.
+        retired = SubscriptionPlan.objects.filter(name__in=['weekly', 'biweekly'], is_active=True)
+        retired_count = retired.update(is_active=False)
+        if retired_count:
+            self.stdout.write(
+                self.style.WARNING(f'Deactivated {retired_count} retired plan(s): weekly, biweekly')
+            )
 
         self.stdout.write(
             self.style.SUCCESS('Successfully set up subscription plans!')

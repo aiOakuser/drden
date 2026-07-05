@@ -3924,7 +3924,7 @@ class ReferralSummaryView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        from .services.referrals import ensure_referral_profile, next_tier_info
+        from .services.referrals import ensure_referral_profile, next_tier_info, REFERRAL_BONUS_USD
 
         ensure_referral_profile(request.user)
         profile = request.user.referral_profile
@@ -3938,6 +3938,7 @@ class ReferralSummaryView(APIView):
             "invite_url": invite_url,
             "referral_count": profile.referral_count,
             "referral_points": profile.referral_points,
+            "bonus_per_referral_usd": REFERRAL_BONUS_USD,
             "current_tier": (
                 {"code": profile.current_tier.code, "name": profile.current_tier.name}
                 if profile.current_tier else None
