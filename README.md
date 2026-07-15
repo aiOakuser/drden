@@ -1,5 +1,5 @@
-GlobalDesignerHub.com is a secure, tech-forward application designed for fashion designers to effortlessly upload and manage their design portfolios with detailed, clean, and organized tech pack information.
-The platform offers a user-friendly interface and a robust authentication system, allowing users (including staff admins) to sign in securely via Google, LinkedIn, or Instagram OAuth flows or with traditional credentials. Built with both usability and security in mind, GlobalDesignerHub.com streamlines the process of presenting, storing, and sharing professional design documents in the fashion industry.
+designrden.com is a secure, tech-forward application designed for fashion designers to effortlessly upload and manage their design portfolios with detailed, clean, and organized tech pack information.
+The platform offers a user-friendly interface and a robust authentication system, allowing users (including staff admins) to sign in securely via Google, LinkedIn, or Instagram OAuth flows or with traditional credentials. Built with both usability and security in mind, designrden.com streamlines the process of presenting, storing, and sharing professional design documents in the fashion industry.
 
 ## Local development (runserver)
 
@@ -37,7 +37,7 @@ This app is intended to run on **PostgreSQL** in production.
 
 ### App configuration (repo)
 
-- `gdh/settings.py` reads `DATABASE_URL` first; otherwise it uses `DB_*` or `POSTGRES_*/PG*` equivalents.
+- `drden/settings.py` reads `DATABASE_URL` first; otherwise it uses `DB_*` or `POSTGRES_*/PG*` equivalents.
 - `.env.example` lists the supported variables for local dev and hosting providers.
 - There is **no SQLite fallback** in production; tests use in-memory SQLite.
 - Discrete vars (if not using `DATABASE_URL`):
@@ -80,10 +80,10 @@ This keeps uploads logically separated by account/content domain while staying i
 
 ### 502 Bad Gateway (login / site not loading)
 
-If **https://globaldesignerhub.com/accounts/login/** (or the whole site) shows **502 Bad Gateway** from Cloudflare, the origin server is not responding. Check:
+If **https://designrden.com/accounts/login/** (or the whole site) shows **502 Bad Gateway** from Cloudflare, the origin server is not responding. Check:
 
 1. **App process** — Is the Django/Gunicorn (or your WSGI server) process running on the host? Restart it if it crashed.
-2. **Health check** — Open **https://globaldesignerhub.com/health/** in a browser. If it returns **"ok"**, the app is up and the 502 may be intermittent or proxy-related. If **/health/** also returns 502, the app is down or not reachable by the proxy.
+2. **Health check** — Open **https://designrden.com/health/** in a browser. If it returns **"ok"**, the app is up and the 502 may be intermittent or proxy-related. If **/health/** also returns 502, the app is down or not reachable by the proxy.
 3. **Logs** — On the host, check application and proxy (e.g. Nginx/Caddy) logs for errors, tracebacks, or "connection refused".
 4. **Proxy** — Ensure the reverse proxy (Nginx, Caddy, etc.) points to the correct host/port where Django/Gunicorn is listening (e.g. `127.0.0.1:8000`).
 5. **Database** — If the app crashes on startup or first request due to DB (e.g. missing migrations or connection failure), fix DB and restart the app.
